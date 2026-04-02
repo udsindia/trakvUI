@@ -1,0 +1,16 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+# 'serve' statically serves the Vite build output on the PORT Railway assigns
+startCommand = "npx serve -s dist -l $PORT"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Environment variables
+# Set VITE_API_BASE_URL in the Railway dashboard (or via the Railway CLI):
+#   railway variables set VITE_API_BASE_URL=https://<your-backend>.up.railway.app
+#
+# Note: VITE_ prefixed variables must be available at BUILD TIME.
+# Add them in: Railway Dashboard → your service → Variables, before deploying.
