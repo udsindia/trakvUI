@@ -1,5 +1,6 @@
 import type { FormEventHandler } from "react";
 import {
+  Box,
   Button,
   Card,
   CardContent,
@@ -23,7 +24,7 @@ const MAX_NOTES_LENGTH = 500;
 type LeadFormProps = {
   form: UseFormReturn<LeadFormValues>;
   onCancel: () => void;
-  onSubmit: FormEventHandler<HTMLDivElement>;
+  onSubmit: FormEventHandler<HTMLFormElement>;
   options: LeadFormOptions;
 };
 
@@ -73,7 +74,8 @@ export function LeadForm({
         boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
       }}
     >
-      <CardContent component="form" noValidate sx={{ p: { xs: 2.5, md: 4 } }} onSubmit={onSubmit}>
+      <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
+        <Box component="form" noValidate onSubmit={onSubmit}>
         <Stack spacing={3}>
           <Stack spacing={0.75}>
             <Typography variant="h6">Lead Information</Typography>
@@ -380,6 +382,7 @@ export function LeadForm({
             </Button>
           </Stack>
         </Stack>
+        </Box>
       </CardContent>
     </Card>
   );

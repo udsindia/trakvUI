@@ -1,0 +1,5 @@
+CardContent in MUI v7 dropped the component prop from its types. Replaced <CardContent component="form" ...> with a plain <CardContent> wrapping a new <Box component="form" noValidate onSubmit={onSubmit}> inside it. Also added Box to the MUI imports.
+Updated the onSubmit prop type from FormEventHandler<HTMLDivElement> → FormEventHandler<HTMLFormElement> to match what form.handleSubmit() actually returns.
+
+MultiSelectAutocomplete.tsx (1 fix)
+When freeSolo is enabled, MUI types options as string | NormalizedOption. Added a typeof guard: getOptionLabel={(option) => typeof option === "string" ? option : option.label} so it handles both cases without a type error.

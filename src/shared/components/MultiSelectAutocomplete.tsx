@@ -68,7 +68,7 @@ export function MultiSelectAutocomplete({
       filterSelectedOptions
       freeSolo={allowCustomValues}
       id={id}
-      getOptionLabel={(option) => option.label}
+      getOptionLabel={(option) => typeof option === "string" ? option : option.label}
       handleHomeEndKeys={allowCustomValues}
       isOptionEqualToValue={(option, selectedOption) => option.value === selectedOption.value}
       multiple
