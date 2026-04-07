@@ -7,7 +7,7 @@ console.debug("[httpClient] Initialising with baseURL:", BASE_URL);
 
 export const httpClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10_000,
+  timeout: 60_000, // 60s — allows for Render free-tier cold starts (~30-50s)
   headers: {
     "Content-Type": "application/json",
   },
