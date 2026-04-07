@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { leadService } from "@/modules/lead/leadService";
 import type {
   CreateLeadPayload,
   LeadFormValues,
@@ -50,11 +51,14 @@ export function useLeadFormController() {
   const handleValidSubmit = async (values: LeadFormValues) => {
     const payload = buildCreateLeadPayload(values);
 
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 400);
-    });
-
-    console.info("Mock lead submission payload", payload);
+    try {
+      await leadService.createLead(payload);
+      form.reset(defaultLeadFormValues);
+      navigate(leadRoutePaths.dashboard);
+    } catch (error) {
+      console.error("Failed to create lead:", error);
+      throw error;
+    }
   };
 
   return {
