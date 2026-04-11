@@ -10,13 +10,15 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { isMockAuthEnabled } from "@/app/auth/authService";
 import { useAuth } from "@/app/auth/useAuth";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 
 export function LoginPage() {
   const { error, isAuthenticated, isInitializing, isLoggingIn, login } = useAuth();
+  const location = useLocation();
+  const registrationSuccess = (location.state as { registrationSuccess?: boolean } | null)?.registrationSuccess;
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
@@ -77,6 +79,12 @@ export function LoginPage() {
               </Alert>
             )}
 
+            {registrationSuccess && (
+              <Alert severity="success">
+                Account created successfully. Sign in to continue.
+              </Alert>
+            )}
+
             {error && <Alert severity="error">{error}</Alert>}
 
             <Box
@@ -121,6 +129,13 @@ export function LoginPage() {
                 >
                   {isLoggingIn ? "Signing In..." : "Sign In"}
                 </Button>
+
+                <Typography align="center" color="text.secondary" variant="body2">
+                  New consultancy?{" "}
+                  <RouterLink to="/register" style={{ color: "inherit", fontWeight: 600 }}>
+                    Create an account
+                  </RouterLink>
+                </Typography>
               </Stack>
             </Box>
           </Stack>

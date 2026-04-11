@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
 import { LoginPage } from "@/app/auth/LoginPage";
+import { RegisterPage } from "@/app/auth/RegisterPage";
 import { MainLayout } from "@/app/layout/MainLayout";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { AuthGuard, ModuleGuard } from "@/app/router/guards";
@@ -34,6 +35,7 @@ export function AppRouter({
   return (
     <Routes>
       <Route element={<LoginPage />} path="/login" />
+      <Route element={<RegisterPage />} path="/register" />
 
       <Route element={<AuthGuard />}>
         <Route

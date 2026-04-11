@@ -1,9 +1,7 @@
 import axios from "axios";
 import type {
   AuthLoginRequest,
-  AuthLoginResponse,
   AuthSession,
-  TenantContextState,
 } from "@/app/auth/auth.types";
 import {
   MODULE_KEYS,
@@ -13,6 +11,26 @@ import {
 import { getPermissionsForRoles } from "@/config/permissions/permissions";
 import { ROLES, type RoleKey } from "@/config/roles/roles";
 import { httpClient } from "@/shared/services/http/client";
+
+// Actual response from the Spring Boot auth service
+interface BackendAuthResponse {
+  token: string;
+  consultancyId: number;
+  userId: number;
+  role: string;
+}
+
+// Maps backend role strings to frontend RoleKey
+const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
+  ADMIN: ROLES.TENANT_ADMIN,
+  TENANT_ADMIN: ROLES.TENANT_ADMIN,
+  SUPER_ADMIN: ROLES.SUPER_ADMIN,
+  COUNSELLOR: ROLES.COUNSELLOR,
+  COUNSELOR: ROLES.COUNSELLOR,
+  APPLICATION_MANAGER: ROLES.APPLICATION_MANAGER,
+  ACTIVITY_MANAGER: ROLES.ACTIVITY_MANAGER,
+  ANALYST: ROLES.ANALYST,
+};
 
 const AUTH_STORAGE_KEY = "edutrack.auth.session";
 const AUTH_LOGIN_ENDPOINT = "/auth/login";
@@ -104,28 +122,31 @@ function resolveTokenExpiry(token: string) {
   return typeof payload?.exp === "number" ? payload.exp * 1000 : undefined;
 }
 
-function buildTenantContext(response: AuthLoginResponse): TenantContextState {
-  return {
-    tenantId: response.tenantId,
-    tenantName: response.tenantName ?? response.tenantId,
-    enabledModules: {
-      ...getEmptyTenantModules(),
-      ...response.enabledModules,
-    },
-  };
-}
+function mapBackendResponseToSession(response: BackendAuthResponse, email: string): AuthSession {
+  const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.TENANT_ADMIN;
+  const roles: RoleKey[] = [roleKey];
+  const permissions = getPermissionsForRoles(roles);
+  const displayName = email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-function mapResponseToSession(response: AuthLoginResponse): AuthSession {
+  console.debug("[authService] mapped role:", response.role, "→", roleKey);
+
   return {
-    user: response.user,
-    roles: Array.from(new Set(response.roles)),
-    permissions: Array.from(new Set(response.permissions)),
-    tenant: buildTenantContext(response),
+    user: {
+      id: String(response.userId),
+      name: displayName || email,
+      email,
+    },
+    roles,
+    permissions,
+    tenant: {
+      tenantId: String(response.consultancyId),
+      tenantName: `Consultancy ${response.consultancyId}`,
+      enabledModules: { ...defaultTenantModules },
+    },
     tokens: {
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      tokenType: response.tokenType ?? "Bearer",
-      expiresAt: resolveTokenExpiry(response.accessToken),
+      accessToken: response.token,
+      tokenType: "Bearer",
+      expiresAt: resolveTokenExpiry(response.token),
     },
   };
 }
@@ -289,12 +310,16 @@ export const authService = {
       return session;
     }
 
-    const { data } = await httpClient.post<AuthLoginResponse>(AUTH_LOGIN_ENDPOINT, {
-      ...request,
-      strategy: request.strategy ?? "credentials",
+    if (request.strategy === "sso") {
+      throw new Error("SSO is not supported yet.");
+    }
+
+    const { data } = await httpClient.post<BackendAuthResponse>(AUTH_LOGIN_ENDPOINT, {
+      email: request.identifier,
+      password: request.password,
     });
 
-    const session = mapResponseToSession(data);
+    const session = mapBackendResponseToSession(data, request.identifier);
 
     this.persistSession(session);
 

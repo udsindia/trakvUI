@@ -6,16 +6,8 @@ export const leadService = {
     return await leadApi.createLead(payload);
   },
 
-  getLeads: async (params?: {
-    page?: number;
-    pageSize?: number;
-    agent?: string;
-    country?: string;
-    source?: string;
-    stage?: string;
-    search?: string;
-  }) => {
-    return await leadApi.getLeads(params);
+  getLeads: async () => {
+    return await leadApi.getLeads();
   },
 
   getLeadById: async (id: string) => {
@@ -28,5 +20,5 @@ export const leadService = {
 
   deleteLead: async (id: string) => {
     return await leadApi.deleteLead(id);
-  }
+  },
 };
