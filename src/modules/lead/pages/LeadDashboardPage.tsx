@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AddRounded } from "@mui/icons-material";
-import { Box, Button, Paper, Stack } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
@@ -15,6 +16,7 @@ import {
 } from "@/modules/lead/components/LeadTableContainer";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import {
   FilterPanel,
@@ -65,80 +67,30 @@ const filterConfig: FilterConfig[] = [
   },
 ];
 
-const leadRows: LeadRow[] = [
-  {
-    id: "lead-101",
-    name: "Aarav Mehta",
-    email: "aarav.mehta@example.com",
-    phone: "+91 98765 43210",
-    source: "Website",
-    agent: "Aisha Khan",
-    stage: "New",
-    lastActivity: "28 Mar, 09:10",
-    nextAction: "Intro call at 2:30 PM",
-    score: 82,
-  },
-  {
-    id: "lead-102",
-    name: "Sara Thompson",
-    email: "sara.thompson@example.com",
-    phone: "+91 98111 22334",
-    source: "Referral",
-    agent: "Rahul Verma",
-    stage: "Contacted",
-    lastActivity: "28 Mar, 08:15",
-    nextAction: "Send course shortlist",
-    score: 76,
-  },
-  {
-    id: "lead-103",
-    name: "Nihal Patel",
-    email: "nihal.patel@example.com",
-    phone: "+91 98222 33445",
-    source: "Meta Ads",
-    agent: "Priya Menon",
-    stage: "Qualified",
-    lastActivity: "27 Mar, 18:20",
-    nextAction: "Document review",
-    score: 91,
-  },
-  {
-    id: "lead-104",
-    name: "Mia Collins",
-    email: "mia.collins@example.com",
-    phone: "+91 98333 44556",
-    source: "Walk-in",
-    agent: "Aisha Khan",
-    stage: "Proposal",
-    lastActivity: "27 Mar, 16:05",
-    nextAction: "Proposal follow-up",
-    score: 69,
-  },
-  {
-    id: "lead-105",
-    name: "Dev Kapoor",
-    email: "dev.kapoor@example.com",
-    phone: "+91 98444 55667",
-    source: "Website",
-    agent: "Rahul Verma",
-    stage: "Contacted",
-    lastActivity: "27 Mar, 11:40",
-    nextAction: "Counsellor callback",
-    score: 73,
-  },
-  {
-    id: "lead-106",
-    name: "Elena Brooks",
-    email: "elena.brooks@example.com",
-    phone: "+91 98555 66778",
-    source: "Referral",
-    agent: "Priya Menon",
-    stage: "Qualified",
-    lastActivity: "26 Mar, 15:35",
-    nextAction: "Application eligibility review",
-    score: 88,
-  },
-];
+function formatLastActivity(isoString: string | null): string {
+  if (!isoString) return "—";
+  return new Date(isoString).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function mapBackendLeadToRow(lead: BackendLead): LeadRow {
+  return {
+    id: lead.id,
+    name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
+    email: lead.email ?? "",
+    phone: lead.phone ?? "",
+    stage: lead.leadStage ?? "New",
+    agent: lead.assignedToName ?? "—",
+    source: lead.sourceName ?? "—",
+    score: lead.score ?? 0,
+    lastActivity: formatLastActivity(lead.lastActivityAt),
+    nextAction: "",
+  };
+}
 
 function getStageKey(stage: string) {
   return stage.toLowerCase().replace(/\s+/g, "-");
@@ -153,6 +105,13 @@ export function LeadDashboardPage() {
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
 
+  const { data: backendLeads = [], isLoading, isError } = useQuery({
+    queryKey: ["leads"],
+    queryFn: leadApi.getLeads,
+  });
+
+  const leadRows: LeadRow[] = backendLeads.map(mapBackendLeadToRow);
+
   const quickFilterTabs: LeadQuickFilterTab[] = quickFilterDefinitions.map((tab) => ({
     ...tab,
     count:
@@ -165,6 +124,7 @@ export function LeadDashboardPage() {
     activeQuickFilter === "all"
       ? leadRows
       : leadRows.filter((lead) => getStageKey(lead.stage) === activeQuickFilter);
+
   const visibleLeadCount = filteredLeadRows.length;
   const paginationLabel =
     visibleLeadCount === 0
@@ -270,12 +230,25 @@ export function LeadDashboardPage() {
             tabs={quickFilterTabs}
             onChange={setActiveQuickFilter}
           />
-          <LeadTableContainer
-            leads={filteredLeadRows}
-            page={1}
-            pageCount={1}
-            paginationLabel={paginationLabel}
-          />
+
+          {isLoading ? (
+            <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
+              <CircularProgress size={32} />
+            </Box>
+          ) : isError ? (
+            <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
+              <Typography color="error" variant="body2">
+                Failed to load leads. Check the console for details.
+              </Typography>
+            </Box>
+          ) : (
+            <LeadTableContainer
+              leads={filteredLeadRows}
+              page={1}
+              pageCount={1}
+              paginationLabel={paginationLabel}
+            />
+          )}
         </Box>
       </Box>
     </Paper>
