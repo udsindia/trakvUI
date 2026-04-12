@@ -21,17 +21,35 @@ const defaultLeadFormValues: LeadFormValues = {
 };
 
 export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayload {
+  // Split "John Doe" → firstName="John", lastName="Doe"
+  const nameParts = values.name.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ") || firstName;
+
+  // Split "+91 98765 43210" → countryCode="+91", phoneNo="9876543210"
+  const cleanPhone = values.phone.replace(/\s/g, "");
+  const phoneMatch = cleanPhone.match(/^(\+\d{1,3})(.+)$/);
+  const countryCode = phoneMatch?.[1] ?? "+91";
+  const phoneNo = phoneMatch?.[2] ?? cleanPhone.replace(/\D/g, "");
+
+  // "2024-09-01" → intakeMonth="September", year=2024
+  const intakeDate = new Date(values.intakeDate);
+  const intakeMonth = intakeDate.toLocaleString("en-US", { month: "long" }) || "January";
+  const year = isNaN(intakeDate.getFullYear()) ? new Date().getFullYear() : intakeDate.getFullYear();
+
   return {
-    agent: values.agent.trim(),
-    countries: values.countries,
-    courses: values.courses,
-    email: values.email.trim(),
-    intakeDate: values.intakeDate,
-    name: values.name.trim(),
-    notes: values.notes.trim(),
-    phone: values.phone.trim(),
-    source: values.source,
-    tags: values.tags,
+    firstName,
+    lastName,
+    countryCode,
+    phoneNo,
+    emailAddress: values.email.trim(),
+    leadSource: values.source,
+    countriesOfInterest: values.countries,
+    intakeMonth,
+    year,
+    fieldOfStudy: values.courses[0] ?? "Not Specified",
+    currentStudyLevel: "Not Specified",
+    isWhatsAppAvailable: false,
   };
 }
 

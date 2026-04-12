@@ -13,17 +13,20 @@ export type LeadFormValues = {
   tags: string[];
 };
 
+// Matches backend AddLeadRequestDTO
 export type CreateLeadPayload = {
-  agent: string;
-  countries: string[];
-  courses: string[];
-  email: string;
-  intakeDate: string;
-  name: string;
-  notes: string;
-  phone: string;
-  source: string;
-  tags: string[];
+  firstName: string;
+  lastName: string;
+  countryCode: string;
+  phoneNo: string;
+  emailAddress: string;
+  leadSource: string;
+  countriesOfInterest: string[];
+  intakeMonth: string;
+  year: number;
+  fieldOfStudy: string;
+  currentStudyLevel: string;
+  isWhatsAppAvailable: boolean;
 };
 
 export type LeadFormOptions = {
