@@ -1,5 +1,6 @@
 import type { FormEventHandler } from "react";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -77,6 +78,11 @@ export function LeadForm({
       <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
         <Box component="form" noValidate onSubmit={onSubmit}>
         <Stack spacing={3}>
+          {errors.root?.message && (
+            <Alert severity={errors.root.message.includes("warming up") ? "warning" : "error"}>
+              {errors.root.message}
+            </Alert>
+          )}
           <Stack spacing={0.75}>
             <Typography variant="h6">Lead Information</Typography>
             <Typography color="text.secondary" variant="body2">

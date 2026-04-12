@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
@@ -75,7 +76,16 @@ export function useLeadFormController() {
       navigate(leadRoutePaths.dashboard);
     } catch (error) {
       console.error("Failed to create lead:", error);
-      throw error;
+
+      const isTimeout =
+        axios.isAxiosError(error) &&
+        (error.code === "ECONNABORTED" || error.message.toLowerCase().includes("timeout"));
+
+      form.setError("root", {
+        message: isTimeout
+          ? "The server is warming up — your data is safe. Click Save Lead to try again."
+          : "Failed to save the lead. Please try again.",
+      });
     }
   };
 
