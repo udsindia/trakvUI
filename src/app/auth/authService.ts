@@ -2,6 +2,8 @@ import axios from "axios";
 import type {
   AuthLoginRequest,
   AuthSession,
+  CreateConsultancyRequest,
+  RegisterAdminRequest,
 } from "@/app/auth/auth.types";
 import {
   MODULE_KEYS,
@@ -164,10 +166,10 @@ function isValidSession(session: unknown): session is AuthSession {
 
   return Boolean(
     candidate.user &&
-      candidate.tenant &&
-      candidate.tokens?.accessToken &&
-      Array.isArray(candidate.roles) &&
-      Array.isArray(candidate.permissions),
+    candidate.tenant &&
+    candidate.tokens?.accessToken &&
+    Array.isArray(candidate.roles) &&
+    Array.isArray(candidate.permissions),
   );
 }
 
@@ -282,9 +284,9 @@ export function getAuthErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
     const responseMessage =
       typeof error.response?.data === "object" &&
-      error.response?.data &&
-      "message" in error.response.data &&
-      typeof error.response.data.message === "string"
+        error.response?.data &&
+        "message" in error.response.data &&
+        typeof error.response.data.message === "string"
         ? error.response.data.message
         : null;
 
@@ -366,5 +368,25 @@ export const authService = {
 
   getAccessToken() {
     return this.restoreSession()?.tokens.accessToken ?? null;
+  },
+
+  async createConsultancy(request: CreateConsultancyRequest) {
+    if (isMockAuthEnabled) {
+      await wait(MOCK_AUTH_LATENCY_MS);
+      return { id: randomUUID() };
+    }
+
+    const { data } = await httpClient.post<{ id: string }>("/consultancies", request);
+    return data;
+  },
+
+  async registerAdminUser(request: RegisterAdminRequest) {
+    if (isMockAuthEnabled) {
+      await wait(MOCK_AUTH_LATENCY_MS);
+      return { success: true };
+    }
+
+    const { data } = await httpClient.post("/auth/register", request);
+    return data;
   },
 };

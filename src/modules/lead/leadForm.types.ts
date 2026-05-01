@@ -15,6 +15,8 @@ export type LeadFormValues = {
 
 // Matches backend AddLeadRequestDTO
 export type CreateLeadPayload = {
+  assignedToId: string;
+  assignedToName: string;
   firstName: string;
   lastName: string;
   countryCode: string;
@@ -29,8 +31,13 @@ export type CreateLeadPayload = {
   isWhatsAppAvailable: boolean;
 };
 
+export type AgentOption = {
+  agentId: string;
+  agentName: string;
+};
+
 export type LeadFormOptions = {
-  agentOptions: string[];
+  agentOptions: AgentOption[];
   countryOptions: MultiSelectOption[];
   courseOptions: MultiSelectOption[];
   sourceOptions: string[];

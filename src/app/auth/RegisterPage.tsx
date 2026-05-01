@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { httpClient } from "@/shared/services/http/client";
+import { authService, getAuthErrorMessage } from "@/app/auth/authService";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ export function RegisterPage() {
 
     try {
       // Step 1: create consultancy
-      const consultancyRes = await httpClient.post<{ id: number }>("/consultancies", {
+      const consultancyData = await authService.createConsultancy({
         name: values.consultancyName,
         address: values.address || undefined,
         city: values.city || undefined,
@@ -97,26 +97,23 @@ export function RegisterPage() {
         regId: values.regId || undefined,
       });
 
-      const consultancyId = consultancyRes.data.id;
-      console.debug("[register] consultancy created, id:", consultancyId);
+      const tenantId = consultancyData?.id;
+      console.debug("[register] consultancy created, id:", tenantId);
 
       // Step 2: register admin user
-      await httpClient.post("/auth/register", {
+      await authService.registerAdminUser({
         name: values.userName,
         email: values.email,
         phone: values.phone || undefined,
         password: values.password,
         role: values.role,
-        consultancyId,
+        tenantId,
       });
 
       console.debug("[register] user registered, redirecting to login");
       navigate("/login", { state: { registrationSuccess: true } });
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        "Registration failed. Please try again.";
-      setServerError(message);
+      setServerError(getAuthErrorMessage(err));
     }
   };
 

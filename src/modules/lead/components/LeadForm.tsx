@@ -310,8 +310,8 @@ export function LeadForm({
                         Select agent
                       </MenuItem>
                       {options.agentOptions.map((agentOption) => (
-                        <MenuItem key={agentOption} value={agentOption}>
-                          {agentOption}
+                        <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
+                          {agentOption.agentName}
                         </MenuItem>
                       ))}
                     </TextField>

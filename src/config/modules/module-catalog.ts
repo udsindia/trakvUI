@@ -62,6 +62,14 @@ export const moduleCatalog: ModuleDefinition[] = [
     title: "Activities",
     navLabel: "Activities",
     path: "activities",
+    children: [
+      {
+        key: "tasks",
+        navLabel: "My Tasks",
+        path: "tasks",
+        description: "Manage follow-ups, priorities, and completion workflows.",
+      },
+    ],
     icon: MODULE_ICON_KEYS.ACTIVITIES,
     description: "Tasks, reminders, and case coordination timelines.",
     order: 4,
