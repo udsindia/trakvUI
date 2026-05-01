@@ -71,3 +71,21 @@ export interface AuthState {
   tenant: TenantContextState | null;
   tokens: AuthTokens | null;
 }
+
+export interface CreateConsultancyRequest {
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  regId?: string;
+}
+
+export interface RegisterAdminRequest {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  role: string;
+  tenantId: string;
+}

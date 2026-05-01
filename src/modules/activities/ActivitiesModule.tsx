@@ -1,17 +1,13 @@
-import { ModuleScaffold } from "@/shared/components/ModuleScaffold";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ActivityFeed } from "@/modules/activities/pages/ActivityFeed";
+import { MyTasks } from "@/modules/activities/pages/MyTasks";
 
 export default function ActivitiesModule() {
   return (
-    <ModuleScaffold
-      capabilities={[
-        "Task timelines",
-        "Counsellor follow-ups",
-        "Reminder scheduling",
-        "Activity audit trail",
-      ]}
-      description="This module will carry coordination, reminder, and engagement activity flows across the counselling lifecycle."
-      title="Activities"
-    />
+    <Routes>
+      <Route element={<ActivityFeed />} path="feed" />
+      <Route element={<MyTasks />} path="tasks" />
+      <Route element={<Navigate replace to="feed" />} path="*" />
+    </Routes>
   );
 }
-

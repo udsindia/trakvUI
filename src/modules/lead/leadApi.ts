@@ -10,6 +10,7 @@ export interface BackendLead {
   lastName: string;
   phone: string;
   email: string;
+  isArchived: boolean;
   leadStage: string;
   assignedToId: string;
   assignedToName: string;

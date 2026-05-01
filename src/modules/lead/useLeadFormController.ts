@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { leadFormOptions } from "@/modules/lead/leadForm.options";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadService } from "@/modules/lead/leadService";
 import type {
@@ -37,8 +38,13 @@ export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayloa
   const intakeDate = new Date(values.intakeDate);
   const intakeMonth = intakeDate.toLocaleString("en-US", { month: "long" }) || "January";
   const year = isNaN(intakeDate.getFullYear()) ? new Date().getFullYear() : intakeDate.getFullYear();
+  const assignedAgent = leadFormOptions.agentOptions.find(
+    (agentOption) => agentOption.agentId === values.agent,
+  );
 
   return {
+    assignedToId: values.agent,
+    assignedToName: assignedAgent?.agentName ?? "",
     firstName,
     lastName,
     countryCode,
