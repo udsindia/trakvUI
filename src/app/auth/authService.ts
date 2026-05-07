@@ -373,7 +373,7 @@ export const authService = {
   async createConsultancy(request: CreateConsultancyRequest) {
     if (isMockAuthEnabled) {
       await wait(MOCK_AUTH_LATENCY_MS);
-      return { id: randomUUID() };
+      return { id: crypto.randomUUID() };
     }
 
     const { data } = await httpClient.post<{ id: string }>("/consultancies", request);
