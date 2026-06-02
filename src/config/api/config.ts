@@ -3,4 +3,5 @@ export const API_CONFIG = {
   leads: "/leads",
   activities: "/activities",
   tasks: "/tasks",
+  applications: "/applications",
 } as const;
