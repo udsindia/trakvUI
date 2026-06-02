@@ -16,10 +16,14 @@ import { httpClient } from "@/shared/services/http/client";
 
 // Actual response from the Spring Boot auth service
 interface BackendAuthResponse {
-  token: string;
-  consultancyId: number;
-  userId: number;
+  accessToken: string;
+  refreshToken?: string;
+  tenantId: string;
+  userId: string;
   role: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 // Maps backend role strings to frontend RoleKey
@@ -128,27 +132,29 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
   const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.TENANT_ADMIN;
   const roles: RoleKey[] = [roleKey];
   const permissions = getPermissionsForRoles(roles);
-  const displayName = email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const fullName = [response.firstName, response.lastName].filter(Boolean).join(" ");
+  const displayName = fullName || email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   console.debug("[authService] mapped role:", response.role, "→", roleKey);
 
   return {
     user: {
-      id: String(response.userId),
+      id: response.userId,
       name: displayName || email,
-      email,
+      email: response.email ?? email,
     },
     roles,
     permissions,
     tenant: {
-      tenantId: String(response.consultancyId),
-      tenantName: `Consultancy ${response.consultancyId}`,
+      tenantId: response.tenantId,
+      tenantName: displayName || response.tenantId,
       enabledModules: { ...defaultTenantModules },
     },
     tokens: {
-      accessToken: response.token,
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
       tokenType: "Bearer",
-      expiresAt: resolveTokenExpiry(response.token),
+      expiresAt: resolveTokenExpiry(response.accessToken),
     },
   };
 }

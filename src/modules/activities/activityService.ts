@@ -109,6 +109,7 @@ export interface BackendTaskDto {
   createdBy?: BackendActorDto | null;
   description?: string | null;
   dueDate: string;
+  entityName?: string | null;
   entityType?: ActivityEntityType;
   id: string;
   leadId?: string | null;
@@ -288,7 +289,12 @@ function toActivityItemsResponse(data: unknown): GetActivityFeedResponse {
     return { hasMore: false, items: [], nextCursor: null };
   }
 
-  const wrappedItems = Array.isArray(data.items) ? data.items : undefined;
+  // Backend ActivityFeedResponse uses "activities"; some endpoints use "items"; paged responses use "content"
+  const wrappedItems = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.activities)
+      ? data.activities
+      : undefined;
   const pageItems = Array.isArray(data.content) ? data.content : undefined;
   const items = wrappedItems ?? pageItems ?? [];
   const hasMore =
@@ -347,6 +353,7 @@ function normalizeTask(value: unknown): BackendTaskDto {
     createdBy: normalizeBackendActor(source.createdBy),
     description: asNullableString(source.description),
     dueDate,
+    entityName: asNullableString(source.entityName),
     entityType: asString(source.entityType) as ActivityEntityType,
     id: asString(source.id),
     leadId: asNullableString(source.leadId),
@@ -450,7 +457,7 @@ function mapBackendTaskToBoardItem(
     },
     linkedLead: {
       id: leadId,
-      name: leadId ? `Lead ${leadId}` : "No linked lead",
+      name: task.entityName ?? (leadId ? `Lead ${leadId.slice(0, 8)}` : "No linked lead"),
       details: task.entityType ? titleCase(task.entityType) : "General task",
       email: "",
       phone: "",

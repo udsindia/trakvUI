@@ -46,7 +46,7 @@ type TaskDetailsSidebarProps = {
     newDueDate: string;
     reason: string;
     taskId: string;
-  }) => Promise<void> | void;
+  }) => Promise<boolean>;
 };
 
 type TaskActionKey = "reschedule" | "complete" | "cancel" | null;
@@ -110,7 +110,10 @@ export function TaskDetailsSidebar({
   const [activeAction, setActiveAction] = useState<TaskActionKey>(null);
   const isActionPending =
     isCancellingTask || isCompletingTask || isReschedulingTask || isStartingTask;
-  const isClosedTask = task?.status === "DONE" || task?.status === "CANCELLED";
+  const isClosedTask =
+    task?.status === "DONE" ||
+    task?.status === "CANCELLED" ||
+    task?.status === "SUPERSEDED";
 
   useEffect(() => {
     if (!task) return;
@@ -161,14 +164,17 @@ export function TaskDetailsSidebar({
       return;
     }
 
-    await onRescheduleTask({
+    const success = await onRescheduleTask({
       newDueDate,
       reason: trimmedReason,
       taskId: task.id,
     });
-    setRescheduleReason("");
-    setRescheduleError("");
-    setActiveAction(null);
+
+    if (success) {
+      setRescheduleReason("");
+      setRescheduleError("");
+      setActiveAction(null);
+    }
   };
 
   const handleCancel = async () => {

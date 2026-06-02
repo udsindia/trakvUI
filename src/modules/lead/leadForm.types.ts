@@ -15,6 +15,7 @@ export type LeadFormValues = {
 
 // Matches backend AddLeadRequestDTO
 export type CreateLeadPayload = {
+  tenantId?: string;
   assignedToId: string;
   assignedToName: string;
   firstName: string;

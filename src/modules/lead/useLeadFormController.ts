@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadService } from "@/modules/lead/leadService";
+import { selectAuthTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
 import type {
   CreateLeadPayload,
   LeadFormValues,
@@ -28,11 +30,11 @@ export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayloa
   const firstName = nameParts[0] ?? "";
   const lastName = nameParts.slice(1).join(" ") || firstName;
 
-  // Split "+91 98765 43210" → countryCode="+91", phoneNo="9876543210"
+  // Split "+91 98765 43210" or "+91-9876543210" → countryCode="+91", phoneNo="9876543210"
   const cleanPhone = values.phone.replace(/\s/g, "");
   const phoneMatch = cleanPhone.match(/^(\+\d{1,3})(.+)$/);
   const countryCode = phoneMatch?.[1] ?? "+91";
-  const phoneNo = phoneMatch?.[2] ?? cleanPhone.replace(/\D/g, "");
+  const phoneNo = (phoneMatch?.[2] ?? cleanPhone).replace(/\D/g, "");
 
   // "2024-09-01" → intakeMonth="September", year=2024
   const intakeDate = new Date(values.intakeDate);
@@ -62,6 +64,7 @@ export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayloa
 
 export function useLeadFormController() {
   const navigate = useNavigate();
+  const tenant = useAppSelector(selectAuthTenant);
   const form = useForm<LeadFormValues>({
     defaultValues: defaultLeadFormValues,
     mode: "onBlur",
@@ -75,6 +78,7 @@ export function useLeadFormController() {
 
   const handleValidSubmit = async (values: LeadFormValues) => {
     const payload = buildCreateLeadPayload(values);
+    payload.tenantId = tenant?.tenantId;
 
     try {
       await leadService.createLead(payload);

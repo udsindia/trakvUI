@@ -23,6 +23,11 @@ export interface BackendLead {
 }
 
 export const leadApi = {
+  getLeadCount: async (): Promise<number> => {
+    const response = await httpClient.get<{ count: number }>(`${API_CONFIG.leads}/count`);
+    return response.data.count;
+  },
+
   getLeads: async (): Promise<BackendLead[]> => {
     console.debug("[leadApi] getLeads called");
     const response = await httpClient.get<BackendLead[]>(API_CONFIG.leads);

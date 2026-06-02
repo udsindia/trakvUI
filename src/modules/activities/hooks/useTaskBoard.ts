@@ -114,6 +114,7 @@ export function useTaskBoard({
       await queryClient.invalidateQueries({
         queryKey: ["activities", "tasks", "details", taskId],
       });
+      closeTask();
     },
   });
 
@@ -143,12 +144,17 @@ export function useTaskBoard({
       await queryClient.invalidateQueries({
         queryKey: ["activities", "tasks", "details", variables.taskId],
       });
+      closeTask();
     },
   });
 
   const createTask = useCallback(
     async (request: CreateTaskRequest) => {
-      await createTaskMutation.mutateAsync(request);
+      try {
+        await createTaskMutation.mutateAsync(request);
+      } catch {
+        // error surfaced via createTaskMutation.error
+      }
     },
     [createTaskMutation],
   );
@@ -158,39 +164,46 @@ export function useTaskBoard({
 
   const markTaskInProgress = useCallback(
     async (taskId: string) => {
-      await startTaskMutation.mutateAsync(taskId);
+      try {
+        await startTaskMutation.mutateAsync(taskId);
+      } catch {
+        // error surfaced via startTaskMutation.error → taskMutationError
+      }
     },
     [startTaskMutation],
   );
 
   const markTaskComplete = useCallback(
     async ({ completionNote, taskId }: MarkTaskCompleteInput) => {
-      await markTaskCompleteMutation.mutateAsync({
-        completionNote,
-        taskId,
-      });
+      try {
+        await markTaskCompleteMutation.mutateAsync({ completionNote, taskId });
+      } catch {
+        // error surfaced via markTaskCompleteMutation.error → taskMutationError
+      }
     },
     [markTaskCompleteMutation],
   );
 
   const cancelTask = useCallback(
     async ({ reason, taskId }: CancelTaskInput) => {
-      await cancelTaskMutation.mutateAsync({
-        reason,
-        taskId,
-      });
+      try {
+        await cancelTaskMutation.mutateAsync({ reason, taskId });
+      } catch {
+        // error surfaced via cancelTaskMutation.error → taskMutationError
+      }
     },
     [cancelTaskMutation],
   );
 
   const rescheduleTask = useCallback(
-    async ({ assignedToId, newDueDate, reason, taskId }: RescheduleTaskInput) => {
-      await rescheduleTaskMutation.mutateAsync({
-        assignedToId,
-        newDueDate,
-        reason,
-        taskId,
-      });
+    async ({ assignedToId, newDueDate, reason, taskId }: RescheduleTaskInput): Promise<boolean> => {
+      try {
+        await rescheduleTaskMutation.mutateAsync({ assignedToId, newDueDate, reason, taskId });
+        return true;
+      } catch {
+        // error surfaced via rescheduleTaskMutation.error → taskMutationError
+        return false;
+      }
     },
     [rescheduleTaskMutation],
   );
