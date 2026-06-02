@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trakv — API Audit Report</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f1117 100%);
+      border-bottom: 1px solid #1e293b;
+      padding: 32px 40px 24px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+    header p {
+      margin-top: 6px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    .header-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .meta-chip {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .meta-chip span { color: #e2e8f0; font-weight: 600; }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
+
+    /* ── Summary Cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .summary-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .summary-card .count {
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .summary-card .label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .summary-card .sub   { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+    .card-green  .count { color: #4ade80; }
+    .card-yellow .count { color: #facc15; }
+    .card-red    .count { color: #f87171; }
+    .card-blue   .count { color: #60a5fa; }
+    .card-orange .count { color: #fb923c; }
+
+    /* ── Section Headers ── */
+    .section { margin-bottom: 40px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .section-header h2 { font-size: 1.15rem; font-weight: 600; color: #f1f5f9; }
+    .module-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-complete { background: #14532d; color: #4ade80; border: 1px solid #166534; }
+    .badge-partial  { background: #713f12; color: #facc15; border: 1px solid #854d0e; }
+    .badge-missing  { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; }
+    .badge-critical { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+
+    .progress-bar {
+      height: 6px;
+      background: #1e293b;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+    .fill-green  { background: #4ade80; }
+    .fill-yellow { background: #facc15; }
+    .fill-red    { background: #f87171; }
+    .fill-blue   { background: #60a5fa; }
+
+    /* ── Tables ── */
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .api-table th {
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    .api-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e293b;
+      vertical-align: middle;
+    }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table tr:hover td { background: #1a2234; }
+
+    /* ── Method badges ── */
+    .method {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      min-width: 56px;
+      text-align: center;
+    }
+    .method-get    { background: #0c4a6e; color: #38bdf8; border: 1px solid #0369a1; }
+    .method-post   { background: #14532d; color: #4ade80; border: 1px solid #166534; }
+    .method-patch  { background: #713f12; color: #fbbf24; border: 1px solid #92400e; }
+    .method-delete { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; }
+    .method-put    { background: #312e81; color: #a5b4fc; border: 1px solid #3730a3; }
+
+    /* ── Status icons ── */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .status-done    { background: #14532d22; color: #4ade80; }
+    .status-stubbed { background: #71441222; color: #facc15; }
+    .status-missing { background: #7f1d1d22; color: #f87171; }
+    .status-critical{ background: #450a0a;   color: #fca5a5; border: 1px solid #7f1d1d; }
+
+    /* ── URL code ── */
+    .url {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.82rem;
+      color: #c4b5fd;
+    }
+    .url .path-param { color: #67e8f9; }
+
+    /* ── Perm badge ── */
+    .perm {
+      font-family: monospace;
+      font-size: 0.72rem;
+      background: #1e1b4b;
+      color: #a5b4fc;
+      border: 1px solid #3730a3;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    /* ── Critical issues table ── */
+    .severity {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .sev-critical { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .sev-high     { background: #431407; color: #fb923c; border: 1px solid #9a3412; }
+    .sev-medium   { background: #422006; color: #fbbf24; border: 1px solid #92400e; }
+
+    /* ── Module overview table ── */
+    .overview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin-bottom: 40px;
+    }
+    .overview-table th {
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    .overview-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #1e293b;
+      vertical-align: middle;
+    }
+    .overview-table tr:last-child td { border-bottom: none; }
+    .overview-table tr:hover td { background: #1a2234; }
+
+    .inline-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .inline-track {
+      flex: 1;
+      height: 6px;
+      background: #334155;
+      border-radius: 99px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .inline-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+    .fill-100 { background: #4ade80; width: 100%; }
+    .fill-27  { background: #facc15; width: 27%; }
+    .fill-13  { background: #f87171; width: 13%; }
+    .fill-0   { background: #475569; width: 2px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 4px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 6px 16px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn.active { background: #334155; color: #f1f5f9; }
+    .tab-btn:hover:not(.active) { color: #cbd5e1; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Collapsible sections ── */
+    .collapsible-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 12px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px 8px 0 0;
+      user-select: none;
+    }
+    .collapsible-header:hover { background: #253045; }
+    .collapsible-header.collapsed { border-radius: 8px; }
+    .collapsible-body {
+      border: 1px solid #334155;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
+    }
+    .collapsible-body.hidden { display: none; }
+    .chevron { transition: transform 0.2s; font-size: 0.8rem; }
+    .collapsed .chevron { transform: rotate(-90deg); }
+    .collapsible-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #f1f5f9;
+    }
+    .endpoint-count {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 400;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #475569;
+      font-size: 0.78rem;
+      border-top: 1px solid #1e293b;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 Trakv — API Audit Report</h1>
+  <p>Comparison of implemented endpoints vs. specification documents (v6.2 / v6.3)</p>
+  <div class="header-meta">
+    <div class="meta-chip">Generated: <span>2026-05-09</span></div>
+    <div class="meta-chip">Backend: <span>Spring Boot 4.0.5 / Java 25</span></div>
+    <div class="meta-chip">Spec version: <span>v6.2 / v6.3</span></div>
+    <div class="meta-chip">Total endpoints in spec: <span>~74</span></div>
+    <div class="meta-chip">Implemented: <span>24</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card card-green">
+      <div class="count">18</div>
+      <div class="label">M3 — Tasks & Activities</div>
+      <div class="sub">100% complete</div>
+    </div>
+    <div class="summary-card card-yellow">
+      <div class="count">4/15</div>
+      <div class="label">M2 — Lead Management</div>
+      <div class="sub">27% implemented</div>
+    </div>
+    <div class="summary-card card-red">
+      <div class="count">2/16</div>
+      <div class="label">M1 — Auth & Team</div>
+      <div class="sub">13% implemented</div>
+    </div>
+    <div class="summary-card card-orange">
+      <div class="count">0/25</div>
+      <div class="label">M4 — Students & Apps</div>
+      <div class="sub">Not started</div>
+    </div>
+    <div class="summary-card card-blue">
+      <div class="count">7</div>
+      <div class="label">Critical Bugs</div>
+      <div class="sub">In existing code</div>
+    </div>
+  </div>
+
+  <!-- Module Overview -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Module Overview</h2>
+    </div>
+    <table class="overview-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Spec Endpoints</th>
+          <th>Implemented</th>
+          <th>Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>M3</strong> — Activities &amp; Tasks</td>
+          <td>18</td>
+          <td>18</td>
+          <td>
+            <div class="inline-bar">
+              <div class="inline-track"><div class="inline-fill fill-100"></div></div>
+              <span style="color:#4ade80;font-size:.8rem;font-weight:600;">100%</span>
+            </div>
+          </td>
+          <td><span class="module-badge badge-complete">Complete</span></td>
+        </tr>
+        <tr>
+          <td><strong>M2</strong> — Lead Management</td>
+          <td>15</td>
+          <td>4 (1 stubbed)</td>
+          <td>
+            <div class="inline-bar">
+              <div class="inline-track"><div class="inline-fill fill-27"></div></div>
+              <span style="color:#facc15;font-size:.8rem;font-weight:600;">27%</span>
+            </div>
+          </td>
+          <td><span class="module-badge badge-partial">Partial</span></td>
+        </tr>
+        <tr>
+          <td><strong>M1</strong> — Auth &amp; Team Management</td>
+          <td>16</td>
+          <td>2</td>
+          <td>
+            <div class="inline-bar">
+              <div class="inline-track"><div class="inline-fill fill-13"></div></div>
+              <span style="color:#f87171;font-size:.8rem;font-weight:600;">13%</span>
+            </div>
+          </td>
+          <td><span class="module-badge badge-missing">Critical gaps</span></td>
+        </tr>
+        <tr>
+          <td><strong>M4</strong> — Students &amp; Applications</td>
+          <td>~25</td>
+          <td>0</td>
+          <td>
+            <div class="inline-bar">
+              <div class="inline-track"><div class="inline-fill fill-0"></div></div>
+              <span style="color:#64748b;font-size:.8rem;font-weight:600;">0%</span>
+            </div>
+          </td>
+          <td><span class="module-badge badge-missing">Not started</span></td>
+        </tr>
+        <tr>
+          <td><strong>M0</strong> — Common / Permissions</td>
+          <td>Shared lib</td>
+          <td>Partial</td>
+          <td>
+            <div class="inline-bar">
+              <div class="inline-track"><div class="inline-fill" style="background:#fb923c;width:50%;"></div></div>
+              <span style="color:#fb923c;font-size:.8rem;font-weight:600;">50%</span>
+            </div>
+          </td>
+          <td><span class="module-badge badge-partial">Permissions missing in Lead/Auth</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('m3')">M3 — Tasks &amp; Activities</button>
+    <button class="tab-btn" onclick="switchTab('m2')">M2 — Leads</button>
+    <button class="tab-btn" onclick="switchTab('m1')">M1 — Auth &amp; Team</button>
+    <button class="tab-btn" onclick="switchTab('m4')">M4 — Students &amp; Apps</button>
+    <button class="tab-btn" onclick="switchTab('bugs')">🔴 Critical Bugs</button>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB: M3
+  ════════════════════════════════════ -->
+  <div id="tab-m3" class="tab-content active">
+
+    <!-- Activities -->
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          📋 Activities
+          <span class="endpoint-count">7 endpoints</span>
+          <span class="module-badge badge-complete">Complete</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/activities</span></td>
+              <td><span class="perm">ACTIVITY_LOG</span></td>
+              <td>Log manual activity (call, meeting, note) against any entity</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/activities</span></td>
+              <td><span class="perm">ACTIVITY_VIEW</span></td>
+              <td>Cursor-paginated activity feed; optional filters: entityType, agentId</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/activities/lead/<span class="path-param">{leadId}</span></span></td>
+              <td>—</td>
+              <td>Unified activity + task timeline for a lead</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/activities/student/<span class="path-param">{studentId}</span></span></td>
+              <td>—</td>
+              <td>Unified timeline for student (includes pre-enrolment)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/activities/application/<span class="path-param">{applicationId}</span></span></td>
+              <td>—</td>
+              <td>Unified timeline for application</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-put">PUT</span></td>
+              <td><span class="url">/api/activities/<span class="path-param">{id}</span></span></td>
+              <td>—</td>
+              <td>Returns 405 — activities are immutable by design</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-delete">DELETE</span></td>
+              <td><span class="url">/api/activities/<span class="path-param">{id}</span></span></td>
+              <td>—</td>
+              <td>Returns 405 — activities are immutable by design</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="section">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ✅ Tasks
+          <span class="endpoint-count">11 endpoints</span>
+          <span class="module-badge badge-complete">Complete</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/tasks</span></td>
+              <td><span class="perm">TASK_CREATE</span></td>
+              <td>Create standalone task</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/tasks/board</span></td>
+              <td>—</td>
+              <td>Personal task board (overdue / in-progress / todo buckets)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/tasks/team</span></td>
+              <td><span class="perm">TASKS_MANAGE_TEAM</span></td>
+              <td>Team task view — full supervised hierarchy; optional filters</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/tasks/summary</span></td>
+              <td><span class="perm">REPORTS_VIEW</span></td>
+              <td>Per-agent open / overdue / stuck / due-today counts</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/tasks/overdue-count</span></td>
+              <td>—</td>
+              <td>Overdue badge count for current user (cached 5 min)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span></span></td>
+              <td>—</td>
+              <td>Full task detail including full reschedule chain</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span>/reschedule</span></td>
+              <td><span class="perm">TASK_RESCHEDULE</span></td>
+              <td>Reschedule: marks parent SUPERSEDED, creates child atomically</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span>/assign</span></td>
+              <td><span class="perm">TASK_REASSIGN</span></td>
+              <td>Reassign task to different user (Manager/Admin only)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span>/complete</span></td>
+              <td><span class="perm">TASK_COMPLETE</span></td>
+              <td>Mark task DONE with completion note (min 10 chars)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span>/cancel</span></td>
+              <td><span class="perm">TASK_CANCEL</span></td>
+              <td>Cancel task (distinct from SUPERSEDED by reschedule)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/tasks/<span class="path-param">{id}</span>/status?status=IN_PROGRESS</span></td>
+              <td>—</td>
+              <td>Move task to IN_PROGRESS; any other value returns 400</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tab-m3 -->
+
+
+  <!-- ════════════════════════════════════
+       TAB: M2
+  ════════════════════════════════════ -->
+  <div id="tab-m2" class="tab-content">
+
+    <!-- Implemented -->
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ✅ Implemented Lead Endpoints
+          <span class="endpoint-count">4 of 15</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/leads</span></td>
+              <td><span class="perm">LEAD_VIEW</span></td>
+              <td>Retrieve all leads scoped to current tenant</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{leadId}</span></span></td>
+              <td><span class="perm">LEAD_VIEW</span></td>
+              <td>Retrieve detailed lead info with activity timeline</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/leads</span></td>
+              <td><span class="perm">LEAD_CREATE</span></td>
+              <td>Add new lead (returns 200 — should be 201)</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/leads/search</span></td>
+              <td><span class="perm">LEAD_VIEW</span></td>
+              <td>Full-text search on leads</td>
+              <td><span class="status status-stubbed">⚠ Stubbed — returns []</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Missing -->
+    <div class="section">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Missing Lead Endpoints
+          <span class="endpoint-count">11 of 15</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{id}</span></span></td>
+              <td><span class="perm">LEAD_EDIT</span></td>
+              <td>Update lead fields (partial update)</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-delete">DELETE</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{id}</span></span></td>
+              <td><span class="perm">LEAD_DELETE</span></td>
+              <td>Soft-delete lead (sets is_archived = true)</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{id}</span>/stage</span></td>
+              <td><span class="perm">LEAD_QUALIFY</span></td>
+              <td>Stage transition — sets qualified_by, qualified_at</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/leads/stage-counts</span></td>
+              <td><span class="perm">LEAD_VIEW</span></td>
+              <td>Pipeline funnel counts per stage</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/leads/duplicate-check</span></td>
+              <td><span class="perm">LEAD_VIEW</span></td>
+              <td>Check if lead with same email/phone exists in tenant</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/leads/bulk</span></td>
+              <td><span class="perm">LEAD_ASSIGN</span></td>
+              <td>Bulk assign / bulk update leads</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{id}</span>/tags</span></td>
+              <td><span class="perm">LEAD_EDIT</span></td>
+              <td>Add tags to a lead</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-delete">DELETE</span></td>
+              <td><span class="url">/api/leads/<span class="path-param">{id}</span>/tags/<span class="path-param">{tagId}</span></span></td>
+              <td><span class="perm">LEAD_EDIT</span></td>
+              <td>Remove a tag from a lead</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/imports</span></td>
+              <td><span class="perm">LEAD_IMPORT</span></td>
+              <td>Upload CSV for bulk lead import</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/imports/<span class="path-param">{batchId}</span></span></td>
+              <td><span class="perm">LEAD_IMPORT</span></td>
+              <td>Get import batch status &amp; progress</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/imports/<span class="path-param">{batchId}</span>/errors</span></td>
+              <td><span class="perm">LEAD_IMPORT</span></td>
+              <td>Get row-level import errors for a batch</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tab-m2 -->
+
+
+  <!-- ════════════════════════════════════
+       TAB: M1
+  ════════════════════════════════════ -->
+  <div id="tab-m1" class="tab-content">
+
+    <!-- Implemented -->
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ✅ Implemented Auth Endpoints
+          <span class="endpoint-count">5 of 16</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/login</span></td>
+              <td>None</td>
+              <td>Login — returns JWT + tenantId + user metadata</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/register</span></td>
+              <td>Optional JWT</td>
+              <td>Register new user; tenantId from JWT or request body</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/users/me</span></td>
+              <td>JWT</td>
+              <td>Return current user profile including tenantId</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/users</span></td>
+              <td>JWT</td>
+              <td>List all users in current tenant</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/users/<span class="path-param">{id}</span></span></td>
+              <td>JWT</td>
+              <td>Fetch specific user by ID</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/users/<span class="path-param">{id}</span>/deactivate</span></td>
+              <td>JWT</td>
+              <td>Deactivate user account</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/users/<span class="path-param">{id}</span>/reactivate</span></td>
+              <td>JWT</td>
+              <td>Reactivate previously deactivated user</td>
+              <td><span class="status status-done">✓ Done</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Missing Auth -->
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Missing Auth Endpoints
+          <span class="endpoint-count">6 endpoints</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/refresh</span></td>
+              <td>Refresh token</td>
+              <td>Rotate JWT access + refresh token pair</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/logout</span></td>
+              <td>JWT</td>
+              <td>Blacklist token on logout</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/forgot-password</span></td>
+              <td>None</td>
+              <td>Send password reset email</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/reset-password</span></td>
+              <td>Reset token</td>
+              <td>Set new password via reset token</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/mfa/verify</span></td>
+              <td>Partial JWT</td>
+              <td>Verify OTP for MFA second factor</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/auth/accept-invite</span></td>
+              <td>Invite token</td>
+              <td>Accept team invite and set password</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Missing Team -->
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Missing Team Management Endpoints
+          <span class="endpoint-count">5 endpoints</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/team</span></td>
+              <td><span class="perm">USER_VIEW_TEAM</span></td>
+              <td>List all team members with their supervisor chain</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/team/invite</span></td>
+              <td><span class="perm">USER_MANAGE</span></td>
+              <td>Invite new team member with role + supervisor assignment</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-patch">PATCH</span></td>
+              <td><span class="url">/api/team/<span class="path-param">{id}</span>/supervisor</span></td>
+              <td><span class="perm">USER_MANAGE</span></td>
+              <td>Reassign supervisor for a team member</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-get">GET</span></td>
+              <td><span class="url">/api/team/supervision-tree</span></td>
+              <td><span class="perm">USER_VIEW_TEAM</span></td>
+              <td>Full org hierarchy tree (recursive)</td>
+              <td><span class="severity sev-medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Missing Setup -->
+    <div class="section">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Missing Onboarding / Setup Endpoints
+          <span class="endpoint-count">2 endpoints</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/setup/check-slug</span></td>
+              <td>None</td>
+              <td>Check if tenant slug is available before registration</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="method method-post">POST</span></td>
+              <td><span class="url">/api/setup/register</span></td>
+              <td>None</td>
+              <td>5-step onboarding wizard — creates tenant + first admin</td>
+              <td><span class="severity sev-high">High</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tab-m1 -->
+
+
+  <!-- ════════════════════════════════════
+       TAB: M4
+  ════════════════════════════════════ -->
+  <div id="tab-m4" class="tab-content">
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Student Profile Endpoints
+          <span class="endpoint-count">Not started</span>
+          <span class="module-badge badge-missing">Missing</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/students</span></td><td><span class="perm">STUDENT_VIEW</span></td><td>List students in tenant</td></tr>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/students/<span class="path-param">{id}</span></span></td><td><span class="perm">STUDENT_VIEW</span></td><td>Full student profile</td></tr>
+            <tr><td><span class="method method-post">POST</span></td><td><span class="url">/api/students</span></td><td><span class="perm">STUDENT_CREATE</span></td><td>Create student from qualified lead (enrolment pre-check)</td></tr>
+            <tr><td><span class="method method-patch">PATCH</span></td><td><span class="url">/api/students/<span class="path-param">{id}</span></span></td><td><span class="perm">STUDENT_EDIT</span></td><td>Update student profile</td></tr>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/students/<span class="path-param">{id}</span>/documents</span></td><td><span class="perm">STUDENT_VIEW</span></td><td>List student documents</td></tr>
+            <tr><td><span class="method method-post">POST</span></td><td><span class="url">/api/students/<span class="path-param">{id}</span>/documents</span></td><td><span class="perm">STUDENT_EDIT</span></td><td>Upload student document</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" style="margin-bottom:20px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          ❌ Application Management Endpoints
+          <span class="endpoint-count">Not started</span>
+          <span class="module-badge badge-missing">Missing</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Permission</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/applications</span></td><td><span class="perm">APPLICATION_VIEW</span></td><td>List applications in scope</td></tr>
+            <tr><td><span class="method method-post">POST</span></td><td><span class="url">/api/applications</span></td><td><span class="perm">APPLICATION_CREATE</span></td><td>Create new application for a student</td></tr>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/applications/<span class="path-param">{id}</span></span></td><td><span class="perm">APPLICATION_VIEW</span></td><td>Full application detail with stage history</td></tr>
+            <tr><td><span class="method method-patch">PATCH</span></td><td><span class="url">/api/applications/<span class="path-param">{id}</span>/stage</span></td><td><span class="perm">APPLICATION_EDIT</span></td><td>Advance application to next stage</td></tr>
+            <tr><td><span class="method method-patch">PATCH</span></td><td><span class="url">/api/applications/<span class="path-param">{id}</span></span></td><td><span class="perm">APPLICATION_EDIT</span></td><td>Update application fields</td></tr>
+            <tr><td><span class="method method-get">GET</span></td><td><span class="url">/api/applications/<span class="path-param">{id}</span>/commission</span></td><td><span class="perm">COMMISSION_VIEW</span></td><td>View commission for application</td></tr>
+            <tr><td><span class="method method-post">POST</span></td><td><span class="url">/api/applications/<span class="path-param">{id}</span>/documents</span></td><td><span class="perm">APPLICATION_EDIT</span></td><td>Upload application document</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-m4 -->
+
+
+  <!-- ════════════════════════════════════
+       TAB: BUGS
+  ════════════════════════════════════ -->
+  <div id="tab-bugs" class="tab-content">
+    <div class="section">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          🔴 Critical — Blocks Production Deployment
+          <span class="endpoint-count">3 issues</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Severity</th><th>Location</th><th>Issue</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="severity sev-critical">Critical</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td><code style="color:#fca5a5;background:#450a0a;padding:2px 6px;border-radius:3px;font-size:0.8rem;">getCurrentUserId()</code> hardcoded to return <code style="color:#fca5a5">1</code></td>
+              <td>Read from <code style="font-size:0.8rem">SecurityContextHolder</code> / <code style="font-size:0.8rem">TenantContext.getUserId()</code></td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-critical">Critical</span></td>
+              <td><span class="url">JwtTokenUtil.java</span></td>
+              <td>JWT secret hardcoded in source instead of environment variable</td>
+              <td>Read from <code style="font-size:0.8rem">${JWT_SECRET}</code> env var only</td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-critical">Critical</span></td>
+              <td><span class="url">All controllers</span></td>
+              <td><code style="color:#fca5a5;background:#450a0a;padding:2px 6px;border-radius:3px;font-size:0.8rem;">@CrossOrigin(origins = "*")</code> — overrides SecurityConfig CORS</td>
+              <td>Remove from controllers; configure CORS only in SecurityConfig</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:16px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          🟠 High — Spec Compliance Issues
+          <span class="endpoint-count">4 issues</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Severity</th><th>Location</th><th>Issue</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="severity sev-high">High</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td>No LEAD_VIEW / LEAD_CREATE permission checks on endpoints</td>
+              <td>Add <code style="font-size:0.8rem">requirePermission(Permissions.LEAD_VIEW)</code> calls via TenantContext</td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-high">High</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td>No VisibilityScope enforcement — COUNSELLOR can see all tenant leads</td>
+              <td>Filter lead queries through <code style="font-size:0.8rem">visibilityScope.forCurrentUser()</code></td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-high">High</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td><code style="color:#fb923c">POST /api/leads</code> returns HTTP 200 instead of 201</td>
+              <td>Change to <code style="font-size:0.8rem">ResponseEntity.status(HttpStatus.CREATED).body(...)</code></td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-high">High</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td>Tenant extracted manually from token instead of using TenantContext</td>
+              <td>Replace manual JWT parsing with <code style="font-size:0.8rem">TenantContext.getTenantId()</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:16px;">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <div class="collapsible-title">
+          🟡 Medium — Quality / Tech Debt
+          <span class="endpoint-count">3 issues</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <table class="api-table">
+          <thead>
+            <tr><th>Severity</th><th>Location</th><th>Issue</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="severity sev-medium">Medium</span></td>
+              <td><span class="url">LeadController.java</span></td>
+              <td><code style="color:#fbbf24">GET /api/leads/search</code> is stubbed — returns empty array</td>
+              <td>Implement full-text search using PostgreSQL <code style="font-size:0.8rem">ILIKE</code> or tsvector</td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-medium">Medium</span></td>
+              <td><span class="url">AuthService.java</span></td>
+              <td>Generic <code style="color:#fbbf24">RuntimeException</code> thrown instead of typed AppException</td>
+              <td>Throw <code style="font-size:0.8rem">AppException</code> subclasses for proper HTTP response codes</td>
+            </tr>
+            <tr>
+              <td><span class="severity sev-medium">Medium</span></td>
+              <td><span class="url">ConsultancyController.java</span></td>
+              <td>Separate <code style="color:#fbbf24">consultancies</code> table not linked to <code style="color:#fbbf24">tenants</code> UUID table</td>
+              <td>Unify onboarding: create tenant record (UUID) during consultancy setup</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-bugs -->
+
+</div><!-- /container -->
+
+<footer>
+  Trakv API Audit Report &nbsp;·&nbsp; Spec v6.2 / v6.3 &nbsp;·&nbsp; Generated 2026-05-09
+</footer>
+
+<script>
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCollapsible(header) {
+    const body = header.nextElementSibling;
+    header.classList.toggle('collapsed');
+    body.classList.toggle('hidden');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack · M6 Owner Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0B1622;--ink2:#152636;--ink3:#1C3448;
+  --gold:#C8890E;--gold2:#A87108;--gold-lt:#FDF6E3;--gold-mid:#F5D888;
+  --amber:#E09520;--amber-lt:#FDF4E6;--amber-mid:#F5CA80;
+  --ivory:#FAF8F3;--ivory2:#F1EBE0;--ivory3:#E6DECE;
+  --white:#FFFFFF;
+  --coral:#D94848;--coral-lt:#FEF0F0;
+  --emerald:#177A5A;--emerald-lt:#EBF7F3;
+  --sky:#186498;--sky-lt:#E8F2FB;
+  --violet:#5930A0;--violet-lt:#F0EBFD;
+  --slate:#586470;--muted:#8898A6;
+  --border:#D8D0C2;--border2:#C4BAA8;
+  --shadow-sm:0 1px 3px rgba(11,22,34,.07);
+  --shadow:0 2px 10px rgba(11,22,34,.1);
+  --shadow-lg:0 10px 40px rgba(11,22,34,.16);
+  --r:10px;--r-lg:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#09121C;color:var(--ink);min-height:100vh}
+
+/* NAV */
+.nav-bar{position:sticky;top:0;z-index:200;background:var(--ink);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-brand{padding:0 20px;font-family:'Fraunces',serif;font-size:17px;color:#FAF8F3;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);height:46px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav-brand span{color:#F5D888}
+.nav-brand small{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.28);font-weight:400;letter-spacing:.06em;text-transform:uppercase}
+.nav-tabs{display:flex;flex:1}
+.nav-tab{padding:0 18px;height:46px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;white-space:nowrap;color:rgba(255,255,255,.42);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;border-right:1px solid rgba(255,255,255,.05);text-decoration:none}
+.nav-tab:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.04)}
+.nav-tab.active{color:#F5D888;border-bottom-color:#F5D888;background:rgba(200,137,14,.08)}
+.tab-num{font-size:10px;background:rgba(255,255,255,.1);border-radius:20px;padding:1px 7px}
+.nav-tab.active .tab-num{background:rgba(245,216,136,.2);color:#F5D888}
+
+/* SCREENS */
+.screen{display:none;min-height:calc(100vh - 46px);background:var(--ivory)}
+.screen.active{display:flex;flex-direction:column}
+.app-shell{display:flex;flex:1;height:calc(100vh - 46px);overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:212px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,.06)}
+.sb-logo{padding:18px 18px 14px;font-family:'Fraunces',serif;font-size:20px;color:#FAF8F3;border-bottom:1px solid rgba(255,255,255,.06);line-height:1}
+.sb-logo span{color:#F5D888}
+.sb-logo small{display:block;font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(255,255,255,.28);font-weight:400;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.sb-nav{flex:1;padding:12px 0}
+.sb-label{padding:8px 18px 3px;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13px;font-weight:500;color:rgba(255,255,255,.48);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.sb-item:hover{color:rgba(255,255,255,.82);background:rgba(255,255,255,.04)}
+.sb-item.active{color:#F5D888;background:rgba(200,137,14,.1);border-left-color:#F5D888}
+.sb-icon{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--coral);color:#fff;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user{display:flex;align-items:center;gap:9px}
+.sb-uname{font-size:12px;color:#FAF8F3;font-weight:600}
+.sb-urole{font-size:10px;color:rgba(255,255,255,.32)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--ivory);display:flex;flex-direction:column}
+.topbar{height:50px;padding:0 22px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;flex-shrink:0}
+.tb-title{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);font-weight:600}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.page{padding:22px;flex:1}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--gold2)}
+.btn-amber{background:var(--amber);color:var(--ink)}
+.btn-amber:hover{filter:brightness(1.08)}
+.btn-outline{background:transparent;color:var(--ink2);border:1.5px solid var(--border2)}
+.btn-outline:hover{border-color:var(--ink);background:var(--ivory2)}
+.btn-ghost{background:transparent;color:var(--slate);border:none}
+.btn-ghost:hover{color:var(--ink);background:var(--ivory2)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 10px;font-size:10px;border-radius:6px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-title{font-size:13px;font-weight:700;color:var(--ink)}
+.card-body{padding:18px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.b-gold  {background:var(--gold-lt);color:var(--gold2)}
+.b-amber {background:var(--amber-lt);color:#8B5710}
+.b-green {background:var(--emerald-lt);color:var(--emerald)}
+.b-red   {background:var(--coral-lt);color:var(--coral)}
+.b-sky   {background:var(--sky-lt);color:var(--sky)}
+.b-violet{background:var(--violet-lt);color:var(--violet)}
+.b-slate {background:#EEF2F6;color:var(--slate)}
+
+/* INPUTS */
+.inp{padding:8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--gold)}
+.sel{padding:8px 30px 8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A6A7A' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--ivory2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(216,208,194,.4);transition:background .1s}
+tbody tr:hover{background:rgba(200,137,14,.03)}
+tbody td{padding:11px 14px;font-size:12px;color:var(--ink2);vertical-align:middle}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.flex-c{display:flex;align-items:center;gap:8px}
+.flex-sb{display:flex;justify-content:space-between;align-items:center}
+.frow{display:flex;flex-direction:column;gap:4px}
+.mb8{margin-bottom:8px}.mb14{margin-bottom:14px}.mb18{margin-bottom:18px}.mb22{margin-bottom:22px}
+.mt10{margin-top:10px}.mt14{margin-top:14px}
+
+/* SS STRIP */
+.ss{background:var(--ink);padding:10px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ss-mod{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#F5D888}
+.ss-name{font-size:13px;font-weight:600;color:rgba(250,248,243,.85)}
+.ss-desc{font-size:11px;color:rgba(250,248,243,.3);margin-left:auto}
+
+/* KPI CARD */
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;opacity:.06}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.kpi-val{font-family:'Fraunces',serif;font-size:34px;color:var(--ink);margin:6px 0 4px;line-height:1}
+.kpi-trend{font-size:11px;font-weight:600}
+.trend-up{color:var(--emerald)}
+.trend-dn{color:var(--coral)}
+.trend-flat{color:var(--muted)}
+
+/* FUNNEL */
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{width:100px;font-size:11px;font-weight:600;color:var(--slate);text-align:right;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--ivory2);border-radius:6px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;color:#fff;transition:width .3s}
+.funnel-count{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--ink2);flex-shrink:0}
+.funnel-pct{width:36px;text-align:right;font-size:10px;color:var(--muted);flex-shrink:0}
+
+/* AGENT ROW */
+.agent-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(216,208,194,.4)}
+.agent-row:last-child{border-bottom:none}
+
+/* TOGGLE */
+.tog{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0}
+.tog-on{background:var(--gold)}
+.tog-off{background:var(--border2)}
+.tog-thumb{position:absolute;top:3px;width:14px;height:14px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.tog-on .tog-thumb{left:19px}
+.tog-off .tog-thumb{left:3px}
+
+/* AV */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.av-sm{width:26px;height:26px;font-size:10px}
+.av-md{width:34px;height:34px;font-size:13px}
+.av-lg{width:40px;height:40px;font-size:15px}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--ivory2);border:1.5px solid var(--border2);border-radius:9px;padding:7px 12px;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--gold);background:var(--white)}
+.search-bar input{background:none;border:none;outline:none;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);flex:1}
+.search-bar input::placeholder{color:var(--muted)}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--white);border:1.5px solid var(--border2);color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover,.chip.on{border-color:var(--gold);color:var(--gold2);background:var(--gold-lt)}
+
+/* HINTS */
+.hint{background:var(--amber-lt);border:1px solid var(--amber-mid);border-radius:9px;padding:10px 14px;font-size:11px;color:#8B5710;display:flex;gap:8px}
+.ok  {background:var(--emerald-lt);border:1px solid #9DDCCF;border-radius:9px;padding:10px 14px;font-size:11px;color:#125944;display:flex;gap:8px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* PROG BAR */
+.prog-bar{height:4px;background:var(--ivory3);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px}
+
+/* INFO ROWS */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(216,208,194,.4);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--muted);font-weight:500}
+.info-val{color:var(--ink2);font-weight:600;text-align:right}
+
+/* DONUT RING (CSS only) */
+.donut-wrap{position:relative;width:90px;height:90px}
+.donut-svg{transform:rotate(-90deg)}
+.donut-track{fill:none;stroke:var(--ivory3);stroke-width:8}
+.donut-fill{fill:none;stroke-width:8;stroke-linecap:round}
+
+/* CHART BARS (CSS) */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:80px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{border-radius:4px 4px 0 0;width:100%;transition:height .3s;min-height:4px}
+.bar-lbl{font-size:9px;color:var(--muted);text-align:center}
+.bar-val{font-size:10px;font-weight:700;color:var(--ink2)}
+
+/* SECTION */
+.section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <div class="nav-brand">Edu<span>Track</span> <small>· M6</small></div>
+  <div class="nav-tabs">
+    <a class="nav-tab active" onclick="show('s1')" href="#">📊 Main Dashboard <span class="tab-num">1/5</span></a>
+    <a class="nav-tab" onclick="show('s2')" href="#">📉 Pipeline Funnel <span class="tab-num">2/5</span></a>
+    <a class="nav-tab" onclick="show('s3')" href="#">👥 Agent Performance <span class="tab-num">3/5</span></a>
+    <a class="nav-tab" onclick="show('s4')" href="#">📈 Lead Source Report <span class="tab-num">4/5</span></a>
+    <a class="nav-tab" onclick="show('s5')" href="#">💰 Revenue Forecast <span class="tab-num">5/5</span></a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     S1 — MAIN DASHBOARD
+═══════════════════════════════════════ -->
+<div id="s1" class="screen active">
+  <div class="ss"><span class="ss-mod">M6 · 1/5</span><span class="ss-name">Owner Dashboard</span><span class="ss-desc">P0 · Phase 1 · High Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+        <div class="sb-item"><span class="sb-icon">✈️</span>Travel</div>
+        <div class="sb-label">Settings</div>
+        <div class="sb-item"><span class="sb-icon">👥</span>Team</div>
+        <div class="sb-item"><span class="sb-icon">⚙️</span>Workspace</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#F5D888;color:#8B5710">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Good morning, Rahul 👋</span>
+        <div style="font-size:11px;color:var(--muted);margin-left:4px">Friday, March 8, 2025</div>
+        <div class="tb-actions">
+          <select class="sel" style="width:130px;font-size:11px;padding:6px 26px 6px 10px">
+            <option>This month</option>
+            <option>Last month</option>
+            <option>This quarter</option>
+          </select>
+          <button class="btn btn-outline btn-sm">⬇ Export</button>
+        </div>
+      </div>
+
+      <div class="page">
+        <!-- KPI Row -->
+        <div class="g4 mb18">
+          <div class="kpi" style="border-top:3px solid var(--gold)">
+            <div class="kpi-label">New Leads (Mar)</div>
+            <div class="kpi-val">38</div>
+            <div class="kpi-trend trend-up">↑ 12 vs Feb · +46%</div>
+          </div>
+          <div class="kpi" style="border-top:3px solid var(--sky)">
+            <div class="kpi-label">Active Students</div>
+            <div class="kpi-val">18</div>
+            <div class="kpi-trend trend-up">↑ 6 this month</div>
+          </div>
+          <div class="kpi" style="border-top:3px solid var(--emerald)">
+            <div class="kpi-label">Visas Approved</div>
+            <div class="kpi-val">5</div>
+            <div class="kpi-trend trend-up">↑ 2 this week</div>
+          </div>
+          <div class="kpi" style="border-top:3px solid var(--violet)">
+            <div class="kpi-label">Revenue (Mar)</div>
+            <div class="kpi-val" style="font-size:26px">₹4.2L</div>
+            <div class="kpi-trend trend-up">↑ ₹1.1L vs Feb</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 340px;gap:16px mb18">
+
+          <!-- Lead trend chart -->
+          <div class="card">
+            <div class="card-head"><span>📈</span><div class="card-title">Monthly Lead Volume</div><span class="badge b-green" style="margin-left:auto">↑ 46% MoM</span></div>
+            <div class="card-body">
+              <div class="bar-chart">
+                <div class="bar-col"><div class="bar-val">14</div><div class="bar" style="height:30%;background:var(--ivory3)"></div><div class="bar-lbl">Oct</div></div>
+                <div class="bar-col"><div class="bar-val">19</div><div class="bar" style="height:40%;background:var(--ivory3)"></div><div class="bar-lbl">Nov</div></div>
+                <div class="bar-col"><div class="bar-val">22</div><div class="bar" style="height:46%;background:var(--ivory3)"></div><div class="bar-lbl">Dec</div></div>
+                <div class="bar-col"><div class="bar-val">28</div><div class="bar" style="height:58%;background:var(--ivory3)"></div><div class="bar-lbl">Jan</div></div>
+                <div class="bar-col"><div class="bar-val">26</div><div class="bar" style="height:54%;background:var(--ivory3)"></div><div class="bar-lbl">Feb</div></div>
+                <div class="bar-col"><div class="bar-val" style="color:var(--gold)">38</div><div class="bar" style="height:79%;background:var(--gold)"></div><div class="bar-lbl" style="color:var(--gold);font-weight:700">Mar</div></div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:14px;font-size:11px;color:var(--muted)">
+                <span>Avg per month: <strong style="color:var(--ink)">24.5</strong></span>
+                <span>Best month: <strong style="color:var(--gold)">Mar (38)</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipeline mini funnel -->
+          <div class="card">
+            <div class="card-head"><span>📉</span><div class="card-title">Pipeline Snapshot</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s2')">Full view →</button></div>
+            <div class="card-body" style="padding:14px 18px">
+              <div class="funnel" style="gap:4px">
+                <div class="funnel-row"><div class="funnel-label">New</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:var(--ink2)">28</div></div><div class="funnel-count">28</div></div>
+                <div class="funnel-row"><div class="funnel-label">Contacted</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:82%;background:var(--sky)">34</div></div><div class="funnel-count">34</div></div>
+                <div class="funnel-row"><div class="funnel-label">Qualified</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:60%;background:var(--violet)">19</div></div><div class="funnel-count">19</div></div>
+                <div class="funnel-row"><div class="funnel-label">Counselling</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:52%;background:var(--emerald)">22</div></div><div class="funnel-count">22</div></div>
+                <div class="funnel-row"><div class="funnel-label">Applied</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:36%;background:var(--gold)">15</div></div><div class="funnel-count">15</div></div>
+                <div class="funnel-row"><div class="funnel-label">Visa</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:18%;background:var(--coral)">6</div></div><div class="funnel-count">6</div></div>
+                <div class="funnel-row"><div class="funnel-label">Enrolled</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:10%;background:#177A5A">3</div></div><div class="funnel-count">3</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent performance mini -->
+          <div class="card">
+            <div class="card-head"><span>👥</span><div class="card-title">Agent Performance</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s3')">Detail →</button></div>
+            <div class="card-body" style="padding:12px 16px">
+              <div class="agent-row">
+                <div class="av av-md" style="background:#F5D888;color:#8B5710">AK</div>
+                <div style="flex:1">
+                  <div class="flex-sb mb8"><strong style="font-size:13px">Arjun Kapoor</strong><span class="badge b-gold" style="font-size:9px">🏆 Top</span></div>
+                  <div class="prog-bar mb8"><div class="prog-fill" style="width:82%;background:var(--gold)"></div></div>
+                  <div style="display:flex;gap:10px;font-size:10px;color:var(--muted)">
+                    <span><strong style="color:var(--ink)">84</strong> leads</span>
+                    <span><strong style="color:var(--ink)">11</strong> students</span>
+                    <span><strong style="color:var(--emerald)">3</strong> enrolled</span>
+                  </div>
+                </div>
+              </div>
+              <div class="agent-row">
+                <div class="av av-md" style="background:#DDD6FE;color:#5930A0">PM</div>
+                <div style="flex:1">
+                  <div class="flex-sb mb8"><strong style="font-size:13px">Priya Mehta</strong><span class="badge b-violet" style="font-size:9px">Manager</span></div>
+                  <div class="prog-bar mb8"><div class="prog-fill" style="width:63%;background:var(--violet)"></div></div>
+                  <div style="display:flex;gap:10px;font-size:10px;color:var(--muted)">
+                    <span><strong style="color:var(--ink)">58</strong> leads</span>
+                    <span><strong style="color:var(--ink)">7</strong> students</span>
+                    <span><strong style="color:var(--emerald)">2</strong> enrolled</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+          <!-- Lead sources donut -->
+          <div class="card">
+            <div class="card-head"><span>🎯</span><div class="card-title">Lead Sources (Mar)</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s4')">Detail →</button></div>
+            <div class="card-body">
+              <div class="flex-c" style="gap:20px">
+                <!-- CSS donut -->
+                <div style="position:relative;width:90px;height:90px;flex-shrink:0">
+                  <svg width="90" height="90" viewBox="0 0 90 90">
+                    <circle cx="45" cy="45" r="34" fill="none" stroke="#E6DECE" stroke-width="10"/>
+                    <!-- Referral 34% -->
+                    <circle cx="45" cy="45" r="34" fill="none" stroke="#C8890E" stroke-width="10" stroke-dasharray="72.6 141" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+                    <!-- Website 26% -->
+                    <circle cx="45" cy="45" r="34" fill="none" stroke="#186498" stroke-width="10" stroke-dasharray="55.4 158.2" stroke-dashoffset="-72.6" transform="rotate(-90 45 45)"/>
+                    <!-- Walk-in 22% -->
+                    <circle cx="45" cy="45" r="34" fill="none" stroke="#5930A0" stroke-width="10" stroke-dasharray="46.9 166.7" stroke-dashoffset="-128" transform="rotate(-90 45 45)"/>
+                    <!-- Social 18% -->
+                    <circle cx="45" cy="45" r="34" fill="none" stroke="#177A5A" stroke-width="10" stroke-dasharray="38.4 175.2" stroke-dashoffset="-174.9" transform="rotate(-90 45 45)"/>
+                  </svg>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                    <div style="font-family:'Fraunces',serif;font-size:20px;color:var(--ink)">38</div>
+                    <div style="font-size:8px;color:var(--muted)">leads</div>
+                  </div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+                  <div class="flex-c" style="gap:8px;justify-content:space-between"><div class="flex-c" style="gap:6px"><div style="width:10px;height:10px;background:var(--gold);border-radius:3px;flex-shrink:0"></div><span style="font-size:12px">Referral</span></div><div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700">13 <span style="color:var(--muted);font-weight:400">(34%)</span></div></div>
+                  <div class="flex-c" style="gap:8px;justify-content:space-between"><div class="flex-c" style="gap:6px"><div style="width:10px;height:10px;background:var(--sky);border-radius:3px;flex-shrink:0"></div><span style="font-size:12px">Website</span></div><div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700">10 <span style="color:var(--muted);font-weight:400">(26%)</span></div></div>
+                  <div class="flex-c" style="gap:8px;justify-content:space-between"><div class="flex-c" style="gap:6px"><div style="width:10px;height:10px;background:var(--violet);border-radius:3px;flex-shrink:0"></div><span style="font-size:12px">Walk-in</span></div><div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700">8 <span style="color:var(--muted);font-weight:400">(22%)</span></div></div>
+                  <div class="flex-c" style="gap:8px;justify-content:space-between"><div class="flex-c" style="gap:6px"><div style="width:10px;height:10px;background:var(--emerald);border-radius:3px;flex-shrink:0"></div><span style="font-size:12px">Social Media</span></div><div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700">7 <span style="color:var(--muted);font-weight:400">(18%)</span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alerts -->
+          <div class="card">
+            <div class="card-head"><span>🔔</span><div class="card-title">Attention Required</div><span class="badge b-red" style="margin-left:auto">5 items</span></div>
+            <div class="card-body" style="padding:0">
+              <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer" class="flex-c">
+                <div style="width:8px;height:8px;background:var(--coral);border-radius:50%;flex-shrink:0;margin-top:4px"></div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--ink)">3 overdue tasks</div>
+                  <div style="font-size:11px;color:var(--muted)">Arjun has 3 tasks past due date</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" style="margin-left:auto">View</button>
+              </div>
+              <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                <div style="width:8px;height:8px;background:var(--amber);border-radius:50%;flex-shrink:0;margin-top:4px"></div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--ink)">Offer deadline expiring</div>
+                  <div style="font-size:11px;color:var(--muted)">Priya Krishnan — UoM offer expires Mar 14</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" style="margin-left:auto">View</button>
+              </div>
+              <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                <div style="width:8px;height:8px;background:var(--amber);border-radius:50%;flex-shrink:0;margin-top:4px"></div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--ink)">Bank statement expiring</div>
+                  <div style="font-size:11px;color:var(--muted)">Rohan Desai — expires Apr 10</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" style="margin-left:auto">View</button>
+              </div>
+              <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                <div style="width:8px;height:8px;background:var(--muted);border-radius:50%;flex-shrink:0;margin-top:4px"></div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--ink)">8 leads inactive 7+ days</div>
+                  <div style="font-size:11px;color:var(--muted)">No activity logged since Mar 1</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" style="margin-left:auto">View</button>
+              </div>
+              <div style="padding:11px 16px;display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                <div style="width:8px;height:8px;background:var(--muted);border-radius:50%;flex-shrink:0;margin-top:4px"></div>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--ink)">Subscription renewal in 12 days</div>
+                  <div style="font-size:11px;color:var(--muted)">Growth plan · ₹2,499 due Mar 20</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" style="margin-left:auto">View</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S2 — PIPELINE FUNNEL
+═══════════════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="ss"><span class="ss-mod">M6 · 2/5</span><span class="ss-name">Pipeline Funnel Analysis</span><span class="ss-desc">P0 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#F5D888;color:#8B5710">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Pipeline Funnel</span>
+        <div class="tb-actions">
+          <select class="sel" style="width:130px;font-size:11px;padding:6px 26px 6px 10px"><option>All agents</option><option>Arjun Kapoor</option><option>Priya Mehta</option></select>
+          <select class="sel" style="width:120px;font-size:11px;padding:6px 26px 6px 10px"><option>This month</option><option>Last 90 days</option></select>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Full funnel visual -->
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:16px mb18">
+          <div class="card">
+            <div class="card-head"><span>📉</span><div class="card-title">Conversion Funnel</div></div>
+            <div class="card-body">
+              <div class="funnel" style="gap:8px">
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">New</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:var(--ink2)">142 leads</div></div><div class="funnel-count">142</div><div class="funnel-pct">—</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Contacted</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:79%;background:var(--sky)">112</div></div><div class="funnel-count">112</div><div class="funnel-pct" style="color:var(--emerald)">79%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Qualified</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:64%;background:var(--violet)">91</div></div><div class="funnel-count">91</div><div class="funnel-pct" style="color:var(--emerald)">64%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Counselling</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:50%;background:#2B6CB0">71</div></div><div class="funnel-count">71</div><div class="funnel-pct" style="color:var(--emerald)">50%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Applied</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:32%;background:var(--gold)">46</div></div><div class="funnel-count">46</div><div class="funnel-pct" style="color:var(--amber)">32%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Offer Received</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:18%;background:#D97706">26</div></div><div class="funnel-count">26</div><div class="funnel-pct" style="color:var(--amber)">18%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Visa Approved</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:10%;background:var(--emerald)">15</div></div><div class="funnel-count">15</div><div class="funnel-pct" style="color:var(--amber)">10%</div></div>
+                <div class="funnel-row"><div class="funnel-label" style="width:120px">Enrolled</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:7%;background:#0F7B57">10</div></div><div class="funnel-count">10</div><div class="funnel-pct" style="color:var(--coral)">7%</div></div>
+              </div>
+
+              <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Stage-to-Stage Conversion</div>
+                <div class="g4" style="gap:8px">
+                  <div style="text-align:center;background:var(--emerald-lt);border-radius:8px;padding:10px"><div style="font-family:'Fraunces',serif;font-size:20px;color:var(--emerald)">79%</div><div style="font-size:9px;color:var(--muted)">New→Contact</div></div>
+                  <div style="text-align:center;background:var(--emerald-lt);border-radius:8px;padding:10px"><div style="font-family:'Fraunces',serif;font-size:20px;color:var(--emerald)">81%</div><div style="font-size:9px;color:var(--muted)">Contact→Qual</div></div>
+                  <div style="text-align:center;background:var(--amber-lt);border-radius:8px;padding:10px"><div style="font-family:'Fraunces',serif;font-size:20px;color:var(--amber)">51%</div><div style="font-size:9px;color:var(--muted)">Qual→Applied</div></div>
+                  <div style="text-align:center;background:var(--coral-lt);border-radius:8px;padding:10px"><div style="font-family:'Fraunces',serif;font-size:20px;color:var(--coral)">22%</div><div style="font-size:9px;color:var(--muted)">Applied→Enrolled</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drop-off analysis -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-head"><span>⚠️</span><div class="card-title">Biggest Drop-offs</div></div>
+              <div class="card-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+                <div style="background:var(--coral-lt);border-radius:8px;padding:10px 12px;border-left:3px solid var(--coral)">
+                  <div style="font-size:12px;font-weight:700;color:var(--coral)">Applied → Enrolled: 22%</div>
+                  <div style="font-size:11px;color:var(--slate);margin-top:3px">High drop-off after offer. Students reconsidering or delaying.</div>
+                </div>
+                <div style="background:var(--amber-lt);border-radius:8px;padding:10px 12px;border-left:3px solid var(--amber)">
+                  <div style="font-size:12px;font-weight:700;color:var(--amber)">Qualified → Applied: 51%</div>
+                  <div style="font-size:11px;color:var(--slate);margin-top:3px">Many counselled leads not converting. May need stronger follow-through.</div>
+                </div>
+                <div style="background:var(--emerald-lt);border-radius:8px;padding:10px 12px;border-left:3px solid var(--emerald)">
+                  <div style="font-size:12px;font-weight:700;color:var(--emerald)">New → Contacted: 79% ✓</div>
+                  <div style="font-size:11px;color:var(--slate);margin-top:3px">Strong first-touch rate. Response time is working well.</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>📊</span><div class="card-title">Not Interested / Not Eligible</div></div>
+              <div class="card-body" style="padding:12px 16px">
+                <div class="info-row"><span class="info-key">Not interested</span><strong class="info-val" style="color:var(--coral)">24 leads</strong></div>
+                <div class="info-row"><span class="info-key">Not eligible</span><strong class="info-val" style="color:var(--coral)">18 leads</strong></div>
+                <div class="info-row"><span class="info-key">Common reason</span><span class="info-val">Budget concern</span></div>
+                <div class="info-row"><span class="info-key">Avg time to drop</span><strong class="info-val">14 days</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S3 — AGENT PERFORMANCE
+═══════════════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="ss"><span class="ss-mod">M6 · 3/5</span><span class="ss-name">Agent Performance</span><span class="ss-desc">P0 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+        <div class="sb-label">Settings</div>
+        <div class="sb-item"><span class="sb-icon">👥</span>Team</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#F5D888;color:#8B5710">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Agent Performance</span>
+        <div class="tb-actions">
+          <select class="sel" style="width:130px;font-size:11px;padding:6px 26px 6px 10px"><option selected>This month</option><option>Last 3 months</option><option>This year</option></select>
+          <button class="btn btn-outline btn-sm">⬇ Export CSV</button>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Team summary KPIs -->
+        <div class="g4 mb18">
+          <div class="kpi" style="border-top:3px solid var(--gold)"><div class="kpi-label">Team Leads (Mar)</div><div class="kpi-val">38</div><div class="kpi-trend trend-up">↑ 12 vs Feb</div></div>
+          <div class="kpi" style="border-top:3px solid var(--emerald)"><div class="kpi-label">Enrolled (Mar)</div><div class="kpi-val">5</div><div class="kpi-trend trend-up">↑ 2 vs Feb</div></div>
+          <div class="kpi" style="border-top:3px solid var(--sky)"><div class="kpi-label">Avg Response Time</div><div class="kpi-val" style="font-size:24px">4.2h</div><div class="kpi-trend trend-up">↓ vs target 6h</div></div>
+          <div class="kpi" style="border-top:3px solid var(--violet)"><div class="kpi-label">Task Completion</div><div class="kpi-val">74%</div><div class="kpi-trend trend-dn">↓ 8% target gap</div></div>
+        </div>
+
+        <!-- Per-agent cards -->
+        <div class="g2 mb14">
+          <!-- Arjun -->
+          <div class="card">
+            <div style="padding:18px 20px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--gold-lt),#FFF)">
+              <div class="flex-c" style="gap:12px;margin-bottom:10px">
+                <div class="av av-lg" style="background:#F5D888;color:#8B5710">AK</div>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--ink)">Arjun Kapoor</div>
+                  <div style="font-size:11px;color:var(--muted)">Agent · joined Jan 2025</div>
+                </div>
+                <span class="badge b-gold" style="margin-left:auto">🏆 Top Performer</span>
+              </div>
+              <div class="g4" style="gap:8px">
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--gold)">22</div><div style="font-size:9px;color:var(--muted)">Leads</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--emerald)">3</div><div style="font-size:9px;color:var(--muted)">Enrolled</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px">34</div><div style="font-size:9px;color:var(--muted)">Activities</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--sky)">3.2h</div><div style="font-size:9px;color:var(--muted)">Resp. time</div></div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:14px 18px">
+              <div class="info-row"><span class="info-key">Tasks completed</span><strong class="info-val">12 / 14 <span style="color:var(--emerald)">(86%)</span></strong></div>
+              <div class="info-row"><span class="info-key">Overdue tasks</span><strong class="info-val" style="color:var(--coral)">3</strong></div>
+              <div class="info-row"><span class="info-key">Leads converted</span><strong class="info-val">3 / 22 <span style="color:var(--muted)">(14%)</span></strong></div>
+              <div class="info-row"><span class="info-key">Revenue generated</span><strong class="info-val" style="color:var(--gold)">₹2.8L</strong></div>
+            </div>
+          </div>
+
+          <!-- Priya -->
+          <div class="card">
+            <div style="padding:18px 20px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--violet-lt),#FFF)">
+              <div class="flex-c" style="gap:12px;margin-bottom:10px">
+                <div class="av av-lg" style="background:#DDD6FE;color:#5930A0">PM</div>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--ink)">Priya Mehta</div>
+                  <div style="font-size:11px;color:var(--muted)">Manager · joined Nov 2024</div>
+                </div>
+                <span class="badge b-violet" style="margin-left:auto">Manager</span>
+              </div>
+              <div class="g4" style="gap:8px">
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--violet)">16</div><div style="font-size:9px;color:var(--muted)">Leads</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--emerald)">2</div><div style="font-size:9px;color:var(--muted)">Enrolled</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px">27</div><div style="font-size:9px;color:var(--muted)">Activities</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif;font-size:22px;color:var(--sky)">5.8h</div><div style="font-size:9px;color:var(--muted)">Resp. time</div></div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:14px 18px">
+              <div class="info-row"><span class="info-key">Tasks completed</span><strong class="info-val">9 / 12 <span style="color:var(--amber)">(75%)</span></strong></div>
+              <div class="info-row"><span class="info-key">Overdue tasks</span><strong class="info-val" style="color:var(--amber)">1</strong></div>
+              <div class="info-row"><span class="info-key">Leads converted</span><strong class="info-val">2 / 16 <span style="color:var(--muted)">(13%)</span></strong></div>
+              <div class="info-row"><span class="info-key">Revenue generated</span><strong class="info-val" style="color:var(--gold)">₹1.4L</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity breakdown table -->
+        <div class="card">
+          <div class="card-head"><span>📋</span><div class="card-title">Activity Breakdown</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Agent</th><th>Calls</th><th>Meetings</th><th>WhatsApps</th><th>Emails</th><th>Notes</th><th>Total</th><th>Avg/Lead</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="flex-c" style="gap:7px"><div class="av av-sm" style="background:#F5D888;color:#8B5710">AK</div><strong>Arjun Kapoor</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace">14</td>
+                  <td style="font-family:'DM Mono',monospace">6</td>
+                  <td style="font-family:'DM Mono',monospace">22</td>
+                  <td style="font-family:'DM Mono',monospace">8</td>
+                  <td style="font-family:'DM Mono',monospace">4</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">54</td>
+                  <td style="font-family:'DM Mono',monospace">2.5</td>
+                </tr>
+                <tr>
+                  <td><div class="flex-c" style="gap:7px"><div class="av av-sm" style="background:#DDD6FE;color:#5930A0">PM</div><strong>Priya Mehta</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace">10</td>
+                  <td style="font-family:'DM Mono',monospace">4</td>
+                  <td style="font-family:'DM Mono',monospace">18</td>
+                  <td style="font-family:'DM Mono',monospace">12</td>
+                  <td style="font-family:'DM Mono',monospace">3</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--violet)">47</td>
+                  <td style="font-family:'DM Mono',monospace">2.9</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S4 — LEAD SOURCE REPORT
+═══════════════════════════════════════ -->
+<div id="s4" class="screen">
+  <div class="ss"><span class="ss-mod">M6 · 4/5</span><span class="ss-name">Lead Source Report</span><span class="ss-desc">P1 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#F5D888;color:#8B5710">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Lead Source Report</span>
+        <div class="tb-actions">
+          <select class="sel" style="width:130px;font-size:11px;padding:6px 26px 6px 10px"><option>Last 6 months</option><option>This month</option><option>This year</option></select>
+          <button class="btn btn-outline btn-sm">⬇ Export</button>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Source performance table -->
+        <div class="card mb14">
+          <div class="card-head"><span>🎯</span><div class="card-title">Source Performance (Last 6 months)</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Source</th><th>Leads</th><th>% of Total</th><th>Converted</th><th>Conv. Rate</th><th>Avg Time to Convert</th><th>Revenue</th><th>Cost / Lead</th></tr></thead>
+              <tbody>
+                <tr style="background:rgba(200,137,14,.04)">
+                  <td><div class="flex-c" style="gap:7px"><div style="width:10px;height:10px;background:var(--gold);border-radius:3px"></div><strong>Referral</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700">68</td>
+                  <td><div class="flex-c" style="gap:6px"><div style="flex:1;height:5px;background:var(--ivory3);border-radius:3px;overflow:hidden"><div style="width:34%;height:100%;background:var(--gold);border-radius:3px"></div></div><span style="font-family:'DM Mono',monospace;font-size:11px">34%</span></div></td>
+                  <td style="font-family:'DM Mono',monospace">12</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--emerald);font-weight:700">17.6%</td>
+                  <td style="font-family:'DM Mono',monospace">22 days</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">₹7.8L</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--emerald)">₹0</td>
+                </tr>
+                <tr>
+                  <td><div class="flex-c" style="gap:7px"><div style="width:10px;height:10px;background:var(--sky);border-radius:3px"></div><strong>Website Form</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700">52</td>
+                  <td><div class="flex-c" style="gap:6px"><div style="flex:1;height:5px;background:var(--ivory3);border-radius:3px;overflow:hidden"><div style="width:26%;height:100%;background:var(--sky);border-radius:3px"></div></div><span style="font-family:'DM Mono',monospace;font-size:11px">26%</span></div></td>
+                  <td style="font-family:'DM Mono',monospace">7</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--amber);font-weight:700">13.5%</td>
+                  <td style="font-family:'DM Mono',monospace">28 days</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">₹4.6L</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--emerald)">₹320</td>
+                </tr>
+                <tr>
+                  <td><div class="flex-c" style="gap:7px"><div style="width:10px;height:10px;background:var(--violet);border-radius:3px"></div><strong>Walk-in</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700">44</td>
+                  <td><div class="flex-c" style="gap:6px"><div style="flex:1;height:5px;background:var(--ivory3);border-radius:3px;overflow:hidden"><div style="width:22%;height:100%;background:var(--violet);border-radius:3px"></div></div><span style="font-family:'DM Mono',monospace;font-size:11px">22%</span></div></td>
+                  <td style="font-family:'DM Mono',monospace">8</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--emerald);font-weight:700">18.2%</td>
+                  <td style="font-family:'DM Mono',monospace">18 days</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">₹5.2L</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--emerald)">₹0</td>
+                </tr>
+                <tr>
+                  <td><div class="flex-c" style="gap:7px"><div style="width:10px;height:10px;background:var(--emerald);border-radius:3px"></div><strong>Social Media</strong></div></td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700">36</td>
+                  <td><div class="flex-c" style="gap:6px"><div style="flex:1;height:5px;background:var(--ivory3);border-radius:3px;overflow:hidden"><div style="width:18%;height:100%;background:var(--emerald);border-radius:3px"></div></div><span style="font-family:'DM Mono',monospace;font-size:11px">18%</span></div></td>
+                  <td style="font-family:'DM Mono',monospace">3</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--coral);font-weight:700">8.3%</td>
+                  <td style="font-family:'DM Mono',monospace">35 days</td>
+                  <td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">₹2.0L</td>
+                  <td style="font-family:'DM Mono',monospace;color:var(--coral)">₹1,800</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="ok"><span>💡</span><span>Referral and Walk-in leads convert at 17–18% with zero cost. Social Media has the highest cost per conversion at ₹1,800 and longest conversion time.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S5 — REVENUE FORECAST
+═══════════════════════════════════════ -->
+<div id="s5" class="screen">
+  <div class="ss"><span class="ss-mod">M6 · 5/5</span><span class="ss-name">Revenue Forecast</span><span class="ss-desc">P1 · Phase 2 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#F5D888;color:#8B5710">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Revenue Forecast — Sep 2025 Intake</span>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm">⬇ Export</button>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Summary KPIs -->
+        <div class="g4 mb18">
+          <div class="kpi" style="border-top:3px solid var(--gold)"><div class="kpi-label">Confirmed Revenue</div><div class="kpi-val" style="font-size:26px">₹19.5L</div><div class="kpi-trend trend-up">10 enrollments locked</div></div>
+          <div class="kpi" style="border-top:3px solid var(--emerald)"><div class="kpi-label">Pipeline Revenue</div><div class="kpi-val" style="font-size:26px">₹28.0L</div><div class="kpi-trend" style="color:var(--muted)">Based on active leads</div></div>
+          <div class="kpi" style="border-top:3px solid var(--sky)"><div class="kpi-label">Projected Total</div><div class="kpi-val" style="font-size:26px">₹47.5L</div><div class="kpi-trend trend-up">↑ 22% vs last cycle</div></div>
+          <div class="kpi" style="border-top:3px solid var(--amber)"><div class="kpi-label">Avg Commission</div><div class="kpi-val" style="font-size:26px">₹68K</div><div class="kpi-trend trend-up">↑ ₹4K vs last cycle</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+          <!-- Revenue by month chart -->
+          <div class="card">
+            <div class="card-head"><span>💰</span><div class="card-title">Monthly Revenue — 2024–25</div></div>
+            <div class="card-body">
+              <div style="margin-bottom:10px;font-size:11px;color:var(--muted)">Commission income from enrolled students</div>
+              <div class="bar-chart" style="height:100px">
+                <div class="bar-col"><div class="bar-val" style="font-size:9px">₹1.8L</div><div class="bar" style="height:38%;background:var(--ivory3)"></div><div class="bar-lbl">Oct</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px">₹2.2L</div><div class="bar" style="height:46%;background:var(--ivory3)"></div><div class="bar-lbl">Nov</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px">₹1.4L</div><div class="bar" style="height:29%;background:var(--ivory3)"></div><div class="bar-lbl">Dec</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px">₹2.8L</div><div class="bar" style="height:58%;background:var(--ivory3)"></div><div class="bar-lbl">Jan</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px">₹3.1L</div><div class="bar" style="height:64%;background:var(--ivory3)"></div><div class="bar-lbl">Feb</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px;color:var(--gold)">₹4.2L</div><div class="bar" style="height:87%;background:var(--gold)"></div><div class="bar-lbl" style="color:var(--gold);font-weight:700">Mar ▲</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px;color:var(--muted)">₹4.8L</div><div class="bar" style="height:100%;background:var(--ivory3);border:1.5px dashed var(--border2)"></div><div class="bar-lbl" style="color:var(--muted)">Apr ◌</div></div>
+                <div class="bar-col"><div class="bar-val" style="font-size:9px;color:var(--muted)">₹5.5L</div><div class="bar" style="height:100%;background:var(--ivory3);border:1.5px dashed var(--border2);height:114%;opacity:.6"></div><div class="bar-lbl" style="color:var(--muted)">May ◌</div></div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:16px;font-size:11px">
+                <div class="flex-c" style="gap:5px"><div style="width:10px;height:10px;background:var(--gold);border-radius:3px"></div>Actual</div>
+                <div class="flex-c" style="gap:5px"><div style="width:10px;height:10px;background:var(--ivory3);border:1.5px dashed var(--border2);border-radius:3px"></div>Forecast</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Revenue by university -->
+          <div class="card">
+            <div class="card-head"><span>🏛</span><div class="card-title">Top Revenue Universities</div></div>
+            <div class="card-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+              <div><div class="flex-sb mb8"><span style="font-size:12px;font-weight:700">University College Dublin</span><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--gold)">₹5.0L</span></div><div class="prog-bar"><div class="prog-fill" style="width:72%;background:var(--gold)"></div></div></div>
+              <div><div class="flex-sb mb8"><span style="font-size:12px;font-weight:700">Univ. of Manchester</span><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--gold)">₹3.8L</span></div><div class="prog-bar"><div class="prog-fill" style="width:55%;background:var(--amber)"></div></div></div>
+              <div><div class="flex-sb mb8"><span style="font-size:12px;font-weight:700">Univ. of Melbourne</span><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--gold)">₹3.2L</span></div><div class="prog-bar"><div class="prog-fill" style="width:46%;background:var(--sky)"></div></div></div>
+              <div><div class="flex-sb mb8"><span style="font-size:12px;font-weight:700">NCI Dublin</span><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--gold)">₹2.1L</span></div><div class="prog-bar"><div class="prog-fill" style="width:30%;background:var(--emerald)"></div></div></div>
+              <div><div class="flex-sb mb8"><span style="font-size:12px;font-weight:700">Univ. of Auckland</span><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--gold)">₹1.6L</span></div><div class="prog-bar"><div class="prog-fill" style="width:23%;background:var(--violet)"></div></div></div>
+              <div style="padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+                Total confirmed: <strong style="color:var(--gold)">₹15.7L</strong> from top 5
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx=['s1','s2','s3','s4','s5'].indexOf(id);
+  if(idx>=0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('a[href="#"]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+</script>
+</body>
+</html>

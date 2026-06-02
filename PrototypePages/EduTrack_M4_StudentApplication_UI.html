@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack · M4 Student & Application</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0C1A2E;--ink2:#1A3050;--ink3:#254471;
+  --violet:#5B35A0;--violet2:#6D44C0;--violet-lt:#F3EFFD;--violet-mid:#C4B3F0;
+  --amber:#E08C1A;--amber-lt:#FDF5E6;--amber-mid:#F5CC88;
+  --ivory:#FAF8F4;--ivory2:#F2EDE2;--ivory3:#E7DFD2;
+  --white:#FFFFFF;
+  --coral:#DC4E4E;--coral-lt:#FEF0F0;
+  --emerald:#1A7A5E;--emerald-lt:#ECF8F4;
+  --sky:#1A6EA8;--sky-lt:#EAF4FB;
+  --slate:#586070;--muted:#8898A6;
+  --border:#DDD5C8;--border2:#C6BBB0;
+  --shadow-sm:0 1px 3px rgba(12,26,46,.07),0 1px 2px rgba(12,26,46,.04);
+  --shadow:0 2px 8px rgba(12,26,46,.1),0 1px 3px rgba(12,26,46,.06);
+  --shadow-lg:0 10px 36px rgba(12,26,46,.14),0 2px 8px rgba(12,26,46,.08);
+  --r:10px;--r-lg:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#100D1E;color:var(--ink);min-height:100vh}
+
+/* ── NAV ─────────────────────────────────────────── */
+.nav-bar{position:sticky;top:0;z-index:200;background:var(--ink);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-brand{padding:0 20px;font-family:'Fraunces',serif;font-size:17px;color:#FAF8F4;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);height:46px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav-brand span{color:#A78BFA}
+.nav-brand small{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);font-weight:400;letter-spacing:.06em;text-transform:uppercase}
+.nav-tabs{display:flex;flex:1}
+.nav-tab{padding:0 17px;height:46px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.02em;white-space:nowrap;color:rgba(255,255,255,.42);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;border-right:1px solid rgba(255,255,255,.05);text-decoration:none}
+.nav-tab:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.04)}
+.nav-tab.active{color:#A78BFA;border-bottom-color:#A78BFA;background:rgba(91,53,160,.1)}
+.tab-num{font-size:10px;background:rgba(255,255,255,.1);border-radius:20px;padding:1px 7px}
+.nav-tab.active .tab-num{background:rgba(167,139,250,.2);color:#A78BFA}
+
+/* ── SCREEN ──────────────────────────────────────── */
+.screen{display:none;min-height:calc(100vh - 46px);background:var(--ivory)}
+.screen.active{display:flex;flex-direction:column}
+.app-shell{display:flex;flex:1;height:calc(100vh - 46px);overflow:hidden}
+
+/* ── SIDEBAR ─────────────────────────────────────── */
+.sidebar{width:212px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,.06)}
+.sb-logo{padding:18px 18px 14px;font-family:'Fraunces',serif;font-size:20px;color:#FAF8F4;border-bottom:1px solid rgba(255,255,255,.06);line-height:1}
+.sb-logo span{color:#A78BFA}
+.sb-logo small{display:block;font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(255,255,255,.28);font-weight:400;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.sb-nav{flex:1;padding:12px 0}
+.sb-label{padding:8px 18px 3px;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13px;font-weight:500;color:rgba(255,255,255,.48);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.sb-item:hover{color:rgba(255,255,255,.82);background:rgba(255,255,255,.04)}
+.sb-item.active{color:#A78BFA;background:rgba(91,53,160,.12);border-left-color:#A78BFA}
+.sb-icon{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--coral);color:#fff;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user{display:flex;align-items:center;gap:9px}
+.sb-uname{font-size:12px;color:#FAF8F4;font-weight:600}
+.sb-urole{font-size:10px;color:rgba(255,255,255,.32)}
+
+/* ── MAIN ────────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;background:var(--ivory);display:flex;flex-direction:column}
+.topbar{height:50px;padding:0 22px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;flex-shrink:0}
+.tb-title{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);font-weight:600}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.page{padding:22px;flex:1}
+
+/* ── BUTTONS ─────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--ink);color:#FAF8F4}
+.btn-primary:hover{background:var(--ink2)}
+.btn-violet{background:var(--violet);color:#fff}
+.btn-violet:hover{background:var(--violet2)}
+.btn-amber{background:var(--amber);color:var(--ink)}
+.btn-amber:hover{filter:brightness(1.08)}
+.btn-outline{background:transparent;color:var(--ink2);border:1.5px solid var(--border2)}
+.btn-outline:hover{border-color:var(--ink);background:var(--ivory2)}
+.btn-ghost{background:transparent;color:var(--slate);border:none}
+.btn-ghost:hover{color:var(--ink);background:var(--ivory2)}
+.btn-success{background:var(--emerald);color:#fff}
+.btn-danger{background:var(--coral);color:#fff}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 10px;font-size:10px;border-radius:6px}
+
+/* ── CARD ────────────────────────────────────────── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-title{font-size:13px;font-weight:700;color:var(--ink)}
+.card-body{padding:18px}
+
+/* ── BADGES ──────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.03em}
+.b-violet{background:var(--violet-lt);color:var(--violet)}
+.b-amber {background:var(--amber-lt);color:#8B5710}
+.b-green {background:var(--emerald-lt);color:var(--emerald)}
+.b-red   {background:var(--coral-lt);color:var(--coral)}
+.b-sky   {background:var(--sky-lt);color:var(--sky)}
+.b-ink   {background:rgba(12,26,46,.08);color:var(--ink2)}
+.b-slate {background:#EEF2F6;color:var(--slate)}
+
+/* ── INPUTS ──────────────────────────────────────── */
+.inp{padding:8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--violet2)}
+.inp::placeholder{color:var(--muted)}
+.inp-label{font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.03em;margin-bottom:4px;display:block}
+.sel{padding:8px 30px 8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A6A7A' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* ── TABLE ───────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--ivory2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(221,213,200,.4);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(91,53,160,.03)}
+tbody td{padding:11px 14px;font-size:12px;color:var(--ink2);vertical-align:middle}
+
+/* ── TIMELINE ────────────────────────────────────── */
+.tl{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:12px;padding-bottom:18px;position:relative}
+.tl-item::before{content:'';position:absolute;left:14px;top:28px;bottom:0;width:1px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:2px solid var(--white);box-shadow:0 0 0 1px var(--border)}
+.tl-body{flex:1;padding-top:3px}
+.tl-time{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* ── INFO ROWS ───────────────────────────────────── */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(221,213,200,.4);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--muted);font-weight:500}
+.info-val{color:var(--ink2);font-weight:600;text-align:right}
+
+/* ── TOGGLE ──────────────────────────────────────── */
+.tog{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.tog-on{background:var(--violet)}
+.tog-off{background:var(--border2)}
+.tog-thumb{position:absolute;top:3px;width:14px;height:14px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.tog-on .tog-thumb{left:19px}
+.tog-off .tog-thumb{left:3px}
+
+/* ── AVATAR ──────────────────────────────────────── */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.av-sm{width:26px;height:26px;font-size:10px}
+.av-md{width:34px;height:34px;font-size:13px}
+.av-xl{width:62px;height:62px;font-size:22px;border-radius:18px}
+
+/* ── SEARCH ──────────────────────────────────────── */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--ivory2);border:1.5px solid var(--border2);border-radius:9px;padding:7px 12px;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--violet2);background:var(--white)}
+.search-bar input{background:none;border:none;outline:none;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);flex:1}
+.search-bar input::placeholder{color:var(--muted)}
+
+/* ── CHIP ────────────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--white);border:1.5px solid var(--border2);color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover,.chip.on{border-color:var(--violet2);color:var(--violet);background:var(--violet-lt)}
+
+/* ── HINTS ───────────────────────────────────────── */
+.hint{background:var(--amber-lt);border:1px solid var(--amber-mid);border-radius:9px;padding:10px 14px;font-size:11px;color:#8B5710;display:flex;gap:8px}
+.ok  {background:var(--emerald-lt);border:1px solid #9DDCCF;border-radius:9px;padding:10px 14px;font-size:11px;color:#125944;display:flex;gap:8px}
+.err {background:var(--coral-lt);border:1px solid #FABABD;border-radius:9px;padding:10px 14px;font-size:11px;color:#9A1C1C;display:flex;gap:8px}
+
+/* ── GRID / FLEX ─────────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.flex-c{display:flex;align-items:center;gap:8px}
+.flex-sb{display:flex;justify-content:space-between;align-items:center}
+.frow{display:flex;flex-direction:column;gap:4px}
+.mb8{margin-bottom:8px}
+.mb14{margin-bottom:14px}
+.mb18{margin-bottom:18px}
+.mb22{margin-bottom:22px}
+.mt10{margin-top:10px}
+.mt14{margin-top:14px}
+
+/* ── SCREEN STRIP ────────────────────────────────── */
+.screen-strip{background:var(--ink);padding:10px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ss-mod{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#A78BFA}
+.ss-name{font-size:13px;font-weight:600;color:rgba(250,248,244,.85)}
+.ss-desc{font-size:11px;color:rgba(250,248,244,.3);margin-left:auto}
+
+/* ── STAT ────────────────────────────────────────── */
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat-val{font-family:'Fraunces',serif;font-size:30px;color:var(--ink);margin:4px 0 2px}
+.stat-trend{font-size:11px}
+.trend-up{color:var(--emerald)}
+.trend-dn{color:var(--coral)}
+
+/* ── APPLICATION STEP TRACKER ────────────────────── */
+.app-tracker{display:flex;flex-direction:column;gap:0}
+.app-step{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(221,213,200,.35);position:relative}
+.app-step:last-child{border-bottom:none}
+.app-step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-done{background:var(--emerald);color:#fff}
+.step-curr{background:var(--violet);color:#fff;box-shadow:0 0 0 3px var(--violet-lt)}
+.step-todo{background:var(--border);color:var(--muted)}
+.app-step-label{font-size:12px;flex:1}
+.app-step-label.done{color:var(--emerald);font-weight:600}
+.app-step-label.curr{color:var(--violet);font-weight:700}
+.app-step-label.todo{color:var(--muted)}
+.app-step-date{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* ── HERO ────────────────────────────────────────── */
+.student-hero{background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 55%,var(--ink3) 100%);padding:22px 24px 0;position:relative;overflow:hidden}
+.student-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 85% 0%,rgba(91,53,160,.35) 0%,transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(26,110,168,.2) 0%,transparent 50%);pointer-events:none}
+
+/* ── DOC CHECKLIST ───────────────────────────────── */
+.doc-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(221,213,200,.4)}
+.doc-item:last-child{border-bottom:none}
+.doc-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.doc-ok  {background:var(--emerald-lt);color:var(--emerald)}
+.doc-miss{background:var(--coral-lt);color:var(--coral)}
+.doc-warn{background:var(--amber-lt);color:#8B5710}
+.doc-name{flex:1;font-size:12px;color:var(--ink2)}
+.doc-expiry{font-size:10px;font-family:'DM Mono',monospace}
+.doc-expiry.ok{color:var(--emerald)}
+.doc-expiry.warn{color:var(--amber)}
+.doc-action{font-size:11px;color:var(--violet);cursor:pointer;font-weight:600}
+
+/* ── UPLOAD BOX ──────────────────────────────────── */
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:30px 20px;text-align:center;background:var(--ivory2);cursor:pointer;transition:all .15s}
+.upload-zone:hover{border-color:var(--violet);background:var(--violet-lt)}
+
+/* ── PROGRESS BAR ────────────────────────────────── */
+.prog-bar{height:5px;background:var(--ivory3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+
+/* ── PIPELINE PILL ───────────────────────────────── */
+.pipe-bar{display:flex;gap:0;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.pipe-bar::-webkit-scrollbar{display:none}
+.pipe-step{padding:7px 18px 7px 28px;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%);cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.pipe-step:first-child{clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);padding-left:14px}
+
+/* ── BREADCRUMB ──────────────────────────────────── */
+.bc{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.bc a{color:var(--muted);text-decoration:none;cursor:pointer}
+.bc a:hover{color:var(--ink2)}
+.bc-sep{color:var(--border2)}
+
+/* ── MODAL ───────────────────────────────────────── */
+.modal-wrap{position:absolute;inset:0;background:rgba(12,26,46,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200}
+.modal{background:var(--white);border-radius:20px;width:560px;max-width:100%;box-shadow:var(--shadow-lg);overflow:hidden}
+.modal-head{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
+.modal-title{font-family:'Fraunces',serif;font-size:22px;color:var(--ink)}
+.modal-body{padding:20px 24px 24px}
+
+/* ── DRAWER ──────────────────────────────────────── */
+.drawer{position:absolute;right:0;top:0;bottom:0;width:400px;background:var(--white);border-left:1px solid var(--border);box-shadow:-10px 0 36px rgba(12,26,46,.14);z-index:50;overflow-y:auto;display:flex;flex-direction:column}
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.drawer-body{padding:20px;flex:1}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── IELTS BANDS ────────────────────────────────── */
+.band-box{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center}
+.band-score{font-family:'Fraunces',serif;font-size:22px;color:var(--ink)}
+.band-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* ── VISA STATUS ─────────────────────────────────── */
+.visa-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+
+/* ─ COUNTRY CHIP ─────────────────────────────────── */
+.cc{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;background:var(--ivory2);border:1px solid var(--border);color:var(--ink2)}
+
+/* ── SECTION DIVIDER ─────────────────────────────── */
+.section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px}
+
+/* ── TAB NAV ─────────────────────────────────────── */
+.tab-nav{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px}
+.tab-item{padding:9px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab-item.active{color:var(--violet);border-bottom-color:var(--violet);font-weight:700}
+.tab-item:hover:not(.active){color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- ── TOP NAV ──────────────────────────────────── -->
+<nav class="nav-bar">
+  <div class="nav-brand">Edu<span>Track</span> <small>· M4</small></div>
+  <div class="nav-tabs">
+    <a class="nav-tab active" onclick="show('s1')" href="#">🎓 Student Profile <span class="tab-num">1/6</span></a>
+    <a class="nav-tab" onclick="show('s2')" href="#">✏️ Edit Profile <span class="tab-num">2/6</span></a>
+    <a class="nav-tab" onclick="show('s3')" href="#">📋 Application Detail <span class="tab-num">3/6</span></a>
+    <a class="nav-tab" onclick="show('s4')" href="#">➕ Add Application <span class="tab-num">4/6</span></a>
+    <a class="nav-tab" onclick="show('s5')" href="#">📁 Document Manager <span class="tab-num">5/6</span></a>
+    <a class="nav-tab" onclick="show('s6')" href="#">📋 Student List <span class="tab-num">6/6</span></a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     S1 — STUDENT PROFILE
+════════════════════════════════════════════════ -->
+<div id="s1" class="screen active">
+  <div class="screen-strip"><span class="ss-mod">M4 · 1/6</span><span class="ss-name">Student Profile</span><span class="ss-desc">P0 · Phase 1 · High Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+        <div class="sb-item active"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div class="bc"><a onclick="show('s6')">Students</a><span class="bc-sep">›</span><span style="color:var(--ink2);font-weight:600">Rohan Desai</span></div>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm" onclick="show('s2')">✏️ Edit Profile</button>
+          <button class="btn btn-violet btn-sm" onclick="show('s4')">＋ Add Application</button>
+        </div>
+      </div>
+
+      <!-- Hero banner -->
+      <div class="student-hero">
+        <div style="display:flex;align-items:flex-start;gap:18px;position:relative;z-index:1">
+          <div class="av-xl" style="background:rgba(91,53,160,.25);color:#A78BFA;font-family:'Fraunces',serif;font-size:24px;border-radius:18px;width:62px;height:62px;display:flex;align-items:center;justify-content:center">RD</div>
+          <div style="flex:1">
+            <div style="font-family:'Fraunces',serif;font-size:26px;color:#FAF8F4;margin-bottom:6px">Rohan Desai</div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap">
+              <span style="font-size:12px;color:rgba(250,248,244,.6)">🇮🇳 Indian</span>
+              <span style="font-size:12px;color:rgba(250,248,244,.6)">📅 DOB: 14 Aug 2001</span>
+              <span style="font-size:12px;color:rgba(250,248,244,.6)">📱 +91 99000 77777</span>
+              <span style="font-size:12px;color:rgba(250,248,244,.6)">✉️ rohan.desai@gmail.com</span>
+            </div>
+          </div>
+          <div style="text-align:right;position:relative;z-index:1">
+            <div style="font-size:9px;color:rgba(250,248,244,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Passport</div>
+            <span class="badge b-green" style="background:rgba(26,122,94,.25);color:#6EE7B7;font-size:10px">✓ Valid until 2030</span>
+            <div style="margin-top:6px">
+              <span class="visa-pill" style="background:rgba(91,53,160,.3);color:#C4B3F0;font-size:10px">🛂 Visa: Applied</span>
+            </div>
+          </div>
+        </div>
+        <!-- Lead stage -->
+        <div style="margin-top:16px;position:relative;z-index:1">
+          <div class="pipe-bar">
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">New</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">Contacted</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">Qualified</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">Counselling</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">Applied</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);opacity:1">Offer Rxd</div>
+            <div class="pipe-step" style="background:#A78BFA;color:var(--ink);opacity:1">✓ Visa Applied</div>
+            <div class="pipe-step" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.3);opacity:1">Enrolled</div>
+          </div>
+        </div>
+        <!-- Quick actions -->
+        <div style="display:flex;gap:8px;padding:12px 0 0;position:relative;z-index:1">
+          <button class="btn btn-violet btn-sm">📞 Log Activity</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,248,244,.8);border:1px solid rgba(255,255,255,.14)">📁 View Docs</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,248,244,.8);border:1px solid rgba(255,255,255,.14)">📚 Applications</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,248,244,.8);border:1px solid rgba(255,255,255,.14)">📧 Send Email</button>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="tab-nav" style="margin-top:0">
+          <div class="tab-item active">Overview</div>
+          <div class="tab-item" onclick="show('s3')">Applications (2)</div>
+          <div class="tab-item" onclick="show('s5')">Documents</div>
+          <div class="tab-item">Activity</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+          <!-- Left -->
+          <div>
+            <!-- Academic + IELTS -->
+            <div class="card mb14">
+              <div class="card-head"><span>🎓</span><div class="card-title">Academic Background</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s2')">Edit</button></div>
+              <div class="card-body">
+                <div class="g2 mb14">
+                  <div>
+                    <div class="section-title">Highest Degree</div>
+                    <div style="font-size:14px;font-weight:700;color:var(--ink)">B.Tech Computer Science</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px">BITS Pilani, Hyderabad Campus</div>
+                    <div style="font-size:12px;color:var(--muted)">Graduated: May 2023</div>
+                  </div>
+                  <div>
+                    <div class="section-title">Academic Score</div>
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="font-family:'Fraunces',serif;font-size:32px;color:var(--ink)">78.4<span style="font-size:16px;color:var(--muted)">%</span></div>
+                      <div>
+                        <div class="prog-bar" style="width:100px;height:7px;margin-bottom:4px"><div class="prog-fill" style="width:78%;background:var(--emerald)"></div></div>
+                        <span class="badge b-green" style="font-size:9px">Above 2:1 equivalent</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- IELTS -->
+                <div class="section-title">English Proficiency</div>
+                <div style="background:var(--emerald-lt);border:1.5px solid #9DDCCF;border-radius:12px;padding:14px 18px">
+                  <div class="flex-sb mb14">
+                    <div>
+                      <div style="font-size:14px;font-weight:800;color:var(--ink)">IELTS Academic</div>
+                      <div style="font-size:11px;color:var(--muted);margin-top:2px">Test date: Jan 15, 2025 · Expires: Jan 2027</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-family:'Fraunces',serif;font-size:36px;color:var(--emerald);line-height:1">7.0</div>
+                      <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Overall</div>
+                    </div>
+                  </div>
+                  <div class="g4" style="gap:8px">
+                    <div class="band-box"><div class="band-score" style="color:var(--emerald)">8.0</div><div class="band-label">Listening</div></div>
+                    <div class="band-box"><div class="band-score" style="color:var(--emerald)">7.5</div><div class="band-label">Reading</div></div>
+                    <div class="band-box"><div class="band-score" style="color:var(--amber)">6.5</div><div class="band-label">Writing</div></div>
+                    <div class="band-box"><div class="band-score" style="color:var(--amber)">6.5</div><div class="band-label">Speaking</div></div>
+                  </div>
+                  <div style="margin-top:10px" class="hint" style="font-size:10px">
+                    <span>⚠</span><span>W/S 6.5 may not meet UCD's per-band requirement. Verify with university before submitting.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Work Experience -->
+            <div class="card">
+              <div class="card-head"><span>💼</span><div class="card-title">Work Experience</div><button class="btn btn-ghost btn-xs" style="margin-left:auto">＋ Add</button></div>
+              <div class="card-body">
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+                  <div style="width:36px;height:36px;background:var(--violet-lt);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💻</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--ink)">Software Engineer Intern</div>
+                    <div style="font-size:11px;color:var(--muted)">Infosys · Bengaluru · Jun 2022 – Aug 2022</div>
+                    <div style="font-size:11px;color:var(--slate);margin-top:3px">Python backend development, data pipeline work</div>
+                  </div>
+                </div>
+                <div style="font-size:11px;color:var(--muted);padding-top:10px;text-align:center">Total: 3 months internship experience</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right sidebar cards -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <!-- Lead info -->
+            <div class="card">
+              <div class="card-head"><span>📝</span><div class="card-title">Lead Details</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div class="info-row"><span class="info-key">Source</span><span style="font-size:11px;background:var(--ivory2);border:1px solid var(--border);border-radius:6px;padding:2px 9px;color:var(--slate)">Referral</span></div>
+                <div class="info-row"><span class="info-key">Destination</span><span class="cc">🇮🇪 Ireland</span></div>
+                <div class="info-row"><span class="info-key">Target Intake</span><strong class="info-val">Sep 2025</strong></div>
+                <div class="info-row"><span class="info-key">Assigned Agent</span>
+                  <div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><span style="font-size:12px;font-weight:600">Arjun Kapoor</span></div>
+                </div>
+                <div class="info-row"><span class="info-key">Student since</span><span class="info-val">Mar 1, 2025</span></div>
+              </div>
+            </div>
+
+            <!-- Applications summary -->
+            <div class="card">
+              <div class="card-head"><span>📚</span><div class="card-title">Applications (2)</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s4')">＋ Add</button></div>
+              <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:10px">
+                <div style="background:var(--ivory2);border-radius:10px;padding:12px;border:1px solid var(--border);cursor:pointer" onclick="show('s3')">
+                  <div class="flex-sb mb8">
+                    <div style="font-weight:700;font-size:12px">🏛 University College Dublin</div>
+                    <span class="badge b-violet" style="font-size:9px">Visa Applied</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px">MSc Data Science · Sep 2025</div>
+                  <div class="prog-bar" style="margin-bottom:4px"><div class="prog-fill" style="width:75%;background:var(--violet)"></div></div>
+                  <div style="font-size:9px;color:var(--muted)">Step 6/8 — Visa Applied</div>
+                </div>
+                <div style="background:var(--ivory2);border-radius:10px;padding:12px;border:1px solid var(--border);cursor:pointer" onclick="show('s3')">
+                  <div class="flex-sb mb8">
+                    <div style="font-weight:700;font-size:12px">🏛 NCI Dublin</div>
+                    <span class="badge b-sky" style="font-size:9px">Not Applied</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted)">MSc Data Analytics · Jan 2026</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Next task -->
+            <div class="card" style="border-left:3px solid var(--violet)">
+              <div class="card-head"><span>⏰</span><div class="card-title">Next Follow-up</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px">Visa outcome check-in</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Expected decision by Mar 20</div>
+                <div style="font-size:11px;color:var(--violet);font-weight:700">📅 Mar 20, 2025</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     S2 — EDIT STUDENT PROFILE
+════════════════════════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="screen-strip"><span class="ss-mod">M4 · 2/6</span><span class="ss-name">Edit Student Profile</span><span class="ss-desc">P0 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div class="bc"><a onclick="show('s6')">Students</a><span class="bc-sep">›</span><a onclick="show('s1')">Rohan Desai</a><span class="bc-sep">›</span><span style="color:var(--ink2);font-weight:600">Edit Profile</span></div>
+        <div class="tb-actions">
+          <button class="btn btn-ghost btn-sm" onclick="show('s1')">Cancel</button>
+          <button class="btn btn-violet btn-sm">Save Changes</button>
+        </div>
+      </div>
+      <div class="page" style="max-width:760px">
+
+        <!-- Personal -->
+        <div class="mb22">
+          <div class="section-title">Personal Information</div>
+          <div class="g2">
+            <div class="frow"><label class="inp-label">First name *</label><input class="inp" value="Rohan"></div>
+            <div class="frow"><label class="inp-label">Last name *</label><input class="inp" value="Desai"></div>
+            <div class="frow"><label class="inp-label">Date of birth</label><input class="inp" type="date" value="2001-08-14"></div>
+            <div class="frow"><label class="inp-label">Nationality</label><select class="sel"><option selected>Indian</option><option>Other</option></select></div>
+            <div class="frow"><label class="inp-label">Phone number</label>
+              <div style="display:flex;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden">
+                <div style="padding:8px 11px;background:var(--ivory2);font-size:12px;border-right:1px solid var(--border2);white-space:nowrap">🇮🇳 +91</div>
+                <input style="flex:1;border:none;outline:none;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink)" value="99000 77777">
+              </div>
+            </div>
+            <div class="frow"><label class="inp-label">Email address</label><input class="inp" value="rohan.desai@gmail.com"></div>
+          </div>
+        </div>
+
+        <!-- Passport -->
+        <div class="mb22">
+          <div class="section-title">Passport Details</div>
+          <div class="g2">
+            <div class="frow"><label class="inp-label">Passport number</label><input class="inp" type="password" value="P1234567" placeholder="Will not be shown in logs"></div>
+            <div class="frow"><label class="inp-label">Passport expiry</label><input class="inp" type="date" value="2030-04-15"><div style="font-size:10px;color:var(--emerald);margin-top:3px">✓ Valid for 5+ more years</div></div>
+          </div>
+        </div>
+
+        <!-- Academic -->
+        <div class="mb22">
+          <div class="section-title">Academic Background</div>
+          <div class="g2">
+            <div class="frow"><label class="inp-label">Highest degree *</label><select class="sel"><option selected>Bachelor's (B.Tech / B.E.)</option><option>Bachelor's (B.Sc / B.Com / BA)</option><option>Master's</option></select></div>
+            <div class="frow"><label class="inp-label">Institution name</label><input class="inp" value="BITS Pilani, Hyderabad Campus"></div>
+            <div class="frow"><label class="inp-label">Field of study</label><input class="inp" value="Computer Science"></div>
+            <div class="frow"><label class="inp-label">Year of graduation</label><input class="inp" value="2023" type="number"></div>
+            <div class="frow"><label class="inp-label">Percentage / CGPA</label><input class="inp" value="78.4%"></div>
+            <div class="frow"><label class="inp-label">Score type</label><select class="sel"><option selected>Percentage (%)</option><option>CGPA (10 scale)</option><option>CGPA (4 scale)</option></select></div>
+          </div>
+        </div>
+
+        <!-- IELTS -->
+        <div class="mb22">
+          <div class="section-title">English Proficiency</div>
+          <div class="g2">
+            <div class="frow"><label class="inp-label">Test type *</label><select class="sel"><option selected>IELTS Academic</option><option>TOEFL iBT</option><option>PTE Academic</option><option>Duolingo</option></select></div>
+            <div class="frow"><label class="inp-label">Overall score *</label><input class="inp" value="7.0"></div>
+            <div class="frow"><label class="inp-label">Listening</label><input class="inp" value="8.0"></div>
+            <div class="frow"><label class="inp-label">Reading</label><input class="inp" value="7.5"></div>
+            <div class="frow"><label class="inp-label">Writing</label><input class="inp" value="6.5" style="border-color:var(--amber)"><div style="font-size:10px;color:var(--amber);margin-top:3px">⚠ Below 7.0 — may not meet some universities</div></div>
+            <div class="frow"><label class="inp-label">Speaking</label><input class="inp" value="6.5"></div>
+            <div class="frow"><label class="inp-label">Test date</label><input class="inp" type="date" value="2025-01-15"></div>
+            <div class="frow"><label class="inp-label">Expiry (auto-calculated)</label><input class="inp" value="January 2027" disabled style="background:var(--ivory2);color:var(--muted)"></div>
+          </div>
+        </div>
+
+        <div class="ok mb18"><span>ℹ</span><span>Changes are saved immediately. Editing academic scores after an application is submitted will show a warning on the application.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     S3 — APPLICATION DETAIL (DRAWER STYLE)
+════════════════════════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="screen-strip"><span class="ss-mod">M4 · 3/6</span><span class="ss-name">Application Detail — Drawer</span><span class="ss-desc">P0 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell" style="position:relative;overflow:hidden">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎓</span>Students</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+
+    <!-- Blurred background: student profile overview -->
+    <div class="main" style="filter:blur(2px);opacity:.5;pointer-events:none">
+      <div class="topbar"><div class="bc"><a>Students</a><span class="bc-sep">›</span><span>Rohan Desai</span></div></div>
+      <div class="page">
+        <div class="tab-nav"><div class="tab-item">Overview</div><div class="tab-item active">Applications (2)</div><div class="tab-item">Documents</div></div>
+        <div class="card"><div class="card-body" style="height:200px;background:var(--ivory2)"></div></div>
+      </div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(12,26,46,.25)"></div>
+
+    <!-- Drawer -->
+    <div class="drawer">
+      <div class="drawer-head">
+        <div style="font-size:15px;font-weight:700;color:var(--ink)">Application Detail</div>
+        <button class="btn btn-ghost btn-xs" onclick="show('s1')">✕ Close</button>
+      </div>
+      <div class="drawer-body">
+        <!-- Uni header -->
+        <div style="margin-bottom:16px">
+          <div style="font-family:'Fraunces',serif;font-size:20px;color:var(--ink);margin-bottom:3px">University College Dublin</div>
+          <div style="font-size:12px;color:var(--muted)">🇮🇪 Dublin, Ireland · QS Rank #201</div>
+        </div>
+        <!-- Course meta -->
+        <div style="background:var(--ivory2);border-radius:10px;padding:12px 14px;margin-bottom:16px;border:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div><div style="font-size:10px;color:var(--muted)">Course</div><div style="font-weight:700">MSc Data Science</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Level</div><div style="font-weight:700">Postgraduate</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Intake</div><div style="font-weight:700">September 2025</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Annual Tuition</div><div style="font-weight:700;color:var(--violet)">₹24,50,000</div></div>
+          </div>
+        </div>
+
+        <!-- Status badge -->
+        <div class="flex-c mb14">
+          <span class="badge b-violet" style="font-size:11px;padding:4px 12px">🛂 Visa Applied</span>
+          <span style="font-size:11px;color:var(--muted)">Updated Mar 5, 2025</span>
+        </div>
+
+        <!-- 8-step progress tracker -->
+        <div class="section-title">Application Progress</div>
+        <div class="app-tracker mb16">
+          <div class="app-step"><div class="app-step-dot step-done">✓</div><div class="app-step-label done">1. Interest / Not Applied</div><div class="app-step-date">Feb 12</div></div>
+          <div class="app-step"><div class="app-step-dot step-done">✓</div><div class="app-step-label done">2. Application Submitted</div><div class="app-step-date">Feb 20</div></div>
+          <div class="app-step"><div class="app-step-dot step-done">✓</div><div class="app-step-label done">3. Document Collection</div><div class="app-step-date">Feb 25</div></div>
+          <div class="app-step"><div class="app-step-dot step-done">✓</div><div class="app-step-label done">4. Offer Received</div><div class="app-step-date">Mar 1</div></div>
+          <div class="app-step"><div class="app-step-dot step-done">✓</div><div class="app-step-label done">5. Fees Paid / CAS Requested</div><div class="app-step-date">Mar 3</div></div>
+          <div class="app-step"><div class="app-step-dot step-curr">→</div><div class="app-step-label curr">6. Visa Applied</div><div class="app-step-date">Mar 5</div></div>
+          <div class="app-step"><div class="app-step-dot step-todo">7</div><div class="app-step-label todo">7. Visa Approved</div><div class="app-step-date">—</div></div>
+          <div class="app-step"><div class="app-step-dot step-todo">8</div><div class="app-step-label todo">8. Enrolled</div><div class="app-step-date">—</div></div>
+        </div>
+
+        <!-- Notes -->
+        <div class="frow mb14">
+          <label class="inp-label">Internal notes</label>
+          <textarea class="inp" style="resize:vertical;min-height:64px;font-size:11px">Visa application ref: UKVI-2025-XXXX. Biometrics done Feb 28. Expected decision by March 20.</textarea>
+        </div>
+
+        <!-- Action -->
+        <button class="btn btn-violet" style="width:100%;justify-content:center">↕ Update Status to Visa Approved</button>
+        <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:6px;color:var(--coral)">⚑ Flag issue with this application</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     S4 — ADD APPLICATION MODAL
+════════════════════════════════════════════════ -->
+<div id="s4" class="screen">
+  <div class="screen-strip"><span class="ss-mod">M4 · 4/6</span><span class="ss-name">Add Application — Modal</span><span class="ss-desc">P0 · Phase 1 · Medium Complexity</span></div>
+
+  <div style="position:relative;flex:1;overflow:hidden">
+    <!-- Blurred bg: student profile -->
+    <div style="position:absolute;inset:0;filter:blur(3px);opacity:.45;background:var(--ivory);overflow:hidden;padding:22px">
+      <div class="card" style="height:180px;background:linear-gradient(135deg,var(--ink),var(--ink2));margin-bottom:16px"></div>
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+        <div class="card" style="height:240px"></div>
+        <div class="card" style="height:240px"></div>
+      </div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(12,26,46,.58);backdrop-filter:blur(2px)"></div>
+
+    <!-- Modal -->
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px">
+      <div class="modal">
+        <div class="modal-head">
+          <div>
+            <div class="modal-title">Add New Application</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">Adding for Rohan Desai</div>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="show('s1')" style="font-size:16px;padding:4px 8px">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Student context -->
+          <div style="background:var(--violet-lt);border:1px solid var(--violet-mid);border-radius:10px;padding:10px 14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
+            <div class="flex-c" style="gap:8px">
+              <div class="av av-sm" style="background:var(--violet-mid);color:var(--violet)">RD</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--violet)">Rohan Desai</div>
+                <div style="font-size:10px;color:var(--muted)">IELTS 7.0 · B.Tech 78.4% · Ireland · Sep 2025</div>
+              </div>
+            </div>
+            <span class="badge b-violet">Counselling</span>
+          </div>
+
+          <div class="g2 mb14">
+            <div class="frow" style="grid-column:1/-1">
+              <label class="inp-label">University name *</label>
+              <input class="inp" value="University College Dublin" placeholder="Type to search universities...">
+            </div>
+            <div class="frow">
+              <label class="inp-label">Course name *</label>
+              <input class="inp" value="MSc Data Science">
+            </div>
+            <div class="frow">
+              <label class="inp-label">Study level</label>
+              <select class="sel"><option selected>Postgraduate (Masters)</option><option>Undergraduate</option><option>PhD</option></select>
+            </div>
+            <div class="frow">
+              <label class="inp-label">Intake — Month *</label>
+              <select class="sel"><option selected>September</option><option>January</option><option>May</option></select>
+            </div>
+            <div class="frow">
+              <label class="inp-label">Intake — Year *</label>
+              <select class="sel"><option selected>2025</option><option>2026</option></select>
+            </div>
+            <div class="frow">
+              <label class="inp-label">Annual tuition (₹)</label>
+              <div style="display:flex;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden">
+                <div style="padding:8px 11px;background:var(--ivory2);font-size:12px;color:var(--muted);border-right:1px solid var(--border2)">₹</div>
+                <input style="flex:1;border:none;outline:none;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink)" value="24,50,000">
+              </div>
+            </div>
+            <div class="frow">
+              <label class="inp-label">Application fee (₹)</label>
+              <div style="display:flex;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden">
+                <div style="padding:8px 11px;background:var(--ivory2);font-size:12px;color:var(--muted);border-right:1px solid var(--border2)">₹</div>
+                <input style="flex:1;border:none;outline:none;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink)" value="8,500">
+              </div>
+            </div>
+          </div>
+
+          <div class="frow mb16">
+            <label class="inp-label">Notes (internal)</label>
+            <textarea class="inp" style="resize:vertical;min-height:56px" placeholder="Any notes about this application..."></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px">
+            <button class="btn btn-outline" onclick="show('s1')">Cancel</button>
+            <button class="btn btn-violet">Add Application</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     S5 — DOCUMENT MANAGER
+════════════════════════════════════════════════ -->
+<div id="s5" class="screen">
+  <div class="screen-strip"><span class="ss-mod">M4 · 5/6</span><span class="ss-name">Document Manager</span><span class="ss-desc">P1 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div class="bc"><a onclick="show('s6')">Students</a><span class="bc-sep">›</span><a onclick="show('s1')">Rohan Desai</a><span class="bc-sep">›</span><span style="color:var(--ink2);font-weight:600">Documents</span></div>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm">⬇ Download All</button>
+          <button class="btn btn-violet btn-sm">＋ Upload</button>
+        </div>
+      </div>
+      <div class="page">
+
+        <!-- Status summary -->
+        <div class="g4 mb18">
+          <div class="stat"><div class="stat-label">Uploaded</div><div class="stat-val" style="color:var(--emerald)">6</div><div class="stat-trend trend-up">Documents ready</div></div>
+          <div class="stat"><div class="stat-label">Missing</div><div class="stat-val" style="color:var(--coral)">2</div><div class="stat-trend trend-dn">Needs collection</div></div>
+          <div class="stat"><div class="stat-label">Expiring Soon</div><div class="stat-val" style="color:var(--amber)">1</div><div class="stat-trend" style="color:var(--amber)">Within 90 days</div></div>
+          <div class="stat"><div class="stat-label">Storage Used</div><div class="stat-val" style="font-size:22px">14.2 MB</div><div class="stat-trend" style="color:var(--muted)">of 100 MB</div></div>
+        </div>
+
+        <div class="hint mb14"><span>⏰</span><span>Bank Statement expires in 33 days (Apr 10, 2025). Request an updated version from the student.</span></div>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+          <!-- Checklist -->
+          <div class="card">
+            <div class="card-head">
+              <span>📋</span>
+              <div class="card-title">Document Checklist</div>
+              <div style="margin-left:auto;display:flex;gap:6px">
+                <span class="badge b-green">6 uploaded</span>
+                <span class="badge b-red">2 missing</span>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0 18px">
+              <div class="doc-item">
+                <div class="doc-icon doc-ok">✓</div>
+                <div class="doc-name"><strong>Passport</strong> <span style="font-size:10px;color:var(--muted)">· P1234567</span></div>
+                <div class="doc-expiry ok">Exp: Apr 2030</div>
+                <div class="doc-action">View</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-ok">✓</div>
+                <div class="doc-name"><strong>IELTS Score Card</strong></div>
+                <div class="doc-expiry ok">Exp: Jan 2027</div>
+                <div class="doc-action">View</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-ok">✓</div>
+                <div class="doc-name"><strong>B.Tech Degree Certificate</strong></div>
+                <div class="doc-expiry" style="color:var(--muted)">Permanent</div>
+                <div class="doc-action">View</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-ok">✓</div>
+                <div class="doc-name"><strong>Mark Sheets</strong> <span style="font-size:10px;color:var(--muted)">· All 8 semesters</span></div>
+                <div class="doc-expiry" style="color:var(--muted)">Permanent</div>
+                <div class="doc-action">View</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-warn">⚠</div>
+                <div class="doc-name"><strong>Bank Statement</strong> <span style="font-size:10px;color:var(--amber)">· Expires soon!</span></div>
+                <div class="doc-expiry warn">Exp: Apr 10, 2025</div>
+                <div class="doc-action" style="color:var(--amber)">Replace</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-ok">✓</div>
+                <div class="doc-name"><strong>Statement of Purpose</strong> <span style="font-size:10px;color:var(--muted)">· v2 final</span></div>
+                <div class="doc-expiry" style="color:var(--muted)">—</div>
+                <div class="doc-action">View</div>
+              </div>
+              <div class="doc-item">
+                <div class="doc-icon doc-miss">✗</div>
+                <div class="doc-name" style="color:var(--coral)"><strong>Letter of Recommendation #1</strong></div>
+                <div class="doc-expiry" style="color:var(--coral)">Missing</div>
+                <div class="doc-action" style="color:var(--amber)">Request →</div>
+              </div>
+              <div class="doc-item" style="border-bottom:none">
+                <div class="doc-icon doc-miss">✗</div>
+                <div class="doc-name" style="color:var(--coral)"><strong>Letter of Recommendation #2</strong></div>
+                <div class="doc-expiry" style="color:var(--coral)">Missing</div>
+                <div class="doc-action" style="color:var(--amber)">Request →</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload + request -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <!-- Upload zone -->
+            <div class="card">
+              <div class="card-head"><span>⬆</span><div class="card-title">Upload Document</div></div>
+              <div class="card-body">
+                <div class="upload-zone mb14">
+                  <div style="font-size:32px;margin-bottom:10px">📎</div>
+                  <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px">Drag & drop files here</div>
+                  <div style="font-size:11px;color:var(--muted)">PDF, JPG, PNG up to 10 MB each</div>
+                  <button class="btn btn-outline btn-sm" style="margin-top:12px">Browse Files</button>
+                </div>
+                <div class="frow mb10">
+                  <label class="inp-label">Document type</label>
+                  <select class="sel">
+                    <option>Select document type...</option>
+                    <option>Passport</option>
+                    <option>IELTS Score Card</option>
+                    <option>Degree Certificate</option>
+                    <option>Bank Statement</option>
+                    <option>LOR</option>
+                    <option>SOP</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Request from student -->
+            <div class="card">
+              <div class="card-head"><span>📨</span><div class="card-title">Request from Student</div></div>
+              <div class="card-body">
+                <div style="font-size:12px;color:var(--slate);margin-bottom:12px">Send WhatsApp / email to Rohan requesting missing documents</div>
+                <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--violet)"> Letter of Recommendation #1</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--violet)"> Letter of Recommendation #2</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" style="accent-color:var(--violet)"> Updated Bank Statement</label>
+                </div>
+                <button class="btn btn-violet btn-sm" style="width:100%;justify-content:center">📱 Send WhatsApp Request</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     S6 — STUDENT LIST
+════════════════════════════════════════════════ -->
+<div id="s6" class="screen">
+  <div class="screen-strip"><span class="ss-mod">M4 · 6/6</span><span class="ss-name">Student List</span><span class="ss-desc">P1 · Phase 1 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+        <div class="sb-item active"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>Courses</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">PM</div><div><div class="sb-uname">Priya Mehta</div><div class="sb-urole">Manager</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Students</span>
+        <div class="flex-c" style="gap:6px;margin-left:10px">
+          <span class="badge b-amber">1 doc expiring</span>
+          <span class="badge b-red">2 docs missing</span>
+        </div>
+        <div class="tb-actions">
+          <select class="sel" style="width:130px;font-size:11px;padding:6px 26px 6px 10px"><option>All agents</option><option>Arjun Kapoor</option><option>Priya Mehta</option></select>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Filters -->
+        <div class="flex-c mb14" style="flex-wrap:wrap;gap:8px">
+          <div class="search-bar" style="width:260px">
+            <span style="color:var(--muted);font-size:13px">🔍</span>
+            <input placeholder="Name or passport...">
+          </div>
+          <div class="chip on">All Intakes</div>
+          <div class="chip">🛂 Visa Status ▾</div>
+          <div class="chip">🌍 Country ▾</div>
+          <div class="chip">📁 Docs Status ▾</div>
+          <div style="margin-left:auto">
+            <select class="sel" style="width:140px;font-size:11px;padding:6px 26px 6px 10px"><option>Sort: Last Activity</option><option>Sort: Intake</option><option>Sort: Visa Status</option></select>
+          </div>
+        </div>
+
+        <!-- Stat strip -->
+        <div class="g4 mb14">
+          <div class="stat"><div class="stat-label">Total Students</div><div class="stat-val">18</div><div class="stat-trend trend-up">↑ 6 this month</div></div>
+          <div class="stat"><div class="stat-label">Sep 2025 Intake</div><div class="stat-val">11</div><div class="stat-trend" style="color:var(--muted)">Active</div></div>
+          <div class="stat"><div class="stat-label">Visa Approved</div><div class="stat-val" style="color:var(--emerald)">5</div><div class="stat-trend trend-up">↑ 2 this week</div></div>
+          <div class="stat"><div class="stat-label">Enrolled</div><div class="stat-val" style="color:var(--violet)">3</div><div class="stat-trend" style="color:var(--muted)">This cycle</div></div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Destination</th>
+                  <th>Intake</th>
+                  <th>Applications</th>
+                  <th>Visa Status</th>
+                  <th>Docs</th>
+                  <th>Agent</th>
+                  <th>Last Update</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="flex-c" style="gap:9px">
+                      <div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">RD</div>
+                      <div><div style="font-weight:700;color:var(--ink)">Rohan Desai</div><div style="font-size:10px;color:var(--muted)">rohan.desai@gmail.com</div></div>
+                    </div>
+                  </td>
+                  <td><span class="cc">🇮🇪 Ireland</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-sky">2 apps</span></td>
+                  <td><span class="visa-pill" style="background:#EDE9FE;color:#5B35A0;font-size:10px">🛂 Applied</span></td>
+                  <td>
+                    <div class="flex-c" style="gap:4px">
+                      <span class="badge b-green" style="font-size:9px">6 ✓</span>
+                      <span class="badge b-red" style="font-size:9px">2 ✗</span>
+                      <span class="badge b-amber" style="font-size:9px">1 ⚠</span>
+                    </div>
+                  </td>
+                  <td><div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">Today, 2:30 PM</td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s1')">View →</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="flex-c" style="gap:9px">
+                      <div class="av av-sm" style="background:#BAE6FD;color:#1A6EA8">KI</div>
+                      <div><div style="font-weight:700;color:var(--ink)">Kavya Iyer</div><div style="font-size:10px;color:var(--muted)">kavya.iyer@gmail.com</div></div>
+                    </div>
+                  </td>
+                  <td><span class="cc">🇳🇿 New Zealand</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Jan 2026</td>
+                  <td><span class="badge b-sky">1 app</span></td>
+                  <td><span class="visa-pill" style="background:#DCFCE7;color:#166534;font-size:10px">✓ Approved</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">8 ✓ All good</span></td>
+                  <td><div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#F3EFFD;color:#5B35A0">PM</div><span style="font-size:11px">Priya</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">Yesterday</td>
+                  <td><button class="btn btn-ghost btn-xs">View →</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="flex-c" style="gap:9px">
+                      <div class="av av-sm" style="background:#FDE8C8;color:#8B5710">SR</div>
+                      <div><div style="font-weight:700;color:var(--ink)">Siddharth Rao</div><div style="font-size:10px;color:var(--muted)">siddharth.rao@gmail.com</div></div>
+                    </div>
+                  </td>
+                  <td><span class="cc">🇬🇧 UK</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-amber">1 offer</span></td>
+                  <td><span class="visa-pill" style="background:#DBEAFE;color:#1A6EA8;font-size:10px">📋 Pending</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">7 ✓ All good</span></td>
+                  <td><div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--coral);font-weight:600">⚠ Task overdue</td>
+                  <td><button class="btn btn-ghost btn-xs">View →</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="flex-c" style="gap:9px">
+                      <div class="av av-sm" style="background:#A7F3D0;color:#065F46">AD</div>
+                      <div><div style="font-weight:700;color:var(--ink)">Ananya Das</div><div style="font-size:10px;color:var(--muted)">ananya.das@gmail.com</div></div>
+                    </div>
+                  </td>
+                  <td><span class="cc">🇦🇺 Australia</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-sky">1 app</span></td>
+                  <td><span class="visa-pill" style="background:#DCFCE7;color:#166534;font-size:10px">✓ Approved</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">9 ✓ All good</span></td>
+                  <td><div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#F3EFFD;color:#5B35A0">PM</div><span style="font-size:11px">Priya</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">2 days ago</td>
+                  <td><button class="btn btn-ghost btn-xs">View →</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="flex-c" style="gap:9px">
+                      <div class="av av-sm" style="background:#FCE7F3;color:#9D174D">FS</div>
+                      <div><div style="font-weight:700;color:var(--ink)">Farhana Sheikh</div><div style="font-size:10px;color:var(--muted)">farhana.sheikh@gmail.com</div></div>
+                    </div>
+                  </td>
+                  <td><span class="cc">🇬🇧 UK</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-slate">In progress</span></td>
+                  <td><span class="visa-pill" style="background:#F3F4F6;color:var(--slate);font-size:10px">— Not yet</span></td>
+                  <td>
+                    <div class="flex-c" style="gap:4px">
+                      <span class="badge b-green" style="font-size:9px">5 ✓</span>
+                      <span class="badge b-red" style="font-size:9px">3 ✗</span>
+                    </div>
+                  </td>
+                  <td><div class="flex-c" style="gap:5px"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">3 days ago</td>
+                  <td><button class="btn btn-ghost btn-xs">View →</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:var(--ivory2)">
+            <div style="font-size:11px;color:var(--muted)">Showing <strong>1–18</strong> of <strong style="color:var(--ink)">18</strong> students</div>
+            <div style="display:flex;gap:5px">
+              <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--ink);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace">1</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx=['s1','s2','s3','s4','s5','s6'].indexOf(id);
+  if(idx>=0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('a[href="#"]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+</script>
+</body>
+</html>

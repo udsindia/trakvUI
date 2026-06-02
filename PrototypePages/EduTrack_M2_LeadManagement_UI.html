@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack · M2 Lead Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & TOKENS ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:       #0D1B2A;
+  --ink2:      #1E3448;
+  --ink3:      #2D4A63;
+  --amber:     #E8962A;
+  --amber-lt:  #FDF3E3;
+  --amber-mid: #F7D59B;
+  --ivory:     #FAF7F2;
+  --ivory2:    #F2EDE4;
+  --ivory3:    #E8E0D2;
+  --white:     #FFFFFF;
+  --coral:     #E05252;
+  --coral-lt:  #FEF0F0;
+  --emerald:   #1A7A5E;
+  --emerald-lt:#EBF7F3;
+  --sky:       #1C6EA4;
+  --sky-lt:    #EAF3FB;
+  --violet:    #6344B5;
+  --violet-lt: #F0EDFC;
+  --slate:     #5A6A7A;
+  --muted:     #8A99A8;
+  --border:    #DDD6CC;
+  --border2:   #C9BFB3;
+  --shadow-sm: 0 1px 3px rgba(13,27,42,.07), 0 1px 2px rgba(13,27,42,.04);
+  --shadow:    0 2px 8px rgba(13,27,42,.09), 0 1px 3px rgba(13,27,42,.06);
+  --shadow-lg: 0 8px 30px rgba(13,27,42,.13), 0 2px 8px rgba(13,27,42,.07);
+  --r:         10px;
+  --r-lg:      16px;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: #18120C; color: var(--ink); min-height: 100vh; }
+
+/* ─── SCREEN NAVIGATOR ────────────────────────────────────────── */
+.nav-bar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--ink); border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; gap: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-bar::-webkit-scrollbar { display: none; }
+.nav-brand {
+  padding: 0 20px; font-family: 'Fraunces', serif; font-size: 17px;
+  color: #FAF7F2; white-space: nowrap; border-right: 1px solid rgba(255,255,255,.08);
+  height: 46px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.nav-brand span { color: var(--amber); }
+.nav-brand small { font-family: 'DM Sans', sans-serif; font-size: 10px; color: rgba(255,255,255,.35); font-weight: 400; letter-spacing: .06em; text-transform: uppercase; }
+.nav-tabs { display: flex; flex: 1; }
+.nav-tab {
+  padding: 0 18px; height: 46px; display: flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; letter-spacing: .03em; white-space: nowrap;
+  color: rgba(255,255,255,.45); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s; border-right: 1px solid rgba(255,255,255,.05); text-decoration: none;
+}
+.nav-tab:hover { color: rgba(255,255,255,.8); background: rgba(255,255,255,.04); }
+.nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); background: rgba(232,150,42,.06); }
+.tab-num { font-size: 10px; background: rgba(255,255,255,.1); border-radius: 20px; padding: 1px 7px; }
+.nav-tab.active .tab-num { background: rgba(232,150,42,.25); color: var(--amber); }
+
+/* ─── SHELL ──────────────────────────────────────────────────── */
+.screen { display: none; min-height: calc(100vh - 46px); background: var(--ivory); }
+.screen.active { display: flex; flex-direction: column; }
+
+.app-shell { display: flex; flex: 1; height: calc(100vh - 46px); overflow: hidden; }
+
+/* ─── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar {
+  width: 210px; flex-shrink: 0; background: var(--ink);
+  display: flex; flex-direction: column; overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,.06);
+}
+.sb-logo {
+  padding: 18px 18px 14px; font-family: 'Fraunces', serif; font-size: 20px;
+  color: #FAF7F2; border-bottom: 1px solid rgba(255,255,255,.06); line-height: 1;
+}
+.sb-logo span { color: var(--amber); }
+.sb-logo small { display: block; font-family: 'DM Sans', sans-serif; font-size: 9px; color: rgba(255,255,255,.3); font-weight: 400; letter-spacing: .08em; text-transform: uppercase; margin-top: 5px; }
+.sb-nav { flex: 1; padding: 12px 0; }
+.sb-label { padding: 8px 18px 3px; font-size: 9px; color: rgba(255,255,255,.25); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.sb-item {
+  display: flex; align-items: center; gap: 9px; padding: 9px 18px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.5);
+  cursor: pointer; border-left: 3px solid transparent; transition: all .15s;
+}
+.sb-item:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.04); }
+.sb-item.active { color: var(--amber); background: rgba(232,150,42,.08); border-left-color: var(--amber); }
+.sb-icon { font-size: 14px; width: 16px; text-align: center; }
+.sb-badge { margin-left: auto; background: var(--coral); color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 20px; font-weight: 700; }
+.sb-foot { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.06); }
+.sb-user { display: flex; align-items: center; gap: 9px; }
+.sb-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.sb-uname { font-size: 12px; color: #FAF7F2; font-weight: 600; }
+.sb-urole { font-size: 10px; color: rgba(255,255,255,.35); }
+
+/* ─── MAIN AREA ─────────────────────────────────────────────── */
+.main { flex: 1; overflow-y: auto; background: var(--ivory); display: flex; flex-direction: column; }
+
+.topbar {
+  height: 50px; padding: 0 22px; background: var(--white);
+  border-bottom: 1px solid var(--border); display: flex; align-items: center;
+  gap: 14px; position: sticky; top: 0; z-index: 50; flex-shrink: 0;
+}
+.tb-title { font-family: 'Fraunces', serif; font-size: 16px; color: var(--ink); font-weight: 600; }
+.tb-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.page { padding: 22px; flex: 1; }
+
+/* ─── COMPONENTS ─────────────────────────────────────────────── */
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; font-family: 'DM Sans', sans-serif;
+  transition: all .15s; letter-spacing: .01em; text-decoration: none; white-space: nowrap;
+}
+.btn-primary { background: var(--ink); color: #FAF7F2; }
+.btn-primary:hover { background: var(--ink2); }
+.btn-amber { background: var(--amber); color: var(--ink); }
+.btn-amber:hover { filter: brightness(1.08); }
+.btn-outline { background: transparent; color: var(--ink2); border: 1.5px solid var(--border2); }
+.btn-outline:hover { border-color: var(--ink); background: var(--ivory2); }
+.btn-ghost { background: transparent; color: var(--slate); border: none; }
+.btn-ghost:hover { color: var(--ink); background: var(--ivory2); }
+.btn-danger { background: var(--coral); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.btn-xs { padding: 4px 10px; font-size: 10px; border-radius: 6px; }
+.btn-icon { padding: 7px; border-radius: 8px; font-size: 13px; }
+
+/* Cards */
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--white); }
+.card-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+.card-body { padding: 18px; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .03em;
+}
+.b-amber  { background: var(--amber-lt);  color: #8B5E1A; }
+.b-green  { background: var(--emerald-lt);color: var(--emerald); }
+.b-red    { background: var(--coral-lt);  color: var(--coral); }
+.b-sky    { background: var(--sky-lt);    color: var(--sky); }
+.b-violet { background: var(--violet-lt); color: var(--violet); }
+.b-ink    { background: rgba(13,27,42,.08); color: var(--ink2); }
+.b-slate  { background: #EEF2F6; color: var(--slate); }
+.b-new    { background: #EEF2F6; color: #3A5068; }
+
+/* Inputs */
+.inp {
+  padding: 8px 12px; border-radius: 8px; font-size: 12px;
+  border: 1.5px solid var(--border2); background: var(--white);
+  font-family: 'DM Sans', sans-serif; color: var(--ink); width: 100%;
+  transition: border-color .15s;
+}
+.inp:focus { outline: none; border-color: var(--ink2); }
+.inp::placeholder { color: var(--muted); }
+.inp-label { font-size: 11px; font-weight: 700; color: var(--ink2); letter-spacing: .03em; margin-bottom: 4px; display: block; }
+.inp-hint  { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.inp-ok    { font-size: 10px; color: var(--emerald); margin-top: 3px; font-weight: 600; }
+.inp-err   { font-size: 10px; color: var(--coral); margin-top: 3px; font-weight: 600; }
+
+.sel {
+  padding: 8px 30px 8px 12px; border-radius: 8px; font-size: 12px;
+  border: 1.5px solid var(--border2); background: var(--white);
+  font-family: 'DM Sans', sans-serif; color: var(--ink); width: 100%;
+  appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A6A7A' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+  background: var(--ivory2); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid rgba(221,214,204,.5); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(232,150,42,.04); }
+tbody td { padding: 11px 14px; font-size: 12px; color: var(--ink2); vertical-align: middle; }
+
+/* Search bar */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--ivory2); border: 1.5px solid var(--border2);
+  border-radius: 9px; padding: 7px 12px; transition: border-color .15s;
+}
+.search-bar:focus-within { border-color: var(--ink2); background: var(--white); }
+.search-bar input { background: none; border: none; outline: none; font-size: 12px; font-family: 'DM Sans',sans-serif; color: var(--ink); flex: 1; }
+.search-bar input::placeholder { color: var(--muted); }
+
+/* Filter chip */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: var(--white); border: 1.5px solid var(--border2); color: var(--slate);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.chip.on { border-color: var(--ink2); color: var(--ink2); background: var(--ivory2); }
+
+/* Score dots */
+.dots { display: flex; gap: 3px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot-on  { background: var(--amber); }
+.dot-off { background: var(--ivory3); }
+
+/* Avatar */
+.av {
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; flex-shrink: 0;
+}
+.av-sm { width: 26px; height: 26px; font-size: 10px; }
+.av-md { width: 32px; height: 32px; font-size: 12px; }
+.av-lg { width: 48px; height: 48px; font-size: 17px; }
+.av-xl { width: 60px; height: 60px; font-size: 22px; }
+
+/* Pipeline stage bar */
+.pipe-bar { display: flex; gap: 0; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.pipe-bar::-webkit-scrollbar { display: none; }
+.pipe-step {
+  padding: 7px 18px 7px 28px; font-size: 10px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%, 11px 50%);
+  cursor: pointer; transition: opacity .15s; flex-shrink: 0;
+}
+.pipe-step:first-child { clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%); padding-left: 16px; }
+.pipe-step.off { opacity: .38; }
+.pipe-step.on  { opacity: 1; }
+
+/* Tag */
+.tag { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 10px; font-weight: 600; background: var(--ivory2); color: var(--slate); border: 1px solid var(--border); }
+
+/* Country chip */
+.cc { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 20px; font-size: 11px; background: var(--ivory2); border: 1px solid var(--border); color: var(--ink2); }
+
+/* Divider */
+.divider { display: flex; align-items: center; gap: 10px; }
+.div-line { flex: 1; height: 1px; background: var(--border); }
+.div-txt { font-size: 11px; color: var(--muted); }
+
+/* Toggle */
+.tog { width: 34px; height: 20px; border-radius: 10px; position: relative; cursor: pointer; flex-shrink: 0; }
+.tog-on  { background: var(--emerald); }
+.tog-off { background: var(--border2); }
+.tog-thumb { position: absolute; top: 3px; width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .15s; }
+.tog-on  .tog-thumb { left: 17px; }
+.tog-off .tog-thumb { left: 3px; }
+
+/* Progress steps wizard */
+.prog-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.prog-step { display: flex; align-items: center; gap: 8px; }
+.prog-step-dot {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border2);
+  background: var(--white); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--muted); position: relative; z-index: 1; flex-shrink: 0;
+}
+.prog-step-dot.done { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+.prog-step-dot.curr { background: var(--ink); border-color: var(--ink); color: #fff; }
+.prog-step-label { font-size: 11px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+.prog-step-label.done { color: var(--emerald); font-weight: 600; }
+.prog-step-label.curr { color: var(--ink); font-weight: 700; }
+.prog-connector { flex: 1; height: 2px; background: var(--border); min-width: 20px; max-width: 60px; margin: 0 4px; }
+.prog-connector.done { background: var(--emerald); }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; }
+.tl-item { display: flex; gap: 12px; padding-bottom: 18px; position: relative; }
+.tl-item::before { content: ''; position: absolute; left: 14px; top: 28px; bottom: 0; width: 1px; background: var(--border); }
+.tl-item:last-child::before { display: none; }
+.tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--border); }
+.tl-body { flex: 1; padding-top: 2px; }
+.tl-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* Kanban */
+.kb-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; }
+.kb-board::-webkit-scrollbar { height: 4px; }
+.kb-board::-webkit-scrollbar-track { background: var(--ivory2); border-radius: 2px; }
+.kb-board::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.kb-col { width: 220px; flex-shrink: 0; }
+.kb-head { padding: 10px 12px; border-radius: 9px 9px 0 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.kb-body { background: var(--ivory2); border-radius: 0 0 9px 9px; padding: 8px; min-height: 160px; display: flex; flex-direction: column; gap: 7px; }
+.kb-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px; box-shadow: var(--shadow-sm); }
+.kb-card-name { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.kb-card-sub  { font-size: 10px; color: var(--muted); }
+.kb-card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+
+/* Info rows */
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(221,214,204,.4); font-size: 12px; }
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--muted); font-weight: 500; }
+.info-val { color: var(--ink2); font-weight: 600; text-align: right; }
+
+/* Hint / error boxes */
+.hint { background: var(--amber-lt); border: 1px solid var(--amber-mid); border-radius: 9px; padding: 10px 14px; font-size: 11px; color: #7A4F10; display: flex; gap: 8px; }
+.err  { background: var(--coral-lt); border: 1px solid #FABABD; border-radius: 9px; padding: 10px 14px; font-size: 11px; color: #9A1C1C; display: flex; gap: 8px; }
+.ok   { background: var(--emerald-lt); border: 1px solid #9DDCCF; border-radius: 9px; padding: 10px 14px; font-size: 11px; color: #125944; display: flex; gap: 8px; }
+
+/* Grid utils */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.flex-c { display: flex; align-items: center; gap: 8px; }
+.flex-sb { display: flex; justify-content: space-between; align-items: center; }
+.gap4 { gap: 4px; }
+.gap6 { gap: 6px; }
+.gap10 { gap: 10px; }
+.gap14 { gap: 14px; }
+.mb8  { margin-bottom: 8px; }
+.mb14 { margin-bottom: 14px; }
+.mb18 { margin-bottom: 18px; }
+.mb22 { margin-bottom: 22px; }
+.mt6  { margin-top: 6px; }
+.mt10 { margin-top: 10px; }
+.mt14 { margin-top: 14px; }
+
+/* Upload zone */
+.drop-zone { border: 2px dashed var(--border2); border-radius: 12px; padding: 36px 20px; text-align: center; background: var(--ivory2); cursor: pointer; transition: all .15s; }
+.drop-zone:hover { border-color: var(--amber); background: var(--amber-lt); }
+.drop-icon { font-size: 38px; margin-bottom: 12px; }
+.drop-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.drop-sub   { font-size: 12px; color: var(--muted); }
+
+/* Pagination */
+.pager { display: flex; align-items: center; gap: 5px; }
+.pager-btn { width: 28px; height: 28px; border-radius: 7px; border: 1.5px solid var(--border2); background: var(--white); color: var(--slate); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; font-family: 'DM Mono', monospace; }
+.pager-btn:hover { border-color: var(--ink); color: var(--ink); }
+.pager-btn.curr { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pager-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Form section */
+.fsec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.frow { display: flex; flex-direction: column; gap: 4px; }
+
+/* Map preview box */
+.map-preview { background: linear-gradient(135deg, #E8F4FF 0%, #D4EDFF 100%); border-radius: 10px; height: 100px; display: flex; align-items: center; justify-content: center; border: 1px solid #BAD9F5; font-size: 11px; color: var(--sky); font-weight: 600; }
+
+/* ─── LEAD DETAIL header gradient ───────────────────────────── */
+.detail-hero {
+  background: linear-gradient(135deg, var(--ink) 0%, #1E3D5C 60%, #2D5478 100%);
+  padding: 20px 22px 0;
+  position: relative;
+  overflow: hidden;
+}
+.detail-hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(ellipse at 90% 0%, rgba(232,150,42,.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.hero-name { font-family: 'Fraunces', serif; font-size: 26px; color: #FAF7F2; margin-bottom: 6px; }
+.hero-meta { display: flex; gap: 16px; font-size: 12px; color: rgba(250,247,242,.6); flex-wrap: wrap; }
+.hero-meta span { display: flex; align-items: center; gap: 5px; }
+
+/* Import table highlights */
+.row-ok   { }
+.row-warn { background: rgba(232,150,42,.05); }
+.row-err  { background: rgba(224,82,82,.05); }
+td.cell-err { color: var(--coral); font-weight: 700; }
+td.cell-warn { color: #8B5E1A; font-weight: 600; }
+
+/* Web form preview */
+.wfp { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.wfp-logo { font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); margin-bottom: 4px; }
+.wfp-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+
+/* Section title strip */
+.screen-strip {
+  background: var(--ink); padding: 10px 22px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.screen-strip-mod  { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+.screen-strip-name { font-size: 13px; font-weight: 600; color: rgba(250,247,242,.85); }
+.screen-strip-desc { font-size: 11px; color: rgba(250,247,242,.35); margin-left: auto; }
+
+/* Stat mini card */
+.mini-stat { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+.mini-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.mini-stat-val { font-family: 'Fraunces', serif; font-size: 28px; color: var(--ink); margin: 3px 0; }
+.mini-stat-trend { font-size: 11px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Overlap trick for KB drag hint */
+.drag-hint { font-size: 10px; color: var(--muted); text-align: center; padding: 12px; letter-spacing: .03em; }
+
+/* Tooltip badge on table cell */
+.ovd { color: var(--coral); font-weight: 600; font-size: 11px; }
+
+/* Col map row */
+.map-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--ivory); border: 1px solid var(--border); margin-bottom: 6px; }
+.map-col-src { font-size: 11px; font-weight: 600; color: var(--ink2); width: 140px; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+.map-arrow { color: var(--muted); }
+.map-col-dst { flex: 1; }
+
+/* Form embed code block */
+.code-block { background: #0D1B2A; border-radius: 9px; padding: 14px 16px; font-family: 'DM Mono', monospace; font-size: 11px; color: #9DD7A8; line-height: 1.7; overflow-x: auto; }
+.code-block .c-tag { color: #7EC8E3; }
+.code-block .c-attr { color: #FFD580; }
+.code-block .c-val { color: #B5EAD7; }
+</style>
+</head>
+<body>
+
+<!-- ─── TOP NAV ─────────────────────────────────────────────── -->
+<nav class="nav-bar">
+  <div class="nav-brand">Edu<span>Track</span> <small>· M2</small></div>
+  <div class="nav-tabs">
+    <a class="nav-tab active" onclick="show('s1')" href="#">
+      📋 Lead List <span class="tab-num">1/6</span>
+    </a>
+    <a class="nav-tab" onclick="show('s2')" href="#">
+      🔍 Lead Detail <span class="tab-num">2/6</span>
+    </a>
+    <a class="nav-tab" onclick="show('s3')" href="#">
+      ✏️ Add / Edit Lead <span class="tab-num">3/6</span>
+    </a>
+    <a class="nav-tab" onclick="show('s4')" href="#">
+      📥 Import Leads <span class="tab-num">4/6</span>
+    </a>
+    <a class="nav-tab" onclick="show('s5')" href="#">
+      🗂 Pipeline Board <span class="tab-num">5/6</span>
+    </a>
+    <a class="nav-tab" onclick="show('s6')" href="#">
+      🌐 Web Form Builder <span class="tab-num">6/6</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 1 — LEAD LIST
+══════════════════════════════════════════════════════════════ -->
+<div id="s1" class="screen active">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 1/6</span>
+    <span class="screen-strip-name">Lead List</span>
+    <span class="screen-strip-desc">P0 · Phase 1 · High Complexity</span>
+  </div>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item active"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+        <div class="sb-item"><span class="sb-icon">✈️</span>Travel</div>
+        <div class="sb-label">Settings</div>
+        <div class="sb-item"><span class="sb-icon">👥</span>Team</div>
+        <div class="sb-item"><span class="sb-icon">⚙️</span>Workspace</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div>
+          <div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Leads</span>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:700">142</span> total leads
+        </div>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm" onclick="show('s4')">📥 Import CSV</button>
+          <button class="btn btn-amber btn-sm" onclick="show('s3')">＋ Add Lead</button>
+        </div>
+      </div>
+
+      <div class="page">
+        <!-- Pipeline stage tabs -->
+        <div class="mb14">
+          <div class="pipe-bar">
+            <div class="pipe-step off" style="background:#E8E2D8;color:#5A6A7A">All &nbsp;142</div>
+            <div class="pipe-step on"  style="background:var(--ink);color:#FAF7F2">New &nbsp;28</div>
+            <div class="pipe-step off" style="background:#1C6EA4;color:#fff">Contacted &nbsp;34</div>
+            <div class="pipe-step off" style="background:#6344B5;color:#fff">Qualified &nbsp;19</div>
+            <div class="pipe-step off" style="background:#1A7A5E;color:#fff">Counselling &nbsp;22</div>
+            <div class="pipe-step off" style="background:var(--amber);color:var(--ink)">Applied &nbsp;15</div>
+            <div class="pipe-step off" style="background:#A03030;color:#fff">Offer Rxd &nbsp;8</div>
+            <div class="pipe-step off" style="background:#2C6E49;color:#fff">Visa &nbsp;6</div>
+            <div class="pipe-step off" style="background:#15803D;color:#fff">Enrolled &nbsp;10</div>
+          </div>
+        </div>
+
+        <!-- Filter row -->
+        <div class="flex-c mb14" style="flex-wrap:wrap;gap:8px">
+          <div class="search-bar" style="width:260px">
+            <span style="color:var(--muted);font-size:13px">🔍</span>
+            <input placeholder="Name or phone...">
+          </div>
+          <div class="chip">🌍 Country ▾</div>
+          <div class="chip">👤 Agent ▾</div>
+          <div class="chip">📅 Intake ▾</div>
+          <div class="chip on">⭐ Score ▾</div>
+          <div class="chip on">📅 Mar 2025 ▾ ×</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--muted)">Sort:</span>
+            <select class="sel" style="width:140px;font-size:11px;padding:6px 26px 6px 10px">
+              <option>Last Activity</option>
+              <option>Score: High</option>
+              <option>Date Created</option>
+            </select>
+            <button class="btn btn-ghost btn-sm btn-icon" title="View toggle">⊞</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card mb14">
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px"><input type="checkbox"></th>
+                  <th>Lead</th>
+                  <th>Destination</th>
+                  <th>Intake</th>
+                  <th>Stage</th>
+                  <th>Score</th>
+                  <th>Agent</th>
+                  <th>Last Activity</th>
+                  <th>Source</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" checked></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Aditya Nair</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 98888 12345</div>
+                  </td>
+                  <td><div class="flex-c gap4"><span class="cc">🇬🇧 UK</span><span class="cc">🇦🇺 AUS</span></div></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-new">New</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">2h ago</td>
+                  <td><span class="tag">Walk-in</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Meera Pillai</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 87777 55555</div>
+                  </td>
+                  <td><span class="cc">🇨🇦 CAN</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Jan 2026</td>
+                  <td><span class="badge b-sky">Contacted</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#DDD6FE;color:#6344B5">PM</div><span style="font-size:11px">Priya</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">Yesterday</td>
+                  <td><span class="tag">Website</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Rohan Desai</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 99000 77777</div>
+                  </td>
+                  <td><span class="cc">🇮🇪 IRE</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-green">Counselling</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">3 days ago</td>
+                  <td><span class="tag">Referral</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Kavya Iyer</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 91234 56789</div>
+                  </td>
+                  <td><span class="cc">🇳🇿 NZ</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Jan 2026</td>
+                  <td><span class="badge b-violet">Qualified</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#DDD6FE;color:#6344B5">PM</div><span style="font-size:11px">Priya</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">1 week ago</td>
+                  <td><span class="tag">Social</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Siddharth Rao</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 80808 33333</div>
+                  </td>
+                  <td><span class="cc">🇬🇧 UK</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-amber">Applied</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td><span class="ovd">⚠ Task overdue</span></td>
+                  <td><span class="tag">Event</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div style="font-weight:700;font-size:13px;color:var(--ink)">Farhana Sheikh</div>
+                    <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">+91 99111 22222</div>
+                  </td>
+                  <td><span class="cc">🇬🇧 UK</span></td>
+                  <td style="font-size:11px;font-family:'DM Mono',monospace">Sep 2025</td>
+                  <td><span class="badge b-new">New</span></td>
+                  <td><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div></td>
+                  <td><div class="flex-c gap6"><div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div><span style="font-size:11px">Arjun</span></div></td>
+                  <td style="font-size:11px;color:var(--muted)">Just now</td>
+                  <td><span class="tag">Website</span></td>
+                  <td><button class="btn btn-ghost btn-xs" onclick="show('s2')">View →</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Table footer -->
+          <div style="padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:var(--ivory2);">
+            <div style="font-size:11px;color:var(--muted)">Showing <strong>1–25</strong> of <strong style="color:var(--ink)">142</strong> leads</div>
+            <div class="flex-c gap6">
+              <span style="font-size:11px;color:var(--muted)">2 selected</span>
+              <button class="btn btn-outline btn-xs">Bulk Assign</button>
+              <button class="btn btn-outline btn-xs">Change Stage</button>
+            </div>
+            <div class="pager">
+              <button class="pager-btn" disabled>‹</button>
+              <button class="pager-btn curr">1</button>
+              <button class="pager-btn">2</button>
+              <button class="pager-btn">3</button>
+              <span style="font-size:11px;color:var(--muted);padding:0 4px">…</span>
+              <button class="pager-btn">6</button>
+              <button class="pager-btn">›</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick stats strip -->
+        <div class="g4">
+          <div class="mini-stat"><div class="mini-stat-label">New Today</div><div class="mini-stat-val">6</div><div class="mini-stat-trend" style="color:var(--emerald)">↑ 2 vs yesterday</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Overdue Tasks</div><div class="mini-stat-val" style="color:var(--coral)">7</div><div class="mini-stat-trend" style="color:var(--coral)">↑ 4 this week</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Hot Leads (5★)</div><div class="mini-stat-val" style="color:var(--amber)">11</div><div class="mini-stat-trend" style="color:var(--emerald)">↑ 3 this month</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Avg Score</div><div class="mini-stat-val">3.2</div><div class="mini-stat-trend" style="color:var(--muted)">No change</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 2 — LEAD DETAIL
+══════════════════════════════════════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 2/6</span>
+    <span class="screen-strip-name">Lead Detail</span>
+    <span class="screen-strip-desc">P0 · Phase 1 · High Complexity</span>
+  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item"><span class="sb-icon">📊</span>Dashboard</div>
+        <div class="sb-item active"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>Courses</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div>
+          <div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div>
+        </div>
+      </div>
+    </nav>
+    <div class="main">
+      <!-- Topbar with breadcrumb -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+          <span style="cursor:pointer;color:var(--muted)" onclick="show('s1')">← Leads</span>
+          <span style="color:var(--border2)">›</span>
+          <span style="color:var(--ink2);font-weight:600">Rohan Desai</span>
+        </div>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm" onclick="show('s3')">✏️ Edit Lead</button>
+          <button class="btn btn-amber btn-sm">＋ Log Activity</button>
+        </div>
+      </div>
+
+      <!-- Hero banner -->
+      <div class="detail-hero">
+        <div style="display:flex;align-items:flex-start;gap:18px;position:relative;z-index:1">
+          <div class="av av-xl" style="background:rgba(232,150,42,.2);color:var(--amber);font-family:'Fraunces',serif">RD</div>
+          <div style="flex:1">
+            <div class="hero-name">Rohan Desai</div>
+            <div class="hero-meta">
+              <span>📱 +91 99000 77777</span>
+              <span>✉️ rohan.desai@gmail.com</span>
+              <span>🌍 Ireland</span>
+              <span>🗓 Sep 2025 intake</span>
+            </div>
+          </div>
+          <div style="text-align:right;position:relative;z-index:1">
+            <div style="font-size:9px;color:rgba(250,247,242,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Lead Score</div>
+            <div class="dots" style="justify-content:flex-end;gap:4px">
+              <div class="dot" style="width:9px;height:9px;background:var(--amber)"></div>
+              <div class="dot" style="width:9px;height:9px;background:var(--amber)"></div>
+              <div class="dot" style="width:9px;height:9px;background:var(--amber)"></div>
+              <div class="dot" style="width:9px;height:9px;background:var(--amber)"></div>
+              <div class="dot" style="width:9px;height:9px;background:var(--amber)"></div>
+            </div>
+            <div style="font-size:9px;color:rgba(250,247,242,.4);margin-top:4px">Hot Lead</div>
+          </div>
+        </div>
+        <!-- Stage stepper -->
+        <div style="margin-top:18px;padding-bottom:0;position:relative;z-index:1">
+          <div class="pipe-bar">
+            <div class="pipe-step off" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:9px">New</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:9px">Contacted</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:9px">Qualified</div>
+            <div class="pipe-step on"  style="background:var(--amber);color:var(--ink);font-size:9px">✓ Counselling</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);font-size:9px">Applied</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);font-size:9px">Offer Rxd</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);font-size:9px">Visa</div>
+            <div class="pipe-step off" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);font-size:9px">Enrolled</div>
+          </div>
+        </div>
+        <!-- Quick action strip -->
+        <div style="display:flex;gap:8px;padding:12px 0 0;position:relative;z-index:1">
+          <button class="btn btn-amber btn-sm">📞 Log Call</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,247,242,.8);border:1px solid rgba(255,255,255,.15)">💬 Log WhatsApp</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,247,242,.8);border:1px solid rgba(255,255,255,.15)">✅ Add Task</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,247,242,.8);border:1px solid rgba(255,255,255,.15)">📚 Add Application</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(250,247,242,.8);border:1px solid rgba(255,255,255,.15)">↕ Change Stage</button>
+        </div>
+      </div>
+
+      <div class="page">
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+          <!-- LEFT col: timeline + tasks -->
+          <div>
+            <!-- Tab nav -->
+            <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px">
+              <div style="padding:8px 16px;font-size:12px;font-weight:700;color:var(--ink);border-bottom:2px solid var(--ink);margin-bottom:-2px;cursor:pointer">Timeline</div>
+              <div style="padding:8px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer">Tasks (2)</div>
+              <div style="padding:8px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer">Notes</div>
+            </div>
+
+            <div class="card mb14">
+              <div class="card-head">
+                <span>📋</span>
+                <div class="card-title">Activity Timeline</div>
+                <button class="btn btn-amber btn-sm" style="margin-left:auto">＋ Log Activity</button>
+              </div>
+              <div class="card-body">
+                <div class="timeline">
+                  <div class="tl-item">
+                    <div class="tl-dot" style="background:#EEF2FF">📞</div>
+                    <div class="tl-body">
+                      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                        <div style="font-size:13px;font-weight:700;color:var(--ink)">Phone Call · 14 mins</div>
+                        <span class="badge b-green">Positive</span>
+                      </div>
+                      <div style="font-size:12px;color:var(--ink2);margin-top:4px;line-height:1.55">Discussed UCD MSc Data Science requirements. IELTS 7.0 confirmed (L8 R7.5 W6.5 S6.5). Needs to verify if W/S 6.5 acceptable — will follow up with uni. Monday 3pm call booked.</div>
+                      <div class="tl-time">Arjun Kapoor · Today, 2:30 PM</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot" style="background:#ECFDF5">💬</div>
+                    <div class="tl-body">
+                      <div style="font-size:13px;font-weight:700;color:var(--ink)">WhatsApp Message</div>
+                      <div style="font-size:12px;color:var(--ink2);margin-top:4px">Sent UCD course brochure and fee structure PDF. Student confirmed reading it.</div>
+                      <div class="tl-time">Arjun Kapoor · Yesterday, 4:15 PM</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot" style="background:#FDF3E3">📅</div>
+                    <div class="tl-body">
+                      <div style="font-size:13px;font-weight:700;color:var(--ink)">Meeting · 45 mins</div>
+                      <div style="font-size:12px;color:var(--ink2);margin-top:4px">In-person counselling. Shortlist finalised: UCD Dublin (preferred), NCI, IADT. SOP draft requested by next week.</div>
+                      <div class="tl-time">Arjun Kapoor · 3 days ago</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot" style="background:#FEF3C7">⭐</div>
+                    <div class="tl-body">
+                      <div style="font-size:12px;font-weight:600;color:var(--amber)">Stage changed: Qualified → Counselling</div>
+                      <div class="tl-time">System · 3 days ago</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot" style="background:#EEF2FF">📞</div>
+                    <div class="tl-body">
+                      <div style="font-size:13px;font-weight:700;color:var(--ink)">Phone Call · 8 mins</div>
+                      <div style="font-size:12px;color:var(--ink2);margin-top:4px">Initial call. Student interested in Data Science or CS programs in Ireland. Has IELTS band 7.0. Booked in-person meeting.</div>
+                      <div class="tl-time">Arjun Kapoor · 5 days ago</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT col: lead info + applications -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <!-- Lead details card -->
+            <div class="card">
+              <div class="card-head"><span>📝</span><div class="card-title">Lead Details</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s3')">Edit</button></div>
+              <div class="card-body" style="padding:14px">
+                <div class="info-row"><span class="info-key">Source</span><span class="tag">Referral</span></div>
+                <div class="info-row"><span class="info-key">Destination</span><span class="cc">🇮🇪 Ireland</span></div>
+                <div class="info-row"><span class="info-key">Target Intake</span><strong class="info-val">Sep 2025</strong></div>
+                <div class="info-row"><span class="info-key">Course Interest</span><span class="info-val">MSc Data Science</span></div>
+                <div class="info-row"><span class="info-key">Assigned Agent</span>
+                  <div class="flex-c gap6"><div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div><span style="font-size:12px;font-weight:600">Arjun Kapoor</span></div>
+                </div>
+                <div class="info-row"><span class="info-key">Added</span><span class="info-val">Feb 12, 2025</span></div>
+              </div>
+            </div>
+
+            <!-- Next task -->
+            <div class="card" style="border-left:3px solid var(--amber)">
+              <div class="card-head"><span>⏰</span><div class="card-title">Next Follow-up</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px">Call Rohan Desai</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Re: UCD W/S score clarification</div>
+                <div style="font-size:11px;color:var(--amber);font-weight:700">📅 Mon Mar 10, 3:00 PM</div>
+                <button class="btn btn-outline btn-xs" style="margin-top:10px;width:100%;justify-content:center">✓ Mark Done</button>
+              </div>
+            </div>
+
+            <!-- Applications -->
+            <div class="card">
+              <div class="card-head"><span>📚</span><div class="card-title">Applications (2)</div><button class="btn btn-amber btn-xs" style="margin-left:auto">＋ Add</button></div>
+              <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:10px">
+                <div style="background:var(--ivory2);border-radius:9px;padding:12px;border:1px solid var(--border)">
+                  <div style="font-weight:700;font-size:12px;color:var(--ink);margin-bottom:2px">🏛 University College Dublin</div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px">MSc Data Science · Sep 2025</div>
+                  <span class="badge b-amber">Doc Collection</span>
+                  <!-- mini progress -->
+                  <div style="display:flex;gap:2px;margin-top:8px">
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--emerald)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--emerald)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--amber)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>
+                    <div style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>
+                  </div>
+                  <div style="font-size:9px;color:var(--muted);margin-top:3px">Step 3/8</div>
+                </div>
+                <div style="background:var(--ivory2);border-radius:9px;padding:12px;border:1px solid var(--border)">
+                  <div style="font-weight:700;font-size:12px;color:var(--ink);margin-bottom:2px">🏛 NCI Dublin</div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px">MSc Data Analytics · Jan 2026</div>
+                  <span class="badge b-sky">Not Applied Yet</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 3 — ADD / EDIT LEAD
+══════════════════════════════════════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 3/6</span>
+    <span class="screen-strip-name">Add / Edit Lead</span>
+    <span class="screen-strip-desc">P0 · Phase 1 · Medium Complexity</span>
+  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks</div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#BAD9F5;color:#1C6EA4">AK</div>
+          <div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div>
+        </div>
+      </div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+          <span style="cursor:pointer;color:var(--muted)" onclick="show('s1')">← Leads</span>
+          <span style="color:var(--border2)">›</span>
+          <span style="color:var(--ink2);font-weight:600">Add New Lead</span>
+        </div>
+        <div class="tb-actions">
+          <button class="btn btn-ghost btn-sm">Save as draft</button>
+          <button class="btn btn-amber btn-sm">Save Lead</button>
+        </div>
+      </div>
+      <div class="page">
+        <div style="max-width:680px">
+          <!-- Dup check notice -->
+          <div class="ok mb18" style="display:flex;align-items:center;gap:8px">
+            <span>✓</span>
+            <span>No duplicate found for this phone number. Safe to proceed.</span>
+          </div>
+
+          <!-- Contact -->
+          <div class="mb22">
+            <div class="fsec-title">Contact Information</div>
+            <div class="g2">
+              <div class="frow">
+                <label class="inp-label">Full name *</label>
+                <input class="inp" value="Vikram Bhat">
+              </div>
+              <div class="frow">
+                <label class="inp-label">Phone number *</label>
+                <div style="display:flex;border:1.5px solid var(--ink2);border-radius:8px;overflow:hidden">
+                  <div style="padding:8px 11px;background:var(--ivory2);font-size:12px;color:var(--ink2);border-right:1px solid var(--border2);white-space:nowrap">🇮🇳 +91</div>
+                  <input style="flex:1;border:none;outline:none;padding:8px 12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink)" value="97654 32100">
+                </div>
+                <div class="inp-ok">✓ Format looks good</div>
+              </div>
+              <div class="frow">
+                <label class="inp-label">Email address</label>
+                <input class="inp" type="email" value="vikram.bhat@gmail.com">
+              </div>
+              <div class="frow">
+                <label class="inp-label">Lead source *</label>
+                <select class="sel">
+                  <option>Walk-in</option>
+                  <option selected>Website</option>
+                  <option>Referral</option>
+                  <option>Social Media</option>
+                  <option>Event / Exhibition</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Study prefs -->
+          <div class="mb22">
+            <div class="fsec-title">Study Preferences</div>
+            <div class="g2">
+              <div class="frow" style="grid-column:1/-1">
+                <label class="inp-label">Destination countries *</label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1.5px solid var(--border2);border-radius:8px;background:var(--white);min-height:42px">
+                  <span class="cc" style="background:#DBEAFE;border-color:#93C5FD;color:#1D4ED8">🇬🇧 UK <span style="cursor:pointer;opacity:.6">×</span></span>
+                  <span class="cc" style="background:#DBEAFE;border-color:#93C5FD;color:#1D4ED8">🇦🇺 AUS <span style="cursor:pointer;opacity:.6">×</span></span>
+                  <span style="font-size:11px;color:var(--muted);padding:3px 2px;cursor:pointer">+ Add country</span>
+                </div>
+              </div>
+              <div class="frow">
+                <label class="inp-label">Course interest</label>
+                <input class="inp" value="MBA / Business Management">
+              </div>
+              <div class="frow">
+                <label class="inp-label">Target intake *</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <select class="sel">
+                    <option selected>September</option>
+                    <option>January</option>
+                    <option>May</option>
+                  </select>
+                  <select class="sel">
+                    <option>2025</option>
+                    <option selected>2026</option>
+                  </select>
+                </div>
+              </div>
+              <div class="frow">
+                <label class="inp-label">Assign to agent</label>
+                <select class="sel">
+                  <option>Arjun Kapoor (me)</option>
+                  <option>Priya Mehta</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb22">
+            <div class="fsec-title">Initial Notes</div>
+            <textarea class="inp" style="resize:vertical;min-height:90px">Walked in today. Currently final year B.Com. Interested in UK / Australia MBA. Budget ~₹35L/year. IELTS 6.5 — needs improvement. Parents supportive. Very motivated.</textarea>
+          </div>
+
+          <div class="hint">
+            <span>⚠️</span>
+            <span>Duplicate detection runs on phone and email on blur. Saving is never blocked — you can always proceed.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 4 — IMPORT LEADS
+══════════════════════════════════════════════════════════════ -->
+<div id="s4" class="screen">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 4/6</span>
+    <span class="screen-strip-name">Import Leads — Step 3: Review Data</span>
+    <span class="screen-strip-desc">P0 · Phase 1 · High Complexity</span>
+  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎯</span>Leads</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#DDD6FE;color:#6344B5">RS</div>
+          <div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div>
+        </div>
+      </div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Import Leads from CSV / Excel</span>
+        <div class="tb-actions">
+          <span style="font-size:11px;color:var(--muted)">leads_march_2025.xlsx</span>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Progress wizard -->
+        <div class="prog-steps mb22">
+          <div class="prog-step">
+            <div class="prog-step-dot done">✓</div>
+            <div class="prog-step-label done">Upload File</div>
+          </div>
+          <div class="prog-connector done"></div>
+          <div class="prog-step">
+            <div class="prog-step-dot done">✓</div>
+            <div class="prog-step-label done">Map Columns</div>
+          </div>
+          <div class="prog-connector done"></div>
+          <div class="prog-step">
+            <div class="prog-step-dot curr">3</div>
+            <div class="prog-step-label curr">Review Data</div>
+          </div>
+          <div class="prog-connector"></div>
+          <div class="prog-step">
+            <div class="prog-step-dot">4</div>
+            <div class="prog-step-label">Duplicates</div>
+          </div>
+          <div class="prog-connector"></div>
+          <div class="prog-step">
+            <div class="prog-step-dot">5</div>
+            <div class="prog-step-label">Complete</div>
+          </div>
+        </div>
+
+        <!-- Step 2 recap: column mapping -->
+        <div class="card mb18">
+          <div class="card-head">
+            <span>🗺</span><div class="card-title">Column Mapping (Step 2 — confirmed)</div>
+            <button class="btn btn-ghost btn-xs" style="margin-left:auto">Edit mapping</button>
+          </div>
+          <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="map-row"><span class="map-col-src">Name</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>Full Name</option></select></div>
+            <div class="map-row"><span class="map-col-src">Mobile</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>Phone Number</option></select></div>
+            <div class="map-row"><span class="map-col-src">Email ID</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>Email</option></select></div>
+            <div class="map-row"><span class="map-col-src">Channel</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>Lead Source</option></select></div>
+            <div class="map-row"><span class="map-col-src">Country</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>Destination</option></select></div>
+            <div class="map-row" style="background:var(--amber-lt);border-color:var(--amber-mid)"><span class="map-col-src" style="color:var(--amber)">Notes2</span><span class="map-arrow">→</span><select class="sel map-col-dst" style="font-size:11px"><option>— Skip this column —</option></select></div>
+          </div>
+        </div>
+
+        <!-- Preview table -->
+        <div class="card mb14">
+          <div class="card-head">
+            <span>👁</span>
+            <div class="card-title">Data Preview — First 20 rows</div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <span class="badge b-green">✓ 152 valid</span>
+              <span class="badge b-amber">⚠ 4 warnings</span>
+              <span class="badge b-red">✗ 3 errors</span>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">#</th>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Source</th>
+                  <th>Country</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-ok">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">1</td>
+                  <td style="font-weight:600">Aditya Nair</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">+91 98888 12345</td>
+                  <td style="font-size:11px">aditya@gmail.com</td>
+                  <td><span class="tag">Referral</span></td>
+                  <td><span class="cc">🇬🇧 UK</span></td>
+                  <td><span class="badge b-green">✓ Valid</span></td>
+                </tr>
+                <tr class="row-warn">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">2</td>
+                  <td style="font-weight:600">Meena Krishnan</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">+91 87776 66666</td>
+                  <td class="cell-warn">— missing —</td>
+                  <td><span class="tag">Walk-in</span></td>
+                  <td><span class="cc">🇦🇺 AUS</span></td>
+                  <td><span class="badge b-amber">⚠ Missing email</span></td>
+                </tr>
+                <tr class="row-err">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">3</td>
+                  <td class="cell-warn">— blank —</td>
+                  <td class="cell-err">0INVALID99</td>
+                  <td class="cell-warn">test@</td>
+                  <td class="cell-warn">— blank —</td>
+                  <td class="cell-warn">— blank —</td>
+                  <td><span class="badge b-red">✗ Error — will skip</span></td>
+                </tr>
+                <tr class="row-ok">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">4</td>
+                  <td style="font-weight:600">Pradeep Kumar</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">+91 95555 44444</td>
+                  <td style="font-size:11px">pk@outlook.com</td>
+                  <td><span class="tag">Website</span></td>
+                  <td><span class="cc">🇨🇦 CAN</span></td>
+                  <td><span class="badge b-green">✓ Valid</span></td>
+                </tr>
+                <tr class="row-ok">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">5</td>
+                  <td style="font-weight:600">Farhana Sheikh</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">+91 99111 22222</td>
+                  <td style="font-size:11px">farhana@gmail.com</td>
+                  <td><span class="tag">Social</span></td>
+                  <td><span class="cc">🇮🇪 IRE</span></td>
+                  <td><span class="badge b-green">✓ Valid</span></td>
+                </tr>
+                <tr class="row-warn">
+                  <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:10px">6</td>
+                  <td style="font-weight:600">Sunita Verma</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">+91 88990 11111</td>
+                  <td style="font-size:11px">sunita@yahoo.com</td>
+                  <td><span class="tag">Walk-in</span></td>
+                  <td class="cell-warn">UK, AUS (multi)</td>
+                  <td><span class="badge b-amber">⚠ Multi-country parsed</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);background:var(--ivory2)">
+            <span style="font-size:11px;color:var(--muted)">Showing 6 of 159 rows</span>
+            <div class="flex-c gap8">
+              <button class="btn btn-outline btn-xs">⬇ Download error report</button>
+              <button class="btn btn-ghost btn-xs" onclick="show('s4')">← Back</button>
+              <button class="btn btn-amber btn-sm" onclick="show('s4')">Review Duplicates →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="err"><span>⚠️</span><span>3 rows have critical errors and will be skipped. Download the error report to fix and re-import them separately.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 5 — PIPELINE BOARD
+══════════════════════════════════════════════════════════════ -->
+<div id="s5" class="screen">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 5/6</span>
+    <span class="screen-strip-name">Pipeline Board (Kanban)</span>
+    <span class="screen-strip-desc">P1 · Phase 2 · High Complexity</span>
+  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🎯</span>Leads</div>
+        <div class="sb-item"><span class="sb-icon">📋</span>Tasks</div>
+        <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#DDD6FE;color:#6344B5">RS</div>
+          <div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div>
+        </div>
+      </div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Pipeline Board</span>
+        <div class="tb-actions">
+          <button class="btn btn-ghost btn-sm" onclick="show('s1')">📋 List</button>
+          <button class="btn btn-outline btn-sm" style="background:var(--ink);color:#FAF7F2;border-color:var(--ink)">⊞ Board</button>
+          <select class="sel" style="width:135px;font-size:11px;padding:6px 26px 6px 10px">
+            <option>All agents</option>
+            <option>Arjun Kapoor</option>
+            <option>Priya Mehta</option>
+          </select>
+          <select class="sel" style="width:110px;font-size:11px;padding:6px 26px 6px 10px">
+            <option>All countries</option>
+            <option>🇬🇧 UK</option>
+            <option>🇮🇪 Ireland</option>
+          </select>
+        </div>
+      </div>
+      <div class="page" style="padding:16px;overflow-x:auto">
+        <!-- Conversion strip -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;overflow-x:auto">
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:9px 14px;white-space:nowrap">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Total Active</div>
+            <div style="font-size:18px;font-family:'Fraunces',serif;color:var(--ink)">142</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:12px;white-space:nowrap">New→Contacted <strong style="color:var(--emerald);margin-left:4px">78%</strong></div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:12px;white-space:nowrap">→Qualified <strong style="color:var(--emerald);margin-left:4px">64%</strong></div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:12px;white-space:nowrap">→Applied <strong style="color:var(--amber);margin-left:4px">43%</strong></div>
+          <div style="display:flex;align-items:center;color:var(--muted);font-size:12px;white-space:nowrap">→Enrolled <strong style="color:var(--coral);margin-left:4px">5%</strong></div>
+        </div>
+
+        <div class="kb-board">
+          <!-- New -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:var(--ink);color:#FAF7F2">NEW <span style="opacity:.5;font-weight:400;margin-left:6px">28</span></div>
+            <div class="kb-body">
+              <div class="kb-card">
+                <div class="kb-card-name">Aditya Nair</div>
+                <div class="kb-card-sub">🇬🇧 UK · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--muted)">2h ago</span></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-card-name">Vikram Bhat</div>
+                <div class="kb-card-sub">🇦🇺 AUS · Jan 2026</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--muted)">1d ago</span></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-card-name">Farhana Sheikh</div>
+                <div class="kb-card-sub">🇬🇧 UK · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--muted)">Just now</span></div>
+              </div>
+              <div class="drag-hint">+ 25 more</div>
+            </div>
+          </div>
+
+          <!-- Contacted -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:var(--sky);color:#fff">CONTACTED <span style="opacity:.5;font-weight:400;margin-left:6px">34</span></div>
+            <div class="kb-body">
+              <div class="kb-card" style="border-left:3px solid var(--amber)">
+                <div class="kb-card-name">Meera Pillai</div>
+                <div class="kb-card-sub">🇨🇦 CAN · Jan 2026</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--amber);font-weight:700">Follow-up!</span></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-card-name">Tanuj Patel</div>
+                <div class="kb-card-sub">🇬🇧 UK · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--muted)">3d ago</span></div>
+              </div>
+              <div class="drag-hint">+ 32 more</div>
+            </div>
+          </div>
+
+          <!-- Qualified -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:var(--violet);color:#fff">QUALIFIED <span style="opacity:.5;font-weight:400;margin-left:6px">19</span></div>
+            <div class="kb-body">
+              <div class="kb-card">
+                <div class="kb-card-name">Kavya Iyer</div>
+                <div class="kb-card-sub">🇳🇿 NZ · Jan 2026</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div><div class="dot dot-off"></div></div><span style="font-size:9px;color:var(--muted)">1w ago</span></div>
+              </div>
+              <div class="drag-hint">+ 18 more</div>
+            </div>
+          </div>
+
+          <!-- Counselling -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:var(--emerald);color:#fff">COUNSELLING <span style="opacity:.5;font-weight:400;margin-left:6px">22</span></div>
+            <div class="kb-body">
+              <div class="kb-card" style="border-left:3px solid var(--amber)">
+                <div class="kb-card-name">Rohan Desai</div>
+                <div class="kb-card-sub">🇮🇪 IRE · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div></div><span style="font-size:9px;color:var(--amber);font-weight:700">⭐ Hot</span></div>
+              </div>
+              <div class="drag-hint">+ 21 more</div>
+            </div>
+          </div>
+
+          <!-- Applied -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:var(--amber);color:var(--ink)">APPLIED <span style="opacity:.6;font-weight:400;margin-left:6px">15</span></div>
+            <div class="kb-body">
+              <div class="kb-card" style="border-left:3px solid var(--coral)">
+                <div class="kb-card-name">Siddharth Rao</div>
+                <div class="kb-card-sub">🇬🇧 UK · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-off"></div></div><span class="ovd" style="font-size:9px">⚠ Overdue</span></div>
+              </div>
+              <div class="drag-hint">+ 14 more</div>
+            </div>
+          </div>
+
+          <!-- Offer Received -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:#A03030;color:#fff">OFFER RXD <span style="opacity:.5;font-weight:400;margin-left:6px">8</span></div>
+            <div class="kb-body">
+              <div class="kb-card">
+                <div class="kb-card-name">Priya Krishnan</div>
+                <div class="kb-card-sub">🇬🇧 UK · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div></div><span style="font-size:9px;color:var(--emerald);font-weight:700">Deadline: 14d</span></div>
+              </div>
+              <div class="drag-hint">+ 7 more</div>
+            </div>
+          </div>
+
+          <!-- Visa -->
+          <div class="kb-col">
+            <div class="kb-head" style="background:#2C6E49;color:#fff">VISA <span style="opacity:.5;font-weight:400;margin-left:6px">6</span></div>
+            <div class="kb-body">
+              <div class="kb-card">
+                <div class="kb-card-name">Ananya Das</div>
+                <div class="kb-card-sub">🇦🇺 AUS · Sep 2025</div>
+                <div class="kb-card-foot"><div class="dots"><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div><div class="dot dot-on"></div></div><span style="font-size:9px;color:var(--sky);font-weight:700">Applied</span></div>
+              </div>
+              <div class="drag-hint">+ 5 more</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint mt14" style="font-size:10px;display:flex;align-items:center;gap:6px">
+          <span>💡</span>
+          <span>Drag cards between columns to update stage. Backward moves require a confirmation note.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 6 — WEB FORM BUILDER
+══════════════════════════════════════════════════════════════ -->
+<div id="s6" class="screen">
+  <div class="screen-strip">
+    <span class="screen-strip-mod">M2 · Screen 6/6</span>
+    <span class="screen-strip-name">Web Form Builder</span>
+    <span class="screen-strip-desc">P1 · Phase 2 · Medium Complexity</span>
+  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-label">Settings</div>
+        <div class="sb-item active"><span class="sb-icon">📝</span>Web Form</div>
+        <div class="sb-item"><span class="sb-icon">👥</span>Team</div>
+        <div class="sb-item"><span class="sb-icon">🔔</span>Notifications</div>
+        <div class="sb-item"><span class="sb-icon">🏫</span>University Prefs</div>
+      </div>
+      <div class="sb-foot">
+        <div class="sb-user">
+          <div class="av av-sm" style="background:#DDD6FE;color:#6344B5">RS</div>
+          <div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div>
+        </div>
+      </div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Web Form Builder</span>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm">📋 Copy Embed Code</button>
+          <button class="btn btn-amber btn-sm">Save Changes</button>
+        </div>
+      </div>
+      <div class="page">
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:20px">
+          <!-- Config panel -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-head"><span>⚙️</span><div class="card-title">Form Fields</div></div>
+              <div class="card-body" style="padding:14px;display:flex;flex-direction:column;gap:0">
+                <div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Show on form</div>
+                <!-- Fields -->
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Full Name</div><div style="font-size:10px;color:var(--muted)">Required</div></div>
+                  <div class="tog tog-on"><div class="tog-thumb"></div></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Phone Number</div><div style="font-size:10px;color:var(--muted)">Required</div></div>
+                  <div class="tog tog-on"><div class="tog-thumb"></div></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Email Address</div><div style="font-size:10px;color:var(--muted)">Optional</div></div>
+                  <div class="tog tog-on"><div class="tog-thumb"></div></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Destination Country</div><div style="font-size:10px;color:var(--muted)">Optional</div></div>
+                  <div class="tog tog-on"><div class="tog-thumb"></div></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Target Intake</div><div style="font-size:10px;color:var(--muted)">Optional</div></div>
+                  <div class="tog tog-off"><div class="tog-thumb"></div></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0">
+                  <div><div style="font-size:12px;font-weight:600;color:var(--ink)">Course Interest</div><div style="font-size:10px;color:var(--muted)">Optional</div></div>
+                  <div class="tog tog-off"><div class="tog-thumb"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>👤</span><div class="card-title">Auto-Assignment</div></div>
+              <div class="card-body" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div class="frow">
+                  <label class="inp-label">Assign incoming leads to</label>
+                  <select class="sel">
+                    <option selected>Round Robin (all agents)</option>
+                    <option>Specific Agent</option>
+                  </select>
+                </div>
+                <div class="hint" style="font-size:10px">
+                  <span>💡</span>
+                  <span>Round Robin distributes leads evenly across all active agents.</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>📊</span><div class="card-title">Form Submissions</div></div>
+              <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Last 30 days</span><strong style="color:var(--ink)">23 leads</strong></div>
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Last submission</span><span style="color:var(--ink2)">2h ago</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--muted)">Conversion rate</span><strong style="color:var(--emerald)">34%</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview + code -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-head"><span>👁</span><div class="card-title">Live Preview</div><span style="font-size:10px;color:var(--muted);margin-left:auto">As it appears on your website</span></div>
+              <div class="card-body" style="background:var(--ivory2);padding:28px;display:flex;justify-content:center">
+                <div class="wfp" style="width:360px;box-shadow:var(--shadow-lg)">
+                  <div class="wfp-logo">Global Edge Education</div>
+                  <div class="wfp-sub">Fill in your details — we'll respond within 24 hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="frow">
+                      <label class="inp-label">Full Name *</label>
+                      <input class="inp" placeholder="Your full name" style="font-size:11px;padding:7px 10px">
+                    </div>
+                    <div class="frow">
+                      <label class="inp-label">Phone Number *</label>
+                      <div style="display:flex;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden">
+                        <div style="padding:7px 10px;background:var(--ivory2);font-size:11px;color:var(--ink2);border-right:1px solid var(--border2)">🇮🇳 +91</div>
+                        <input style="flex:1;border:none;outline:none;padding:7px 10px;font-size:11px;font-family:'DM Sans',sans-serif" placeholder="XXXXX XXXXX">
+                      </div>
+                    </div>
+                    <div class="frow">
+                      <label class="inp-label">Email Address</label>
+                      <input class="inp" placeholder="your@email.com" style="font-size:11px;padding:7px 10px">
+                    </div>
+                    <div class="frow">
+                      <label class="inp-label">Where do you want to study?</label>
+                      <select class="sel" style="font-size:11px;padding:7px 24px 7px 10px">
+                        <option>Select country...</option>
+                        <option>🇬🇧 United Kingdom</option>
+                        <option>🇦🇺 Australia</option>
+                        <option>🇨🇦 Canada</option>
+                        <option>🇮🇪 Ireland</option>
+                        <option>🇳🇿 New Zealand</option>
+                      </select>
+                    </div>
+                    <button style="background:var(--ink);color:#FAF7F2;border:none;padding:11px;border-radius:8px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;width:100%;cursor:pointer;margin-top:4px">
+                      Book Free Consultation →
+                    </button>
+                    <div style="text-align:center;font-size:9px;color:var(--muted)">Powered by EduTrack · Your data is private</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <span>💻</span>
+                <div class="card-title">Embed Code</div>
+                <button class="btn btn-amber btn-xs" style="margin-left:auto">📋 Copy Code</button>
+              </div>
+              <div class="card-body">
+                <div class="code-block">
+<span class="c-tag">&lt;iframe</span>
+  <span class="c-attr">src</span>=<span class="c-val">"https://app.edutrack.in/form/globaledge/enquiry"</span>
+  <span class="c-attr">width</span>=<span class="c-val">"100%"</span>
+  <span class="c-attr">height</span>=<span class="c-val">"560"</span>
+  <span class="c-attr">frameborder</span>=<span class="c-val">"0"</span>
+  <span class="c-attr">allow</span>=<span class="c-val">"clipboard-write"</span>
+  <span class="c-attr">loading</span>=<span class="c-val">"lazy"</span>
+<span class="c-tag">&gt;&lt;/iframe&gt;</span>
+                </div>
+                <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+                  Paste this snippet anywhere in your website's HTML. Works with WordPress, Wix, and any custom site.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── JS: tab switching ──────────────────────────────────── -->
+<script>
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['s1','s2','s3','s4','s5','s6'].indexOf(id);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+}
+// Prevent all href="#" from jumping
+document.querySelectorAll('a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+</script>
+</body>
+</html>

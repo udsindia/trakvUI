@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack · M5 University & Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0A1628;--ink2:#162742;--ink3:#1E3557;
+  --forest:#0F6B4F;--forest2:#0A5440;--forest-lt:#EDFAF4;--forest-mid:#7DDBB6;
+  --amber:#D98020;--amber-lt:#FDF4E6;--amber-mid:#F5CA80;
+  --ivory:#F9F7F2;--ivory2:#F0EBE0;--ivory3:#E5DDD0;
+  --white:#FFFFFF;
+  --coral:#D94F4F;--coral-lt:#FEF0F0;
+  --emerald:#1A7A5E;--emerald-lt:#EBF7F3;
+  --sky:#1865A0;--sky-lt:#E8F2FB;
+  --gold:#B8860B;--gold-lt:#FFF8DC;
+  --slate:#566070;--muted:#8696A6;
+  --border:#D8D0C4;--border2:#C4BAB0;
+  --shadow-sm:0 1px 3px rgba(10,22,40,.07);
+  --shadow:0 2px 10px rgba(10,22,40,.1);
+  --shadow-lg:0 10px 40px rgba(10,22,40,.14);
+  --r:10px;--r-lg:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#081420;color:var(--ink);min-height:100vh}
+
+/* NAV */
+.nav-bar{position:sticky;top:0;z-index:200;background:var(--ink);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-brand{padding:0 20px;font-family:'Fraunces',serif;font-size:17px;color:#F9F7F2;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);height:46px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav-brand span{color:#4ADE80}
+.nav-brand small{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.28);font-weight:400;letter-spacing:.06em;text-transform:uppercase}
+.nav-tabs{display:flex;flex:1}
+.nav-tab{padding:0 18px;height:46px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;white-space:nowrap;color:rgba(255,255,255,.42);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;border-right:1px solid rgba(255,255,255,.05);text-decoration:none}
+.nav-tab:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.04)}
+.nav-tab.active{color:#4ADE80;border-bottom-color:#4ADE80;background:rgba(15,107,79,.1)}
+.tab-num{font-size:10px;background:rgba(255,255,255,.1);border-radius:20px;padding:1px 7px}
+.nav-tab.active .tab-num{background:rgba(74,222,128,.2);color:#4ADE80}
+
+/* SCREENS */
+.screen{display:none;min-height:calc(100vh - 46px);background:var(--ivory)}
+.screen.active{display:flex;flex-direction:column}
+.app-shell{display:flex;flex:1;height:calc(100vh - 46px);overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:212px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(255,255,255,.06)}
+.sb-logo{padding:18px 18px 14px;font-family:'Fraunces',serif;font-size:20px;color:#F9F7F2;border-bottom:1px solid rgba(255,255,255,.06);line-height:1}
+.sb-logo span{color:#4ADE80}
+.sb-logo small{display:block;font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(255,255,255,.28);font-weight:400;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.sb-nav{flex:1;padding:12px 0}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;font-size:13px;font-weight:500;color:rgba(255,255,255,.48);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.sb-item:hover{color:rgba(255,255,255,.82);background:rgba(255,255,255,.04)}
+.sb-item.active{color:#4ADE80;background:rgba(15,107,79,.12);border-left-color:#4ADE80}
+.sb-icon{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--coral);color:#fff;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-user{display:flex;align-items:center;gap:9px}
+.sb-uname{font-size:12px;color:#F9F7F2;font-weight:600}
+.sb-urole{font-size:10px;color:rgba(255,255,255,.32)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--ivory);display:flex;flex-direction:column}
+.topbar{height:50px;padding:0 22px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;flex-shrink:0}
+.tb-title{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);font-weight:600}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.page{padding:22px;flex:1}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn-forest{background:var(--forest);color:#fff}
+.btn-forest:hover{background:var(--forest2)}
+.btn-amber{background:var(--amber);color:var(--ink)}
+.btn-amber:hover{filter:brightness(1.08)}
+.btn-outline{background:transparent;color:var(--ink2);border:1.5px solid var(--border2)}
+.btn-outline:hover{border-color:var(--ink);background:var(--ivory2)}
+.btn-ghost{background:transparent;color:var(--slate);border:none}
+.btn-ghost:hover{color:var(--ink);background:var(--ivory2)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 10px;font-size:10px;border-radius:6px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-title{font-size:13px;font-weight:700;color:var(--ink)}
+.card-body{padding:18px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.b-forest{background:var(--forest-lt);color:var(--forest2)}
+.b-amber {background:var(--amber-lt);color:#8B5710}
+.b-green {background:var(--emerald-lt);color:var(--emerald)}
+.b-red   {background:var(--coral-lt);color:var(--coral)}
+.b-sky   {background:var(--sky-lt);color:var(--sky)}
+.b-gold  {background:var(--gold-lt);color:var(--gold)}
+.b-slate {background:#EEF2F6;color:var(--slate)}
+
+/* INPUTS */
+.inp{padding:8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--forest)}
+.inp::placeholder{color:var(--muted)}
+.inp-label{font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.03em;margin-bottom:4px;display:block}
+.sel{padding:8px 30px 8px 12px;border-radius:8px;font-size:12px;border:1.5px solid var(--border2);background:var(--white);font-family:'DM Sans',sans-serif;color:var(--ink);width:100%;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A6A7A' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--ivory2);border:1.5px solid var(--border2);border-radius:9px;padding:7px 12px;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--forest);background:var(--white)}
+.search-bar input{background:none;border:none;outline:none;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);flex:1}
+.search-bar input::placeholder{color:var(--muted)}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--white);border:1.5px solid var(--border2);color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover,.chip.on{border-color:var(--forest);color:var(--forest2);background:var(--forest-lt)}
+
+/* AVATAR */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.av-sm{width:26px;height:26px;font-size:10px}
+
+/* SCREEN STRIP */
+.ss{background:var(--ink);padding:10px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ss-mod{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#4ADE80}
+.ss-name{font-size:13px;font-weight:600;color:rgba(249,247,242,.85)}
+.ss-desc{font-size:11px;color:rgba(249,247,242,.3);margin-left:auto}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--ivory2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(216,208,196,.4);transition:background .1s}
+tbody tr:hover{background:rgba(15,107,79,.03)}
+tbody td{padding:11px 14px;font-size:12px;color:var(--ink2);vertical-align:middle}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.flex-c{display:flex;align-items:center;gap:8px}
+.flex-sb{display:flex;justify-content:space-between;align-items:center}
+.frow{display:flex;flex-direction:column;gap:4px}
+.mb8{margin-bottom:8px}.mb14{margin-bottom:14px}.mb18{margin-bottom:18px}.mb22{margin-bottom:22px}
+.mt10{margin-top:10px}.mt14{margin-top:14px}
+
+/* HINTS */
+.hint{background:var(--amber-lt);border:1px solid var(--amber-mid);border-radius:9px;padding:10px 14px;font-size:11px;color:#7A4B0E;display:flex;gap:8px}
+.ok  {background:var(--emerald-lt);border:1px solid #9DDCCF;border-radius:9px;padding:10px 14px;font-size:11px;color:#125944;display:flex;gap:8px}
+
+/* INFO ROWS */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(216,208,196,.4);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--muted);font-weight:500}
+.info-val{color:var(--ink2);font-weight:600;text-align:right}
+
+/* STAT */
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat-val{font-family:'Fraunces',serif;font-size:30px;color:var(--ink);margin:4px 0 2px}
+
+/* CC */
+.cc{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;background:var(--ivory2);border:1px solid var(--border);color:var(--ink2)}
+
+/* RANK BADGE */
+.rank{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;background:var(--gold-lt);color:var(--gold);border:1px solid #EDD68A;padding:2px 8px;border-radius:6px}
+
+/* PROG BAR */
+.prog-bar{height:4px;background:var(--ivory3);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px}
+
+/* UNI CARD */
+.uni-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .2s;cursor:pointer}
+.uni-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.uni-card-hero{height:90px;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative}
+.uni-card-body{padding:14px}
+
+/* COURSE CARD */
+.course-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--shadow-sm);transition:all .2s;cursor:pointer}
+.course-card:hover{box-shadow:var(--shadow);border-color:var(--forest-mid)}
+
+/* ELIGIBILITY METER */
+.elig-bar{height:8px;background:var(--ivory3);border-radius:4px;overflow:hidden;margin-bottom:5px}
+.elig-fill{height:100%;border-radius:4px}
+
+/* REQUIREMENT ROW */
+.req-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(216,208,196,.35);font-size:12px}
+.req-row:last-child{border-bottom:none}
+.req-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.req-met{background:var(--forest-lt);color:var(--forest)}
+.req-miss{background:var(--coral-lt);color:var(--coral)}
+.req-warn{background:var(--amber-lt);color:var(--amber)}
+
+/* SHORTLIST TRAY */
+.shortlist-tray{background:var(--ink);border-top:1px solid rgba(255,255,255,.08);padding:12px 22px;display:flex;align-items:center;gap:12px}
+.tray-item{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(249,247,242,.8)}
+.tray-x{color:rgba(249,247,242,.4);cursor:pointer;font-size:12px}
+.tray-x:hover{color:#fff}
+
+/* SECTION TITLE */
+.section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px}
+
+/* BREADCRUMB */
+.bc{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.bc a{color:var(--muted);text-decoration:none;cursor:pointer}
+.bc a:hover{color:var(--ink2)}
+.bc-sep{color:var(--border2)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* FILTERS PANEL */
+.filter-panel{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
+.fp-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;display:block}
+.fp-group{margin-bottom:18px}
+.fp-opt{display:flex;align-items:center;gap:7px;padding:6px 0;font-size:12px;color:var(--ink2);cursor:pointer}
+.fp-opt input{accent-color:var(--forest)}
+.fp-count{margin-left:auto;font-size:10px;color:var(--muted);background:var(--ivory2);padding:1px 7px;border-radius:20px}
+
+/* RANGE SLIDER */
+.range-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.range-val{font-weight:700;color:var(--ink2);font-family:'DM Mono',monospace;min-width:28px;text-align:center}
+input[type=range]{flex:1;accent-color:var(--forest);height:4px}
+
+/* DETAIL HERO */
+.detail-hero{background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 55%,var(--ink3) 100%);padding:22px 24px;position:relative;overflow:hidden}
+.detail-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 85% 0%,rgba(74,222,128,.15) 0%,transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(24,101,160,.15) 0%,transparent 50%);pointer-events:none}
+
+/* TAG */
+.tag{display:inline-block;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:600;background:var(--ivory2);color:var(--slate);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <div class="nav-brand">Edu<span>Track</span> <small>· M5</small></div>
+  <div class="nav-tabs">
+    <a class="nav-tab active" onclick="show('s1')" href="#">🔍 Course Search <span class="tab-num">1/4</span></a>
+    <a class="nav-tab" onclick="show('s2')" href="#">🏛 University Detail <span class="tab-num">2/4</span></a>
+    <a class="nav-tab" onclick="show('s3')" href="#">📖 Course Detail <span class="tab-num">3/4</span></a>
+    <a class="nav-tab" onclick="show('s4')" href="#">⚙️ Course DB Admin <span class="tab-num">4/4</span></a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     S1 — COURSE SEARCH
+════════════════════════════════════════ -->
+<div id="s1" class="screen active">
+  <div class="ss"><span class="ss-mod">M5 · 1/4</span><span class="ss-name">Course Search</span><span class="ss-desc">P1 · Phase 2 · High Complexity</span></div>
+  <div class="app-shell" style="flex-direction:column">
+    <!-- Top app shell row -->
+    <div style="display:flex;flex:1;height:0;min-height:0">
+      <nav class="sidebar">
+        <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+        <div class="sb-nav">
+          <div class="sb-item"><span class="sb-icon">📊</span>Dashboard</div>
+          <div class="sb-item"><span class="sb-icon">🎯</span>Leads</div>
+          <div class="sb-item"><span class="sb-icon">📋</span>Tasks <span class="sb-badge">7</span></div>
+          <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+          <div class="sb-item active"><span class="sb-icon">🏫</span>Courses</div>
+          <div class="sb-item"><span class="sb-icon">📈</span>Reports</div>
+        </div>
+        <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#A7F3D0;color:#065F46">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+      </nav>
+
+      <!-- Filter panel -->
+      <div class="filter-panel">
+        <span class="fp-label">Filter Courses</span>
+
+        <div class="fp-group">
+          <span class="fp-label">Country</span>
+          <div class="fp-opt"><input type="checkbox" checked>🇬🇧 UK <span class="fp-count">148</span></div>
+          <div class="fp-opt"><input type="checkbox" checked>🇮🇪 Ireland <span class="fp-count">62</span></div>
+          <div class="fp-opt"><input type="checkbox">🇦🇺 Australia <span class="fp-count">110</span></div>
+          <div class="fp-opt"><input type="checkbox">🇨🇦 Canada <span class="fp-count">84</span></div>
+          <div class="fp-opt"><input type="checkbox">🇳🇿 New Zealand <span class="fp-count">34</span></div>
+        </div>
+
+        <div class="fp-group">
+          <span class="fp-label">Level</span>
+          <div class="fp-opt"><input type="checkbox">Undergraduate</div>
+          <div class="fp-opt"><input type="checkbox" checked>Masters (PG)</div>
+          <div class="fp-opt"><input type="checkbox">PhD</div>
+          <div class="fp-opt"><input type="checkbox">Diploma / Foundation</div>
+        </div>
+
+        <div class="fp-group">
+          <span class="fp-label">Intake</span>
+          <div class="fp-opt"><input type="checkbox" checked>Sep 2025</div>
+          <div class="fp-opt"><input type="checkbox">Jan 2026</div>
+          <div class="fp-opt"><input type="checkbox">May 2026</div>
+        </div>
+
+        <div class="fp-group">
+          <span class="fp-label">Annual Tuition (₹ Lakh)</span>
+          <div class="range-row">
+            <span class="range-val">10</span>
+            <input type="range" min="5" max="60" value="10">
+            <input type="range" min="5" max="60" value="35">
+            <span class="range-val">35</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center">₹10L – ₹35L per year</div>
+        </div>
+
+        <div class="fp-group">
+          <span class="fp-label">IELTS Overall (min)</span>
+          <div class="range-row">
+            <span class="range-val">6.0</span>
+            <input type="range" min="5.5" max="8.0" step="0.5" value="6.5">
+            <span class="range-val">7.5</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center">6.0 – 7.5 overall</div>
+        </div>
+
+        <div class="fp-group">
+          <span class="fp-label">Eligibility Match</span>
+          <div class="fp-opt"><input type="checkbox" checked>Matches Rohan Desai</div>
+          <div style="font-size:10px;color:var(--muted);padding-left:2px;margin-top:-2px">IELTS 7.0 · B.Tech 78%</div>
+        </div>
+
+        <button class="btn btn-forest btn-sm" style="width:100%;justify-content:center">Apply Filters</button>
+        <button class="btn btn-ghost btn-xs" style="width:100%;justify-content:center;margin-top:6px">Clear all</button>
+      </div>
+
+      <!-- Results area -->
+      <div class="main">
+        <div class="topbar">
+          <span class="tb-title">Course Search</span>
+          <div class="search-bar" style="width:300px">
+            <span style="color:var(--muted);font-size:13px">🔍</span>
+            <input placeholder="Search courses, universities, cities...">
+          </div>
+          <div class="flex-c" style="gap:6px;margin-left:8px">
+            <span style="font-size:11px;color:var(--muted)">Searching for:</span>
+            <span class="badge b-forest">Rohan Desai</span>
+          </div>
+          <div class="tb-actions">
+            <select class="sel" style="width:150px;font-size:11px;padding:6px 26px 6px 10px">
+              <option>Sort: Best Match</option>
+              <option>Sort: Tuition: Low</option>
+              <option>Sort: QS Rank</option>
+              <option>Sort: Intake</option>
+            </select>
+            <button class="btn btn-outline btn-sm">⊞ Grid</button>
+            <button class="btn btn-sm" style="background:var(--ink);color:#F9F7F2">☰ List</button>
+          </div>
+        </div>
+
+        <div class="page">
+          <!-- Results header -->
+          <div class="flex-sb mb14">
+            <div style="font-size:13px;color:var(--slate)"><strong style="color:var(--ink)">210</strong> courses found · <strong style="color:var(--forest)">47 eligible</strong> for Rohan Desai</div>
+            <div class="flex-c gap6"><span class="chip on">✓ Eligible only</span></div>
+          </div>
+
+          <!-- Course cards (list view) -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+
+            <!-- Card 1 — top match -->
+            <div class="course-card" style="border-left:3px solid var(--forest)" onclick="show('s3')">
+              <div class="flex-sb mb8">
+                <div class="flex-c" style="gap:12px">
+                  <div style="width:40px;height:40px;background:var(--forest-lt);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏛</div>
+                  <div>
+                    <div style="font-size:14px;font-weight:700;color:var(--ink)">MSc Data Science</div>
+                    <div style="font-size:12px;color:var(--muted)">University College Dublin · 🇮🇪 Dublin, Ireland</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--forest)">₹24.5L</div>
+                  <div style="font-size:10px;color:var(--muted)">per year</div>
+                </div>
+              </div>
+              <div class="flex-c" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                <span class="rank">QS #201</span>
+                <span class="badge b-forest">✓ Eligible</span>
+                <span class="tag">Sep 2025</span>
+                <span class="tag">1 year</span>
+                <span class="tag">IELTS 6.5+</span>
+                <span class="badge b-amber">⚠ W/S 6.5 risk</span>
+              </div>
+              <!-- Eligibility bar -->
+              <div>
+                <div class="flex-sb" style="margin-bottom:4px">
+                  <span style="font-size:10px;color:var(--muted)">Eligibility match for Rohan</span>
+                  <span style="font-size:10px;font-weight:700;color:var(--forest)">88%</span>
+                </div>
+                <div class="elig-bar"><div class="elig-fill" style="width:88%;background:var(--forest)"></div></div>
+              </div>
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:11px;color:var(--muted)">Already shortlisted for Rohan · 2 applications pending</div>
+                <div class="flex-c gap6">
+                  <button class="btn btn-outline btn-xs" onclick="show('s3')">View Course</button>
+                  <button class="btn btn-forest btn-xs">+ Add to Shortlist</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="course-card" onclick="show('s3')">
+              <div class="flex-sb mb8">
+                <div class="flex-c" style="gap:12px">
+                  <div style="width:40px;height:40px;background:#EFF6FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏛</div>
+                  <div>
+                    <div style="font-size:14px;font-weight:700;color:var(--ink)">MSc Advanced Computer Science</div>
+                    <div style="font-size:12px;color:var(--muted)">University of Manchester · 🇬🇧 Manchester, UK</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--amber)">₹31.8L</div>
+                  <div style="font-size:10px;color:var(--muted)">per year</div>
+                </div>
+              </div>
+              <div class="flex-c" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                <span class="rank">QS #28</span>
+                <span class="badge b-forest">✓ Eligible</span>
+                <span class="tag">Sep 2025</span>
+                <span class="tag">1 year</span>
+                <span class="tag">IELTS 6.5+</span>
+              </div>
+              <div>
+                <div class="flex-sb" style="margin-bottom:4px">
+                  <span style="font-size:10px;color:var(--muted)">Eligibility match</span>
+                  <span style="font-size:10px;font-weight:700;color:var(--forest)">95%</span>
+                </div>
+                <div class="elig-bar"><div class="elig-fill" style="width:95%;background:var(--forest)"></div></div>
+              </div>
+              <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:6px">
+                <button class="btn btn-outline btn-xs">View Course</button>
+                <button class="btn btn-forest btn-xs">+ Add to Shortlist</button>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="course-card" onclick="show('s3')">
+              <div class="flex-sb mb8">
+                <div class="flex-c" style="gap:12px">
+                  <div style="width:40px;height:40px;background:#F0FDF4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏛</div>
+                  <div>
+                    <div style="font-size:14px;font-weight:700;color:var(--ink)">MSc Data Analytics</div>
+                    <div style="font-size:12px;color:var(--muted)">National College of Ireland · 🇮🇪 Dublin, Ireland</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--forest)">₹14.2L</div>
+                  <div style="font-size:10px;color:var(--muted)">per year</div>
+                </div>
+              </div>
+              <div class="flex-c" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                <span class="badge b-forest">✓ Eligible</span>
+                <span class="tag">Jan 2026</span>
+                <span class="tag">1 year</span>
+                <span class="tag">IELTS 6.0+</span>
+              </div>
+              <div>
+                <div class="flex-sb" style="margin-bottom:4px">
+                  <span style="font-size:10px;color:var(--muted)">Eligibility match</span>
+                  <span style="font-size:10px;font-weight:700;color:var(--forest)">100%</span>
+                </div>
+                <div class="elig-bar"><div class="elig-fill" style="width:100%;background:var(--forest)"></div></div>
+              </div>
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+                <span class="badge b-green" style="font-size:9px">All requirements fully met</span>
+                <div class="flex-c gap6">
+                  <button class="btn btn-outline btn-xs">View Course</button>
+                  <button class="btn btn-forest btn-xs">+ Add to Shortlist</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4 — not eligible -->
+            <div class="course-card" style="opacity:.7">
+              <div class="flex-sb mb8">
+                <div class="flex-c" style="gap:12px">
+                  <div style="width:40px;height:40px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏛</div>
+                  <div>
+                    <div style="font-size:14px;font-weight:700;color:var(--ink)">MSc Artificial Intelligence</div>
+                    <div style="font-size:12px;color:var(--muted)">Imperial College London · 🇬🇧 London, UK</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--amber)">₹42.0L</div>
+                  <div style="font-size:10px;color:var(--muted)">per year</div>
+                </div>
+              </div>
+              <div class="flex-c" style="gap:6px;flex-wrap:wrap;margin-bottom:6px">
+                <span class="rank">QS #6</span>
+                <span class="badge b-red">✗ Not eligible</span>
+                <span class="tag">Sep 2025</span>
+                <span class="tag">IELTS 7.0 each band</span>
+              </div>
+              <div class="hint" style="font-size:10px"><span>✗</span><span>Requires IELTS 7.0 in each band. Rohan's W/S = 6.5 — does not qualify.</span></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shortlist tray -->
+    <div class="shortlist-tray">
+      <span style="font-size:11px;font-weight:700;color:rgba(249,247,242,.5);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Shortlist (2)</span>
+      <div class="tray-item">🏛 UCD Dublin — MSc Data Science <span class="tray-x">×</span></div>
+      <div class="tray-item">🏛 NCI Dublin — MSc Data Analytics <span class="tray-x">×</span></div>
+      <button style="margin-left:auto;background:transparent;border:1.5px solid rgba(255,255,255,.15);color:rgba(249,247,242,.8);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif">Send Shortlist to Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     S2 — UNIVERSITY DETAIL
+════════════════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="ss"><span class="ss-mod">M5 · 2/4</span><span class="ss-name">University Detail</span><span class="ss-desc">P1 · Phase 2 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#A7F3D0;color:#065F46">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div class="bc"><a onclick="show('s1')">← Courses</a><span class="bc-sep">›</span><span style="color:var(--ink2);font-weight:600">University College Dublin</span></div>
+        <div class="tb-actions"><button class="btn btn-forest btn-sm" onclick="show('s3')">View Courses (12) →</button></div>
+      </div>
+
+      <!-- Hero -->
+      <div class="detail-hero">
+        <div style="display:flex;align-items:center;gap:20px;position:relative;z-index:1">
+          <div style="width:68px;height:68px;background:rgba(74,222,128,.15);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0">🏛</div>
+          <div style="flex:1">
+            <div style="font-family:'Fraunces',serif;font-size:26px;color:#F9F7F2;margin-bottom:5px">University College Dublin</div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap">
+              <span style="font-size:12px;color:rgba(249,247,242,.6)">🇮🇪 Dublin, Ireland</span>
+              <span style="font-size:12px;color:rgba(249,247,242,.6)">🏛 Founded 1854</span>
+              <span style="font-size:12px;color:rgba(249,247,242,.6)">🌐 ucd.ie</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;position:relative;z-index:1">
+            <div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 14px">
+              <div style="font-family:'Fraunces',serif;font-size:22px;color:#4ADE80">#201</div>
+              <div style="font-size:9px;color:rgba(249,247,242,.4);text-transform:uppercase;letter-spacing:.06em">QS Rank</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 14px">
+              <div style="font-family:'Fraunces',serif;font-size:22px;color:#F9D47A">12</div>
+              <div style="font-size:9px;color:rgba(249,247,242,.4);text-transform:uppercase;letter-spacing:.06em">Courses</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 14px">
+              <div style="font-family:'Fraunces',serif;font-size:22px;color:#60A5FA">28</div>
+              <div style="font-size:9px;color:rgba(249,247,242,.4);text-transform:uppercase;letter-spacing:.06em">Our Students</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+          <div>
+            <!-- About -->
+            <div class="card mb14">
+              <div class="card-head"><span>📝</span><div class="card-title">About</div></div>
+              <div class="card-body">
+                <p style="font-size:13px;line-height:1.65;color:var(--slate)">Ireland's largest research-intensive university, UCD is ranked among Europe's leading universities. Located 5 km from Dublin city centre, it offers a vibrant campus with 33,000+ students from 150 countries. Strong industry links with multinationals based in Dublin — Google, Facebook, LinkedIn, Pfizer.</p>
+              </div>
+            </div>
+
+            <!-- Entry requirements table -->
+            <div class="card mb14">
+              <div class="card-head"><span>📋</span><div class="card-title">General Entry Requirements</div></div>
+              <div class="card-body" style="padding:0 18px">
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1">Bachelor's degree (2:1 or above)<br><span style="font-size:10px;color:var(--muted)">Equivalent: 60% Indian university</span></div><span class="badge b-green">Rohan: 78.4% ✓</span></div>
+                <div class="req-row"><div class="req-icon req-warn">⚠</div><div style="flex:1">IELTS 6.5 overall (no band below 6.0)<br><span style="font-size:10px;color:var(--muted)">Some courses require 7.0 per band — verify</span></div><span class="badge b-amber">Rohan: 7.0 (W/S 6.5)</span></div>
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1">Relevant undergraduate degree</div><span class="badge b-green">B.Tech CS ✓</span></div>
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1">2 Letters of Recommendation</div><span class="badge b-amber" style="font-size:9px">Not collected yet</span></div>
+              </div>
+            </div>
+
+            <!-- Courses offered (mini list) -->
+            <div class="card">
+              <div class="card-head"><span>📚</span><div class="card-title">Courses at UCD (12)</div><button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="show('s3')">View all →</button></div>
+              <div class="tbl-wrap">
+                <table>
+                  <thead><tr><th>Course</th><th>Intake</th><th>Duration</th><th>Tuition</th><th>IELTS</th><th>Eligible?</th></tr></thead>
+                  <tbody>
+                    <tr><td style="font-weight:600">MSc Data Science</td><td><span class="tag">Sep 2025</span></td><td>1 yr</td><td style="font-family:'DM Mono',monospace">₹24.5L</td><td>6.5</td><td><span class="badge b-amber">⚠ W/S risk</span></td></tr>
+                    <tr><td style="font-weight:600">MSc Computer Science</td><td><span class="tag">Sep 2025</span></td><td>1 yr</td><td style="font-family:'DM Mono',monospace">₹26.0L</td><td>6.5</td><td><span class="badge b-green">✓</span></td></tr>
+                    <tr><td style="font-weight:600">MSc Business Analytics</td><td><span class="tag">Sep 2025</span></td><td>1 yr</td><td style="font-family:'DM Mono',monospace">₹22.0L</td><td>7.0 each</td><td><span class="badge b-red">✗</span></td></tr>
+                    <tr><td style="font-weight:600">BE Computer Engineering</td><td><span class="tag">Sep 2025</span></td><td>4 yr</td><td style="font-family:'DM Mono',monospace">₹18.5L</td><td>6.0</td><td><span class="badge b-green">✓</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right col -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-head"><span>📊</span><div class="card-title">Our Track Record</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div class="info-row"><span class="info-key">Students enrolled</span><strong class="info-val">28 (all time)</strong></div>
+                <div class="info-row"><span class="info-key">Visas approved</span><strong class="info-val" style="color:var(--forest)">26 / 28</strong></div>
+                <div class="info-row"><span class="info-key">Visa success rate</span><strong class="info-val" style="color:var(--forest)">92.8%</strong></div>
+                <div class="info-row"><span class="info-key">Avg application time</span><strong class="info-val">18 days</strong></div>
+                <div class="info-row"><span class="info-key">Avg commission</span><strong class="info-val">₹65,000</strong></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>🔗</span><div class="card-title">Useful Links</div></div>
+              <div class="card-body" style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+                <a href="#" style="font-size:12px;color:var(--forest);text-decoration:none;font-weight:600">🌐 UCD International Admissions</a>
+                <a href="#" style="font-size:12px;color:var(--forest);text-decoration:none;font-weight:600">📄 Scholarship Guide 2025</a>
+                <a href="#" style="font-size:12px;color:var(--forest);text-decoration:none;font-weight:600">📋 Accommodation Portal</a>
+                <a href="#" style="font-size:12px;color:var(--forest);text-decoration:none;font-weight:600">📞 Agent Contact: John Murphy</a>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>🗒</span><div class="card-title">Internal Notes</div><button class="btn btn-ghost btn-xs" style="margin-left:auto">Edit</button></div>
+              <div class="card-body" style="font-size:12px;color:var(--slate);line-height:1.55;padding:12px 14px">Strong partner. Agent John Murphy responds within 24h. Preferred for Dublin placements. Document submission via portal only — no email submissions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     S3 — COURSE DETAIL
+════════════════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="ss"><span class="ss-mod">M5 · 3/4</span><span class="ss-name">Course Detail</span><span class="ss-desc">P1 · Phase 2 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-item"><span class="sb-icon">🎓</span>Students</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#A7F3D0;color:#065F46">AK</div><div><div class="sb-uname">Arjun Kapoor</div><div class="sb-urole">Agent</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <div class="bc"><a onclick="show('s1')">Courses</a><span class="bc-sep">›</span><a onclick="show('s2')">UCD</a><span class="bc-sep">›</span><span style="color:var(--ink2);font-weight:600">MSc Data Science</span></div>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm">🔗 Share with Student</button>
+          <button class="btn btn-forest btn-sm">+ Add to Shortlist</button>
+        </div>
+      </div>
+
+      <div class="page">
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+          <div>
+            <!-- Header card -->
+            <div class="card mb14">
+              <div class="card-body" style="padding:20px 22px">
+                <div class="flex-c" style="gap:14px;margin-bottom:14px">
+                  <div style="width:52px;height:52px;background:var(--forest-lt);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏛</div>
+                  <div>
+                    <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--ink);line-height:1.1">MSc Data Science</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:3px">University College Dublin · 🇮🇪 Dublin, Ireland</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+                  <span class="rank">QS #201</span>
+                  <span class="tag">Postgraduate Masters</span>
+                  <span class="tag">Full-time · 1 year</span>
+                  <span class="tag">Sep 2025 · Jan 2026</span>
+                  <span class="badge b-amber">⚠ Per-band IELTS risk</span>
+                </div>
+                <div class="g3" style="gap:10px">
+                  <div style="text-align:center;background:var(--forest-lt);border-radius:10px;padding:12px">
+                    <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--forest)">₹24.5L</div>
+                    <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Annual Tuition</div>
+                  </div>
+                  <div style="text-align:center;background:var(--ivory2);border-radius:10px;padding:12px">
+                    <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--ink)">₹8,500</div>
+                    <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">App Fee</div>
+                  </div>
+                  <div style="text-align:center;background:var(--ivory2);border-radius:10px;padding:12px">
+                    <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--amber)">Mar 31</div>
+                    <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Deadline</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Eligibility check for student -->
+            <div class="card mb14" style="border-left:3px solid var(--amber)">
+              <div class="card-head"><span>🎯</span><div class="card-title">Eligibility Check — Rohan Desai</div><span class="badge b-amber" style="margin-left:auto">⚠ Partial match</span></div>
+              <div class="card-body" style="padding:0 18px">
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1"><strong>Bachelor's degree</strong> — B.Tech CS, BITS Pilani, 78.4%</div><span class="badge b-green" style="font-size:9px">Met</span></div>
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1"><strong>IELTS Overall 6.5</strong> — Rohan: 7.0 overall</div><span class="badge b-green" style="font-size:9px">Met</span></div>
+                <div class="req-row"><div class="req-icon req-warn">⚠</div><div style="flex:1"><strong>IELTS per band 6.5 min</strong> — W = 6.5, S = 6.5. Some courses require 7.0 per band — contact admissions for clarity.</div><span class="badge b-amber" style="font-size:9px">⚠ Verify</span></div>
+                <div class="req-row"><div class="req-icon req-met">✓</div><div style="flex:1"><strong>Relevant UG background</strong> — CS degree matches</div><span class="badge b-green" style="font-size:9px">Met</span></div>
+                <div class="req-row"><div class="req-icon req-miss">✗</div><div style="flex:1"><strong>2× LOR</strong> — Not yet collected</div><span class="badge b-red" style="font-size:9px">Missing</span></div>
+              </div>
+            </div>
+
+            <!-- Curriculum -->
+            <div class="card">
+              <div class="card-head"><span>📚</span><div class="card-title">Curriculum Overview</div></div>
+              <div class="card-body">
+                <div class="g2" style="gap:10px">
+                  <div>
+                    <div class="section-title">Semester 1</div>
+                    <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--slate)">
+                      <div>• Statistical Machine Learning</div>
+                      <div>• Data Engineering & Pipelines</div>
+                      <div>• Business Analytics Foundations</div>
+                      <div>• Programming for Data Science (Python/R)</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="section-title">Semester 2 + Project</div>
+                    <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--slate)">
+                      <div>• Deep Learning & Neural Networks</div>
+                      <div>• NLP & Text Analytics</div>
+                      <div>• Research Methods</div>
+                      <div>• Capstone Project (12 weeks)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-head"><span>📅</span><div class="card-title">Key Dates</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div class="info-row"><span class="info-key">Application deadline</span><strong class="info-val" style="color:var(--amber)">Mar 31, 2025</strong></div>
+                <div class="info-row"><span class="info-key">Rolling admissions</span><strong class="info-val">Yes</strong></div>
+                <div class="info-row"><span class="info-key">Course start</span><strong class="info-val">Sep 8, 2025</strong></div>
+                <div class="info-row"><span class="info-key">Course end</span><strong class="info-val">Aug 2026</strong></div>
+                <div class="info-row"><span class="info-key">PGWP eligible?</span><strong class="info-val">N/A (Ireland)</strong></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>💰</span><div class="card-title">Fees & Scholarships</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div class="info-row"><span class="info-key">Tuition</span><strong class="info-val">₹24,50,000/yr</strong></div>
+                <div class="info-row"><span class="info-key">App fee</span><strong class="info-val">₹8,500</strong></div>
+                <div class="info-row"><span class="info-key">Living costs</span><strong class="info-val">~₹12L/yr</strong></div>
+                <div class="info-row"><span class="info-key">Scholarship</span><span class="badge b-gold" style="font-size:9px">Global Excellence</span></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px">Global Excellence Award: up to €3,000 for high-achieving students. Automatic with offer.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span>📊</span><div class="card-title">Our Data</div></div>
+              <div class="card-body" style="padding:12px 14px">
+                <div class="info-row"><span class="info-key">Students sent</span><strong class="info-val">7</strong></div>
+                <div class="info-row"><span class="info-key">Accepted</span><strong class="info-val" style="color:var(--forest)">6 / 7</strong></div>
+                <div class="info-row"><span class="info-key">Visa approved</span><strong class="info-val" style="color:var(--forest)">6 / 6</strong></div>
+                <div class="info-row"><span class="info-key">Avg commission</span><strong class="info-val">₹72,000</strong></div>
+              </div>
+            </div>
+            <button class="btn btn-forest" style="width:100%;justify-content:center">+ Add to Rohan's Shortlist</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     S4 — COURSE DB ADMIN
+════════════════════════════════════════ -->
+<div id="s4" class="screen">
+  <div class="ss"><span class="ss-mod">M5 · 4/4</span><span class="ss-name">Course Database Admin</span><span class="ss-desc">P1 · Phase 2 · Medium Complexity</span></div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sb-logo">Edu<span>Track</span><small>Global Edge Education</small></div>
+      <div class="sb-nav">
+        <div class="sb-item active"><span class="sb-icon">🏫</span>Courses</div>
+        <div class="sb-label">Settings</div>
+        <div class="sb-item"><span class="sb-icon">⚙️</span>Workspace</div>
+      </div>
+      <div class="sb-foot"><div class="sb-user"><div class="av av-sm" style="background:#DDD6FE;color:#5B35A0">RS</div><div><div class="sb-uname">Rahul Sharma</div><div class="sb-urole">Owner</div></div></div></div>
+    </nav>
+    <div class="main">
+      <div class="topbar">
+        <span class="tb-title">Course Database</span>
+        <div class="tb-actions">
+          <button class="btn btn-outline btn-sm">📥 Import CSV</button>
+          <button class="btn btn-forest btn-sm">＋ Add Course</button>
+        </div>
+      </div>
+      <div class="page">
+        <!-- Stats -->
+        <div class="g4 mb18">
+          <div class="stat"><div class="stat-label">Universities</div><div class="stat-val">48</div><div style="font-size:11px;color:var(--muted)">Across 5 countries</div></div>
+          <div class="stat"><div class="stat-label">Courses</div><div class="stat-val">438</div><div style="font-size:11px;color:var(--forest)">↑ 22 added this month</div></div>
+          <div class="stat"><div class="stat-label">Sep 2025 Intake</div><div class="stat-val">312</div><div style="font-size:11px;color:var(--muted)">Available</div></div>
+          <div class="stat"><div class="stat-label">Needs Update</div><div class="stat-val" style="color:var(--amber)">14</div><div style="font-size:11px;color:var(--amber)">Fee / deadline changes</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex-c mb14" style="flex-wrap:wrap;gap:8px">
+          <div class="search-bar" style="width:260px"><span style="color:var(--muted);font-size:13px">🔍</span><input placeholder="Search courses..."></div>
+          <div class="chip on">All Countries</div>
+          <div class="chip">Sep 2025</div>
+          <div class="chip">⚠ Needs Update</div>
+          <div style="margin-left:auto">
+            <select class="sel" style="width:140px;font-size:11px;padding:6px 26px 6px 10px"><option>Sort: A-Z</option><option>Sort: Recently Added</option></select>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>University</th>
+                  <th>Course</th>
+                  <th>Country</th>
+                  <th>Level</th>
+                  <th>Intake</th>
+                  <th>Tuition</th>
+                  <th>IELTS</th>
+                  <th>Deadline</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:700">Univ. College Dublin</td>
+                  <td>MSc Data Science</td>
+                  <td><span class="cc" style="font-size:10px">🇮🇪 Ireland</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">PG</span></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Sep 2025</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">₹24.5L</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">6.5</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)">Mar 31</td>
+                  <td><span class="badge b-forest" style="font-size:9px">✓ Active</span></td>
+                  <td><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">Univ. of Manchester</td>
+                  <td>MSc Adv. Comp. Sci.</td>
+                  <td><span class="cc" style="font-size:10px">🇬🇧 UK</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">PG</span></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Sep 2025</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">₹31.8L</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">6.5</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Apr 30</td>
+                  <td><span class="badge b-forest" style="font-size:9px">✓ Active</span></td>
+                  <td><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <tr style="background:rgba(217,128,32,.04)">
+                  <td style="font-weight:700">Imperial College London</td>
+                  <td>MSc Artificial Intelligence</td>
+                  <td><span class="cc" style="font-size:10px">🇬🇧 UK</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">PG</span></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Sep 2025</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--coral)">₹42.0L</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">7.0 each</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Jan 15 ✗</td>
+                  <td><span class="badge b-amber" style="font-size:9px">⚠ Update</span></td>
+                  <td><button class="btn btn-amber btn-xs" style="color:var(--ink)">Update</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">National College Ireland</td>
+                  <td>MSc Data Analytics</td>
+                  <td><span class="cc" style="font-size:10px">🇮🇪 Ireland</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">PG</span></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Jan 2026</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">₹14.2L</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">6.0</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Rolling</td>
+                  <td><span class="badge b-forest" style="font-size:9px">✓ Active</span></td>
+                  <td><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700">Univ. of Melbourne</td>
+                  <td>Master of Data Science</td>
+                  <td><span class="cc" style="font-size:10px">🇦🇺 Australia</span></td>
+                  <td><span class="badge b-green" style="font-size:9px">PG</span></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Feb 2026</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">₹28.0L</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">6.5</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:11px">Oct 31</td>
+                  <td><span class="badge b-forest" style="font-size:9px">✓ Active</span></td>
+                  <td><button class="btn btn-ghost btn-xs">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:var(--ivory2)">
+            <div style="font-size:11px;color:var(--muted)">Showing 5 of 438 courses</div>
+            <div style="display:flex;gap:5px">
+              <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--ink);color:#fff;font-size:11px;font-weight:700;cursor:pointer">1</button>
+              <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--white);color:var(--slate);font-size:11px;font-weight:700;cursor:pointer">2</button>
+              <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--white);color:var(--slate);font-size:11px;font-weight:700;cursor:pointer">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx=['s1','s2','s3','s4'].indexOf(id);
+  if(idx>=0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('a[href="#"]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+</script>
+</body>
+</html>
