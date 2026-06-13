@@ -1,18 +1,30 @@
 import { ROLES, type RoleKey } from "@/config/roles/roles";
 
+/** Permission strings returned by the backend auth service. */
 export const PERMISSIONS = {
-  DASHBOARD_VIEW: "dashboard:view",
-  LEAD_CREATE: "lead.create",
-  LEAD_VIEW: "lead:view",
-  LEAD_MANAGE: "lead:manage",
-  APPLICATIONS_VIEW: "applications:view",
-  APPLICATIONS_MANAGE: "applications:manage",
-  ACTIVITIES_VIEW: "activities:view",
-  ACTIVITIES_MANAGE: "activities:manage",
+  DASHBOARD_VIEW: "DASHBOARD_VIEW",
+  LEAD_CREATE: "LEAD_CREATE",
+  LEAD_VIEW: "LEAD_VIEW",
+  LEAD_DELETE: "LEAD_DELETE",
+  LEAD_MANAGE: "LEAD_MANAGE",
+  LEAD_ASSIGN: "LEAD_ASSIGN",
+  APPLICATIONS_VIEW: "APPLICATIONS_VIEW",
+  APPLICATIONS_MANAGE: "APPLICATIONS_MANAGE",
+  TASK_CREATE: "TASK_CREATE",
+  TASK_VIEW: "TASK_VIEW",
+  TASK_VIEW_TEAM: "TASK_VIEW_TEAM",
+  TASK_UPDATE: "TASK_UPDATE",
+  TASK_DELETE: "TASK_DELETE",
+  ACTIVITY_LOG: "ACTIVITY_LOG",
+  SETTINGS_TENANT: "SETTINGS_TENANT",
+  TEAM_INVITE: "TEAM_INVITE",
+  USERS_VIEW: "USERS_VIEW",
+  USERS_MANAGE: "USERS_MANAGE",
+  ROLES_VIEW: "ROLES_VIEW",
+  ROLES_MANAGE: "ROLES_MANAGE",
 } as const;
 
-export type PermissionKey =
-  (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | string;
 
 const allPermissions = Object.values(PERMISSIONS);
 
@@ -24,7 +36,7 @@ export const ROLE_PERMISSION_MAP: Record<RoleKey, PermissionKey[]> = {
     PERMISSIONS.LEAD_CREATE,
     PERMISSIONS.LEAD_VIEW,
     PERMISSIONS.APPLICATIONS_VIEW,
-    PERMISSIONS.ACTIVITIES_VIEW,
+    PERMISSIONS.TASK_VIEW,
   ],
   [ROLES.APPLICATION_MANAGER]: [
     PERMISSIONS.DASHBOARD_VIEW,
@@ -33,17 +45,13 @@ export const ROLE_PERMISSION_MAP: Record<RoleKey, PermissionKey[]> = {
   ],
   [ROLES.ACTIVITY_MANAGER]: [
     PERMISSIONS.DASHBOARD_VIEW,
-    PERMISSIONS.ACTIVITIES_VIEW,
-    PERMISSIONS.ACTIVITIES_MANAGE,
+    PERMISSIONS.TASK_VIEW,
+    PERMISSIONS.TASK_CREATE,
+    PERMISSIONS.TASK_UPDATE,
   ],
-  [ROLES.ANALYST]: [
-    PERMISSIONS.DASHBOARD_VIEW,
-    PERMISSIONS.LEAD_VIEW,
-  ],
+  [ROLES.ANALYST]: [PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.LEAD_VIEW],
 };
 
 export function getPermissionsForRoles(roles: RoleKey[]) {
-  return Array.from(
-    new Set(roles.flatMap((role) => ROLE_PERMISSION_MAP[role] ?? [])),
-  );
+  return Array.from(new Set(roles.flatMap((role) => ROLE_PERMISSION_MAP[role] ?? [])));
 }

@@ -10,7 +10,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { ACTIVITY_ALL_AGENTS_OPTION_ID } from "@/modules/activities/activityService";
 import { CreateTaskModal } from "@/modules/activities/components/CreateTaskModal";
 import { TaskBoardColumn } from "@/modules/activities/components/TaskBoardColumn";
@@ -24,6 +26,8 @@ import type { TaskPriority } from "@/modules/activities/types/types";
 const allPriorityValue = "all";
 
 export function MyTasks() {
+  const { hasPermission } = useAuth();
+  const canCreateTask = hasPermission(PERMISSIONS.TASK_CREATE);
   const [selectedAgentId, setSelectedAgentId] = useState(ACTIVITY_ALL_AGENTS_OPTION_ID);
   const [selectedPriorityValue, setSelectedPriorityValue] = useState<string>(allPriorityValue);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -148,20 +152,22 @@ export function MyTasks() {
               ))}
             </TextField>
 
-            <Button
-              sx={{
-                alignSelf: { xs: "stretch", sm: "center" },
-                height: 40,
-                minWidth: 128,
-                px: 2.25,
-                textTransform: "none",
-                whiteSpace: "nowrap",
-              }}
-              variant="contained"
-              onClick={() => setCreateTaskOpen(true)}
-            >
-              Create Task
-            </Button>
+            {canCreateTask ? (
+              <Button
+                sx={{
+                  alignSelf: { xs: "stretch", sm: "center" },
+                  height: 40,
+                  minWidth: 128,
+                  px: 2.25,
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                }}
+                variant="contained"
+                onClick={() => setCreateTaskOpen(true)}
+              >
+                Create Task
+              </Button>
+            ) : null}
           </Stack>
         </Stack>
 
@@ -194,7 +200,7 @@ export function MyTasks() {
                   count={column.tasks.length}
                   tasks={column.tasks}
                   title={column.title}
-                  onAddTask={() => setCreateTaskOpen(true)}
+                  onAddTask={canCreateTask ? () => setCreateTaskOpen(true) : undefined}
                   onTaskClick={openTask}
                 />
               ))}

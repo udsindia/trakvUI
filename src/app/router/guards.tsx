@@ -6,7 +6,7 @@ import { FeedbackState } from "@/shared/components/FeedbackState";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 
 export function AuthGuard() {
-  const { isAuthenticated, isInitializing, tenant } = useAuth();
+  const { isActive, isAuthenticated, isInitializing, isTrialExpired, tenant } = useAuth();
 
   if (isInitializing) {
     return <LoadingScreen />;
@@ -14,6 +14,14 @@ export function AuthGuard() {
 
   if (!isAuthenticated || !tenant) {
     return <Navigate replace to="/login" />;
+  }
+
+  if (isTrialExpired) {
+    return <Navigate replace to="/login" />;
+  }
+
+  if (!isActive) {
+    return <Navigate replace to="/account-inactive" />;
   }
 
   return <Outlet />;

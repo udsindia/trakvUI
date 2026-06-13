@@ -33,7 +33,7 @@ export function UserMenu({ userName, userRoles, onLogout }: UserMenuProps) {
 
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-      <Button
+      {/* <Button
         color="inherit"
         endIcon={<LogoutRounded />}
         sx={{ display: { xs: "none", sm: "inline-flex" } }}
@@ -41,7 +41,7 @@ export function UserMenu({ userName, userRoles, onLogout }: UserMenuProps) {
         onClick={onLogout}
       >
         Logout
-      </Button>
+      </Button> */}
 
       <IconButton onClick={(event) => setProfileAnchor(event.currentTarget)}>
         <Avatar sx={{ bgcolor: "primary.main", color: "primary.contrastText" }}>

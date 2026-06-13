@@ -1,7 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
 import { authService, getAuthErrorMessage } from "@/app/auth/authService";
-import type { AuthLoginRequest, AuthSession, AuthState } from "@/app/auth/auth.types";
+import type {
+  AuthLoginRequest,
+  AuthSession,
+  AuthState,
+} from "@/app/auth/auth.types";
 
 const initialState: AuthState = {
   bootstrapStatus: "idle",
@@ -13,6 +17,8 @@ const initialState: AuthState = {
   permissions: [],
   tenant: null,
   tokens: null,
+  isActive: true,
+  isTrialExpired: false,
 };
 
 function applySession(state: AuthState, session: AuthSession) {
@@ -22,6 +28,8 @@ function applySession(state: AuthState, session: AuthSession) {
   state.tenant = session.tenant;
   state.tokens = session.tokens;
   state.sessionStatus = "authenticated";
+  state.isActive = session.isActive ?? true;
+  state.isTrialExpired = session.isTrialExpired || false;
 }
 
 function resetSessionState(state: AuthState) {
@@ -31,6 +39,8 @@ function resetSessionState(state: AuthState) {
   state.tenant = null;
   state.tokens = null;
   state.sessionStatus = "unauthenticated";
+  state.isActive = true;
+  state.isTrialExpired = false;
 }
 
 export const initializeAuthSession = createAsyncThunk(
@@ -110,11 +120,15 @@ const authSlice = createSlice({
 export const selectAuthState = (state: RootState) => state.auth;
 export const selectAuthUser = (state: RootState) => state.auth.user;
 export const selectAuthRoles = (state: RootState) => state.auth.roles;
-export const selectAuthPermissions = (state: RootState) => state.auth.permissions;
+export const selectAuthPermissions = (state: RootState) =>
+  state.auth.permissions;
 export const selectAuthTenant = (state: RootState) => state.auth.tenant;
 export const selectAuthBootstrapStatus = (state: RootState) =>
   state.auth.bootstrapStatus;
 export const selectAuthSessionStatus = (state: RootState) =>
   state.auth.sessionStatus;
+export const selectAuthIsTrialExpired = (state: RootState) =>
+  state.auth?.isTrialExpired || false;
+export const selectAuthIsActive = (state: RootState) => state.auth.isActive;
 
 export const authReducer = authSlice.reducer;

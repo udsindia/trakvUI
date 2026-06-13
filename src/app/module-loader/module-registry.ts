@@ -4,7 +4,8 @@ import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { moduleCatalog } from "@/config/modules/module-catalog";
 import { MODULE_KEYS, type ModuleKey } from "@/config/modules/modules";
 import type { PermissionKey } from "@/config/permissions/permissions";
-import type { RoleKey } from "@/config/roles/roles";
+import { isSuperAdmin } from "@/config/roles/superAdmin";
+import { hasAllPermissions, hasAnyPermission } from "@/shared/utils/permissions";
 
 type ModuleImport = () => Promise<{ default: ComponentType }>;
 
@@ -13,6 +14,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
   [MODULE_KEYS.LEAD]: () => import("@/modules/lead"),
   [MODULE_KEYS.APPLICATIONS]: () => import("@/modules/applications"),
   [MODULE_KEYS.ACTIVITIES]: () => import("@/modules/activities"),
+  [MODULE_KEYS.SETTINGS]: () => import("@/modules/settings"),
 };
 
 const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
@@ -20,7 +22,19 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.LEAD]: lazy(moduleImporters[MODULE_KEYS.LEAD]),
   [MODULE_KEYS.APPLICATIONS]: lazy(moduleImporters[MODULE_KEYS.APPLICATIONS]),
   [MODULE_KEYS.ACTIVITIES]: lazy(moduleImporters[MODULE_KEYS.ACTIVITIES]),
+  [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
 };
+
+function isModuleAccessible(
+  permissions: PermissionKey[],
+  moduleDefinition: (typeof moduleCatalog)[number],
+) {
+  if (moduleDefinition.anyOfPermissions?.length) {
+    return hasAnyPermission(permissions, moduleDefinition.anyOfPermissions);
+  }
+
+  return hasAllPermissions(permissions, moduleDefinition.requiredPermissions ?? []);
+}
 
 export function resolveModules({
   permissions,
@@ -28,20 +42,18 @@ export function resolveModules({
   tenant,
 }: {
   permissions: PermissionKey[];
-  roles: RoleKey[];
+  roles: string[];
   tenant: TenantContextState | null;
 }): ResolvedModule[] {
   if (!tenant) {
     return [];
   }
 
+  const superAdmin = isSuperAdmin(roles);
+
   return moduleCatalog.map((moduleDefinition) => {
-    const enabled = tenant.enabledModules[moduleDefinition.key] ?? false;
-    const accessible =
-      moduleDefinition.allowedRoles.some((role) => roles.includes(role)) &&
-      moduleDefinition.requiredPermissions.every((permission) =>
-        permissions.includes(permission),
-      );
+    const enabled = superAdmin ? true : (tenant.enabledModules[moduleDefinition.key] ?? false);
+    const accessible = superAdmin ? true : isModuleAccessible(permissions, moduleDefinition);
 
     return {
       ...moduleDefinition,

@@ -3,8 +3,10 @@ import type {
   AuthLoginRequest,
   AuthSession,
   CreateConsultancyRequest,
+  OnboardingRegisterRequest,
   RegisterAdminRequest,
 } from "@/app/auth/auth.types";
+import { API_CONFIG } from "@/config/api/config";
 import {
   MODULE_KEYS,
   defaultTenantModules,
@@ -24,11 +26,16 @@ interface BackendAuthResponse {
   firstName?: string;
   lastName?: string;
   email?: string;
+  isActive?: boolean;
+  isTrialExpired?: boolean;
+  roles?: string[];
+  permissions?: string[];
 }
 
 // Maps backend role strings to frontend RoleKey
 const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
   ADMIN: ROLES.TENANT_ADMIN,
+  AGENCY_ADMIN: ROLES.TENANT_ADMIN,
   TENANT_ADMIN: ROLES.TENANT_ADMIN,
   SUPER_ADMIN: ROLES.SUPER_ADMIN,
   COUNSELLOR: ROLES.COUNSELLOR,
@@ -130,12 +137,16 @@ function resolveTokenExpiry(token: string) {
 
 function mapBackendResponseToSession(response: BackendAuthResponse, email: string): AuthSession {
   const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.TENANT_ADMIN;
-  const roles: RoleKey[] = [roleKey];
-  const permissions = getPermissionsForRoles(roles);
+  const backendRoles =
+    response.roles?.filter(Boolean) ??
+    (response.role ? [response.role] : [roleKey]);
+  const permissions =
+    response.permissions?.filter(Boolean) ??
+    getPermissionsForRoles([roleKey]);
   const fullName = [response.firstName, response.lastName].filter(Boolean).join(" ");
   const displayName = fullName || email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  console.debug("[authService] mapped role:", response.role, "→", roleKey);
+  console.debug("[authService] login roles:", backendRoles, "| permissions:", permissions);
 
   return {
     user: {
@@ -143,7 +154,7 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
       name: displayName || email,
       email: response.email ?? email,
     },
-    roles,
+    roles: backendRoles,
     permissions,
     tenant: {
       tenantId: response.tenantId,
@@ -156,6 +167,8 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
       tokenType: "Bearer",
       expiresAt: resolveTokenExpiry(response.accessToken),
     },
+    isActive: response.isActive ?? true,
+    isTrialExpired: response.isTrialExpired ?? false,
   };
 }
 
@@ -173,7 +186,7 @@ function isValidSession(session: unknown): session is AuthSession {
   return Boolean(
     candidate.user &&
     candidate.tenant &&
-    candidate.tokens?.accessToken &&
+    candidate.tokens &&
     Array.isArray(candidate.roles) &&
     Array.isArray(candidate.permissions),
   );
@@ -261,6 +274,9 @@ function buildMockSession(request: AuthLoginRequest): AuthSession {
   const userName = toDisplayName(identifier) || mockPersona.fallbackName;
   const email = identifier.includes("@") ? identifier : `${userKey}@demo.local`;
   const expiresAt = Date.now() + MOCK_SESSION_DURATION_MS;
+  const normalizedIdentifier = identifier.toLowerCase();
+  const isTrialExpired =
+    normalizedIdentifier.includes("trial") || normalizedIdentifier.includes("expired");
 
   return {
     user: {
@@ -283,6 +299,8 @@ function buildMockSession(request: AuthLoginRequest): AuthSession {
       tokenType: "Bearer",
       expiresAt,
     },
+    isActive: true,
+    isTrialExpired,
   };
 }
 
@@ -386,6 +404,16 @@ export const authService = {
     return data;
   },
 
+  async registerOnboarding(request: OnboardingRegisterRequest) {
+    if (isMockAuthEnabled) {
+      await wait(MOCK_AUTH_LATENCY_MS);
+      return { success: true };
+    }
+
+    const { data } = await httpClient.post("/onboarding/register", request);
+    return data;
+  },
+
   async registerAdminUser(request: RegisterAdminRequest) {
     if (isMockAuthEnabled) {
       await wait(MOCK_AUTH_LATENCY_MS);
@@ -395,4 +423,21 @@ export const authService = {
     const { data } = await httpClient.post("/auth/register", request);
     return data;
   },
+
+  // async registerTenant(request: TenantSignupRequest) {
+  //   if (isMockAuthEnabled) {
+  //     await wait(MOCK_AUTH_LATENCY_MS);
+  //     return {
+  //       tenantId: crypto.randomUUID(),
+  //       message: "Tenant registered successfully.",
+  //     } satisfies TenantSignupResponse;
+  //   }
+
+  //   const { data } = await httpClient.post<TenantSignupResponse>(
+  //     `${API_CONFIG.setup}/register`,
+  //     request,
+  //   );
+
+  //   return data;
+  // },
 };

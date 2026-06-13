@@ -7,6 +7,7 @@ export const MODULE_ICON_KEYS = {
   LEADS: "leads",
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
+  SETTINGS: "settings",
 } as const;
 
 export type ModuleIconKey =
@@ -28,5 +29,8 @@ export interface ModuleDefinition extends ModuleNavigationItemDefinition {
   icon: ModuleIconKey;
   order: number;
   allowedRoles: RoleKey[];
-  requiredPermissions: PermissionKey[];
+  /** User must have every permission in this list to access the module. */
+  requiredPermissions?: PermissionKey[];
+  /** User must have at least one permission in this list to access the module. */
+  anyOfPermissions?: PermissionKey[];
 }

@@ -5,7 +5,7 @@ import type { CreateLeadPayload } from "@/modules/lead/leadForm.types";
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
-  consultencyId: string;
+  consultancyId: string;
   firstName: string;
   lastName: string;
   phone: string;

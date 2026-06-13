@@ -79,6 +79,36 @@ export const moduleCatalog: ModuleDefinition[] = [
       ROLES.COUNSELLOR,
       ROLES.ACTIVITY_MANAGER,
     ],
-    requiredPermissions: [PERMISSIONS.ACTIVITIES_VIEW],
+    requiredPermissions: [PERMISSIONS.TASK_VIEW],
+  },
+  {
+    key: MODULE_KEYS.SETTINGS,
+    title: "Settings",
+    navLabel: "Settings",
+    path: "settings",
+    children: [
+      {
+        key: "team",
+        navLabel: "Team",
+        path: "team",
+        description: "Manage workspace users and access.",
+      },
+      {
+        key: "roles",
+        navLabel: "Roles",
+        path: "roles",
+        description: "Configure roles and permission assignments.",
+      },
+    ],
+    icon: MODULE_ICON_KEYS.SETTINGS,
+    description: "Team members, roles, and workspace administration.",
+    order: 5,
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.TENANT_ADMIN],
+    anyOfPermissions: [
+      PERMISSIONS.SETTINGS_TENANT,
+      PERMISSIONS.TEAM_INVITE,
+      PERMISSIONS.USERS_VIEW,
+      PERMISSIONS.ROLES_VIEW,
+    ],
   },
 ];

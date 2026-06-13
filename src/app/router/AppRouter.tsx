@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
+import { AccountInactivePage } from "@/app/auth/AccountInactivePage";
 import { LoginPage } from "@/app/auth/LoginPage";
 import { RegisterPage } from "@/app/auth/RegisterPage";
 import { MainLayout } from "@/app/layout/MainLayout";
@@ -13,7 +14,7 @@ type AppRouterProps = {
   modules: ResolvedModule[];
   navigationModules: ResolvedModule[];
   notificationsCount: number;
-  roles: RoleKey[];
+  roles: string[];
   tenantName: string;
   user: AuthenticatedUser | null;
   onLogout: () => void;
@@ -30,12 +31,13 @@ export function AppRouter({
   onLogout,
 }: AppRouterProps) {
   const userName = user?.name ?? "Guest User";
-  const userRoles = roles.map((role) => ROLE_LABELS[role]);
+  const userRoles = roles.map((role) => ROLE_LABELS[role as RoleKey] ?? role);
 
   return (
     <Routes>
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
+      <Route element={<AccountInactivePage />} path="/account-inactive" />
 
       <Route element={<AuthGuard />}>
         <Route

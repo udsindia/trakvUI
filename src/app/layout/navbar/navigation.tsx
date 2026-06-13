@@ -3,6 +3,7 @@ import AssessmentRounded from "@mui/icons-material/AssessmentRounded";
 import DescriptionRounded from "@mui/icons-material/DescriptionRounded";
 import EventNoteRounded from "@mui/icons-material/EventNoteRounded";
 import GroupRounded from "@mui/icons-material/GroupRounded";
+import SettingsRounded from "@mui/icons-material/SettingsRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
   ModuleIconKey,
@@ -23,6 +24,7 @@ const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   leads: <GroupRounded />,
   applications: <DescriptionRounded />,
   activities: <EventNoteRounded />,
+  settings: <SettingsRounded />,
 };
 
 function normalizeRoutePath(path: string) {

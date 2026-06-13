@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EventBusyRounded from "@mui/icons-material/EventBusyRounded";
 import LoginRounded from "@mui/icons-material/LoginRounded";
 import {
   Alert,
@@ -14,9 +15,10 @@ import { Navigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { isMockAuthEnabled } from "@/app/auth/authService";
 import { useAuth } from "@/app/auth/useAuth";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
+import QRCode from "@/shared/components/QRCodeGenerator";
 
 export function LoginPage() {
-  const { error, isAuthenticated, isInitializing, isLoggingIn, login } = useAuth();
+  const { error, isActive, isAuthenticated, isInitializing, isLoggingIn, login, isTrialExpired } = useAuth();
   const location = useLocation();
   const registrationSuccess = (location.state as { registrationSuccess?: boolean } | null)?.registrationSuccess;
   const [identifier, setIdentifier] = useState("");
@@ -30,6 +32,68 @@ export function LoginPage() {
         title="Preparing sign in"
       />
     );
+  }
+
+  if (isTrialExpired) {
+    return (
+      <Box
+        sx={{
+          alignItems: "center",
+          bgcolor: "background.default",
+          display: "grid",
+          minHeight: "100vh",
+          px: 2,
+          py: 4,
+        }}
+      >
+        <Card
+          elevation={0}
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            maxWidth: 460,
+            mx: "auto",
+            width: "100%",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+            <Stack alignItems="center" spacing={3}>
+              <Stack alignItems="center" spacing={1.5}>
+                <EventBusyRounded color="warning" sx={{ fontSize: 48 }} />
+                <Typography variant="overline">Trial Expired</Typography>
+                <Typography textAlign="center" variant="h5">
+                  Your trial period has ended
+                </Typography>
+                <Typography color="text.secondary" textAlign="center" variant="body2">
+                  Scan the QR code below to renew your subscription, or contact support to
+                  continue using EduTrack.
+                </Typography>
+              </Stack>
+
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  p: 2,
+                }}
+              >
+                <QRCode value="upi://pay?pa=9177333808@ibl&am=10&cu=INR" />
+              </Box>
+
+              <Typography color="text.secondary" textAlign="center" variant="caption">
+                UPI payment QR for subscription renewal
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
+
+  if (isAuthenticated && !isActive) {
+    return <Navigate replace to="/account-inactive" />;
   }
 
   if (isAuthenticated) {
@@ -133,7 +197,7 @@ export function LoginPage() {
                 <Typography align="center" color="text.secondary" variant="body2">
                   New consultancy?{" "}
                   <RouterLink to="/register" style={{ color: "inherit", fontWeight: 600 }}>
-                    Create an account
+                    Sign up
                   </RouterLink>
                 </Typography>
               </Stack>
