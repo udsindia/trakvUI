@@ -17,7 +17,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 1,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
-      ROLES.TENANT_ADMIN,
+      ROLES.AGENCY_ADMIN,
       ROLES.COUNSELLOR,
       ROLES.APPLICATION_MANAGER,
       ROLES.ACTIVITY_MANAGER,
@@ -35,7 +35,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 2,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
-      ROLES.TENANT_ADMIN,
+      ROLES.AGENCY_ADMIN,
       ROLES.COUNSELLOR,
       ROLES.ANALYST,
     ],
@@ -51,7 +51,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 3,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
-      ROLES.TENANT_ADMIN,
+      ROLES.AGENCY_ADMIN,
       ROLES.COUNSELLOR,
       ROLES.APPLICATION_MANAGER,
     ],
@@ -75,7 +75,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 4,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
-      ROLES.TENANT_ADMIN,
+      ROLES.AGENCY_ADMIN,
       ROLES.COUNSELLOR,
       ROLES.ACTIVITY_MANAGER,
     ],
@@ -103,7 +103,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
     order: 5,
-    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.TENANT_ADMIN],
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
       PERMISSIONS.TEAM_INVITE,

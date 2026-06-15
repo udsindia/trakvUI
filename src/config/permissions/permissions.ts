@@ -30,7 +30,7 @@ const allPermissions = Object.values(PERMISSIONS);
 
 export const ROLE_PERMISSION_MAP: Record<RoleKey, PermissionKey[]> = {
   [ROLES.SUPER_ADMIN]: allPermissions,
-  [ROLES.TENANT_ADMIN]: allPermissions,
+  [ROLES.AGENCY_ADMIN]: allPermissions,
   [ROLES.COUNSELLOR]: [
     PERMISSIONS.DASHBOARD_VIEW,
     PERMISSIONS.LEAD_CREATE,

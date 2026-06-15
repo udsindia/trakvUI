@@ -221,7 +221,7 @@ function ActionPointCard({ point }: { point: ActionPoint }) {
 
 export default function DashboardModule() {
   const { roles, user } = useAuth();
-  const isAdmin = roles.includes(ROLES.SUPER_ADMIN) || roles.includes(ROLES.TENANT_ADMIN);
+  const isAdmin = roles.includes(ROLES.SUPER_ADMIN) || roles.includes(ROLES.AGENCY_ADMIN);
   const isApplicationManager = roles.includes(ROLES.APPLICATION_MANAGER);
   const isActivityManager = roles.includes(ROLES.ACTIVITY_MANAGER);
   const isAnalyst = roles.includes(ROLES.ANALYST);

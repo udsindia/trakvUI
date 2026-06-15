@@ -34,9 +34,8 @@ interface BackendAuthResponse {
 
 // Maps backend role strings to frontend RoleKey
 const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
-  ADMIN: ROLES.TENANT_ADMIN,
-  AGENCY_ADMIN: ROLES.TENANT_ADMIN,
-  TENANT_ADMIN: ROLES.TENANT_ADMIN,
+  ADMIN: ROLES.AGENCY_ADMIN,
+  AGENCY_ADMIN: ROLES.AGENCY_ADMIN,
   SUPER_ADMIN: ROLES.SUPER_ADMIN,
   COUNSELLOR: ROLES.COUNSELLOR,
   COUNSELOR: ROLES.COUNSELLOR,
@@ -62,7 +61,7 @@ type MockPersona = {
 const defaultMockPersona: MockPersona = {
   fallbackName: "Demo Tenant Admin",
   keywords: [],
-  roles: [ROLES.TENANT_ADMIN],
+  roles: [ROLES.AGENCY_ADMIN],
 };
 
 const mockPersonas: MockPersona[] = [
@@ -74,7 +73,7 @@ const mockPersonas: MockPersona[] = [
   {
     fallbackName: "Demo Tenant Admin",
     keywords: ["admin"],
-    roles: [ROLES.TENANT_ADMIN],
+    roles: [ROLES.AGENCY_ADMIN],
   },
   {
     fallbackName: "Demo Counsellor",
@@ -136,7 +135,7 @@ function resolveTokenExpiry(token: string) {
 }
 
 function mapBackendResponseToSession(response: BackendAuthResponse, email: string): AuthSession {
-  const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.TENANT_ADMIN;
+  const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.AGENCY_ADMIN;
   const backendRoles =
     response.roles?.filter(Boolean) ??
     (response.role ? [response.role] : [roleKey]);
