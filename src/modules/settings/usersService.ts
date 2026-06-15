@@ -107,6 +107,7 @@ export const usersService = {
       email: payload.email,
       phone: payload.phone,
       role: payload.role,
+      tenantId: payload.tenantId,
     });
   },
 

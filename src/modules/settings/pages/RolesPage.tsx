@@ -165,12 +165,12 @@ export function RolesPage() {
             </Table>
           </TableContainer>
 
-          <Stack spacing={1.5}>
+          {/* <Stack spacing={1.5}>
             <Typography sx={{ fontWeight: 600 }} variant="h6">
               Permission Matrix
             </Typography>
             <PermissionMatrix roles={rolesQuery.data} />
-          </Stack>
+          </Stack> */}
         </>
       ) : null}
     </Stack>
