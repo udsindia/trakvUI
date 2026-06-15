@@ -25,9 +25,9 @@ export const usersApi = {
     return response.data;
   },
 
-  setUserActive: async (tenantId: string, userId: string, active: boolean) => {
+  setUserActive: async (tenantId: string, userId: string, active: 'deactivate' | 'reactivate') => {
     const response = await httpClient.patch(
-      `${API_CONFIG.users}/${userId}/active`,
+      `${API_CONFIG.users}/${userId}/${active}`,
       {
         tenantId,
         active,

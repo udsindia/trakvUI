@@ -26,7 +26,7 @@ export function TeamPage() {
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ active, userId }: { active: boolean; userId: string }) =>
+    mutationFn: ({ active, userId }: { active: 'deactivate' | 'reactivate'; userId: string }) =>
       usersService.setUserActive(tenantId, userId, active),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["settings", "users", tenantId] });
@@ -78,7 +78,7 @@ export function TeamPage() {
           onToggleActive={(user) => {
             toggleActiveMutation.mutate({
               userId: user.id,
-              active: !user.active,
+              active: user.active ? 'deactivate' : 'reactivate',
             });
           }}
         />

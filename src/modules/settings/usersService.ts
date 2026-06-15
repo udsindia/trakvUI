@@ -111,13 +111,13 @@ export const usersService = {
     });
   },
 
-  async setUserActive(tenantId: string, userId: string, active: boolean) {
+  async setUserActive(tenantId: string, userId: string, active: 'deactivate' | 'reactivate') {
     if (isMockAuthEnabled) {
       await wait(MOCK_LATENCY_MS);
       const users = readMockUsers(tenantId).map((user) =>
         user.id === userId ? { ...user, active } : user,
       );
-      writeMockUsers(tenantId, users);
+      // writeMockUsers(tenantId, users);
       return;
     }
 
