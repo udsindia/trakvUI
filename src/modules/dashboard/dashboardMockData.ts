@@ -1,7 +1,13 @@
+import type { RoleKey } from "@/config/roles/roles";
+import { ROLES } from "@/config/roles/roles";
 import type {
+  DashboardActivityChartPointDto,
   DashboardActivityDto,
   DashboardApplicationDto,
+  DashboardApplicationPipelineDto,
   DashboardLeadDto,
+  DashboardLeadPipelineDto,
+  DashboardPerformanceMetricDto,
   DashboardTaskDto,
   DashboardTaskSummaryDto,
 } from "@/modules/dashboard/dashboard.types";
@@ -260,58 +266,161 @@ export function getMockDashboardActivities(): DashboardActivityDto[] {
     {
       id: "mock-activity-1",
       type: "CALL",
-      title: "Lead qualification call",
-      description: "Discussed MBA program fit and Canada intake readiness.",
+      title: "Anjali Singh called Priya Sharma",
+      description: "Discussed UK university options — interested in Masters in Data Science",
       status: "Completed",
-      occurredAt: isoHoursAgo(1),
+      occurredAt: isoHoursAgo(0.17),
       actor: {
-        id: "mock-admin",
-        name: "Demo Tenant Admin",
-        role: "Agency Admin",
+        id: "mock-counsellor",
+        name: "Anjali Singh",
+        role: "Counsellor",
       },
       linkedEntity: {
         id: "mock-lead-1",
-        name: "Ananya Sharma",
+        name: "Priya Sharma",
         type: "LEAD",
       },
       durationMinutes: 18,
     },
     {
       id: "mock-activity-2",
-      type: "WHATSAPP",
-      title: "Document reminder sent",
-      description: "Sent a document checklist reminder for visa processing.",
-      status: "Sent",
-      occurredAt: isoHoursAgo(5),
+      type: "NOTE",
+      title: "Ravi Kumar moved Manish Gupta to Qualified",
+      description: "Stage changed: Contacted → Qualified",
+      status: "Completed",
+      occurredAt: isoHoursAgo(0.42),
       actor: {
-        id: "mock-counsellor",
-        name: "Demo Counsellor",
+        id: "mock-manager",
+        name: "Ravi Kumar",
         role: "Counsellor",
       },
       linkedEntity: {
-        id: "mock-app-2",
-        name: "Kabir Mehta - Monash University",
-        type: "APPLICATION",
+        id: "mock-lead-2",
+        name: "Manish Gupta",
+        type: "LEAD",
       },
     },
     {
       id: "mock-activity-3",
-      type: "NOTE",
-      title: "Visa approval note",
-      description: "Captured next steps after approval confirmation.",
-      status: "Internal",
-      occurredAt: isoHoursAgo(20),
+      type: "WHATSAPP",
+      title: "Meena Joshi sent WhatsApp to Ananya Rao",
+      description: "Sent university brochure via welcome template",
+      status: "Sent",
+      occurredAt: isoHoursAgo(1),
       actor: {
-        id: "mock-admin",
-        name: "Demo Tenant Admin",
-        role: "Agency Admin",
+        id: "mock-lead-manager",
+        name: "Meena Joshi",
+        role: "Counsellor",
       },
       linkedEntity: {
-        id: "mock-app-3",
-        name: "Meera Iyer - Technical University of Munich",
+        id: "mock-lead-3",
+        name: "Ananya Rao",
+        type: "LEAD",
+      },
+    },
+    {
+      id: "mock-activity-4",
+      type: "EMAIL",
+      title: "Arjun Nair emailed Sanjay Verma",
+      description: "Sent offer letter from Stanford University",
+      status: "Sent",
+      occurredAt: isoHoursAgo(26),
+      actor: {
+        id: "mock-app-manager",
+        name: "Arjun Nair",
+        role: "Application Manager",
+      },
+      linkedEntity: {
+        id: "mock-app-2",
+        name: "Sanjay Verma",
         type: "APPLICATION",
       },
     },
+    {
+      id: "mock-activity-5",
+      type: "NOTE",
+      title: "Pooja Verma added note on Kavya Reddy",
+      description: "Lead prefers evening calls. Interested in Australia only.",
+      status: "Internal",
+      occurredAt: isoHoursAgo(28),
+      actor: {
+        id: "mock-counsellor-2",
+        name: "Pooja Verma",
+        role: "Counsellor",
+      },
+      linkedEntity: {
+        id: "mock-app-3",
+        name: "Kavya Reddy",
+        type: "STUDENT",
+      },
+    },
   ];
+}
+
+export function getMockLeadPipeline(_role: RoleKey): DashboardLeadPipelineDto {
+  const stages = [
+    { label: "New", count: 120, color: "#4f46e5" },
+    { label: "Contacted", count: 95, color: "#7c3aed" },
+    { label: "Qualified", count: 62, color: "#ec4899" },
+    { label: "Applied", count: 38, color: "#ef4444" },
+    { label: "Enrolled", count: 22, color: "#10b981" },
+  ];
+
+  return {
+    stages,
+    total: stages.reduce((sum, stage) => sum + stage.count, 0),
+  };
+}
+
+export function getMockApplicationPipeline(_role: RoleKey): DashboardApplicationPipelineDto {
+  const stages = [
+    { label: "Doc Check", count: 22, color: "#818cf8" },
+    { label: "Applied", count: 15, color: "#6366f1" },
+    { label: "Offer", count: 10, color: "#4f46e5" },
+    { label: "Visa", count: 7, color: "#4338ca" },
+    { label: "Enrolled", count: 4, color: "#10b981" },
+  ];
+
+  return {
+    stages,
+    total: stages.reduce((sum, stage) => sum + stage.count, 0),
+  };
+}
+
+export function getMockActivityChart(_role: RoleKey): DashboardActivityChartPointDto[] {
+  return [
+    { label: "May W3", calls: 42, whatsapp: 35 },
+    { label: "May W4", calls: 58, whatsapp: 47 },
+    { label: "Jun W1", calls: 51, whatsapp: 53 },
+    { label: "Jun W2", calls: 63, whatsapp: 61 },
+  ];
+}
+
+export function getMockPerformanceMetrics(role: RoleKey): DashboardPerformanceMetricDto[] {
+  if (role === ROLES.COUNSELLOR) {
+    return [
+      { label: "Leads Contacted", value: 88, color: "#0f5ad4" },
+      { label: "Tasks Completed", value: 72, color: "#10b981" },
+      { label: "Follow-up Rate", value: 74, color: "#f59e0b" },
+      { label: "WA Reply Rate", value: 62, color: "#7c3aed" },
+    ];
+  }
+
+  return [
+    { label: "Leads Contacted", value: 82, color: "#0f5ad4" },
+    { label: "Tasks Completed", value: 75, color: "#10b981" },
+    { label: "Follow-up Rate", value: 68, color: "#f59e0b" },
+    { label: "WA Reply Rate", value: 58, color: "#7c3aed" },
+  ];
+}
+
+export function getMockRecentActivities(role: RoleKey): DashboardActivityDto[] {
+  const activities = getMockDashboardActivities();
+
+  if (role === ROLES.COUNSELLOR) {
+    return activities.filter((activity) => activity.actor?.role === "Counsellor").slice(0, 3);
+  }
+
+  return activities.slice(0, 3);
 }
 

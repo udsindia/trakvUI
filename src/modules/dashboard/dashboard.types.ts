@@ -85,6 +85,69 @@ export interface DashboardTaskSummaryDto {
   total: number;
 }
 
+export type DashboardKpiAccent = "blue" | "green" | "red" | "orange" | "purple";
+
+export type DashboardDeltaTone = "up" | "down" | "flat";
+
+/** Role-specific KPI card shown at the top of the dashboard. */
+export interface DashboardKpiDto {
+  accent: DashboardKpiAccent;
+  delta: string;
+  deltaTone: DashboardDeltaTone;
+  icon: string;
+  label: string;
+  value: string;
+}
+
+/** Quick action button in the dashboard greeting section. */
+export interface DashboardQuickAction {
+  href: string;
+  icon: string;
+  label: string;
+}
+
+/** Controls which dashboard widgets are visible for a role profile. */
+export interface DashboardWidgetVisibility {
+  applicationPipeline: boolean;
+  leadPipeline: boolean;
+  performance: boolean;
+  recentActivities: boolean;
+  weeklyActivity: boolean;
+}
+
+/** Single stage in the lead or application pipeline visualization. */
+export interface DashboardPipelineStageDto {
+  color: string;
+  count: number;
+  label: string;
+}
+
+/** Lead pipeline summary — GET /api/dashboard/pipeline/leads */
+export interface DashboardLeadPipelineDto {
+  stages: DashboardPipelineStageDto[];
+  total: number;
+}
+
+/** Application pipeline summary — GET /api/dashboard/pipeline/applications */
+export interface DashboardApplicationPipelineDto {
+  stages: DashboardPipelineStageDto[];
+  total: number;
+}
+
+/** Weekly activity chart point — GET /api/dashboard/activity-chart */
+export interface DashboardActivityChartPointDto {
+  calls: number;
+  label: string;
+  whatsapp: number;
+}
+
+/** Performance metric bar — GET /api/dashboard/performance */
+export interface DashboardPerformanceMetricDto {
+  color: string;
+  label: string;
+  value: number;
+}
+
 /** Recent activity item shown in the dashboard operational pulse. */
 export interface DashboardActivityDto {
   id: string;
