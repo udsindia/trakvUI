@@ -628,21 +628,15 @@ export const activityService = {
   },
 
   async getTaskBoard(params: GetTaskBoardParams = {}): Promise<GetTaskBoardResponse> {
-    const { data } = await httpClient.get<unknown>(`${API_CONFIG.tasks}/board`);
-    
-    // Handle both direct response and wrapped response
-    const boardData = isRecord(data) && data.data ? (data.data as BackendTaskBoardResponse) : (data as BackendTaskBoardResponse);
-    
-    console.debug("[activityService] Task board response:", boardData);
-    
+    const { data } = await httpClient.get<BackendTaskBoardResponse>(`${API_CONFIG.tasks}/board`);
     const tasks = [
-      ...(boardData.overdue ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "overdue")),
-      ...(boardData.todo ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "todo")),
-      ...(boardData.inProgress ?? []).map((task) =>
+      ...(data.overdue ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "overdue")),
+      ...(data.todo ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "todo")),
+      ...(data.inProgress ?? []).map((task) =>
         mapBackendTaskToBoardItem(normalizeTask(task), "inProgress"),
       ),
-      ...(boardData.dueToday ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "dueToday")),
-      ...(boardData.upcoming ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "upcoming")),
+      ...(data.dueToday ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "dueToday")),
+      ...(data.upcoming ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "upcoming")),
     ].filter((task) => {
       const agentMatches =
         !params.agentId ||
@@ -651,8 +645,6 @@ export const activityService = {
       const priorityMatches = !params.priority || task.priority === params.priority;
       return agentMatches && priorityMatches;
     });
-
-    console.debug("[activityService] Processed tasks:", tasks.length);
 
     return {
       availableAgents: buildAgentOptions(tasks),

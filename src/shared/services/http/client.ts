@@ -13,6 +13,37 @@ export const httpClient = axios.create({
   },
 });
 
+// ─── Response envelope unwrapping ────────────────────────────────────────────
+// Some backend deployments wrap successful payloads in a `{ data, message, status }`
+// envelope while others return the payload directly (see the Render vs Railway
+// backends behind VITE_API_BASE_URL). To keep every service agnostic to that
+// difference, unwrap the envelope here — but only when the body is *clearly* an
+// envelope: a `data` field whose siblings are all known metadata keys. This
+// deliberately leaves real DTOs alone (e.g. the auth login response, which
+// carries `accessToken`/`refreshToken` at the top level and must not be unwrapped).
+
+const ENVELOPE_META_KEYS = new Set([
+  "message",
+  "status",
+  "statusCode",
+  "code",
+  "success",
+  "timestamp",
+  "path",
+  "error",
+]);
+
+function unwrapEnvelope(body: unknown): unknown {
+  if (body === null || typeof body !== "object" || Array.isArray(body) || !("data" in body)) {
+    return body;
+  }
+
+  const siblingKeys = Object.keys(body).filter((key) => key !== "data");
+  const isEnvelope = siblingKeys.every((key) => ENVELOPE_META_KEYS.has(key));
+
+  return isEnvelope ? (body as { data: unknown }).data : body;
+}
+
 // ─── Debug interceptors ──────────────────────────────────────────────────────
 
 httpClient.interceptors.request.use((config) => {
@@ -26,6 +57,7 @@ httpClient.interceptors.request.use((config) => {
 
 httpClient.interceptors.response.use(
   (response) => {
+    response.data = unwrapEnvelope(response.data);
     console.debug(
       `[API ←] ${response.status} ${response.config.url}`,
       "| data:",
