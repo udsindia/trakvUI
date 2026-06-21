@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci && npm run build"
+buildCommand = "npm run build"
 
 [deploy]
 # 'serve' statically serves the Vite build output on the PORT Railway assigns
@@ -14,3 +14,4 @@ restartPolicyMaxRetries = 10
 #
 # Note: VITE_ prefixed variables must be available at BUILD TIME.
 # Add them in: Railway Dashboard → your service → Variables, before deploying.
+
