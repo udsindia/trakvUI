@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
 import { AccountInactivePage } from "@/app/auth/AccountInactivePage";
@@ -8,6 +9,10 @@ import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { AuthGuard, ModuleGuard } from "@/app/router/guards";
 import { ROLE_LABELS, type RoleKey } from "@/config/roles/roles";
 import { FeedbackState } from "@/shared/components/FeedbackState";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
+
+// SA portal — standalone route tree, own auth
+const SaTeamModule = lazy(() => import("@/modules/sa-team/SaTeamModule"));
 
 type AppRouterProps = {
   defaultModulePath: string;
@@ -35,6 +40,18 @@ export function AppRouter({
 
   return (
     <Routes>
+      {/* SA portal — standalone route tree, own auth */}
+      <Route
+        path="/sa/*"
+        element={
+          <Suspense
+            fallback={<LoadingScreen title="Loading SA Portal" description="" fullHeight />}
+          >
+            <SaTeamModule />
+          </Suspense>
+        }
+      />
+
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
       <Route element={<AccountInactivePage />} path="/account-inactive" />
