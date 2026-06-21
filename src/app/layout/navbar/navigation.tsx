@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import AssessmentRounded from "@mui/icons-material/AssessmentRounded";
-import DescriptionRounded from "@mui/icons-material/DescriptionRounded";
 import EventNoteRounded from "@mui/icons-material/EventNoteRounded";
-import GroupRounded from "@mui/icons-material/GroupRounded";
 import SettingsRounded from "@mui/icons-material/SettingsRounded";
+import SpeedRounded from "@mui/icons-material/SpeedRounded";
+import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
+import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
   ModuleIconKey,
@@ -20,9 +20,9 @@ export interface NavigationItem {
 }
 
 const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
-  dashboard: <AssessmentRounded />,
-  leads: <GroupRounded />,
-  applications: <DescriptionRounded />,
+  dashboard: <SpeedRounded />,
+  leads: <TrendingUpRounded />,
+  applications: <AssignmentRounded />,
   activities: <EventNoteRounded />,
   settings: <SettingsRounded />,
 };

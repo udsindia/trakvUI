@@ -45,15 +45,45 @@ export function getDashboardGreeting(userName: string): string {
 }
 
 type RoleDashboardConfig = {
+  attentionItems: DashboardAttentionItem[];
   kpis: DashboardKpiDto[];
+  leadsScope: string;
   quickActions: DashboardQuickAction[];
+  scopeNote: string;
+  sectionTabs: DashboardSectionTab[];
+  showUnassigned: boolean;
   subtitle: string;
   widgets: DashboardWidgetVisibility;
 };
 
+export type DashboardAttentionItem = {
+  action: string;
+  message: string;
+  tone?: "danger" | "info" | "warning";
+};
+
+export type DashboardSectionTab = {
+  badge?: string;
+  id: string;
+  label: string;
+};
+
 const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
   [ROLES.SUPER_ADMIN]: {
-    subtitle: "Platform-wide overview across all agencies on Trakv.",
+    subtitle: "Platform overview across all consultancies.",
+    leadsScope: "All leads",
+    scopeNote: 'Showing <strong style="color:#007A87">all</strong> data',
+    showUnassigned: true,
+    attentionItems: [
+      { message: "6 leads not contacted in 3+ days", action: "View leads" },
+      { message: "₹32K commission pending approval", action: "Review" },
+    ],
+    sectionTabs: [
+      { id: "leads", label: "Leads", badge: "24" },
+      { id: "applications", label: "Applications", badge: "7" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
     kpis: [
       {
         accent: "blue",
@@ -103,39 +133,53 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
     },
   },
   [ROLES.AGENCY_ADMIN]: {
-    subtitle: "Here's what's happening at your agency today.",
+    subtitle: "Here's your business overview for today.",
+    leadsScope: "All team leads",
+    scopeNote: 'Showing <strong style="color:#007A87">team-wide</strong> data',
+    showUnassigned: true,
+    attentionItems: [
+      { message: "6 leads not contacted in 3+ days", action: "View leads" },
+      { message: "4 leads unassigned", action: "Assign now", tone: "danger" },
+      { message: "3 students — documents pending", action: "Review", tone: "info" },
+    ],
+    sectionTabs: [
+      { id: "leads", label: "Leads", badge: "24" },
+      { id: "applications", label: "Applications", badge: "7" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
     kpis: [
       {
-        accent: "purple",
-        delta: "↑ 12% vs last month",
-        deltaTone: "up",
-        icon: "💰",
-        label: "Revenue (MTD)",
-        value: "₹4.85L",
-      },
-      {
         accent: "blue",
-        delta: "↑ 8 from Meta Ads",
+        delta: "+8 from Meta Ads",
         deltaTone: "up",
         icon: "👤",
         label: "New Leads Today",
         value: "23",
       },
       {
+        accent: "green",
+        delta: "+4 this week",
+        deltaTone: "up",
+        icon: "🎓",
+        label: "Active Students",
+        value: "142",
+      },
+      {
+        accent: "orange",
+        delta: "+11 active this month",
+        deltaTone: "up",
+        icon: "📊",
+        label: "Applications",
+        value: "89",
+      },
+      {
         accent: "red",
-        delta: "Needs attention",
+        delta: "HIGH team-wide",
         deltaTone: "down",
         icon: "⚠️",
         label: "Overdue Tasks",
         value: "5",
-      },
-      {
-        accent: "green",
-        delta: "↑ 2.1% this month",
-        deltaTone: "up",
-        icon: "📈",
-        label: "Conversion Rate",
-        value: "18.4%",
       },
     ],
     quickActions: [
@@ -154,6 +198,16 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
   },
   [ROLES.APPLICATION_MANAGER]: {
     subtitle: "Track application progress from document check to enrolment.",
+    leadsScope: "My applications",
+    scopeNote: 'Showing <strong style="color:#007A87">application</strong> pipeline data',
+    showUnassigned: false,
+    attentionItems: [
+      { message: "3 applications awaiting document review", action: "Review queue" },
+    ],
+    sectionTabs: [
+      { id: "applications", label: "Applications", badge: "7" },
+      { id: "activity", label: "Activity" },
+    ],
     kpis: [
       {
         accent: "blue",
@@ -203,7 +257,19 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
     },
   },
   [ROLES.ACTIVITY_MANAGER]: {
-    subtitle: "Monitor team workload, tasks, and daily activity.",
+    subtitle: "Lead pipeline and qualification overview.",
+    leadsScope: "All leads",
+    scopeNote: 'Showing <strong style="color:#007A87">all</strong> leads',
+    showUnassigned: true,
+    attentionItems: [
+      { message: "4 leads unassigned — action required", action: "Assign now", tone: "danger" },
+      { message: "6 leads not contacted in 3+ days", action: "Review" },
+    ],
+    sectionTabs: [
+      { id: "leads", label: "Leads", badge: "24" },
+      { id: "activity", label: "Activity" },
+      { id: "tasks", label: "Tasks", badge: "8" },
+    ],
     kpis: [
       {
         accent: "orange",
@@ -253,7 +319,20 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
     },
   },
   [ROLES.ANALYST]: {
-    subtitle: "Pipeline analytics and conversion insights for your agency.",
+    subtitle: "Team overview and pipeline health.",
+    leadsScope: "All team leads",
+    scopeNote: 'Showing <strong style="color:#007A87">team-wide</strong> data',
+    showUnassigned: true,
+    attentionItems: [
+      { message: "6 leads not contacted in 3+ days", action: "View leads" },
+      { message: "4 leads unassigned", action: "Assign now", tone: "danger" },
+    ],
+    sectionTabs: [
+      { id: "leads", label: "Leads", badge: "24" },
+      { id: "applications", label: "Applications", badge: "7" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
     kpis: [
       {
         accent: "blue",
@@ -303,7 +382,20 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
     },
   },
   [ROLES.COUNSELLOR]: {
-    subtitle: "Your personal workload, leads, and follow-ups for today.",
+    subtitle: "Your leads and tasks for today.",
+    leadsScope: "My assigned leads",
+    scopeNote: 'Showing <strong style="color:#007A87">my assigned</strong> leads only',
+    showUnassigned: false,
+    attentionItems: [
+      { message: "2 of your leads — no contact in 3+ days", action: "View now" },
+      { message: "1 student — document checklist overdue", action: "Review", tone: "danger" },
+    ],
+    sectionTabs: [
+      { id: "leads", label: "My Leads", badge: "6" },
+      { id: "applications", label: "My Applications", badge: "3" },
+      { id: "activity", label: "Activity" },
+      { id: "tasks", label: "My Tasks", badge: "8" },
+    ],
     kpis: [
       {
         accent: "orange",

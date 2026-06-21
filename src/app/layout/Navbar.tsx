@@ -16,9 +16,10 @@ import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { DesktopNav } from "@/app/layout/navbar/DesktopNav";
 import { MobileNav } from "@/app/layout/navbar/MobileNav";
 import { UserMenu } from "@/app/layout/navbar/UserMenu";
+import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 import { getNavigationItems } from "@/app/layout/navbar/navigation";
 
-export const NAVBAR_HEIGHT = 72;
+export { NAVBAR_HEIGHT, TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 
 type NavbarProps = {
   modules: ResolvedModule[];
@@ -70,7 +71,7 @@ export function Navbar({
           sx={{
             gap: 2,
             justifyContent: "space-between",
-            minHeight: `${NAVBAR_HEIGHT}px !important`,
+            minHeight: `${TOPBAR_HEIGHT}px !important`,
             px: { xs: 2, md: 3 },
           }}
         >
@@ -135,7 +136,7 @@ export function Navbar({
         items={navigationItems}
         open={mobileNavigationOpen}
         tenantName={tenantName}
-        topOffset={NAVBAR_HEIGHT}
+        topOffset={TOPBAR_HEIGHT}
         onClose={onCloseMobileNavigation}
       />
     </>

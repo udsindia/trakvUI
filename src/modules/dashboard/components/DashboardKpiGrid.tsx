@@ -1,84 +1,89 @@
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
+import TrendingDownRounded from "@mui/icons-material/TrendingDownRounded";
+import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
+import AccessTimeRounded from "@mui/icons-material/AccessTimeRounded";
 import type { DashboardKpiAccent, DashboardKpiDto } from "@/modules/dashboard/dashboard.types";
 
-const ACCENT_COLORS: Record<DashboardKpiAccent, string> = {
-  blue: "#0f5ad4",
-  green: "#10b981",
-  orange: "#f59e0b",
-  purple: "#7c3aed",
-  red: "#ef4444",
-};
-
-const ICON_BACKGROUNDS: Record<DashboardKpiAccent, string> = {
-  blue: "#eff6ff",
-  green: "#f0fdf4",
-  orange: "#fffbeb",
-  purple: "#f3f0ff",
-  red: "#fef2f2",
+const ACCENT_BORDER: Record<DashboardKpiAccent, string> = {
+  blue: "#007A87",
+  green: "#10B981",
+  orange: "#F5820D",
+  purple: "#8B5CF6",
+  red: "#EF4444",
 };
 
 const DELTA_COLORS = {
-  down: "#ef4444",
-  flat: "#94a3b8",
-  up: "#10b981",
+  down: "#EF4444",
+  flat: "#F59E0B",
+  up: "#10B981",
 } as const;
 
 function KpiCard({ kpi }: { kpi: DashboardKpiDto }) {
+  const DeltaIcon =
+    kpi.deltaTone === "up"
+      ? TrendingUpRounded
+      : kpi.deltaTone === "down"
+        ? TrendingDownRounded
+        : AccessTimeRounded;
+
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        border: "1px solid",
-        borderColor: "#e2e8f0",
-        borderRadius: 2,
-        overflow: "hidden",
-        p: 2.5,
-        position: "relative",
-        "&::before": {
-          bgcolor: ACCENT_COLORS[kpi.accent],
-          content: '""',
-          height: 3,
-          left: 0,
-          position: "absolute",
-          right: 0,
-          top: 0,
+        alignItems: "center",
+        bgcolor: "background.paper",
+        border: "1px solid rgba(229,231,235,.5)",
+        borderLeft: "4px solid",
+        borderLeftColor: ACCENT_BORDER[kpi.accent],
+        borderRadius: 2.5,
+        boxShadow: "0 4px 16px rgba(0,0,0,.07)",
+        display: "flex",
+        gap: 1.25,
+        p: "10px 12px",
+        transition: "transform .18s, box-shadow .18s",
+        "&:hover": {
+          boxShadow: "0 6px 20px rgba(0,0,0,.09)",
+          transform: "translateY(-2px)",
         },
       }}
     >
-      <Stack spacing={1.5}>
-        <Box
+      <Box
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          filter: "drop-shadow(0 2px 4px rgba(0,0,0,.1))",
+          flexShrink: 0,
+          fontSize: 28,
+          height: 38,
+          justifyContent: "center",
+          width: 38,
+        }}
+      >
+        {kpi.icon}
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
           sx={{
-            alignItems: "center",
-            bgcolor: ICON_BACKGROUNDS[kpi.accent],
-            borderRadius: 1.5,
-            display: "flex",
-            fontSize: 20,
-            height: 42,
-            justifyContent: "center",
-            width: 42,
+            color: "text.disabled",
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: 0.6,
+            mb: 0.25,
+            textTransform: "uppercase",
           }}
         >
-          {kpi.icon}
-        </Box>
-        <Stack spacing={0.5}>
-          <Typography
-            sx={{
-              color: "#64748b",
-              fontSize: 11.5,
-              fontWeight: 700,
-              letterSpacing: 0.5,
-              textTransform: "uppercase",
-            }}
-          >
-            {kpi.label}
-          </Typography>
-          <Typography sx={{ fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>{kpi.value}</Typography>
-          <Typography sx={{ color: DELTA_COLORS[kpi.deltaTone], fontSize: 12, fontWeight: 500 }}>
+          {kpi.label}
+        </Typography>
+        <Typography sx={{ color: "text.primary", fontSize: 19, fontWeight: 800, lineHeight: 1.1 }}>
+          {kpi.value}
+        </Typography>
+        <Stack direction="row" spacing={0.375} sx={{ alignItems: "center", mt: 0.25 }}>
+          <DeltaIcon sx={{ color: DELTA_COLORS[kpi.deltaTone], fontSize: 10 }} />
+          <Typography sx={{ color: DELTA_COLORS[kpi.deltaTone], fontSize: 9, fontWeight: 700 }}>
             {kpi.delta}
           </Typography>
         </Stack>
-      </Stack>
-    </Paper>
+      </Box>
+    </Box>
   );
 }
 
@@ -87,7 +92,8 @@ export function DashboardKpiGrid({ kpis }: { kpis: DashboardKpiDto[] }) {
     <Box
       sx={{
         display: "grid",
-        gap: 2,
+        flexShrink: 0,
+        gap: 1,
         gridTemplateColumns: {
           xs: "1fr",
           sm: "repeat(2, minmax(0, 1fr))",

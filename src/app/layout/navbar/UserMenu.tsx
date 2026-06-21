@@ -44,7 +44,16 @@ export function UserMenu({ userName, userRoles, onLogout }: UserMenuProps) {
       </Button> */}
 
       <IconButton onClick={(event) => setProfileAnchor(event.currentTarget)}>
-        <Avatar sx={{ bgcolor: "primary.main", color: "primary.contrastText" }}>
+        <Avatar
+          sx={{
+            background: "linear-gradient(135deg, #007A87, #15A6B8)",
+            color: "#fff",
+            fontSize: 10,
+            fontWeight: 700,
+            height: 30,
+            width: 30,
+          }}
+        >
           {initials}
         </Avatar>
       </IconButton>

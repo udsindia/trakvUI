@@ -89,13 +89,13 @@ export const moduleCatalog: ModuleDefinition[] = [
     children: [
       {
         key: "team",
-        navLabel: "Team",
+        navLabel: "User Management",
         path: "team",
         description: "Manage workspace users and access.",
       },
       {
         key: "roles",
-        navLabel: "Roles",
+        navLabel: "Role Management",
         path: "roles",
         description: "Configure roles and permission assignments.",
       },

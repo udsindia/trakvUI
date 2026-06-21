@@ -134,17 +134,18 @@ export interface DashboardApplicationPipelineDto {
   total: number;
 }
 
-/** Weekly activity chart point — GET /api/dashboard/activity-chart */
+/** Weekly activity chart point — GET /api/dashboard */
 export interface DashboardActivityChartPointDto {
-  calls: number;
+  activities: number;
   label: string;
-  whatsapp: number;
+  tasks: number;
 }
 
-/** Performance metric bar — GET /api/dashboard/performance */
+/** Performance metric bar — GET /api/dashboard */
 export interface DashboardPerformanceMetricDto {
   color: string;
   label: string;
+  unit?: string;
   value: number;
 }
 

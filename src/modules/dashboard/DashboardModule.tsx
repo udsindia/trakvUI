@@ -1,149 +1,93 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Box, Chip, LinearProgress, Stack, Typography } from "@mui/material";
+import { Alert, Box, LinearProgress, Stack } from "@mui/material";
 import { useAuth } from "@/app/auth/useAuth";
-import {
-  PerformanceCard,
-  WeeklyActivityCard,
-} from "@/modules/dashboard/components/DashboardChartsSection";
-import { DashboardGreeting } from "@/modules/dashboard/components/DashboardGreeting";
+import { DashboardAttentionStrip } from "@/modules/dashboard/components/DashboardAttentionStrip";
+import { DashboardHeader } from "@/modules/dashboard/components/DashboardHeader";
 import { DashboardKpiGrid } from "@/modules/dashboard/components/DashboardKpiGrid";
+import { DashboardSectionTabs } from "@/modules/dashboard/components/DashboardSectionTabs";
+import { DashboardActivitySection } from "@/modules/dashboard/components/sections/DashboardActivitySection";
+import { DashboardApplicationsSection } from "@/modules/dashboard/components/sections/DashboardApplicationsSection";
+import { DashboardLeadsSection } from "@/modules/dashboard/components/sections/DashboardLeadsSection";
+import { DashboardTeamSection } from "@/modules/dashboard/components/sections/DashboardTeamSection";
 import {
-  ApplicationPipelineCard,
-  LeadPipelineCard,
-} from "@/modules/dashboard/components/DashboardPipelineCards";
-import { RecentActivitiesCard } from "@/modules/dashboard/components/RecentActivitiesCard";
-import {
-  getDashboardGreeting,
-  getDashboardRoleLabel,
   getRoleDashboardConfig,
   resolveDashboardRole,
 } from "@/modules/dashboard/dashboardRoleConfig";
+import type { DashboardPeriod } from "@/modules/dashboard/dashboardDateRange";
+import { getDashboardDateRange } from "@/modules/dashboard/dashboardDateRange";
 import { dashboardService } from "@/modules/dashboard/dashboardService";
+import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 const LIVE_REFRESH_MS = 30_000;
 
 export default function DashboardModule() {
-  const { roles, tenant, user } = useAuth();
+  const { roles, tenant } = useAuth();
   const dashboardRole = useMemo(() => resolveDashboardRole(roles), [roles]);
   const roleConfig = useMemo(() => getRoleDashboardConfig(dashboardRole), [dashboardRole]);
+  const [period, setPeriod] = useState<DashboardPeriod>("week");
+  const [activeSection, setActiveSection] = useState(roleConfig.sectionTabs[0]?.id ?? "leads");
+  const dateRange = useMemo(() => getDashboardDateRange(period), [period]);
 
-  const kpisQuery = useQuery({
-    queryKey: ["dashboard", "kpis", dashboardRole],
-    queryFn: () => dashboardService.getKpis(dashboardRole),
-    refetchInterval: LIVE_REFRESH_MS,
-    retry: 1,
-  });
-  const leadPipelineQuery = useQuery({
-    queryKey: ["dashboard", "lead-pipeline", dashboardRole],
-    queryFn: () => dashboardService.getLeadPipeline(dashboardRole),
-    enabled: roleConfig.widgets.leadPipeline,
-    refetchInterval: LIVE_REFRESH_MS,
-    retry: 1,
-  });
-  const applicationPipelineQuery = useQuery({
-    queryKey: ["dashboard", "application-pipeline", dashboardRole],
-    queryFn: () => dashboardService.getApplicationPipeline(dashboardRole),
-    enabled: roleConfig.widgets.applicationPipeline,
-    refetchInterval: LIVE_REFRESH_MS,
-    retry: 1,
-  });
-  const activityChartQuery = useQuery({
-    queryKey: ["dashboard", "activity-chart", dashboardRole],
-    queryFn: () => dashboardService.getActivityChart(dashboardRole),
-    enabled: roleConfig.widgets.weeklyActivity,
-    refetchInterval: LIVE_REFRESH_MS,
-    retry: 1,
-  });
-  const performanceQuery = useQuery({
-    queryKey: ["dashboard", "performance", dashboardRole],
-    queryFn: () => dashboardService.getPerformanceMetrics(dashboardRole),
-    enabled: roleConfig.widgets.performance,
-    refetchInterval: LIVE_REFRESH_MS,
-    retry: 1,
-  });
-  const recentActivitiesQuery = useQuery({
-    queryKey: ["dashboard", "recent-activities", dashboardRole],
-    queryFn: () => dashboardService.getRecentActivities(dashboardRole),
-    enabled: roleConfig.widgets.recentActivities,
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard", dateRange.fromDate, dateRange.toDate],
+    queryFn: () => dashboardService.getDashboard(period),
     refetchInterval: LIVE_REFRESH_MS,
     retry: 1,
   });
 
-  const isLoading =
-    kpisQuery.isLoading ||
-    (roleConfig.widgets.leadPipeline && leadPipelineQuery.isLoading) ||
-    (roleConfig.widgets.applicationPipeline && applicationPipelineQuery.isLoading) ||
-    (roleConfig.widgets.weeklyActivity && activityChartQuery.isLoading) ||
-    (roleConfig.widgets.performance && performanceQuery.isLoading) ||
-    (roleConfig.widgets.recentActivities && recentActivitiesQuery.isLoading);
-
-  const kpis = kpisQuery.data?.data ?? roleConfig.kpis;
-  const greeting = getDashboardGreeting(user?.name ?? "there");
+  const dashboard = dashboardQuery.data?.data;
+  const kpis = dashboard?.kpis ?? roleConfig.kpis;
+  const greeting = dashboard?.greeting ?? "Welcome";
+  const sectionTabs = roleConfig.sectionTabs;
+  const currentSection = sectionTabs.some((tab) => tab.id === activeSection)
+    ? activeSection
+    : sectionTabs[0]?.id ?? "leads";
 
   return (
-    <Stack spacing={2.5}>
-      {isLoading ? <LinearProgress /> : null}
+    <Stack spacing={1} sx={{ display: "flex", flexDirection: "column", gap: 1, minHeight: 0 }}>
+      {dashboardQuery.isLoading ? <LinearProgress /> : null}
 
-      <DashboardGreeting
+      {dashboardQuery.isError ? (
+        <Alert severity="warning">
+          {getApiErrorMessage(dashboardQuery.error, "Unable to load dashboard data. Showing defaults.")}
+        </Alert>
+      ) : null}
+
+      <DashboardHeader
         greeting={greeting}
-        quickActions={roleConfig.quickActions}
-        roleLabel={getDashboardRoleLabel(dashboardRole)}
+        period={period}
         subtitle={roleConfig.subtitle}
-        tenantName={tenant?.tenantName}
+        onPeriodChange={setPeriod}
       />
 
       <DashboardKpiGrid kpis={kpis} />
 
-      {roleConfig.widgets.leadPipeline || roleConfig.widgets.applicationPipeline ? (
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: {
-              xs: "1fr",
-              lg:
-                roleConfig.widgets.leadPipeline && roleConfig.widgets.applicationPipeline
-                  ? "repeat(2, minmax(0, 1fr))"
-                  : "1fr",
-            },
-          }}
-        >
-          {roleConfig.widgets.leadPipeline && leadPipelineQuery.data?.data ? (
-            <LeadPipelineCard pipeline={leadPipelineQuery.data.data} />
-          ) : null}
-          {roleConfig.widgets.applicationPipeline && applicationPipelineQuery.data?.data ? (
-            <ApplicationPipelineCard pipeline={applicationPipelineQuery.data.data} />
-          ) : null}
-        </Box>
-      ) : null}
+      <DashboardAttentionStrip items={roleConfig.attentionItems} />
 
-      {roleConfig.widgets.weeklyActivity || roleConfig.widgets.performance ? (
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: {
-              xs: "1fr",
-              lg:
-                roleConfig.widgets.weeklyActivity && roleConfig.widgets.performance
-                  ? "repeat(2, minmax(0, 1fr))"
-                  : "1fr",
-            },
-          }}
-        >
-          {roleConfig.widgets.weeklyActivity && activityChartQuery.data?.data ? (
-            <WeeklyActivityCard points={activityChartQuery.data.data} />
-          ) : null}
-          {roleConfig.widgets.performance && performanceQuery.data?.data ? (
-            <PerformanceCard metrics={performanceQuery.data.data} />
-          ) : null}
-        </Box>
-      ) : null}
+      <DashboardSectionTabs
+        activeSection={currentSection}
+        scopeNote={roleConfig.scopeNote}
+        tabs={sectionTabs}
+        onSectionChange={setActiveSection}
+      />
 
-      {roleConfig.widgets.recentActivities && recentActivitiesQuery.data?.data ? (
-        <RecentActivitiesCard activities={recentActivitiesQuery.data.data} />
-      ) : null}
+      <Box sx={{ flex: 1, minHeight: { xs: 480, lg: 520 } }}>
+        {currentSection === "leads" ? (
+          <DashboardLeadsSection
+            leadsScope={roleConfig.leadsScope}
+            pipeline={dashboard?.leadPipeline}
+            showUnassigned={roleConfig.showUnassigned}
+          />
+        ) : null}
+        {currentSection === "applications" ? (
+          <DashboardApplicationsSection pipeline={dashboard?.applicationPipeline} />
+        ) : null}
+        {currentSection === "team" ? <DashboardTeamSection /> : null}
+        {currentSection === "activity" || currentSection === "tasks" ? (
+          <DashboardActivitySection />
+        ) : null}
+      </Box>
     </Stack>
   );
 }

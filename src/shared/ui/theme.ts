@@ -4,20 +4,38 @@ export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0f5ad4",
-      dark: "#083d94",
-      light: "#4f8df0",
+      main: "#007A87",
+      dark: "#005F6B",
+      light: "#15A6B8",
     },
     secondary: {
-      main: "#00897b",
+      main: "#F5820D",
     },
     background: {
-      default: "#f4f7fb",
+      default: "#F0F4F8",
       paper: "#ffffff",
+    },
+    text: {
+      primary: "#111827",
+      secondary: "#6B7280",
+      disabled: "#9CA3AF",
+    },
+    divider: "#E5E7EB",
+    success: {
+      main: "#10B981",
+    },
+    error: {
+      main: "#EF4444",
+    },
+    warning: {
+      main: "#F59E0B",
+    },
+    info: {
+      main: "#0EA5E9",
     },
   },
   shape: {
-    borderRadius: 16,
+    borderRadius: 10,
   },
   typography: {
     fontFamily: '"Public Sans", "Segoe UI", sans-serif',

@@ -389,10 +389,10 @@ export function getMockApplicationPipeline(_role: RoleKey): DashboardApplication
 
 export function getMockActivityChart(_role: RoleKey): DashboardActivityChartPointDto[] {
   return [
-    { label: "May W3", calls: 42, whatsapp: 35 },
-    { label: "May W4", calls: 58, whatsapp: 47 },
-    { label: "Jun W1", calls: 51, whatsapp: 53 },
-    { label: "Jun W2", calls: 63, whatsapp: 61 },
+    { label: "May W3", activities: 42, tasks: 35 },
+    { label: "May W4", activities: 58, tasks: 47 },
+    { label: "Jun W1", activities: 51, tasks: 53 },
+    { label: "Jun W2", activities: 63, tasks: 61 },
   ];
 }
 

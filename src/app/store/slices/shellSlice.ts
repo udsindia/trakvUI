@@ -3,10 +3,12 @@ import type { RootState } from "@/app/store/store";
 
 type ShellState = {
   mobileNavigationOpen: boolean;
+  sidebarCollapsed: boolean;
 };
 
 const initialState: ShellState = {
   mobileNavigationOpen: false,
+  sidebarCollapsed: localStorage.getItem("trakv_sidebar_collapsed") === "1",
 };
 
 const shellSlice = createSlice({
@@ -19,15 +21,23 @@ const shellSlice = createSlice({
     closeMobileNavigation: (state) => {
       state.mobileNavigationOpen = false;
     },
+    toggleSidebarCollapsed: (state) => {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      localStorage.setItem("trakv_sidebar_collapsed", state.sidebarCollapsed ? "1" : "0");
+    },
   },
 });
 
 export const {
   openMobileNavigation,
   closeMobileNavigation,
+  toggleSidebarCollapsed,
 } = shellSlice.actions;
 
 export const selectMobileNavigationOpen = (state: RootState) =>
   state.shell.mobileNavigationOpen;
+
+export const selectSidebarCollapsed = (state: RootState) =>
+  state.shell.sidebarCollapsed;
 
 export const shellReducer = shellSlice.reducer;
