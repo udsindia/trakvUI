@@ -10,6 +10,7 @@ import { hasAllPermissions, hasAnyPermission } from "@/shared/utils/permissions"
 type ModuleImport = () => Promise<{ default: ComponentType }>;
 
 const moduleImporters: Record<ModuleKey, ModuleImport> = {
+  [MODULE_KEYS.SUPER_ADMIN]: () => import("@/modules/super-admin"),
   [MODULE_KEYS.DASHBOARD]: () => import("@/modules/dashboard"),
   [MODULE_KEYS.LEAD]: () => import("@/modules/lead"),
   [MODULE_KEYS.APPLICATIONS]: () => import("@/modules/applications"),
@@ -18,6 +19,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
 };
 
 const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
+  [MODULE_KEYS.SUPER_ADMIN]: lazy(moduleImporters[MODULE_KEYS.SUPER_ADMIN]),
   [MODULE_KEYS.DASHBOARD]: lazy(moduleImporters[MODULE_KEYS.DASHBOARD]),
   [MODULE_KEYS.LEAD]: lazy(moduleImporters[MODULE_KEYS.LEAD]),
   [MODULE_KEYS.APPLICATIONS]: lazy(moduleImporters[MODULE_KEYS.APPLICATIONS]),
@@ -52,7 +54,20 @@ export function resolveModules({
   const superAdmin = isSuperAdmin(roles);
 
   return moduleCatalog.map((moduleDefinition) => {
-    const enabled = superAdmin ? true : (tenant.enabledModules[moduleDefinition.key] ?? false);
+    const isPlatformModule = moduleDefinition.key === MODULE_KEYS.SUPER_ADMIN;
+
+    if (isPlatformModule) {
+      return {
+        ...moduleDefinition,
+        enabled: superAdmin,
+        accessible: superAdmin,
+        Component: lazyModuleMap[moduleDefinition.key],
+      };
+    }
+
+    const enabled = superAdmin
+      ? true
+      : (tenant.enabledModules[moduleDefinition.key as keyof typeof tenant.enabledModules] ?? false);
     const accessible = superAdmin ? true : isModuleAccessible(permissions, moduleDefinition);
 
     return {
@@ -70,7 +85,17 @@ export function getNavigationModules(modules: ResolvedModule[]) {
     .sort((left, right) => left.order - right.order);
 }
 
-export function getDefaultModulePath(modules: ResolvedModule[]) {
+export function getDefaultModulePath(modules: ResolvedModule[], roles: string[] = []) {
+  if (isSuperAdmin(roles)) {
+    const platformModule = modules.find(
+      (module) => module.key === MODULE_KEYS.SUPER_ADMIN && module.enabled && module.accessible,
+    );
+
+    if (platformModule) {
+      return `/${platformModule.path}`;
+    }
+  }
+
   const firstAvailableModule = getNavigationModules(modules)[0];
 
   return firstAvailableModule ? `/${firstAvailableModule.path}` : "/unauthorized";

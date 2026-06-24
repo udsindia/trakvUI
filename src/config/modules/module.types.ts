@@ -3,6 +3,7 @@ import type { RoleKey } from "@/config/roles/roles";
 import type { ModuleKey } from "@/config/modules/modules";
 
 export const MODULE_ICON_KEYS = {
+  SUPER_ADMIN: "super_admin",
   DASHBOARD: "dashboard",
   LEADS: "leads",
   APPLICATIONS: "applications",

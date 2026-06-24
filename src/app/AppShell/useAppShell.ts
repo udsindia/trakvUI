@@ -32,8 +32,8 @@ export function useAppShell() {
   );
 
   const defaultModulePath = useMemo(
-    () => getDefaultModulePath(modules),
-    [modules],
+    () => getDefaultModulePath(modules, roles),
+    [modules, roles],
   );
 
   return {

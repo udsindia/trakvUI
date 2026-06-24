@@ -1,4 +1,5 @@
 export const MODULE_KEYS = {
+  SUPER_ADMIN: "super_admin",
   DASHBOARD: "dashboard",
   LEAD: "lead",
   APPLICATIONS: "applications",
@@ -7,7 +8,10 @@ export const MODULE_KEYS = {
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS];
-export type TenantModuleMap = Record<ModuleKey, boolean>;
+
+export type TenantModuleKey = Exclude<ModuleKey, typeof MODULE_KEYS.SUPER_ADMIN>;
+
+export type TenantModuleMap = Record<TenantModuleKey, boolean>;
 
 export const defaultTenantModules: TenantModuleMap = {
   [MODULE_KEYS.DASHBOARD]: true,

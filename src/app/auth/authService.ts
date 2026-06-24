@@ -102,10 +102,13 @@ let cachedSession: AuthSession | null | undefined;
 export const isMockAuthEnabled = AUTH_MODE !== "api";
 
 function getEmptyTenantModules(): TenantModuleMap {
-  return Object.values(MODULE_KEYS).reduce((moduleMap, moduleKey) => {
-    moduleMap[moduleKey] = false;
-    return moduleMap;
-  }, {} as TenantModuleMap);
+  return {
+    [MODULE_KEYS.DASHBOARD]: false,
+    [MODULE_KEYS.LEAD]: false,
+    [MODULE_KEYS.APPLICATIONS]: false,
+    [MODULE_KEYS.ACTIVITIES]: false,
+    [MODULE_KEYS.SETTINGS]: false,
+  };
 }
 
 function decodeJwtPayload(token: string) {

@@ -8,6 +8,49 @@ import { ROLES } from "@/config/roles/roles";
 
 export const moduleCatalog: ModuleDefinition[] = [
   {
+    key: MODULE_KEYS.SUPER_ADMIN,
+    title: "Platform",
+    navLabel: "Platform",
+    path: "super-admin",
+    children: [
+      {
+        key: "overview",
+        navLabel: "Overview",
+        path: "",
+        description: "Platform KPIs, growth, and system health.",
+      },
+      {
+        key: "agencies",
+        navLabel: "Agencies",
+        path: "agencies",
+        description: "Create, verify, and manage consultancy tenants.",
+      },
+      {
+        key: "analytics",
+        navLabel: "Analytics",
+        path: "analytics",
+        description: "Cross-tenant CRM metrics and trends.",
+      },
+      {
+        key: "role-templates",
+        navLabel: "Role Templates",
+        path: "role-templates",
+        description: "Master permission categories and default roles.",
+      },
+      {
+        key: "global-settings",
+        navLabel: "Global Settings",
+        path: "settings",
+        description: "SMTP, gateways, storage, and theme configuration.",
+      },
+    ],
+    icon: MODULE_ICON_KEYS.SUPER_ADMIN,
+    description: "Super admin platform control center.",
+    order: 0,
+    allowedRoles: [ROLES.SUPER_ADMIN],
+    requiredPermissions: [PERMISSIONS.PLATFORM_VIEW],
+  },
+  {
     key: MODULE_KEYS.DASHBOARD,
     title: "Dashboard",
     navLabel: "Dashboard",

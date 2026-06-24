@@ -11,6 +11,10 @@ import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import MenuRounded from "@mui/icons-material/MenuRounded";
 import AdminPanelSettingsRounded from "@mui/icons-material/AdminPanelSettingsRounded";
 import PeopleRounded from "@mui/icons-material/PeopleRounded";
+import BusinessRounded from "@mui/icons-material/BusinessRounded";
+import AnalyticsRounded from "@mui/icons-material/AnalyticsRounded";
+import DashboardRounded from "@mui/icons-material/DashboardRounded";
+import TuneRounded from "@mui/icons-material/TuneRounded";
 import {
   isNavigationItemActive,
   type NavigationItem,
@@ -115,7 +119,24 @@ function SidebarContent({
     ["dashboard", "lead", "applications"].includes(item.id),
   );
   const engageItems = items.filter((item) => item.id === "activities");
+  const platformItem = items.find((item) => item.id === "super_admin");
   const settingsItem = items.find((item) => item.id === "settings");
+  const platformItems =
+    platformItem?.children?.map((child) => ({
+      ...child,
+      icon:
+        child.id.endsWith(".overview") ? (
+          <DashboardRounded />
+        ) : child.id.endsWith(".agencies") ? (
+          <BusinessRounded />
+        ) : child.id.endsWith(".analytics") ? (
+          <AnalyticsRounded />
+        ) : child.id.endsWith(".role-templates") ? (
+          <AdminPanelSettingsRounded />
+        ) : (
+          <TuneRounded />
+        ),
+    })) ?? [];
   const adminItems =
     settingsItem?.children?.map((child) => ({
       ...child,
@@ -221,6 +242,7 @@ function SidebarContent({
       <Box sx={{ flex: 1, overflowX: "hidden", overflowY: "auto", px: 0.875, py: 1 }}>
         {renderGroup("Main", mainItems)}
         {renderGroup("Engage", engageItems)}
+        {renderGroup("Platform", platformItems)}
         {renderGroup("Admin", adminItems)}
       </Box>
 

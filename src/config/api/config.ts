@@ -7,4 +7,6 @@ export const API_CONFIG = {
   tasks: "/tasks",
   applications: "/applications",
   dashboard: "/dashboard",
+  agencies: "/consultancies",
+  platform: "/platform",
 } as const;

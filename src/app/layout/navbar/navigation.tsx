@@ -4,6 +4,7 @@ import SettingsRounded from "@mui/icons-material/SettingsRounded";
 import SpeedRounded from "@mui/icons-material/SpeedRounded";
 import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
+import HubRounded from "@mui/icons-material/HubRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
   ModuleIconKey,
@@ -20,6 +21,7 @@ export interface NavigationItem {
 }
 
 const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
+  super_admin: <HubRounded />,
   dashboard: <SpeedRounded />,
   leads: <TrendingUpRounded />,
   applications: <AssignmentRounded />,
