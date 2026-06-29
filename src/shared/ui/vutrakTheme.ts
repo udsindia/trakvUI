@@ -1,15 +1,36 @@
 import { createTheme } from "@mui/material/styles";
 
 /**
- * "Gemini" brand theme — derived from gemini-code-1782566773923.css.
+ * VUTrak application theme.
  *
- * This mirrors the original appTheme structure but swaps the palette to the
- * VUTRAK steel-teal canvas + orange-gradient CTA system. It is selected only
- * when the theme switch in themeConfig.ts is set to "gemini", so the original
- * look can be restored instantly without touching any component files.
+ * A steel-teal canvas with an orange-gradient CTA system and a deep-teal
+ * navigation panel. Derived from the VUTrak brand CSS.
  */
 
-// ── Palette tokens (from the CSS :root block) ────────────────────────────────
+/** Colors for the left navigation panel — consumed by Sidebar.tsx. */
+export interface SidebarPalette {
+  bg: string;
+  text: string;
+  mutedText: string;
+  strongText: string;
+  activeBg: string;
+  activeText: string;
+  activeShadow: string;
+  hoverBg: string;
+  hoverText: string;
+  brandGradient: string;
+}
+
+declare module "@mui/material/styles" {
+  interface Palette {
+    sidebar: SidebarPalette;
+  }
+  interface PaletteOptions {
+    sidebar?: SidebarPalette;
+  }
+}
+
+// ── Palette tokens ───────────────────────────────────────────────────────────
 const STEEL_TEAL = {
   canvas: "#F0F6F8", // steel-teal-50  — layout canvas background
   divider: "#E1EDF1", // steel-teal-100 — structural dividers
@@ -30,7 +51,7 @@ const TEXT = {
   muted: "#64748B", // secondary subtext
 };
 
-export const geminiTheme = createTheme({
+export const vutrakTheme = createTheme({
   palette: {
     mode: "light",
     primary: {

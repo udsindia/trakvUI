@@ -1,163 +1,99 @@
 /* ==========================================================================
-   VUTRAK BRAND SYSTEM
-   Single source of truth for colors, gradients, surfaces and the sidebar
-   nav scheme (teal active pill + orange hover). Import once in main.tsx:
-       import "@/assets/vutrak-theme.css";
-   Then use the --vt-* tokens in MUI theme.ts (recommended) or the .vt-*
-   utility classes directly via className.
+   VUTRAK THEME — COLORS & OPTIONAL UTILITY CLASSES
+
+   The palette here is mirrored in src/shared/ui/vutrakTheme.ts, which is what
+   actually restyles the MUI components. These utility classes are extra: they
+   only take effect when <body> has the .theme-vutrak class (set by AppProviders.tsx)
+   AND a component opts in by using the class. Inert otherwise — safe to keep.
    ========================================================================== */
 
 :root {
-  /* ── Teal — primary brand ───────────────────────────────────────────────
-     #007A87 is the primary: 5.08:1 on white (passes WCAG AA for text).      */
-  --vt-teal:          #007A87;   /* primary — buttons, links, active states  */
-  --vt-teal-dark:     #005F6B;   /* hover/pressed, AA+ text on white (7.4:1) */
-  --vt-teal-deep:     #0E2D38;   /* sidebar & dark surfaces                  */
-  --vt-teal-bright:   #15A6B8;   /* ACCENT ONLY — graphics/gradients, not text (2.9:1) */
-  --vt-teal-500:      #2E8FA0;   /* mid step for gradients                   */
-  --vt-teal-50:       #F0F6F8;   /* tint background                          */
-  --vt-teal-100:      #E1EDF1;   /* hairline borders / dividers              */
+  /* Core Brand & Architecture Palette */
+  --vutrak-steel-teal-50:  #F0F6F8;   /* Main Layout Canvas Background */
+  --vutrak-steel-teal-100: #E1EDF1;   /* Light Structural Dividers / Inactive Borders */
+  --vutrak-steel-teal-500: #388CA9;   /* Mid-tone Accent Element Focus */
+  --vutrak-steel-teal-600: #2B7B97;   /* Primary Structural Navigation Frame Base */
+  --vutrak-steel-teal-700: #226279;   /* Deep Container Shading Variant */
+  --vutrak-steel-teal-800: #1A4C5E;
+  --vutrak-steel-teal-900: #11333F;   /* Core Layout Framing Shadow Insets */
 
-  /* ── Orange — accent / CTA / hover ─────────────────────────────────────── */
-  --vt-orange:        #E87722;   /* CTA fill on light (use as fill, not small text) */
-  --vt-orange-strong: #D96F0E;   /* deeper — orange text on light bg         */
-  --vt-orange-light:  #FF9E42;   /* hover text on DARK (6.5:1) & highlights   */
+  /* Primary Call-to-Action Surface Gradients */
+  --vutrak-orange-gradient-start: #FF9E42; /* Core Glossy Top Angle */
+  --vutrak-orange-gradient-mid:   #F38118; /* Core Middle Branding Accent */
+  --vutrak-orange-gradient-end:   #D96F0E; /* Deep Anchor Shadow Angle */
 
-  /* ── Neutrals ──────────────────────────────────────────────────────────── */
-  --vt-ink:           #0E2731;   /* primary text                             */
-  --vt-slate:         #566A72;   /* secondary text                           */
-  --vt-muted:         #8597A0;   /* tertiary / captions                      */
-  --vt-line:          #E4EDF0;   /* borders                                  */
-  --vt-canvas:        #EEF4F7;   /* app background                           */
-  --vt-surface:       #FFFFFF;   /* cards / sheets                           */
-
-  /* ── Status ────────────────────────────────────────────────────────────── */
-  --vt-success:       #0E9F6E;
-  --vt-warning:       #F59E0B;
-  --vt-danger:        #E5484D;
-  --vt-info:          #15A6B8;
-
-  /* ── Gradients ─────────────────────────────────────────────────────────── */
-  --vt-grad-teal:     linear-gradient(135deg, #15A6B8, #007A87 55%, #005F6B);
-  --vt-grad-orange:   linear-gradient(135deg, #FF9E42, #E87722 55%, #D96F0E);
-
-  /* ── Radius / shadow / motion ──────────────────────────────────────────── */
-  --vt-radius:        14px;
-  --vt-radius-sm:     10px;
-  --vt-radius-pill:   999px;
-  --vt-shadow:        0 1px 2px rgba(16,39,49,.05), 0 8px 24px rgba(16,39,49,.06);
-  --vt-shadow-lg:     0 24px 60px -20px rgba(14,45,56,.45);
-  --vt-ease:          cubic-bezier(.4, 0, .2, 1);
-
-  /* ── Sidebar role tokens (teal active pill + orange hover) ─────────────── */
-  --vt-sidebar-bg:            linear-gradient(180deg, #143C4A 0%, #0E2D38 60%, #0A2530 100%);
-  --vt-sidebar-text:          rgba(255,255,255,.72);
-  --vt-sidebar-text-strong:   #FFFFFF;
-  --vt-sidebar-muted:         rgba(255,255,255,.50);
-  --vt-sidebar-hover-bg:      rgba(255,255,255,.06);
-  --vt-sidebar-hover-text:    #FF9E42;                                 /* orange hover */
-  --vt-sidebar-active-bg:     linear-gradient(135deg, #0E8D9C, #00707D); /* teal pill   */
-  --vt-sidebar-active-text:   #FFFFFF;
-  --vt-sidebar-active-shadow: 0 6px 16px rgba(0,122,135,.34);
+  /* Neutral Typography Surfaces */
+  --vutrak-text-slate-dark:  #1E293B;  /* High Contrast Headers & Row Text */
+  --vutrak-text-slate-muted: #64748B;  /* Secondary Subtext / Inactive Labels */
 }
 
 /* ==========================================================================
-   OPTIONAL — brand fonts (uncomment to opt in; app currently uses Public Sans)
+   ✨ PRIMARY NAVIGATION MICRO-INTERACTION (DASHBOARD EXCLUSIVE)
    ========================================================================== */
-/* @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
-:root{
-  --vt-font-display:"Space Grotesk", system-ui, sans-serif;
-  --vt-font-body:"Inter", system-ui, sans-serif;
-  --vt-font-mono:"Space Mono", ui-monospace, monospace;
-} */
 
-/* ==========================================================================
-   SIDEBAR NAV  —  teal active pill, orange hover
-   Apply .vt-nav-link to each item; add .active to the current route.
-   ========================================================================== */
-.vt-sidebar {
-  background: var(--vt-sidebar-bg);
-  color: var(--vt-sidebar-text);
-}
-.vt-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 11px;
-  border-radius: 11px;
-  font-weight: 500;
-  color: var(--vt-sidebar-text);
-  text-decoration: none;
-  transition: background .15s var(--vt-ease), color .15s var(--vt-ease);
-}
-.vt-nav-link:hover {
-  background: var(--vt-sidebar-hover-bg);
-  color: var(--vt-sidebar-hover-text);   /* orange — icon follows via currentColor */
-}
-.vt-nav-link.active {
-  background: var(--vt-sidebar-active-bg);
-  color: var(--vt-sidebar-active-text);
-  box-shadow: var(--vt-sidebar-active-shadow);
-}
-.vt-nav-link.active:hover {                /* keep active white, don't flip to orange */
-  color: var(--vt-sidebar-active-text);
-}
-
-/* ==========================================================================
-   BUTTONS
-   ========================================================================== */
-.vt-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .5em;
-  padding: 11px 20px;
-  border-radius: var(--vt-radius-pill);
+body.theme-vutrak .vutrak-nav-dashboard {
+  background-color: transparent;
   border: 1px solid transparent;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform .18s var(--vt-ease), box-shadow .18s var(--vt-ease), background .18s var(--vt-ease);
+  color: rgba(255, 255, 255, 0.75);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.vt-btn:focus-visible { outline: 3px solid var(--vt-orange-light); outline-offset: 2px; }
 
-.vt-btn-primary {                          /* orange CTA */
-  color: #fff;
-  background: var(--vt-grad-orange);
-  border-color: var(--vt-orange-strong);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 20px rgba(232,119,34,.26);
-  text-shadow: 0 1px 1px rgba(0,0,0,.14);
+body.theme-vutrak .vutrak-nav-dashboard:hover {
+  background-color: rgba(255, 158, 66, 0.14) !important;
+  border-color: rgba(255, 158, 66, 0.15) !important;
+  color: var(--vutrak-orange-gradient-start) !important;
+  transform: translateX(4px);
 }
-.vt-btn-primary:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 12px 26px rgba(232,119,34,.4); }
-.vt-btn-primary:active { transform: translateY(0); }
 
-.vt-btn-teal {                             /* teal secondary action */
-  color: #fff;
-  background: var(--vt-grad-teal);
-  border-color: var(--vt-teal-dark);
+body.theme-vutrak .vutrak-nav-dashboard:active {
+  transform: translateX(2px) translateY(0.5px);
+  background-color: rgba(255, 158, 66, 0.20) !important;
 }
-.vt-btn-ghost {                            /* outline */
-  color: var(--vt-teal-dark);
-  background: transparent;
-  border-color: var(--vt-line);
-}
-.vt-btn-ghost:hover { background: var(--vt-teal-50); border-color: var(--vt-teal); }
 
 /* ==========================================================================
-   SURFACES & HELPERS
+   PRIMARY INTERACTIVE ACTION COMPONENTS (BUTTONS & CONTROLS)
    ========================================================================== */
-.vt-card {
-  background: var(--vt-surface);
-  border: 1px solid var(--vt-line);
-  border-radius: var(--vt-radius);
-  box-shadow: var(--vt-shadow);
+
+body.theme-vutrak .vutrak-btn-primary {
+  background: linear-gradient(135deg,
+    var(--vutrak-orange-gradient-start) 0%,
+    var(--vutrak-orange-gradient-mid) 50%,
+    var(--vutrak-orange-gradient-end) 100%
+  ) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 14px rgba(243, 129, 24, 0.25) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--vutrak-orange-gradient-end) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
-.vt-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 11px; border-radius: var(--vt-radius-pill);
-  font-size: 12px; font-weight: 600;
-  color: var(--vt-teal-dark); background: var(--vt-teal-50);
-  border: 1px solid var(--vt-teal-100);
+
+body.theme-vutrak .vutrak-btn-primary:hover {
+  background: linear-gradient(135deg, #FFAE59 0%, #FF952B 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(255, 149, 43, 0.35) !important;
+  border-color: var(--vutrak-orange-gradient-mid) !important;
+  transform: translateY(-1px);
 }
-.vt-text-teal   { color: var(--vt-teal-dark); }
-.vt-text-orange { color: var(--vt-orange-strong); }
-.vt-bg-canvas   { background: var(--vt-canvas); }
-.vt-accent-bar  { height: 3px; border-radius: 3px; background: var(--vt-grad-orange); }
+
+body.theme-vutrak .vutrak-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ==========================================================================
+   NEUTRAL INTERACTIVE COMPONENT STRUCTURES
+   ========================================================================== */
+
+body.theme-vutrak .vutrak-sidebar-link {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+body.theme-vutrak .vutrak-sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+body.theme-vutrak .vutrak-topbar {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+}
