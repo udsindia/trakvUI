@@ -1,0 +1,64 @@
+export const SA_PERMISSIONS = {
+  DASHBOARD_VIEW: "SA_DASHBOARD_VIEW",
+  TENANTS_VIEW: "SA_TENANTS_VIEW",
+  TENANTS_APPROVE: "SA_TENANTS_APPROVE",
+  TENANTS_SUSPEND: "SA_TENANTS_SUSPEND",
+  TENANTS_ONBOARD: "SA_TENANTS_ONBOARD",
+  PLAN_MANAGE: "SA_PLAN_MANAGE",
+  META_CONFIG_VIEW: "SA_META_CONFIG_VIEW",
+  META_CONFIG_EDIT: "SA_META_CONFIG_EDIT",
+  WHATSAPP_CONFIG_VIEW: "SA_WHATSAPP_CONFIG_VIEW",
+  WHATSAPP_CONFIG_EDIT: "SA_WHATSAPP_CONFIG_EDIT",
+  USERS_MANAGE: "SA_USERS_MANAGE",
+  ROLES_MANAGE: "SA_ROLES_MANAGE",
+  IMPERSONATE: "SA_IMPERSONATE",
+} as const;
+
+export type SaPermissionCode = (typeof SA_PERMISSIONS)[keyof typeof SA_PERMISSIONS];
+
+export const SA_PERMISSION_LABELS: Record<SaPermissionCode, string> = {
+  SA_DASHBOARD_VIEW: "View Dashboard",
+  SA_TENANTS_VIEW: "View Tenants",
+  SA_TENANTS_APPROVE: "Approve Tenants",
+  SA_TENANTS_SUSPEND: "Suspend Tenants",
+  SA_TENANTS_ONBOARD: "Onboard Tenants",
+  SA_PLAN_MANAGE: "Manage Plans",
+  SA_META_CONFIG_VIEW: "View Meta Config",
+  SA_META_CONFIG_EDIT: "Edit Meta Config",
+  SA_WHATSAPP_CONFIG_VIEW: "View WhatsApp Config",
+  SA_WHATSAPP_CONFIG_EDIT: "Edit WhatsApp Config",
+  SA_USERS_MANAGE: "Manage SA Users",
+  SA_ROLES_MANAGE: "Manage SA Roles",
+  SA_IMPERSONATE: "Impersonate Tenants",
+};
+
+export const SA_PERMISSION_GROUPS: { label: string; permissions: SaPermissionCode[] }[] = [
+  {
+    label: "Dashboard",
+    permissions: [SA_PERMISSIONS.DASHBOARD_VIEW],
+  },
+  {
+    label: "Tenants",
+    permissions: [
+      SA_PERMISSIONS.TENANTS_VIEW,
+      SA_PERMISSIONS.TENANTS_APPROVE,
+      SA_PERMISSIONS.TENANTS_SUSPEND,
+      SA_PERMISSIONS.TENANTS_ONBOARD,
+      SA_PERMISSIONS.IMPERSONATE,
+    ],
+  },
+  {
+    label: "Platform Config",
+    permissions: [
+      SA_PERMISSIONS.META_CONFIG_VIEW,
+      SA_PERMISSIONS.META_CONFIG_EDIT,
+      SA_PERMISSIONS.WHATSAPP_CONFIG_VIEW,
+      SA_PERMISSIONS.WHATSAPP_CONFIG_EDIT,
+      SA_PERMISSIONS.PLAN_MANAGE,
+    ],
+  },
+  {
+    label: "Team Management",
+    permissions: [SA_PERMISSIONS.USERS_MANAGE, SA_PERMISSIONS.ROLES_MANAGE],
+  },
+];

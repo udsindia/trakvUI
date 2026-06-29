@@ -6,6 +6,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useTheme,
 } from "@mui/material";
 import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import MenuRounded from "@mui/icons-material/MenuRounded";
@@ -29,6 +30,7 @@ type SidebarNavItemProps = {
 
 function SidebarNavItem({ collapsed, item, onNavigate }: SidebarNavItemProps) {
   const location = useLocation();
+  const sidebar = useTheme().palette.sidebar;
   const active = isNavigationItemActive(location.pathname, item);
 
   if (!item.to) {
@@ -40,12 +42,10 @@ function SidebarNavItem({ collapsed, item, onNavigate }: SidebarNavItemProps) {
       component={NavLink}
       sx={{
         alignItems: "center",
-        background: active
-          ? "linear-gradient(135deg, #007A87, #15A6B8)"
-          : "transparent",
+        background: active ? sidebar.activeBg : "transparent",
         borderRadius: 2,
-        boxShadow: active ? "0 3px 10px rgba(0,122,135,.2)" : "none",
-        color: active ? "#fff" : "text.secondary",
+        boxShadow: active ? sidebar.activeShadow : "none",
+        color: active ? sidebar.activeText : sidebar.text,
         display: "flex",
         fontSize: 12,
         fontWeight: 600,
@@ -57,8 +57,8 @@ function SidebarNavItem({ collapsed, item, onNavigate }: SidebarNavItemProps) {
         transition: "background .12s, color .12s",
         whiteSpace: "nowrap",
         "&:hover": {
-          bgcolor: active ? undefined : "#F0F9FA",
-          color: active ? "#fff" : "primary.main",
+          bgcolor: active ? undefined : sidebar.hoverBg,
+          color: active ? sidebar.activeText : sidebar.hoverText,
         },
         "& .MuiSvgIcon-root": {
           fontSize: 18,
@@ -111,6 +111,7 @@ function SidebarContent({
   userInitials,
   userName,
 }: SidebarContentProps) {
+  const sidebar = useTheme().palette.sidebar;
   const mainItems = items.filter((item) =>
     ["dashboard", "lead", "applications"].includes(item.id),
   );
@@ -132,7 +133,7 @@ function SidebarContent({
         {!collapsed ? (
           <Typography
             sx={{
-              color: "text.disabled",
+              color: sidebar.mutedText,
               fontSize: 8,
               fontWeight: 800,
               letterSpacing: 1.4,
@@ -175,7 +176,7 @@ function SidebarContent({
         <Box
           sx={{
             alignItems: "center",
-            background: "linear-gradient(135deg, #007A87, #15A6B8)",
+            background: sidebar.brandGradient,
             borderRadius: 2.25,
             color: "#fff",
             display: "flex",
@@ -190,7 +191,7 @@ function SidebarContent({
           T
         </Box>
         {!collapsed ? (
-          <Typography noWrap sx={{ fontSize: 14, fontWeight: 800 }}>
+          <Typography noWrap sx={{ color: sidebar.strongText, fontSize: 14, fontWeight: 800 }}>
             Trakv
           </Typography>
         ) : null}
@@ -201,6 +202,7 @@ function SidebarContent({
               border: "1px solid",
               borderColor: "divider",
               borderRadius: 1.75,
+              color: sidebar.text,
               height: 26,
               ml: "auto",
               width: 26,
@@ -244,13 +246,13 @@ function SidebarContent({
             px: 1.125,
             py: 0.875,
             whiteSpace: "nowrap",
-            "&:hover": { bgcolor: "#F0F9FA" },
+            "&:hover": { bgcolor: sidebar.hoverBg },
           }}
         >
           <Box
             sx={{
               alignItems: "center",
-              background: "linear-gradient(135deg, #007A87, #15A6B8)",
+              background: sidebar.brandGradient,
               borderRadius: "50%",
               color: "#fff",
               display: "flex",
@@ -266,10 +268,10 @@ function SidebarContent({
           </Box>
           {!collapsed ? (
             <Box sx={{ minWidth: 0 }}>
-              <Typography noWrap sx={{ fontSize: 11, fontWeight: 700 }}>
+              <Typography noWrap sx={{ color: sidebar.strongText, fontSize: 11, fontWeight: 700 }}>
                 {userName}
               </Typography>
-              <Typography noWrap sx={{ color: "text.disabled", fontSize: 9 }}>
+              <Typography noWrap sx={{ color: sidebar.mutedText, fontSize: 9 }}>
                 {primaryRole}
               </Typography>
             </Box>
@@ -308,7 +310,7 @@ export function Sidebar({
       <Box
         component="aside"
         sx={{
-          bgcolor: "background.paper",
+          background: (theme) => theme.palette.sidebar.bg,
           borderRight: "1px solid",
           borderColor: "divider",
           display: { xs: "none", md: "flex" },
@@ -337,6 +339,7 @@ export function Sidebar({
       <Drawer
         ModalProps={{ keepMounted: true }}
         open={mobileOpen}
+        PaperProps={{ sx: { background: (theme) => theme.palette.sidebar.bg } }}
         sx={{ display: { xs: "block", md: "none" } }}
         variant="temporary"
         onClose={onCloseMobile}

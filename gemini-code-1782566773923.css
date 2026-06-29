@@ -1,0 +1,99 @@
+/* ==========================================================================
+   VUTRAK APPLICATION SYSTEM COLORS & COMPONENT STYLES
+   ========================================================================== */
+
+:root {
+  /* Core Brand & Architecture Palette */
+  --vutrak-steel-teal-50:  #F0F6F8;   /* Main Layout Canvas Background */
+  --vutrak-steel-teal-100: #E1EDF1;   /* Light Structural Dividers / Inactive Borders */
+  --vutrak-steel-teal-500: #388CA9;   /* Mid-tone Accent Element Focus */
+  --vutrak-steel-teal-600: #2B7B97;   /* Primary Structural Navigation Frame Base */
+  --vutrak-steel-teal-700: #226279;   /* Deep Container Shading Variant */
+  --vutrak-steel-teal-800: #1A4C5E;   
+  --vutrak-steel-teal-900: #11333F;   /* Core Layout Framing Shadow Insets */
+
+  /* Primary Call-to-Action Surface Gradients */
+  --vutrak-orange-gradient-start: #FF9E42; /* Core Glossy Top Angle */
+  --vutrak-orange-gradient-mid:   #F38118; /* Core Middle Branding Accent */
+  --vutrak-orange-gradient-end:   #D96F0E; /* Deep Anchor Shadow Angle */
+
+  /* Neutral Typography Surfaces */
+  --vutrak-text-slate-dark:  #1E293B;  /* High Contrast Headers & Row Text */
+  --vutrak-text-slate-muted: #64748B;  /* Secondary Subtext / Inactive Labels */
+}
+
+/* ==========================================================================
+   ✨ PRIMARY NAVIGATION MICRO-INTERACTION (DASHBOARD EXCLUSIVE)
+   ========================================================================== */
+
+.vutrak-nav-dashboard {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.75);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Translucent Brand Wash Layer: Filters 14% brand orange alpha values 
+   directly over the background teal to create a quiet, warm copper-gold glow */
+.vutrak-nav-dashboard:hover {
+  background-color: rgba(255, 158, 66, 0.14) !important;
+  border-color: rgba(255, 158, 66, 0.15) !important;
+  color: var(--vutrak-orange-gradient-start) !important;
+  transform: translateX(4px);
+}
+
+.vutrak-nav-dashboard:active {
+  transform: translateX(2px) translateY(0.5px);
+  background-color: rgba(255, 158, 66, 0.20) !important;
+}
+
+/* ==========================================================================
+   PRIMARY INTERACTIVE ACTION COMPONENTS (BUTTONS & CONTROLS)
+   ========================================================================== */
+
+.vutrak-btn-primary {
+  background: linear-gradient(135deg, 
+    var(--vutrak-orange-gradient-start) 0%, 
+    var(--vutrak-orange-gradient-mid) 50%, 
+    var(--vutrak-orange-gradient-end) 100%
+  ) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 14px rgba(243, 129, 24, 0.25) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--vutrak-orange-gradient-end) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.vutrak-btn-primary:hover {
+  /* Soft interactive shine overlay variation without raw scale brightness blowouts */
+  background: linear-gradient(135deg, #FFAE59 0%, #FF952B 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(255, 149, 43, 0.35) !important;
+  border-color: var(--vutrak-orange-gradient-mid) !important;
+  transform: translateY(-1px);
+}
+
+.vutrak-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ==========================================================================
+   NEUTRAL INTERACTIVE COMPONENT STRUCTURES
+   ========================================================================== */
+
+/* Standard Sidebar Links (Non-Dashboard Default Elements) */
+.vutrak-sidebar-link {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.vutrak-sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+/* Clean Clean Surface Top-Bar Surface Base */
+.vutrak-topbar {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0; /* Clean neutral slate boundary */
+}

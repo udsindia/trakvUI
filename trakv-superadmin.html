@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Trakv — Super Admin Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset & base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f7f7;color:#1e293b;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── Topbar ── */
+.topbar{height:56px;background:#0d7a7a;display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.topbar .logo{display:flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:17px;letter-spacing:-.3px}
+.topbar .logo .vu{color:#fff;font-weight:900}
+.topbar .logo .trak{color:#f07820;font-weight:900}
+.topbar .logo span{background:#f07820;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.topbar-badge{background:#dc2626;color:#fff;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:4px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.topbar-right .tb-icon{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.topbar-right .tb-icon:hover{background:rgba(255,255,255,.25)}
+.tb-notif{position:absolute;top:5px;right:5px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid #0d7a7a}
+.topbar-avatar{width:34px;height:34px;background:#f07820;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ── Layout ── */
+.layout{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:16px 12px 8px;font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;margin:1px 8px;cursor:pointer;font-size:13.5px;color:#475569;transition:all .15s}
+.nav-item:hover{background:#f1f5f9;color:#1e293b}
+.nav-item.active{background:#e6f5f5;color:#0d7a7a;font-weight:600}
+.nav-item .ni-icon{width:18px;height:18px;flex-shrink:0;opacity:.7}
+.nav-item.active .ni-icon{opacity:1}
+.nav-item .ni-badge{margin-left:auto;background:#ef4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700}
+.nav-item .ni-badge.amber{background:#f07820}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid #e6f5f5}
+.sf-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer}
+.sf-user:hover{background:#f0f8f8}
+.sf-avatar{width:32px;height:32px;background:#0d7a7a;border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.sf-info .sf-name{font-size:12.5px;font-weight:600;color:#1e293b}
+.sf-info .sf-role{font-size:11px;color:#94a3b8}
+
+/* ── Main content ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.section{display:none}
+.section.active{display:block;height:100%;overflow-y:auto;padding:20px 24px}
+/* Dashboard overrides — no scroll, flex column fills height */
+#sec-dashboard{display:none;padding:14px 20px}
+#sec-dashboard.active{display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Page header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+#sec-dashboard .page-header{margin-bottom:10px;flex-shrink:0}
+#sec-dashboard .alert{margin-bottom:8px;flex-shrink:0;padding:8px 14px;font-size:12px}
+.page-title{font-size:20px;font-weight:700;color:#1e293b}
+.page-subtitle{font-size:13px;color:#64748b;margin-top:2px}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:#f07820;color:#fff}
+.btn-primary:hover{background:#d46810}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-success{background:#10b981;color:#fff}
+.btn-success:hover{background:#059669}
+.btn-outline{background:#fff;color:#0d7a7a;border:1.5px solid #0d7a7a}
+.btn-outline:hover{background:#e6f5f5}
+.btn-ghost{background:transparent;color:#64748b;border:1.5px solid #e2e8f0}
+.btn-ghost:hover{background:#f8fafc;color:#1e293b}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* ── KPI cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:10px;flex-shrink:0}
+.kpi-card{background:#fff;border-radius:12px;padding:13px 16px;border:1px solid #e2e8f0;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;opacity:.06}
+.kpi-card.c1::before{background:#6366f1}
+.kpi-card.c2::before{background:#10b981}
+.kpi-card.c3::before{background:#f59e0b}
+.kpi-card.c4::before{background:#ef4444}
+.kpi-label{font-size:11px;color:#64748b;font-weight:500;margin-bottom:4px}
+.kpi-value{font-size:24px;font-weight:800;color:#1e293b;line-height:1}
+.kpi-sub{font-size:11px;margin-top:4px;display:flex;align-items:center;gap:4px}
+.kpi-sub.up{color:#10b981}
+.kpi-sub.dn{color:#ef4444}
+.kpi-icon{position:absolute;top:16px;right:16px;font-size:22px;opacity:.5}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:16px}
+.card-head{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.card-title{font-size:13.5px;font-weight:700;color:#1e293b}
+.card-body{padding:14px 16px}
+/* Cards inside dash-bottom fill height via flex */
+.dash-bottom{flex:1;min-height:0;display:grid;grid-template-columns:2fr 1fr 1.4fr;gap:12px;overflow:hidden}
+.dash-bottom .card{margin-bottom:0;display:flex;flex-direction:column;overflow:hidden;height:100%}
+.dash-bottom .card-body{flex:1;min-height:0;overflow-y:auto;padding:0}
+
+/* ── Grid ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+
+/* ── Tables ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+table th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #f1f5f9;white-space:nowrap;background:#fafafa}
+table td{padding:12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+table tr:last-child td{border-bottom:none}
+table tr:hover td{background:#fafcff}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%}
+.badge-active{background:#dcfce7;color:#15803d}.badge-active::before{background:#16a34a}
+.badge-pending{background:#fef9c3;color:#854d0e}.badge-pending::before{background:#ca8a04}
+.badge-trial{background:#ede9fe;color:#6d28d9}.badge-trial::before{background:#7c3aed}
+.badge-suspended{background:#fee2e2;color:#991b1b}.badge-suspended::before{background:#dc2626}
+.badge-paid{background:#dbeafe;color:#1e40af}.badge-paid::before{background:#2563eb}
+
+/* ── Alert strips ── */
+.alert{border-radius:10px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.alert-amber{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.alert-red{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+.alert-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+.alert-icon{font-size:18px;flex-shrink:0}
+
+/* ── Search & filters ── */
+.search-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;position:relative}
+.search-box input{width:100%;padding:8px 12px 8px 36px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;background:#fff}
+.search-box input:focus{border-color:#0d7a7a}
+.search-box::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px}
+.filter-select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;background:#fff;color:#475569;cursor:pointer}
+.filter-select:focus{border-color:#0d7a7a}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.2)}
+.modal-head{padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-head h3{font-size:16px;font-weight:700;color:#1e293b}
+.modal-close{width:28px;height:28px;border-radius:6px;background:#f1f5f9;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#64748b}
+.modal-close:hover{background:#e2e8f0}
+.modal-body{padding:20px 24px}
+.modal-foot{padding:16px 24px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+
+/* ── Form elements ── */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;display:block}
+.form-control{width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;color:#1e293b;background:#fff}
+.form-control:focus{border-color:#0d7a7a;box-shadow:0 0 0 3px rgba(13,122,122,.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+textarea.form-control{resize:vertical;min-height:80px}
+
+/* ── Detail drawer ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:150;display:none}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;top:0;right:-520px;width:520px;height:100vh;background:#fff;z-index:151;transition:right .25s ease;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.15)}
+.drawer.open{right:0}
+.drawer-head{padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:#fff;z-index:1}
+.drawer-head h3{font-size:16px;font-weight:700;flex:1}
+.drawer-body{padding:20px 24px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.detail-item .di-label{font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.detail-item .di-value{font-size:13.5px;color:#1e293b;font-weight:500}
+.detail-section{margin-bottom:20px}
+.detail-section h4{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.timeline{list-style:none}
+.tl-item{display:flex;gap:12px;margin-bottom:12px;position:relative}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:#0d7a7a;margin-top:5px;flex-shrink:0}
+.tl-text{font-size:12.5px;color:#475569}
+.tl-time{font-size:11px;color:#94a3b8;display:block;margin-top:2px}
+.action-bar{display:flex;gap:8px;flex-wrap:wrap;padding:16px 0;border-top:1px solid #f1f5f9;margin-top:8px}
+
+/* ── Approval cards ── */
+.approval-card{background:#fff;border-radius:12px;border:1.5px solid #e2e8f0;padding:20px;margin-bottom:14px;transition:border-color .15s}
+.approval-card:hover{border-color:#0d7a7a}
+.approval-card.pending-review{border-left:4px solid #f07820}
+.approval-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.approval-company{font-size:15px;font-weight:700;color:#1e293b}
+.approval-meta{font-size:12px;color:#64748b;margin-top:2px}
+.approval-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.adg-item .adg-label{font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.adg-item .adg-value{font-size:12.5px;color:#1e293b;font-weight:500;margin-top:2px}
+.approval-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── API mapping table ── */
+.api-section{margin-bottom:24px}
+.api-section h3{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:10px;padding:8px 12px;background:#f0f8f8;border-radius:8px;border-left:3px solid #0d7a7a}
+.api-table th:first-child{width:220px}
+.api-table .method{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:.5px}
+.method-get{background:#dcfce7;color:#15803d}
+.method-post{background:#dbeafe;color:#1d4ed8}
+.method-patch{background:#fef9c3;color:#92400e}
+.method-put{background:#ede9fe;color:#6d28d9}
+.method-delete{background:#fee2e2;color:#b91c1c}
+.api-status-exist{display:inline-flex;align-items:center;gap:4px;color:#15803d;font-size:12px;font-weight:600}
+.api-status-miss{display:inline-flex;align-items:center;gap:4px;color:#dc2626;font-size:12px;font-weight:600}
+.api-status-exist::before{content:'✓';font-weight:800}
+.api-status-miss::before{content:'✗';font-weight:800}
+
+/* ── Charts ── */
+.chart-wrap{position:relative;height:220px}
+.dash-bottom .chart-wrap{height:100%;min-height:0;padding:12px 14px}
+
+/* ── Tabs ── */
+.tab-row{display:flex;gap:2px;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:16px;width:fit-content}
+.tab-btn{padding:6px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:#64748b;border:none;background:transparent;transition:all .15s}
+.tab-btn.active{background:#fff;color:#f07820;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ── Stats row ── */
+.stats-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat-mini{background:#f8fafc;border-radius:8px;padding:12px;text-align:center;border:1px solid #e2e8f0}
+.stat-mini .sm-val{font-size:20px;font-weight:800;color:#1e293b}
+.stat-mini .sm-lbl{font-size:11px;color:#64748b;margin-top:2px}
+
+/* ── Plan chips ── */
+.plan-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.plan-trial{background:#ede9fe;color:#5b21b6}
+.plan-starter{background:#e0f2fe;color:#0369a1}
+.plan-pro{background:#d1fae5;color:#065f46}
+.plan-enterprise{background:#0a4f4f;color:#e6f5f5}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:48px 20px;color:#94a3b8}
+.empty-state .es-icon{font-size:40px;margin-bottom:12px}
+.empty-state .es-text{font-size:14px}
+
+/* ── Stepper (onboarding wizard) ── */
+.stepper{display:flex;align-items:center;margin-bottom:24px;gap:0}
+.step{display:flex;align-items:center;flex:1}
+.step-circle{width:32px;height:32px;border-radius:50%;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#9ca3af;background:#fff;flex-shrink:0;transition:all .2s}
+.step-circle.done{background:#0d7a7a;border-color:#0d7a7a;color:#fff}
+.step-circle.active{background:#f07820;border-color:#f07820;color:#fff}
+.step-label{font-size:11px;font-weight:600;color:#9ca3af;margin-left:8px;white-space:nowrap}
+.step-label.active{color:#f07820}
+.step-label.done{color:#0d7a7a}
+.step-line{flex:1;height:2px;background:#e2e8f0;margin:0 8px}
+.step-line.done{background:#0d7a7a}
+.step-pane{display:none}
+.step-pane.active{display:block}
+
+/* ── Integration config cards ── */
+.int-card{background:#fff;border-radius:12px;border:1.5px solid #e2e8f0;padding:20px;margin-bottom:16px}
+.int-card-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.int-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.int-card-icon.meta{background:#e8f4fd}
+.int-card-icon.wa{background:#dcfce7}
+.int-card-icon.google{background:#fef9c3}
+.int-card-title{font-size:15px;font-weight:700;color:#1e293b}
+.int-card-sub{font-size:12px;color:#64748b}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-left:auto}
+.status-pill.connected{background:#dcfce7;color:#15803d}
+.status-pill.disconnected{background:#f1f5f9;color:#64748b}
+.status-pill.error{background:#fee2e2;color:#dc2626}
+.code-box{background:#0a1628;color:#a8d8a8;border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:12px;margin:8px 0;position:relative;overflow-x:auto}
+.code-box .copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer}
+.code-box .copy-btn:hover{background:rgba(255,255,255,.2)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #f1f5f9}
+.toggle-label{font-size:13px;font-weight:500;color:#1e293b}
+.toggle-sub{font-size:11px;color:#64748b}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#d1d5db;border-radius:11px;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.2s}
+.toggle input:checked+.toggle-slider{background:#0d7a7a}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+.trigger-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.trigger-row:last-child{border-bottom:none}
+.trigger-name{font-size:12.5px;font-weight:600;color:#1e293b;width:180px;flex-shrink:0}
+.trigger-desc{font-size:11.5px;color:#64748b;flex:1}
+.template-select{padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;color:#1e293b;background:#fff;min-width:160px}
+.template-select:focus{border-color:#0d7a7a;outline:none}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .approval-detail-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════ TOPBAR ════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="logo">
+    <span class="vu">VU</span><span class="trak">TRAK</span>
+    <span>SUPERADMIN</span>
+  </div>
+
+  <div class="topbar-right">
+    <div class="tb-icon" title="Pending approvals" onclick="showSection('approvals')">
+      📋
+      <span class="tb-notif"></span>
+    </div>
+    <div class="tb-icon" title="Notifications">🔔</div>
+    <div class="topbar-avatar" title="Super Admin">SA</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ LAYOUT ════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Platform</div>
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/combo-chart.png" alt=""/>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('tenants')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/building.png" alt=""/>
+      Tenants
+    </div>
+    <div class="nav-item" onclick="showSection('approvals')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/approval.png" alt=""/>
+      Approvals
+      <span class="ni-badge amber">3</span>
+    </div>
+
+    <div class="sidebar-section">Onboarding</div>
+    <div class="nav-item" onclick="showSection('onboard')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/add-user-male.png" alt=""/>
+      Onboard Tenant
+    </div>
+    <div class="sidebar-section">Integrations</div>
+    <div class="nav-item" onclick="showSection('meta')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/facebook-messenger.png" alt=""/>
+      Meta Ads Config
+    </div>
+    <div class="nav-item" onclick="showSection('whatsapp')">
+      <img class="ni-icon" src="https://img.icons8.com/3d-fluency/24/whatsapp.png" alt=""/>
+      WhatsApp Config
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sf-user">
+        <div class="sf-avatar">SA</div>
+        <div class="sf-info">
+          <div class="sf-name">Super Admin</div>
+          <div class="sf-role">Platform Admin</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════ MAIN ══════════════════════ -->
+  <main class="main">
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DASHBOARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Platform Dashboard</div>
+          <div class="page-subtitle">All tenants · real-time overview · June 2026</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm">Export Report</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-invite')">+ Invite Tenant</button>
+        </div>
+      </div>
+
+      <!-- Alert strip -->
+      <div class="alert alert-amber">
+        <span class="alert-icon">⚠️</span>
+        <span><strong>3 new tenant registrations</strong> are pending review. <a href="#" onclick="showSection('approvals');return false" style="color:#4f46e5;font-weight:600">Review now →</a></span>
+      </div>
+
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="kpi-card c1">
+          <div class="kpi-label">Total Tenants</div>
+          <div class="kpi-value">47</div>
+          <div class="kpi-sub up">↑ +4 this month</div>
+          <div class="kpi-icon">🏢</div>
+        </div>
+        <div class="kpi-card c2">
+          <div class="kpi-label">Active Tenants</div>
+          <div class="kpi-value">41</div>
+          <div class="kpi-sub up">↑ 87% active rate</div>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi-card c3">
+          <div class="kpi-label">Trial Tenants</div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-sub">3 expiring in 7 days</div>
+          <div class="kpi-icon">⏳</div>
+        </div>
+        <div class="kpi-card c4">
+          <div class="kpi-label">Suspended</div>
+          <div class="kpi-value">6</div>
+          <div class="kpi-sub dn">↑ +2 this month</div>
+          <div class="kpi-icon">🚫</div>
+        </div>
+      </div>
+
+      <!-- Bottom row: all 4 cards fill remaining height, no scroll -->
+      <div class="dash-bottom">
+
+        <!-- Card 1: Growth chart -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">Tenant Growth (6 months)</div></div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Card 2: Plan donut -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">Plan Distribution</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;padding:10px 14px">
+            <div class="chart-wrap" style="flex:1;min-height:0;height:auto;padding:0"><canvas id="planChart"></canvas></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;flex-shrink:0">
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:8px;height:8px;background:#7c3aed;border-radius:2px;display:inline-block"></span>Trial (12)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:8px;height:8px;background:#0369a1;border-radius:2px;display:inline-block"></span>Starter (18)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:8px;height:8px;background:#059669;border-radius:2px;display:inline-block"></span>Pro (13)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:8px;height:8px;background:#1e1b4b;border-radius:2px;display:inline-block"></span>Enterprise (4)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Trials expiring -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Trials Expiring Soon</div>
+            <button class="btn btn-ghost btn-sm">Remind all</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>Consultancy</th><th>Expires</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>Alpha Study</strong><br><span style="font-size:11px;color:#94a3b8">Chennai</span></td>
+                  <td><span style="color:#dc2626;font-weight:600;font-size:12px">2 days</span></td>
+                  <td><button class="btn btn-primary btn-sm">Extend</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Zenith Abroad</strong><br><span style="font-size:11px;color:#94a3b8">Pune</span></td>
+                  <td><span style="color:#f59e0b;font-weight:600;font-size:12px">5 days</span></td>
+                  <td><button class="btn btn-primary btn-sm">Extend</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Vista Education</strong><br><span style="font-size:11px;color:#94a3b8">Kolkata</span></td>
+                  <td><span style="color:#f59e0b;font-weight:600;font-size:12px">7 days</span></td>
+                  <td><button class="btn btn-primary btn-sm">Extend</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /dash-bottom -->
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ TENANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section" id="sec-tenants">
+      <div class="page-header">
+        <div>
+          <div class="page-title">All Tenants</div>
+          <div class="page-subtitle">47 consultancies registered on the platform</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-invite')">+ Invite Tenant</button>
+      </div>
+
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="filterTenants(this,'all')">All (47)</button>
+        <button class="tab-btn" onclick="filterTenants(this,'active')">Active (41)</button>
+        <button class="tab-btn" onclick="filterTenants(this,'trial')">Trial (12)</button>
+        <button class="tab-btn" onclick="filterTenants(this,'suspended')">Suspended (6)</button>
+      </div>
+
+      <div class="search-row">
+        <div class="search-box">
+          <input type="text" placeholder="Search by name, city, email…" oninput="filterTenantTable(this.value)"/>
+        </div>
+        <select class="filter-select">
+          <option value="">All Plans</option>
+          <option>Trial</option><option>Starter</option><option>Pro</option><option>Enterprise</option>
+        </select>
+        <select class="filter-select">
+          <option value="">All Countries</option>
+          <option>India</option><option>UAE</option><option>UK</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="tbl-wrap">
+          <table id="tenantTable">
+            <thead><tr>
+              <th>Consultancy</th><th>Admin</th><th>Plan</th><th>Leads</th><th>Users</th><th>Since</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr data-status="active">
+                <td><strong>Global Vision Edu</strong><br><span style="font-size:11px;color:#94a3b8">Bangalore, India</span></td>
+                <td><span style="font-size:12.5px">Ravi Kumar<br><span style="color:#94a3b8">ravi@gve.in</span></span></td>
+                <td><span class="plan-chip plan-pro">Pro</span></td>
+                <td style="font-weight:600;color:#4f46e5">1,243</td>
+                <td>8</td>
+                <td style="font-size:12px;color:#64748b">Jan 2026</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('Global Vision Edu','active')">View</button></td>
+              </tr>
+              <tr data-status="active">
+                <td><strong>Overseas Gateway</strong><br><span style="font-size:11px;color:#94a3b8">Mumbai, India</span></td>
+                <td><span style="font-size:12.5px">Priya Shah<br><span style="color:#94a3b8">priya@og.in</span></span></td>
+                <td><span class="plan-chip plan-pro">Pro</span></td>
+                <td style="font-weight:600;color:#4f46e5">988</td>
+                <td>6</td>
+                <td style="font-size:12px;color:#64748b">Feb 2026</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('Overseas Gateway','active')">View</button></td>
+              </tr>
+              <tr data-status="trial">
+                <td><strong>StudyBridge India</strong><br><span style="font-size:11px;color:#94a3b8">Hyderabad, India</span></td>
+                <td><span style="font-size:12.5px">Anjali Rao<br><span style="color:#94a3b8">anjali@sbi.in</span></span></td>
+                <td><span class="plan-chip plan-trial">Trial</span></td>
+                <td style="font-weight:600;color:#4f46e5">34</td>
+                <td>2</td>
+                <td style="font-size:12px;color:#64748b">Jun 2026</td>
+                <td><span class="badge badge-pending">Trial</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('StudyBridge India','trial')">View</button></td>
+              </tr>
+              <tr data-status="trial">
+                <td><strong>NextStep Abroad</strong><br><span style="font-size:11px;color:#94a3b8">Delhi, India</span></td>
+                <td><span style="font-size:12.5px">Vikram Singh<br><span style="color:#94a3b8">v.singh@nsa.in</span></span></td>
+                <td><span class="plan-chip plan-trial">Trial</span></td>
+                <td style="font-weight:600;color:#4f46e5">12</td>
+                <td>1</td>
+                <td style="font-size:12px;color:#64748b">Jun 2026</td>
+                <td><span class="badge badge-pending">Trial</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('NextStep Abroad','trial')">View</button></td>
+              </tr>
+              <tr data-status="active">
+                <td><strong>EduPath Consultancy</strong><br><span style="font-size:11px;color:#94a3b8">Pune, India</span></td>
+                <td><span style="font-size:12.5px">Meera Nair<br><span style="color:#94a3b8">meera@edp.in</span></span></td>
+                <td><span class="plan-chip plan-starter">Starter</span></td>
+                <td style="font-weight:600;color:#4f46e5">421</td>
+                <td>4</td>
+                <td style="font-size:12px;color:#64748b">Mar 2026</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('EduPath Consultancy','active')">View</button></td>
+              </tr>
+              <tr data-status="suspended">
+                <td><strong>Alpha Study Centre</strong><br><span style="font-size:11px;color:#94a3b8">Chennai, India</span></td>
+                <td><span style="font-size:12.5px">Karthik R<br><span style="color:#94a3b8">k.r@asc.in</span></span></td>
+                <td><span class="plan-chip plan-starter">Starter</span></td>
+                <td style="font-weight:600;color:#4f46e5">156</td>
+                <td>3</td>
+                <td style="font-size:12px;color:#64748b">Nov 2025</td>
+                <td><span class="badge badge-suspended">Suspended</span></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openDrawer('Alpha Study Centre','suspended')">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ APPROVALS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section" id="sec-approvals">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pending Approvals</div>
+          <div class="page-subtitle">New tenant registrations waiting for review</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm">Approve All</button>
+          <button class="btn btn-primary btn-sm">Send Reminders</button>
+        </div>
+      </div>
+
+      <div class="alert alert-amber">
+        <span class="alert-icon">ℹ️</span>
+        <span>These tenants registered via <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px">POST /api/onboarding/register</code>. Currently auto-approved — approval workflow requires new SA APIs (see API Mapping).</span>
+      </div>
+
+      <!-- Approval card 1 -->
+      <div class="approval-card pending-review">
+        <div class="approval-header">
+          <div>
+            <div class="approval-company">StudyBridge India Pvt. Ltd.</div>
+            <div class="approval-meta">Submitted Jun 18, 2026 · 14:32 · via Self-Registration</div>
+          </div>
+          <span class="badge badge-pending">Pending Review</span>
+        </div>
+        <div class="approval-detail-grid">
+          <div class="adg-item"><div class="adg-label">Contact</div><div class="adg-value">Anjali Rao</div></div>
+          <div class="adg-item"><div class="adg-label">Email</div><div class="adg-value">anjali@sbi.in</div></div>
+          <div class="adg-item"><div class="adg-label">Phone</div><div class="adg-value">+91 98765 43210</div></div>
+          <div class="adg-item"><div class="adg-label">City</div><div class="adg-value">Hyderabad</div></div>
+          <div class="adg-item"><div class="adg-label">State</div><div class="adg-value">Telangana</div></div>
+          <div class="adg-item"><div class="adg-label">Reg. ID</div><div class="adg-value">AP1234TLG</div></div>
+        </div>
+        <div class="approval-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openApprovalModal('StudyBridge India','reject')">✗ Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="openApprovalModal('StudyBridge India','info')">Request Info</button>
+          <button class="btn btn-success btn-sm" onclick="openApprovalModal('StudyBridge India','approve')">✓ Approve</button>
+        </div>
+      </div>
+
+      <!-- Approval card 2 -->
+      <div class="approval-card pending-review">
+        <div class="approval-header">
+          <div>
+            <div class="approval-company">NextStep Abroad Consultancy</div>
+            <div class="approval-meta">Submitted Jun 17, 2026 · 09:15 · via Self-Registration</div>
+          </div>
+          <span class="badge badge-pending">Pending Review</span>
+        </div>
+        <div class="approval-detail-grid">
+          <div class="adg-item"><div class="adg-label">Contact</div><div class="adg-value">Vikram Singh</div></div>
+          <div class="adg-item"><div class="adg-label">Email</div><div class="adg-value">v.singh@nsa.in</div></div>
+          <div class="adg-item"><div class="adg-label">Phone</div><div class="adg-value">+91 97654 32109</div></div>
+          <div class="adg-item"><div class="adg-label">City</div><div class="adg-value">New Delhi</div></div>
+          <div class="adg-item"><div class="adg-label">State</div><div class="adg-value">Delhi</div></div>
+          <div class="adg-item"><div class="adg-label">Reg. ID</div><div class="adg-value">DL567890NSA</div></div>
+        </div>
+        <div class="approval-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openApprovalModal('NextStep Abroad','reject')">✗ Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="openApprovalModal('NextStep Abroad','info')">Request Info</button>
+          <button class="btn btn-success btn-sm" onclick="openApprovalModal('NextStep Abroad','approve')">✓ Approve</button>
+        </div>
+      </div>
+
+      <!-- Approval card 3 -->
+      <div class="approval-card pending-review">
+        <div class="approval-header">
+          <div>
+            <div class="approval-company">Prestige Overseas Educare</div>
+            <div class="approval-meta">Submitted Jun 15, 2026 · 16:50 · via Self-Registration</div>
+          </div>
+          <span class="badge badge-pending">Info Requested</span>
+        </div>
+        <div class="approval-detail-grid">
+          <div class="adg-item"><div class="adg-label">Contact</div><div class="adg-value">Suresh Patel</div></div>
+          <div class="adg-item"><div class="adg-label">Email</div><div class="adg-value">suresh@poe.in</div></div>
+          <div class="adg-item"><div class="adg-label">Phone</div><div class="adg-value">+91 96543 21098</div></div>
+          <div class="adg-item"><div class="adg-label">City</div><div class="adg-value">Ahmedabad</div></div>
+          <div class="adg-item"><div class="adg-label">State</div><div class="adg-value">Gujarat</div></div>
+          <div class="adg-item"><div class="adg-label">Reg. ID</div><div class="adg-value">—</div></div>
+        </div>
+        <div class="alert alert-amber" style="margin:0 0 12px;font-size:12px">
+          <span>Info requested Jun 16: "Please provide your GSTIN and business registration document."</span>
+        </div>
+        <div class="approval-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openApprovalModal('Prestige Overseas','reject')">✗ Reject</button>
+          <button class="btn btn-success btn-sm" onclick="openApprovalModal('Prestige Overseas','approve')">✓ Approve</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ONBOARD TENANT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section" id="sec-onboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Onboard New Tenant</div>
+          <div class="page-subtitle">4-step wizard → calls <code style="background:#e6f5f5;padding:2px 6px;border-radius:4px;color:#0d7a7a">POST /api/onboarding/register</code></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="resetWizard()">Reset</button>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper" id="wizardStepper">
+        <div class="step">
+          <div class="step-circle active" id="sc1">1</div>
+          <div class="step-label active" id="sl1">Consultancy</div>
+        </div>
+        <div class="step-line" id="line1"></div>
+        <div class="step">
+          <div class="step-circle" id="sc2">2</div>
+          <div class="step-label" id="sl2">Admin User</div>
+        </div>
+        <div class="step-line" id="line2"></div>
+        <div class="step">
+          <div class="step-circle" id="sc3">3</div>
+          <div class="step-label" id="sl3">Plan</div>
+        </div>
+        <div class="step-line" id="line3"></div>
+        <div class="step">
+          <div class="step-circle" id="sc4">4</div>
+          <div class="step-label" id="sl4">Confirm</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Consultancy info -->
+      <div class="step-pane active" id="pane1">
+        <div class="card" style="max-width:640px">
+          <div class="card-head"><div class="card-title">Consultancy Details</div></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Consultancy Name *</label><input class="form-control" id="w_name" placeholder="e.g. Bright Future Overseas Consultancy"/></div>
+            <div class="form-group"><label class="form-label">Registration ID</label><input class="form-control" id="w_regid" placeholder="GSTIN / Reg No (optional)"/></div>
+            <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="w_addr" placeholder="Street address"/></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">City</label><input class="form-control" id="w_city" placeholder="City"/></div>
+              <div class="form-group"><label class="form-label">State</label><input class="form-control" id="w_state" placeholder="State"/></div>
+            </div>
+            <div class="form-group"><label class="form-label">Country</label>
+              <select class="form-control" id="w_country">
+                <option>India</option><option>UAE</option><option>UK</option><option>USA</option><option>Australia</option><option>Canada</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="wizardNext(1)">Next → Admin User</button>
+      </div>
+
+      <!-- Step 2: Admin user -->
+      <div class="step-pane" id="pane2">
+        <div class="card" style="max-width:640px">
+          <div class="card-head"><div class="card-title">Agency Admin User</div><span style="font-size:12px;color:#64748b">Gets temporary password via email</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">First Name *</label><input class="form-control" id="w_fname" placeholder="First Name"/></div>
+              <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" id="w_lname" placeholder="Last Name"/></div>
+            </div>
+            <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="w_email" type="email" placeholder="admin@consultancy.com"/></div>
+            <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="w_phone" placeholder="+91 98765 43210"/></div>
+            <div class="alert alert-amber" style="margin-top:8px;margin-bottom:0">
+              <span class="alert-icon">📧</span>
+              <span>A temporary password is auto-generated and emailed to this address on registration.</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" onclick="wizardGo(1)">← Back</button>
+          <button class="btn btn-primary" onclick="wizardNext(2)">Next → Plan</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Plan -->
+      <div class="step-pane" id="pane3">
+        <div class="card" style="max-width:640px">
+          <div class="card-head"><div class="card-title">Select Plan</div></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <label style="border:2px solid #e2e8f0;border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s" id="plan-trial" onclick="selectPlan('TRIAL',this)">
+                <input type="radio" name="plan" value="TRIAL" style="display:none"/>
+                <div style="font-weight:700;color:#5b21b6;margin-bottom:4px">Trial</div>
+                <div style="font-size:12px;color:#64748b">14 days free · all features · no card needed</div>
+              </label>
+              <label style="border:2px solid #e2e8f0;border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s" id="plan-starter" onclick="selectPlan('STARTER',this)">
+                <input type="radio" name="plan" value="STARTER" style="display:none"/>
+                <div style="font-weight:700;color:#0369a1;margin-bottom:4px">Starter</div>
+                <div style="font-size:12px;color:#64748b">Up to 3 users · 500 leads · email support</div>
+              </label>
+              <label style="border:2px solid #e2e8f0;border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s" id="plan-pro" onclick="selectPlan('PRO',this)">
+                <input type="radio" name="plan" value="PRO" style="display:none"/>
+                <div style="font-weight:700;color:#065f46;margin-bottom:4px">Pro</div>
+                <div style="font-size:12px;color:#64748b">Unlimited users · Meta + WhatsApp · priority support</div>
+              </label>
+              <label style="border:2px solid #e2e8f0;border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s" id="plan-enterprise" onclick="selectPlan('ENTERPRISE',this)">
+                <input type="radio" name="plan" value="ENTERPRISE" style="display:none"/>
+                <div style="font-weight:700;color:#0a4f4f;margin-bottom:4px">Enterprise</div>
+                <div style="font-size:12px;color:#64748b">Custom limits · dedicated support · SLA</div>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" onclick="wizardGo(2)">← Back</button>
+          <button class="btn btn-primary" onclick="wizardNext(3)">Next → Confirm</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirm -->
+      <div class="step-pane" id="pane4">
+        <div class="card" style="max-width:640px">
+          <div class="card-head"><div class="card-title">Review &amp; Confirm</div></div>
+          <div class="card-body">
+            <div class="detail-grid" id="confirmGrid">
+              <!-- filled by wizardNext(3) -->
+            </div>
+            <div class="alert alert-green" style="margin-bottom:0">
+              <span class="alert-icon">✅</span>
+              <span>Clicking <strong>Register Tenant</strong> calls <code>POST /api/onboarding/register</code>. A temporary password will be emailed to the admin immediately.</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" onclick="wizardGo(3)">← Back</button>
+          <button class="btn btn-primary" onclick="submitOnboarding()">Register Tenant →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ META ADS CONFIG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section" id="sec-meta">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Meta Lead Ads Configuration</div>
+          <div class="page-subtitle">Configure per-tenant Facebook Page + lead form webhook integration</div>
+        </div>
+        <select class="filter-select" style="min-width:220px">
+          <option>Global Vision Edu (active)</option>
+          <option>Overseas Gateway (active)</option>
+          <option>StudyBridge India (trial)</option>
+          <option>EduPath Consultancy (active)</option>
+        </select>
+      </div>
+
+      <!-- Status banner -->
+      <div class="int-card">
+        <div class="int-card-head">
+          <div class="int-card-icon meta">📘</div>
+          <div>
+            <div class="int-card-title">Meta Lead Ads — Global Vision Edu</div>
+            <div class="int-card-sub">Page: GVE India (ID: 102345678901234) · Sync active</div>
+          </div>
+          <span class="status-pill connected">● Connected</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Facebook Page ID *</label><input class="form-control" value="102345678901234" placeholder="Page ID from Meta Business"/></div>
+          <div class="form-group"><label class="form-label">Lead Form ID (optional)</label><input class="form-control" placeholder="Filter to specific form ID"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Page Access Token *</label>
+          <input class="form-control" type="password" value="EAAxxxxxxxxxx" placeholder="Long-lived page access token from Meta Business"/>
+          <span style="font-size:11px;color:#64748b;margin-top:4px;display:block">Generate in Meta Business Suite → System Users → Generate Token (ads_management, pages_read_engagement, leads_retrieval)</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Default Assigned To</label>
+            <select class="form-control"><option>— unassigned —</option><option>Ravi Kumar (AGENCY_ADMIN)</option><option>Priya Shah (MANAGER)</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Default Lead Stage</label>
+            <select class="form-control"><option value="NEW">NEW</option><option>CONTACTED</option><option>QUALIFIED</option></select>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div><div class="toggle-label">Integration Active</div><div class="toggle-sub">Disabling stops all new leads from Meta being captured</div></div>
+          <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="alert('PUT /api/ads/config/meta')">Save Meta Config</button>
+          <button class="btn btn-ghost btn-sm">Test Connection</button>
+        </div>
+      </div>
+
+      <!-- Webhook info -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Webhook Setup (Meta App Dashboard)</div></div>
+        <div class="card-body">
+          <div style="font-size:13px;color:#475569;margin-bottom:10px">Register these in your Meta App → Webhooks → Page subscriptions → <strong>leadgen</strong> event:</div>
+          <div style="margin-bottom:8px">
+            <div class="form-label">Callback URL</div>
+            <div class="code-box">https://api.trakv.io/api/webhooks/meta/leads<button class="copy-btn" onclick="navigator.clipboard.writeText('https://api.trakv.io/api/webhooks/meta/leads');this.textContent='Copied!'">Copy</button></div>
+          </div>
+          <div>
+            <div class="form-label">Verify Token</div>
+            <div class="code-box">trakv-meta-leads-verify<button class="copy-btn" onclick="navigator.clipboard.writeText('trakv-meta-leads-verify');this.textContent='Copied!'">Copy</button></div>
+          </div>
+          <div class="alert alert-amber" style="margin-top:12px;margin-bottom:0">
+            <span class="alert-icon">ℹ️</span>
+            <span>After registering, Meta will call GET with <code>hub.challenge</code> to verify. The <code>PUT /api/ads/config/meta</code> save also auto-subscribes the page via <code>/{pageId}/subscribed_apps</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Ads section -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Google Ads Webhook</div>
+          <span class="status-pill disconnected">Not configured</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Google Ads Customer ID</label><input class="form-control" placeholder="123-456-7890"/></div>
+            <div class="form-group"><label class="form-label">Default Assigned To</label>
+              <select class="form-control"><option>— unassigned —</option><option>Ravi Kumar</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-bottom:12px" onclick="alert('PUT /api/ads/config/google')">Save Google Config</button>
+          <div class="form-label">Your Google Ads Webhook URL (auto-generated)</div>
+          <div class="code-box" style="color:#94d4a8">GET /api/ads/config/google/webhook-url → returns unique URL per tenant<button class="copy-btn" onclick="alert('Would call GET /api/ads/config/google/webhook-url')">Get URL</button></div>
+        </div>
+      </div>
+
+      <!-- Inbound log -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Inbound Lead Log</div>
+          <div style="display:flex;gap:8px">
+            <select class="filter-select" style="font-size:12px;padding:5px 8px"><option>All Channels</option><option>META</option><option>GOOGLE</option></select>
+            <select class="filter-select" style="font-size:12px;padding:5px 8px"><option>All Statuses</option><option>SUCCESS</option><option>FAILED</option><option>DUPLICATE</option></select>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Channel</th><th>Form / Page</th><th>Lead</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:11px;color:#64748b">Jun 21 14:32</td><td><span class="badge badge-paid" style="font-size:10px">META</span></td><td style="font-size:12px">GVE India / Contact Form</td><td style="font-size:12px">Sanjay M.</td><td><span class="badge badge-active">Success</span></td><td>—</td></tr>
+              <tr><td style="font-size:11px;color:#64748b">Jun 21 13:18</td><td><span class="badge badge-paid" style="font-size:10px">META</span></td><td style="font-size:12px">GVE India / Contact Form</td><td style="font-size:12px">Duplicate</td><td><span class="badge badge-trial">Duplicate</span></td><td>—</td></tr>
+              <tr><td style="font-size:11px;color:#64748b">Jun 21 10:05</td><td><span class="badge" style="background:#fef9c3;color:#92400e;font-size:10px">GOOGLE</span></td><td style="font-size:12px">Search Campaign</td><td style="font-size:12px">—</td><td><span class="badge badge-suspended">Failed</span></td><td><button class="btn btn-ghost btn-sm" onclick="alert('POST /api/ads/inbound-log/{id}/retry')">Retry</button></td></tr>
+              <tr><td style="font-size:11px;color:#64748b">Jun 20 16:44</td><td><span class="badge badge-paid" style="font-size:10px">META</span></td><td style="font-size:12px">GVE India / Abroad Study</td><td style="font-size:12px">Preethi K.</td><td><span class="badge badge-active">Success</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ WHATSAPP CONFIG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="section" id="sec-whatsapp">
+      <div class="page-header">
+        <div>
+          <div class="page-title">WhatsApp Business Configuration</div>
+          <div class="page-subtitle">Connect tenant's WABA · sync templates · map trigger automations</div>
+        </div>
+        <select class="filter-select" style="min-width:220px">
+          <option>Global Vision Edu (active)</option>
+          <option>Overseas Gateway (active)</option>
+          <option>StudyBridge India (trial)</option>
+        </select>
+      </div>
+
+      <!-- Credentials -->
+      <div class="tab-row" id="waTabs">
+        <button class="tab-btn active" onclick="waTab(this,'wa-creds')">1 · Credentials</button>
+        <button class="tab-btn" onclick="waTab(this,'wa-templates')">2 · Templates</button>
+        <button class="tab-btn" onclick="waTab(this,'wa-triggers')">3 · Triggers</button>
+      </div>
+
+      <!-- Tab 1: Credentials -->
+      <div id="wa-creds">
+        <div class="int-card">
+          <div class="int-card-head">
+            <div class="int-card-icon wa">💬</div>
+            <div>
+              <div class="int-card-title">WhatsApp Business API — Global Vision Edu</div>
+              <div class="int-card-sub">PUT /api/whatsapp/config · GET /api/whatsapp/config</div>
+            </div>
+            <span class="status-pill connected">● Connected</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Phone Number ID *</label>
+              <input class="form-control" value="109876543210" placeholder="From Meta WABA dashboard"/>
+              <span style="font-size:11px;color:#64748b;margin-top:3px;display:block">Meta → WhatsApp → Phone Numbers → Phone Number ID</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">WABA ID</label>
+              <input class="form-control" value="987654321098765" placeholder="WhatsApp Business Account ID"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">System User Access Token *</label>
+            <input class="form-control" type="password" value="EAAxxxxxxxxxxxxxx" placeholder="Permanent system user token (never expires)"/>
+            <span style="font-size:11px;color:#64748b;margin-top:3px;display:block">Meta Business Suite → System Users → Generate Token → whatsapp_business_messaging + whatsapp_business_management</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Webhook Verify Token *</label>
+              <input class="form-control" value="gve-wa-verify-2026" placeholder="Random string you choose"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tenant Display Name</label>
+              <input class="form-control" value="Global Vision Edu" placeholder="Shown in welcome template header"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Default Welcome Template</label>
+            <input class="form-control" value="welcome_lead" placeholder="Pre-approved Meta template name"/>
+          </div>
+
+          <div class="toggle-row">
+            <div><div class="toggle-label">Activate Integration</div><div class="toggle-sub">When off, no WhatsApp messages are sent even if triggers are configured</div></div>
+            <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+          </div>
+
+          <div style="margin-top:16px;display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="alert('PUT /api/whatsapp/config')">Save WhatsApp Config</button>
+            <button class="btn btn-ghost btn-sm">Test Send</button>
+          </div>
+        </div>
+
+        <!-- Webhook info -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">Meta Webhook Registration</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:#475569;margin-bottom:10px">In Meta App Dashboard → WhatsApp → Configuration → Webhooks, register:</div>
+            <div class="form-label">Callback URL</div>
+            <div class="code-box">https://api.trakv.io/api/whatsapp/webhook<button class="copy-btn" onclick="navigator.clipboard.writeText('https://api.trakv.io/api/whatsapp/webhook');this.textContent='Copied!'">Copy</button></div>
+            <div class="form-label" style="margin-top:10px">Verify Token</div>
+            <div class="code-box" id="waVerifyDisplay">gve-wa-verify-2026<button class="copy-btn" onclick="this.textContent='Copied!'">Copy</button></div>
+            <div style="margin-top:12px;font-size:12.5px;color:#475569"><strong>Subscribe to fields:</strong> messages, message_deliveries, messaging_postbacks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Templates -->
+      <div id="wa-templates" style="display:none">
+        <div class="alert alert-amber">
+          <span class="alert-icon">ℹ️</span>
+          <span>Templates must be pre-approved in Meta Business Suite before use. Click <strong>Sync from Meta</strong> to fetch latest statuses.</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn btn-primary" onclick="alert('POST /api/whatsapp/templates/sync — fetches from Meta WABA and caches locally')">↻ Sync from Meta</button>
+          <select class="filter-select"><option>All Statuses</option><option>APPROVED</option><option>PENDING</option><option>REJECTED</option></select>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Template Name</th><th>Category</th><th>Language</th><th>Body Preview</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>welcome_lead</strong></td>
+                  <td style="font-size:12px">UTILITY</td>
+                  <td style="font-size:12px">en</td>
+                  <td style="font-size:12px;color:#475569">Hi {{1}}, thank you for your enquiry with {{2}}. Our team will contact you shortly.</td>
+                  <td><span class="badge badge-active">Approved</span></td>
+                </tr>
+                <tr>
+                  <td><strong>followup_nudge</strong></td>
+                  <td style="font-size:12px">UTILITY</td>
+                  <td style="font-size:12px">en</td>
+                  <td style="font-size:12px;color:#475569">Hi {{1}}, just following up on your study abroad enquiry. Are you still interested?</td>
+                  <td><span class="badge badge-active">Approved</span></td>
+                </tr>
+                <tr>
+                  <td><strong>appointment_reminder</strong></td>
+                  <td style="font-size:12px">UTILITY</td>
+                  <td style="font-size:12px">en</td>
+                  <td style="font-size:12px;color:#475569">Reminder: Your counselling session with {{1}} is scheduled for {{2}} at {{3}}.</td>
+                  <td><span class="badge badge-active">Approved</span></td>
+                </tr>
+                <tr>
+                  <td><strong>promo_offer</strong></td>
+                  <td style="font-size:12px">MARKETING</td>
+                  <td style="font-size:12px">en</td>
+                  <td style="font-size:12px;color:#475569">Special offer for IELTS coaching this month! Book now at…</td>
+                  <td><span class="badge badge-pending">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Triggers -->
+      <div id="wa-triggers" style="display:none">
+        <div class="alert alert-green">
+          <span class="alert-icon">✅</span>
+          <span>Map each CRM event to an approved WhatsApp template. Uses <code>PUT /api/whatsapp/templates/triggers</code> · <code>GET /api/whatsapp/templates/triggers</code></span>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Trigger → Template Mappings</div>
+            <button class="btn btn-primary btn-sm" onclick="alert('Saves all trigger mappings via PUT /api/whatsapp/templates/triggers')">Save All</button>
+          </div>
+          <div class="card-body" style="padding:0 16px">
+            <div class="trigger-row">
+              <div>
+                <div class="trigger-name">LEAD_CREATED</div>
+                <div class="trigger-desc">Fires when a new lead is added (manual, import, or Meta ad)</div>
+              </div>
+              <select class="template-select">
+                <option>welcome_lead ✓</option>
+                <option>followup_nudge</option>
+                <option>appointment_reminder</option>
+                <option>— disable —</option>
+              </select>
+              <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="trigger-row">
+              <div>
+                <div class="trigger-name">LEAD_FOLLOWUP</div>
+                <div class="trigger-desc">Manual follow-up nudge triggered from lead profile</div>
+              </div>
+              <select class="template-select">
+                <option>followup_nudge ✓</option>
+                <option>welcome_lead</option>
+                <option>appointment_reminder</option>
+                <option>— disable —</option>
+              </select>
+              <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="trigger-row">
+              <div>
+                <div class="trigger-name">APPOINTMENT_REMINDER</div>
+                <div class="trigger-desc">Fires 24h before a scheduled counselling session</div>
+              </div>
+              <select class="template-select">
+                <option>— not configured —</option>
+                <option>appointment_reminder</option>
+                <option>welcome_lead</option>
+                <option>followup_nudge</option>
+              </select>
+              <label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-amber">
+          <span class="alert-icon">⚠️</span>
+          <span>WhatsApp only allows template messages outside the 24-hour window. Free-form replies are available within 24h of last inbound message (<code>POST /api/whatsapp/leads/{'{'}leadId{'}'}/messages</code>).</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ════════════════════════ TENANT DETAIL DRAWER ════════════════════════ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="tenantDrawer">
+  <div class="drawer-head">
+    <div>
+      <h3 id="drawerTitle">Global Vision Edu</h3>
+      <span id="drawerBadge" class="badge badge-active">Active</span>
+    </div>
+    <button class="modal-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="detail-section">
+      <h4>Consultancy Info</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="di-label">City</div><div class="di-value">Bangalore</div></div>
+        <div class="detail-item"><div class="di-label">Country</div><div class="di-value">India</div></div>
+        <div class="detail-item"><div class="di-label">Reg. ID</div><div class="di-value">KA987GVE</div></div>
+        <div class="detail-item"><div class="di-label">Slug</div><div class="di-value">global-vision-edu</div></div>
+        <div class="detail-item"><div class="di-label">Plan</div><div class="di-value"><span class="plan-chip plan-pro">Pro</span></div></div>
+        <div class="detail-item"><div class="di-label">Trial Ends</div><div class="di-value">—</div></div>
+        <div class="detail-item"><div class="di-label">Sub Ends</div><div class="di-value">Dec 31, 2026</div></div>
+        <div class="detail-item"><div class="di-label">Created</div><div class="di-value">Jan 12, 2026</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Admin User</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="di-label">Name</div><div class="di-value">Ravi Kumar</div></div>
+        <div class="detail-item"><div class="di-label">Email</div><div class="di-value">ravi@gve.in</div></div>
+        <div class="detail-item"><div class="di-label">Phone</div><div class="di-value">+91 98760 43210</div></div>
+        <div class="detail-item"><div class="di-label">Active</div><div class="di-value">Yes</div></div>
+      </div>
+    </div>
+
+    <div class="stats-mini" style="margin-bottom:16px">
+      <div class="stat-mini"><div class="sm-val">1,243</div><div class="sm-lbl">Total Leads</div></div>
+      <div class="stat-mini"><div class="sm-val">8</div><div class="sm-lbl">Team Members</div></div>
+      <div class="stat-mini"><div class="sm-val">312</div><div class="sm-lbl">Applications</div></div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Activity Timeline</h4>
+      <ul class="timeline">
+        <li class="tl-item"><div class="tl-dot"></div><div class="tl-text">Plan upgraded to Pro<span class="tl-time">Mar 15, 2026</span></div></li>
+        <li class="tl-item"><div class="tl-dot" style="background:#10b981"></div><div class="tl-text">Tenant approved by Super Admin<span class="tl-time">Jan 14, 2026</span></div></li>
+        <li class="tl-item"><div class="tl-dot" style="background:#f59e0b"></div><div class="tl-text">Registration submitted<span class="tl-time">Jan 12, 2026</span></div></li>
+      </ul>
+    </div>
+
+    <div class="action-bar" id="drawerActions">
+      <!-- filled by JS based on status -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ APPROVE / REJECT MODAL ════════════════════════ -->
+<div class="modal-overlay" id="modal-approval" onclick="closeModal('modal-approval')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="approvalModalTitle">Approve Tenant</h3>
+      <button class="modal-close" onclick="closeModal('modal-approval')">✕</button>
+    </div>
+    <div class="modal-body" id="approvalModalBody">
+      <!-- filled by JS -->
+    </div>
+    <div class="modal-foot" id="approvalModalFoot">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ INVITE TENANT MODAL ════════════════════════ -->
+<div class="modal-overlay" id="modal-invite" onclick="closeModal('modal-invite')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>Invite a New Tenant</h3>
+      <button class="modal-close" onclick="closeModal('modal-invite')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-amber" style="margin-bottom:16px">
+        <span class="alert-icon">⚠️</span>
+        <span>This sends an invite email. The tenant registers via <code>/api/onboarding/register</code> — no "invite by SA" API yet.</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Consultancy Name *</label><input class="form-control" placeholder="e.g. Bright Future Consultancy"/></div>
+        <div class="form-group"><label class="form-label">City</label><input class="form-control" placeholder="City"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Admin First Name *</label><input class="form-control" placeholder="First Name"/></div>
+        <div class="form-group"><label class="form-label">Admin Last Name</label><input class="form-control" placeholder="Last Name"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Admin Email *</label><input class="form-control" type="email" placeholder="admin@consultancy.com"/></div>
+      <div class="form-group">
+        <label class="form-label">Initial Plan</label>
+        <select class="form-control">
+          <option>Trial (14 days)</option><option>Starter</option><option>Pro</option><option>Enterprise</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Internal Note (optional)</label><textarea class="form-control" placeholder="Referral source, special deal, etc."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invite')">Cancel</button>
+      <button class="btn btn-primary">Send Invite Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ ADD UNIVERSITY MODAL ════════════════════════ -->
+<div class="modal-overlay" id="modal-university" onclick="closeModal('modal-university')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>Add University</h3>
+      <button class="modal-close" onclick="closeModal('modal-university')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:#64748b;margin-bottom:16px">Calls <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">POST /api/admin/universities</code></p>
+      <div class="form-group"><label class="form-label">University Name *</label><input class="form-control" placeholder="e.g. University of Edinburgh"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Country *</label><input class="form-control" placeholder="UK"/></div>
+        <div class="form-group"><label class="form-label">City</label><input class="form-control" placeholder="Edinburgh"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Website</label><input class="form-control" type="url" placeholder="https://ed.ac.uk"/></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" placeholder="Short description…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-university')">Cancel</button>
+      <button class="btn btn-primary">Add University</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ SCRIPTS ════════════════════════════════════════ -->
+<script>
+// ── Navigation ──────────────────────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+
+  // match nav item by onclick
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + name + "'")) {
+      n.classList.add('active');
+    }
+  });
+}
+
+// ── Modals ──────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Approval Modal ───────────────────────────────────────────────────────────
+function openApprovalModal(name, action) {
+  const title = document.getElementById('approvalModalTitle');
+  const body  = document.getElementById('approvalModalBody');
+  const foot  = document.getElementById('approvalModalFoot');
+
+  if (action === 'approve') {
+    title.textContent = 'Approve — ' + name;
+    body.innerHTML = `
+      <div class="alert alert-green"><span class="alert-icon">✅</span><span>This will activate the tenant and start a 14-day trial. A welcome email with temporary credentials will be sent.</span></div>
+      <div class="form-group"><label class="form-label">Assign Plan</label>
+        <select class="form-control"><option>Trial (14 days)</option><option>Starter</option><option>Pro</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Note to Tenant (optional)</label>
+        <textarea class="form-control" placeholder="Welcome message…"></textarea>
+      </div>
+      <div class="alert alert-amber" style="margin-top:8px"><span>⚠️ API needed: <code>PATCH /api/superadmin/tenants/{id}/approve</code></span></div>
+    `;
+    foot.innerHTML = `
+      <button class="btn btn-ghost" onclick="closeModal('modal-approval')">Cancel</button>
+      <button class="btn btn-success" onclick="closeModal('modal-approval');alert('Approved! (API not yet built)')">Approve Tenant</button>
+    `;
+  } else if (action === 'reject') {
+    title.textContent = 'Reject — ' + name;
+    body.innerHTML = `
+      <div class="alert alert-red"><span class="alert-icon">🚫</span><span>The applicant will be notified and their account will be permanently rejected.</span></div>
+      <div class="form-group"><label class="form-label">Reason for Rejection *</label>
+        <select class="form-control">
+          <option>Incomplete / unverifiable information</option>
+          <option>Duplicate registration</option>
+          <option>Not a legitimate business</option>
+          <option>Other (see note)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Internal Note</label>
+        <textarea class="form-control" placeholder="Details for audit trail…"></textarea>
+      </div>
+      <div class="alert alert-amber" style="margin-top:8px"><span>⚠️ API needed: <code>PATCH /api/superadmin/tenants/{id}/reject</code></span></div>
+    `;
+    foot.innerHTML = `
+      <button class="btn btn-ghost" onclick="closeModal('modal-approval')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('modal-approval');alert('Rejected (API not yet built)')">Confirm Rejection</button>
+    `;
+  } else {
+    title.textContent = 'Request More Info — ' + name;
+    body.innerHTML = `
+      <div class="alert alert-amber"><span class="alert-icon">📋</span><span>An email will be sent asking the applicant for additional details. Registration stays in pending state.</span></div>
+      <div class="form-group"><label class="form-label">What info is needed? *</label>
+        <textarea class="form-control" rows="4" placeholder="e.g. Please provide your GSTIN number and a copy of your business registration certificate."></textarea>
+      </div>
+    `;
+    foot.innerHTML = `
+      <button class="btn btn-ghost" onclick="closeModal('modal-approval')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-approval');alert('Request sent (email API would trigger)')">Send Request</button>
+    `;
+  }
+  openModal('modal-approval');
+}
+
+// ── Tenant Drawer ────────────────────────────────────────────────────────────
+function openDrawer(name, status) {
+  document.getElementById('drawerTitle').textContent = name;
+
+  const badge = document.getElementById('drawerBadge');
+  const actions = document.getElementById('drawerActions');
+
+  if (status === 'active') {
+    badge.className = 'badge badge-active'; badge.textContent = 'Active';
+    actions.innerHTML = `
+      <button class="btn btn-ghost btn-sm">✉ Message Admin</button>
+      <button class="btn btn-ghost btn-sm">📊 View Leads</button>
+      <button class="btn btn-outline btn-sm">Change Plan</button>
+      <button class="btn btn-danger btn-sm" onclick="alert('Suspend API not built yet')">Suspend</button>
+    `;
+  } else if (status === 'trial') {
+    badge.className = 'badge badge-trial'; badge.textContent = 'Trial';
+    actions.innerHTML = `
+      <button class="btn btn-ghost btn-sm">✉ Message Admin</button>
+      <button class="btn btn-outline btn-sm">Extend Trial</button>
+      <button class="btn btn-success btn-sm">Convert to Paid</button>
+    `;
+  } else if (status === 'suspended') {
+    badge.className = 'badge badge-suspended'; badge.textContent = 'Suspended';
+    actions.innerHTML = `
+      <button class="btn btn-ghost btn-sm">✉ Message Admin</button>
+      <button class="btn btn-success btn-sm" onclick="alert('Reactivate API not built yet')">Reactivate</button>
+    `;
+  }
+
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('tenantDrawer').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('tenantDrawer').classList.remove('open');
+}
+
+// ── Tenant table filter ──────────────────────────────────────────────────────
+function filterTenants(el, status) {
+  el.parentNode.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#tenantTable tbody tr').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+  });
+}
+function filterTenantTable(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#tenantTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── Onboarding wizard ────────────────────────────────────────────────────────
+let currentStep = 1;
+let selectedPlan = 'TRIAL';
+
+function wizardNext(from) {
+  if (from === 1) {
+    const name = document.getElementById('w_name').value.trim();
+    if (!name) { alert('Consultancy name is required'); return; }
+  }
+  if (from === 2) {
+    const email = document.getElementById('w_email').value.trim();
+    const fname = document.getElementById('w_fname').value.trim();
+    if (!fname || !email) { alert('First name and email are required'); return; }
+  }
+  if (from === 3) {
+    // Populate confirm grid
+    const grid = document.getElementById('confirmGrid');
+    grid.innerHTML = `
+      <div class="detail-item"><div class="di-label">Consultancy</div><div class="di-value">${document.getElementById('w_name').value||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">Reg ID</div><div class="di-value">${document.getElementById('w_regid').value||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">City / State</div><div class="di-value">${document.getElementById('w_city').value||'—'}, ${document.getElementById('w_state').value||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">Country</div><div class="di-value">${document.getElementById('w_country').value}</div></div>
+      <div class="detail-item"><div class="di-label">Admin Name</div><div class="di-value">${document.getElementById('w_fname').value} ${document.getElementById('w_lname').value}</div></div>
+      <div class="detail-item"><div class="di-label">Admin Email</div><div class="di-value">${document.getElementById('w_email').value||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">Plan</div><div class="di-value">${selectedPlan}</div></div>
+      <div class="detail-item"><div class="di-label">Phone</div><div class="di-value">${document.getElementById('w_phone').value||'—'}</div></div>
+    `;
+  }
+  wizardGo(from + 1);
+}
+
+function wizardGo(step) {
+  document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane' + step).classList.add('active');
+  for (let i = 1; i <= 4; i++) {
+    const sc = document.getElementById('sc' + i);
+    const sl = document.getElementById('sl' + i);
+    sc.className = 'step-circle' + (i < step ? ' done' : i === step ? ' active' : '');
+    sl.className = 'step-label' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (i < 4) document.getElementById('line' + i).className = 'step-line' + (i < step ? ' done' : '');
+  }
+  currentStep = step;
+}
+
+function selectPlan(plan, el) {
+  selectedPlan = plan;
+  document.querySelectorAll('[id^="plan-"]').forEach(l => l.style.borderColor = '#e2e8f0');
+  el.style.borderColor = '#f07820';
+}
+
+function resetWizard() {
+  wizardGo(1);
+  selectedPlan = 'TRIAL';
+  ['w_name','w_regid','w_addr','w_city','w_state','w_fname','w_lname','w_email','w_phone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function submitOnboarding() {
+  const payload = {
+    consultancyName: document.getElementById('w_name').value,
+    registrationID: document.getElementById('w_regid').value,
+    consultancyAddress: document.getElementById('w_addr').value,
+    consultancyCity: document.getElementById('w_city').value,
+    consultancyState: document.getElementById('w_state').value,
+    consultancyCountry: document.getElementById('w_country').value,
+    firstName: document.getElementById('w_fname').value,
+    lastName: document.getElementById('w_lname').value,
+    email: document.getElementById('w_email').value,
+    phone: document.getElementById('w_phone').value
+  };
+  alert('Would call:\nPOST /api/onboarding/register\n\n' + JSON.stringify(payload, null, 2));
+}
+
+// ── WhatsApp tabs ─────────────────────────────────────────────────────────────
+function waTab(el, paneId) {
+  el.closest('.tab-row').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  ['wa-creds','wa-templates','wa-triggers'].forEach(id => {
+    document.getElementById(id).style.display = id === paneId ? 'block' : 'none';
+  });
+}
+
+// ── Charts ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Growth chart
+  new Chart(document.getElementById('growthChart'), {
+    type: 'line',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets: [{
+        label: 'Tenants',
+        data: [22, 27, 31, 38, 43, 47],
+        borderColor: '#0d7a7a',
+        backgroundColor: 'rgba(13,122,122,.1)',
+        borderWidth: 2.5,
+        tension: .4,
+        fill: true,
+        pointBackgroundColor: '#0d7a7a',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: false, min: 15, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Plan distribution doughnut
+  new Chart(document.getElementById('planChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Trial', 'Starter', 'Pro', 'Enterprise'],
+      datasets: [{
+        data: [12, 18, 13, 4],
+        backgroundColor: ['#7c3aed','#0369a1','#059669','#1e1b4b'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      cutout: '68%'
+    }
+  });
+});
+</script>
+</body>
+</html>

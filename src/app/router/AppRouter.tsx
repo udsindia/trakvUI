@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
 import { AccountInactivePage } from "@/app/auth/AccountInactivePage";
@@ -8,6 +9,9 @@ import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { AuthGuard, ModuleGuard } from "@/app/router/guards";
 import { ROLE_LABELS, type RoleKey } from "@/config/roles/roles";
 import { FeedbackState } from "@/shared/components/FeedbackState";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
+
+const SaTeamModule = lazy(() => import("@/modules/sa-team/SaTeamModule"));
 
 type AppRouterProps = {
   defaultModulePath: string;
@@ -83,6 +87,15 @@ export function AppRouter({
           />
         </Route>
       </Route>
+
+      <Route
+        path="/sa/*"
+        element={
+          <Suspense fallback={<LoadingScreen />}>
+            <SaTeamModule />
+          </Suspense>
+        }
+      />
 
       <Route element={<Navigate replace to="/login" />} path="*" />
     </Routes>
