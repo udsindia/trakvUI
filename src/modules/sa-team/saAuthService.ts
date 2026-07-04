@@ -36,9 +36,7 @@ export const saAuthService = {
       userId: String(payload.saUserId ?? ""),
       email: String(payload.sub ?? ""),
       role: String(payload.saRole ?? ""),
-      permissions: Array.isArray(payload.saPermissions)
-        ? (payload.saPermissions as string[])
-        : [],
+      permissions: Array.isArray(payload.saPermissions) ? (payload.saPermissions as string[]) : [],
     };
     localStorage.setItem(SA_SESSION_KEY, JSON.stringify(session));
     return session;
