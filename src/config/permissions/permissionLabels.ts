@@ -19,6 +19,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
   [PERMISSIONS.TASK_UPDATE]: "Update tasks",
   [PERMISSIONS.TASK_DELETE]: "Delete tasks",
   [PERMISSIONS.ACTIVITY_LOG]: "Log activities",
+  [PERMISSIONS.UNIVERSITIES_VIEW]: "View universities and courses",
+  [PERMISSIONS.UNIVERSITIES_MANAGE]: "Manage course database",
   [PERMISSIONS.SETTINGS_TENANT]: "Manage tenant settings",
   [PERMISSIONS.TEAM_INVITE]: "Invite team members",
   [PERMISSIONS.USERS_VIEW]: "View team members",
@@ -65,6 +67,13 @@ export const PERMISSION_GROUPS: Array<{
       PERMISSIONS.TASK_UPDATE,
       PERMISSIONS.TASK_DELETE,
       PERMISSIONS.ACTIVITY_LOG,
+    ],
+  },
+  {
+    label: "Universities",
+    permissions: [
+      PERMISSIONS.UNIVERSITIES_VIEW,
+      PERMISSIONS.UNIVERSITIES_MANAGE,
     ],
   },
   {

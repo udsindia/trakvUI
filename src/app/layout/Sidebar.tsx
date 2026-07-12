@@ -113,7 +113,7 @@ function SidebarContent({
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
   const mainItems = items.filter((item) =>
-    ["dashboard", "lead", "applications"].includes(item.id),
+    ["dashboard", "lead", "applications", "universities"].includes(item.id),
   );
   const engageItems = items.filter((item) => item.id === "activities");
   const settingsItem = items.find((item) => item.id === "settings");

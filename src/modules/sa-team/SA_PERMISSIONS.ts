@@ -12,6 +12,8 @@ export const SA_PERMISSIONS = {
   USERS_MANAGE: "SA_USERS_MANAGE",
   ROLES_MANAGE: "SA_ROLES_MANAGE",
   IMPERSONATE: "SA_IMPERSONATE",
+  UNIVERSITIES_VIEW: "SA_UNIVERSITIES_VIEW",
+  UNIVERSITIES_MANAGE: "SA_UNIVERSITIES_MANAGE",
 } as const;
 
 export type SaPermissionCode = (typeof SA_PERMISSIONS)[keyof typeof SA_PERMISSIONS];
@@ -30,6 +32,8 @@ export const SA_PERMISSION_LABELS: Record<SaPermissionCode, string> = {
   SA_USERS_MANAGE: "Manage SA Users",
   SA_ROLES_MANAGE: "Manage SA Roles",
   SA_IMPERSONATE: "Impersonate Tenants",
+  SA_UNIVERSITIES_VIEW: "View Universities Catalog",
+  SA_UNIVERSITIES_MANAGE: "Manage Universities Catalog",
 };
 
 export const SA_PERMISSION_GROUPS: { label: string; permissions: SaPermissionCode[] }[] = [
@@ -55,6 +59,8 @@ export const SA_PERMISSION_GROUPS: { label: string; permissions: SaPermissionCod
       SA_PERMISSIONS.WHATSAPP_CONFIG_VIEW,
       SA_PERMISSIONS.WHATSAPP_CONFIG_EDIT,
       SA_PERMISSIONS.PLAN_MANAGE,
+      SA_PERMISSIONS.UNIVERSITIES_VIEW,
+      SA_PERMISSIONS.UNIVERSITIES_MANAGE,
     ],
   },
   {

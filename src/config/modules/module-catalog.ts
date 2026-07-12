@@ -82,6 +82,23 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.TASK_VIEW],
   },
   {
+    key: MODULE_KEYS.UNIVERSITIES,
+    title: "Courses",
+    navLabel: "Courses",
+    path: "universities",
+    icon: MODULE_ICON_KEYS.UNIVERSITIES,
+    description: "Search universities and courses, review eligibility, and build shortlists.",
+    order: 5,
+    allowedRoles: [
+      ROLES.SUPER_ADMIN,
+      ROLES.AGENCY_ADMIN,
+      ROLES.COUNSELLOR,
+      ROLES.APPLICATION_MANAGER,
+      ROLES.ANALYST,
+    ],
+    requiredPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+  },
+  {
     key: MODULE_KEYS.SETTINGS,
     title: "Settings",
     navLabel: "Settings",
@@ -102,7 +119,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
-    order: 5,
+    order: 6,
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,

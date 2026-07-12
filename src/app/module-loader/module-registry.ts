@@ -14,6 +14,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
   [MODULE_KEYS.LEAD]: () => import("@/modules/lead"),
   [MODULE_KEYS.APPLICATIONS]: () => import("@/modules/applications"),
   [MODULE_KEYS.ACTIVITIES]: () => import("@/modules/activities"),
+  [MODULE_KEYS.UNIVERSITIES]: () => import("@/modules/universities"),
   [MODULE_KEYS.SETTINGS]: () => import("@/modules/settings"),
 };
 
@@ -22,6 +23,7 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.LEAD]: lazy(moduleImporters[MODULE_KEYS.LEAD]),
   [MODULE_KEYS.APPLICATIONS]: lazy(moduleImporters[MODULE_KEYS.APPLICATIONS]),
   [MODULE_KEYS.ACTIVITIES]: lazy(moduleImporters[MODULE_KEYS.ACTIVITIES]),
+  [MODULE_KEYS.UNIVERSITIES]: lazy(moduleImporters[MODULE_KEYS.UNIVERSITIES]),
   [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
 };
 

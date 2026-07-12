@@ -3,6 +3,7 @@ export const MODULE_KEYS = {
   LEAD: "lead",
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
+  UNIVERSITIES: "universities",
   SETTINGS: "settings",
 } as const;
 
@@ -14,6 +15,7 @@ export const defaultTenantModules: TenantModuleMap = {
   [MODULE_KEYS.LEAD]: true,
   [MODULE_KEYS.APPLICATIONS]: true,
   [MODULE_KEYS.ACTIVITIES]: true,
+  [MODULE_KEYS.UNIVERSITIES]: true,
   [MODULE_KEYS.SETTINGS]: true,
 };
 

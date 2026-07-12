@@ -4,6 +4,7 @@ import SettingsRounded from "@mui/icons-material/SettingsRounded";
 import SpeedRounded from "@mui/icons-material/SpeedRounded";
 import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
+import SchoolRounded from "@mui/icons-material/SchoolRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
   ModuleIconKey,
@@ -24,6 +25,7 @@ const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   leads: <TrendingUpRounded />,
   applications: <AssignmentRounded />,
   activities: <EventNoteRounded />,
+  universities: <SchoolRounded />,
   settings: <SettingsRounded />,
 };
 

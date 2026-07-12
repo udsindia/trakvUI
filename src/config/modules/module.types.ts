@@ -7,6 +7,7 @@ export const MODULE_ICON_KEYS = {
   LEADS: "leads",
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
+  UNIVERSITIES: "universities",
   SETTINGS: "settings",
 } as const;
 

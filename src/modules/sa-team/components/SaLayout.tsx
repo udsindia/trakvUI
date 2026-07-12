@@ -4,6 +4,7 @@ import CampaignRounded from "@mui/icons-material/CampaignRounded";
 import DashboardRounded from "@mui/icons-material/DashboardRounded";
 import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import LogoutRounded from "@mui/icons-material/LogoutRounded";
+import SchoolRounded from "@mui/icons-material/SchoolRounded";
 import SecurityRounded from "@mui/icons-material/SecurityRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import {
@@ -58,6 +59,12 @@ const navSections: NavSection[] = [
     items: [
       { label: "Meta Ads Config", to: "/sa/meta-ads", Icon: CampaignRounded, permission: SA_PERMISSIONS.META_CONFIG_VIEW },
       { label: "WhatsApp Config", to: "/sa/whatsapp", Icon: WhatsAppIcon, permission: SA_PERMISSIONS.WHATSAPP_CONFIG_VIEW },
+    ],
+  },
+  {
+    heading: "Content",
+    items: [
+      { label: "Universities", to: "/sa/universities", Icon: SchoolRounded, permission: SA_PERMISSIONS.UNIVERSITIES_VIEW },
     ],
   },
   {
