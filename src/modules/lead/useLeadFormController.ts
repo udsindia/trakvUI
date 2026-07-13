@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadService } from "@/modules/lead/leadService";
@@ -64,6 +65,7 @@ export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayloa
 
 export function useLeadFormController() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const tenant = useAppSelector(selectAuthTenant);
   const form = useForm<LeadFormValues>({
     defaultValues: defaultLeadFormValues,
@@ -82,6 +84,7 @@ export function useLeadFormController() {
 
     try {
       await leadService.createLead(payload);
+      await queryClient.invalidateQueries({ queryKey: ["leads"] });
       form.reset(defaultLeadFormValues);
       navigate(leadRoutePaths.dashboard);
     } catch (error) {

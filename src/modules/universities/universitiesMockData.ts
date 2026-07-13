@@ -1,7 +1,4 @@
 import type { StudentProfile } from "@/modules/universities/universities.types";
-import {
-  universitiesCatalogService,
-} from "@/modules/universities/universitiesCatalogService";
 
 export const MOCK_STUDENT: StudentProfile = {
   id: "rohan-desai",
@@ -37,15 +34,3 @@ export const MOCK_STUDENTS: StudentProfile[] = [
     percentage: 68.5,
   },
 ];
-
-export function getUniversityById(id: string) {
-  return universitiesCatalogService.getUniversityById(id);
-}
-
-export function getCourseById(id: string) {
-  return universitiesCatalogService.getCourseById(id);
-}
-
-export function getCoursesByUniversityId(universityId: string) {
-  return universitiesCatalogService.getCoursesByUniversityId(universityId);
-}

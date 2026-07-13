@@ -1,7 +1,5 @@
 import AddRounded from "@mui/icons-material/AddRounded";
-import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import EditRounded from "@mui/icons-material/EditRounded";
-import RestartAltRounded from "@mui/icons-material/RestartAltRounded";
 import {
   Alert,
   Box,
@@ -16,7 +14,6 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { CourseFormDrawer } from "@/modules/sa-team/components/CourseFormDrawer";
@@ -24,19 +21,22 @@ import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFor
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
 import {
-  universitiesCatalogQueryKey,
-  universitiesCatalogService,
   type CourseInput,
   type UniversityInput,
 } from "@/modules/universities/universitiesCatalogService";
-import { useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import {
+  useUniversitiesCatalog,
+  useUniversity,
+  useUniversityCourses,
+  useUniversityMutations,
+} from "@/modules/universities/useUniversitiesCatalog";
 import type { Course, University } from "@/modules/universities/universities.types";
 
 const SA_TEAL = "#0d7a7a";
 
 export function SaUniversitiesPage() {
-  const queryClient = useQueryClient();
-  const { data, isLoading } = useUniversitiesCatalog();
+  const { data, isLoading, isError } = useUniversitiesCatalog();
+  const { saveUniversityMutation } = useUniversityMutations();
   const canManage = saAuthService.hasPermission(SA_PERMISSIONS.UNIVERSITIES_MANAGE);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingUniversity, setEditingUniversity] = useState<University | null>(null);
@@ -50,36 +50,15 @@ export function SaUniversitiesPage() {
     return counts;
   }, [data?.courses]);
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: universitiesCatalogQueryKey });
-  };
-
-  const handleSaveUniversity = (input: UniversityInput) => {
-    universitiesCatalogService.saveUniversity(input);
-    invalidate();
-    setDrawerOpen(false);
-    setEditingUniversity(null);
-    setSnack(input.id ? "University updated" : "University added");
-  };
-
-  const handleDeleteUniversity = (university: University) => {
-    if (!window.confirm(`Delete ${university.name} and all of its courses?`)) {
-      return;
+  const handleSaveUniversity = async (input: UniversityInput) => {
+    try {
+      await saveUniversityMutation.mutateAsync(input);
+      setDrawerOpen(false);
+      setEditingUniversity(null);
+      setSnack(input.id ? "University updated" : "University added");
+    } catch {
+      setSnack("Failed to save university");
     }
-
-    universitiesCatalogService.deleteUniversity(university.id);
-    invalidate();
-    setSnack("University deleted");
-  };
-
-  const handleResetCatalog = () => {
-    if (!window.confirm("Reset the catalog to the default seed data?")) {
-      return;
-    }
-
-    universitiesCatalogService.resetToSeed();
-    invalidate();
-    setSnack("Catalog reset to seed data");
   };
 
   return (
@@ -92,22 +71,17 @@ export function SaUniversitiesPage() {
           </Typography>
         </Box>
         {canManage ? (
-          <Stack direction="row" spacing={1}>
-            <Button color="inherit" startIcon={<RestartAltRounded />} onClick={handleResetCatalog}>
-              Reset seed
-            </Button>
-            <Button
-              startIcon={<AddRounded />}
-              sx={{ bgcolor: SA_TEAL, "&:hover": { bgcolor: "#0a6666" } }}
-              variant="contained"
-              onClick={() => {
-                setEditingUniversity(null);
-                setDrawerOpen(true);
-              }}
-            >
-              Add university
-            </Button>
-          </Stack>
+          <Button
+            startIcon={<AddRounded />}
+            sx={{ bgcolor: SA_TEAL, "&:hover": { bgcolor: "#0a6666" } }}
+            variant="contained"
+            onClick={() => {
+              setEditingUniversity(null);
+              setDrawerOpen(true);
+            }}
+          >
+            Add university
+          </Button>
         ) : null}
       </Stack>
 
@@ -144,26 +118,16 @@ export function SaUniversitiesPage() {
                     Manage
                   </Button>
                   {canManage ? (
-                    <>
-                      <Button
-                        size="small"
-                        startIcon={<EditRounded />}
-                        onClick={() => {
-                          setEditingUniversity(university);
-                          setDrawerOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        color="error"
-                        size="small"
-                        startIcon={<DeleteOutlineRounded />}
-                        onClick={() => handleDeleteUniversity(university)}
-                      >
-                        Delete
-                      </Button>
-                    </>
+                    <Button
+                      size="small"
+                      startIcon={<EditRounded />}
+                      onClick={() => {
+                        setEditingUniversity(university);
+                        setDrawerOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
                   ) : null}
                 </Stack>
               </TableCell>
@@ -176,6 +140,12 @@ export function SaUniversitiesPage() {
         <Typography color="text.secondary" sx={{ mt: 2 }}>
           Loading catalog...
         </Typography>
+      ) : null}
+
+      {isError ? (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Failed to load universities. Check your connection and try again.
+        </Alert>
       ) : null}
 
       {!isLoading && (data?.universities.length ?? 0) === 0 ? (
@@ -209,37 +179,32 @@ export function SaUniversityDetailPage({
 }: {
   universityId: string;
 }) {
-  const queryClient = useQueryClient();
-  const { data } = useUniversitiesCatalog();
+  const { data: university, isLoading: universityLoading } = useUniversity(universityId);
+  const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
+  const { saveCourseMutation } = useUniversityMutations();
   const canManage = saAuthService.hasPermission(SA_PERMISSIONS.UNIVERSITIES_MANAGE);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
-  const university = data?.universities.find((entry) => entry.id === universityId);
-  const courses = data?.courses.filter((course) => course.universityId === universityId) ?? [];
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: universitiesCatalogQueryKey });
-  };
-
-  const handleSaveCourse = (input: CourseInput) => {
-    universitiesCatalogService.saveCourse({ ...input, universityId });
-    invalidate();
-    setCourseDrawerOpen(false);
-    setEditingCourse(null);
-    setSnack(input.id ? "Course updated" : "Course added");
-  };
-
-  const handleDeleteCourse = (course: Course) => {
-    if (!window.confirm(`Delete ${course.name}?`)) {
-      return;
+  const handleSaveCourse = async (input: CourseInput) => {
+    try {
+      await saveCourseMutation.mutateAsync({ ...input, universityId });
+      setCourseDrawerOpen(false);
+      setEditingCourse(null);
+      setSnack("Course added");
+    } catch {
+      setSnack("Failed to save course");
     }
-
-    universitiesCatalogService.deleteCourse(course.id);
-    invalidate();
-    setSnack("Course deleted");
   };
+
+  if (universityLoading || coursesLoading) {
+    return (
+      <Typography color="text.secondary" sx={{ mt: 2 }}>
+        Loading university...
+      </Typography>
+    );
+  }
 
   if (!university) {
     return <Alert severity="warning">University not found.</Alert>;
@@ -294,30 +259,7 @@ export function SaUniversityDetailPage({
               <TableCell>{course.ieltsLabel}</TableCell>
               <TableCell>{course.deadline}</TableCell>
               <TableCell>
-                {canManage ? (
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      size="small"
-                      startIcon={<EditRounded />}
-                      onClick={() => {
-                        setEditingCourse(course);
-                        setCourseDrawerOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      color="error"
-                      size="small"
-                      startIcon={<DeleteOutlineRounded />}
-                      onClick={() => handleDeleteCourse(course)}
-                    >
-                      Delete
-                    </Button>
-                  </Stack>
-                ) : (
-                  "—"
-                )}
+                —
               </TableCell>
             </TableRow>
           ))}

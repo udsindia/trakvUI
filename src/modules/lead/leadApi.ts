@@ -2,6 +2,12 @@ import { httpClient } from "@/shared/services/http/client";
 import { API_CONFIG } from "@/config/api/config";
 import type { CreateLeadPayload } from "@/modules/lead/leadForm.types";
 
+export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
+  leadStage?: string;
+  assignedToId?: string;
+  assignedToName?: string;
+};
+
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
@@ -46,12 +52,23 @@ export const leadApi = {
     return response.data;
   },
 
-  updateLead: async (id: string, payload: Partial<CreateLeadPayload>): Promise<BackendLead> => {
-    const response = await httpClient.put<BackendLead>(`${API_CONFIG.leads}/${id}`, payload);
+  updateLead: async (id: string, payload: UpdateLeadPayload): Promise<BackendLead> => {
+    const response = await httpClient.patch<BackendLead>(`${API_CONFIG.leads}/${id}`, payload);
     return response.data;
   },
 
   deleteLead: async (id: string): Promise<void> => {
     await httpClient.delete(`${API_CONFIG.leads}/${id}`);
+  },
+
+  bulkUpdateLeads: async (
+    leadIds: string[],
+    updates: UpdateLeadPayload,
+  ): Promise<BackendLead[]> => {
+    const response = await httpClient.post<BackendLead[]>(`${API_CONFIG.leads}/bulk`, {
+      leadIds,
+      updates,
+    });
+    return response.data;
   },
 };

@@ -19,7 +19,7 @@ import { RequirementRow } from "@/modules/universities/components/RequirementRow
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { MOCK_STUDENT } from "@/modules/universities/universitiesMockData";
 import { universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
-import { useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import { useUniversity, useUniversityCourses } from "@/modules/universities/useUniversitiesCatalog";
 import {
   getEligibilityChipSx,
   sectionCardHeaderSx,
@@ -33,12 +33,11 @@ import { LoadingScreen } from "@/shared/components/LoadingScreen";
 export function CourseDetailsPage() {
   const { universityId, courseId } = useParams<{ universityId: string; courseId: string }>();
   const navigate = useNavigate();
-  const { data: catalog, isLoading } = useUniversitiesCatalog();
+  const { data: university, isLoading: universityLoading } = useUniversity(universityId);
+  const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
+  const course = courses.find((entry) => entry.id === courseId);
 
-  const university = catalog?.universities.find((entry) => entry.id === universityId);
-  const course = catalog?.courses.find((entry) => entry.id === courseId);
-
-  if (isLoading) {
+  if (universityLoading || coursesLoading) {
     return <LoadingScreen />;
   }
 

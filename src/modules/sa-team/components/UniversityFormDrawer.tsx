@@ -25,6 +25,7 @@ const emptyUniversity = (): UniversityInput => ({
   founded: new Date().getFullYear(),
   website: "",
   qsRank: undefined,
+  universityType: "PUBLIC",
   about: "",
   internalNotes: "",
   links: [],
@@ -113,11 +114,22 @@ export function UniversityFormDrawer({
         <Stack direction="row" spacing={1.5}>
           <TextField
             fullWidth
-            label="Short name"
+            label="University type"
+            select
+            SelectProps={{ native: true }}
             size="small"
-            value={form.shortName}
-            onChange={(event) => setForm((current) => ({ ...current, shortName: event.target.value }))}
-          />
+            value={form.universityType ?? "PUBLIC"}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                universityType: event.target.value as UniversityInput["universityType"],
+              }))
+            }
+          >
+            <option value="PUBLIC">Public</option>
+            <option value="PRIVATE">Private</option>
+            <option value="RESEARCH_INTENSIVE">Research intensive</option>
+          </TextField>
           <TextField
             label="QS rank"
             size="small"

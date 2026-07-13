@@ -3,14 +3,22 @@ import MoreVertRounded from "@mui/icons-material/MoreVertRounded";
 import {
   Avatar,
   Box,
+  Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControl,
   IconButton,
+  InputLabel,
   Menu,
   MenuItem,
   Pagination,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -26,6 +34,8 @@ import {
 } from "@/shared/components/BulkActionsBar";
 
 export type LeadRow = {
+  country: string;
+  createdAt: string;
   email: string;
   id: string;
   lastActivity: string;
@@ -38,8 +48,15 @@ export type LeadRow = {
   stage: string;
 };
 
+export const LEAD_STAGES = ["New", "Contacted", "Qualified", "Proposal"] as const;
+export type LeadStage = (typeof LEAD_STAGES)[number];
+
 type LeadTableContainerProps = {
   leads: LeadRow[];
+  onBulkDelete: (ids: string[]) => Promise<void>;
+  onDeleteLead: (id: string) => Promise<void>;
+  onUpdateStage: (id: string, stage: string) => Promise<void>;
+  onPageChange: (page: number) => void;
   page: number;
   pageCount: number;
   paginationLabel: string;
@@ -64,69 +81,6 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
   },
 };
 
-const bulkActions: BulkAction[] = [
-  {
-    key: "assign-agent",
-    label: "Assign Agent",
-    sx: {
-      "&.Mui-disabled": {
-        bgcolor: "#eef6fc",
-        color: "#9ab4c8",
-      },
-      "&:not(.Mui-disabled)": {
-        bgcolor: "#2f87b7",
-        color: "common.white",
-      },
-    },
-    variant: "contained",
-  },
-  {
-    key: "change-stage",
-    label: "Change Stage",
-    sx: {
-      "&.Mui-disabled": {
-        bgcolor: "#edf5fa",
-        color: "#9fb5c6",
-      },
-      "&:not(.Mui-disabled)": {
-        bgcolor: "#5f9fc6",
-        color: "common.white",
-      },
-    },
-    variant: "contained",
-  },
-  {
-    key: "delete",
-    label: "Delete",
-    sx: {
-      "&.Mui-disabled": {
-        bgcolor: "#fdecef",
-        color: "#d6a2ac",
-      },
-      "&:not(.Mui-disabled)": {
-        bgcolor: "#ef6b7b",
-        color: "common.white",
-      },
-    },
-    variant: "contained",
-  },
-];
-
-const rowActionItems = [
-  {
-    key: "assign-agent",
-    label: "Assign to another agent",
-  },
-  {
-    key: "update-stage",
-    label: "Update Stage",
-  },
-  {
-    key: "delete",
-    label: "Delete",
-  },
-];
-
 function getOwnerInitials(owner: string) {
   return owner
     .split(" ")
@@ -144,33 +98,22 @@ const avatarPalette = [
 ];
 
 function getAvatarTone(seed: string) {
-  const index = seed.split("").reduce((accumulator, character) => accumulator + character.charCodeAt(0), 0);
+  const index = seed.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return avatarPalette[index % avatarPalette.length];
 }
 
 function getScoreTone(score: number) {
-  if (score >= 80) {
-    return {
-      backgroundColor: "#daf5e3",
-      color: "#3ea96c",
-    };
-  }
-
-  if (score >= 70) {
-    return {
-      backgroundColor: "#feedd5",
-      color: "#d98c1f",
-    };
-  }
-
-  return {
-    backgroundColor: "#fff2d8",
-    color: "#b98b28",
-  };
+  if (score >= 80) return { backgroundColor: "#daf5e3", color: "#3ea96c" };
+  if (score >= 70) return { backgroundColor: "#feedd5", color: "#d98c1f" };
+  return { backgroundColor: "#fff2d8", color: "#b98b28" };
 }
 
 export function LeadTableContainer({
   leads,
+  onBulkDelete,
+  onDeleteLead,
+  onUpdateStage,
+  onPageChange,
   page,
   pageCount,
   paginationLabel,
@@ -178,72 +121,134 @@ export function LeadTableContainer({
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
+  const [stageDialogOpen, setStageDialogOpen] = useState(false);
+  const [stageDialogLeadId, setStageDialogLeadId] = useState<string | null>(null);
+  const [stageDialogValue, setStageDialogValue] = useState<string>("New");
+  const [bulkStageDialogOpen, setBulkStageDialogOpen] = useState(false);
+  const [bulkStageValue, setBulkStageValue] = useState<string>("New");
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    setSelectedLeadIds((currentSelection) =>
-      currentSelection.filter((leadId) => leads.some((lead) => lead.id === leadId)),
+    setSelectedLeadIds((current) =>
+      current.filter((id) => leads.some((lead) => lead.id === id)),
     );
   }, [leads]);
 
   const allVisibleRowsSelected = leads.length > 0 && selectedLeadIds.length === leads.length;
-  const hasPartialSelection =
-    selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
-  const bulkActionsEnabled = allVisibleRowsSelected;
+  const hasPartialSelection = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
+  const hasSelection = selectedLeadIds.length > 0;
 
-  const resolvedBulkActions = bulkActions.map((action) => ({
-    ...action,
-    disabled: Boolean(action.disabled) || !bulkActionsEnabled,
-  }));
-
-  const handleClearSelection = () => {
-    setSelectedLeadIds([]);
-  };
-
-  const handleToggleAllRows = (checked: boolean) => {
-    setSelectedLeadIds(checked ? leads.map((lead) => lead.id) : []);
-  };
-
-  const handleToggleRow = (leadId: string) => {
-    setSelectedLeadIds((currentSelection) =>
-      currentSelection.includes(leadId)
-        ? currentSelection.filter((selectedLeadId) => selectedLeadId !== leadId)
-        : [...currentSelection, leadId],
+  const handleClearSelection = () => setSelectedLeadIds([]);
+  const handleToggleAllRows = (checked: boolean) =>
+    setSelectedLeadIds(checked ? leads.map((l) => l.id) : []);
+  const handleToggleRow = (leadId: string) =>
+    setSelectedLeadIds((current) =>
+      current.includes(leadId)
+        ? current.filter((id) => id !== leadId)
+        : [...current, leadId],
     );
-  };
 
-  const handleOpenRowMenu = (
-    event: MouseEvent<HTMLElement>,
-    leadId: string,
-  ) => {
+  const handleOpenRowMenu = (event: MouseEvent<HTMLElement>, leadId: string) => {
     setActiveLeadId(leadId);
     setMenuAnchorEl(event.currentTarget);
   };
-
   const handleCloseRowMenu = () => {
     setActiveLeadId(null);
     setMenuAnchorEl(null);
   };
 
+  const handleRowDelete = async () => {
+    if (!activeLeadId) return;
+    const lead = leads.find((l) => l.id === activeLeadId);
+    if (!window.confirm(`Delete lead "${lead?.name ?? activeLeadId}"? This cannot be undone.`)) return;
+    handleCloseRowMenu();
+    setActionLoading(true);
+    try {
+      await onDeleteLead(activeLeadId);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRowUpdateStage = () => {
+    if (!activeLeadId) return;
+    const lead = leads.find((l) => l.id === activeLeadId);
+    setStageDialogLeadId(activeLeadId);
+    setStageDialogValue(lead?.stage ?? "New");
+    handleCloseRowMenu();
+    setStageDialogOpen(true);
+  };
+
+  const handleStageDialogConfirm = async () => {
+    if (!stageDialogLeadId) return;
+    setActionLoading(true);
+    try {
+      await onUpdateStage(stageDialogLeadId, stageDialogValue);
+    } finally {
+      setActionLoading(false);
+      setStageDialogOpen(false);
+      setStageDialogLeadId(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedLeadIds.length} selected lead(s)? This cannot be undone.`)) return;
+    setActionLoading(true);
+    try {
+      await onBulkDelete(selectedLeadIds);
+      setSelectedLeadIds([]);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkStageDialogConfirm = async () => {
+    setActionLoading(true);
+    try {
+      await Promise.all(selectedLeadIds.map((id) => onUpdateStage(id, bulkStageValue)));
+      setSelectedLeadIds([]);
+    } finally {
+      setActionLoading(false);
+      setBulkStageDialogOpen(false);
+    }
+  };
+
+  const bulkActions: BulkAction[] = [
+    {
+      key: "change-stage",
+      label: "Change Stage",
+      disabled: !hasSelection || actionLoading,
+      variant: "contained",
+      sx: {
+        "&.Mui-disabled": { bgcolor: "#edf5fa", color: "#9fb5c6" },
+        "&:not(.Mui-disabled)": { bgcolor: "#5f9fc6", color: "common.white" },
+      },
+      onClick: () => {
+        setBulkStageValue("Contacted");
+        setBulkStageDialogOpen(true);
+      },
+    },
+    {
+      key: "delete",
+      label: "Delete",
+      disabled: !hasSelection || actionLoading,
+      variant: "contained",
+      sx: {
+        "&.Mui-disabled": { bgcolor: "#fdecef", color: "#d6a2ac" },
+        "&:not(.Mui-disabled)": { bgcolor: "#ef6b7b", color: "common.white" },
+      },
+      onClick: handleBulkDelete,
+    },
+  ];
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flex: 1,
-        flexDirection: "column",
-        gap: 2,
-        minHeight: 0,
-      }}
-    >
+    <Box sx={{ display: "flex", flex: 1, flexDirection: "column", gap: 2, minHeight: 0 }}>
       <Paper
         elevation={0}
-        sx={{
-          border: "1px solid",
-          borderColor: "#edf2f7",
-          borderRadius: 1,
-        }}
+        sx={{ border: "1px solid", borderColor: "#edf2f7", borderRadius: 1 }}
       >
         <BulkActionsBar
-          actions={resolvedBulkActions}
+          actions={bulkActions}
           allSelected={allVisibleRowsSelected}
           indeterminate={hasPartialSelection}
           itemLabel="lead"
@@ -310,11 +315,7 @@ export function LeadTableContainer({
                     hover
                     key={lead.id}
                     selected={selectedLeadIds.includes(lead.id)}
-                    sx={{
-                      "&.Mui-selected": {
-                        bgcolor: "#f9fcff",
-                      },
-                    }}
+                    sx={{ "&.Mui-selected": { bgcolor: "#f9fcff" } }}
                   >
                     <TableCell padding="checkbox">
                       <Checkbox
@@ -322,9 +323,7 @@ export function LeadTableContainer({
                         size="small"
                         sx={{
                           color: "#c8d5e1",
-                          "&.Mui-checked": {
-                            color: "#2f87b7",
-                          },
+                          "&.Mui-checked": { color: "#2f87b7" },
                         }}
                         onChange={() => handleToggleRow(lead.id)}
                       />
@@ -365,7 +364,7 @@ export function LeadTableContainer({
                         label={lead.stage}
                         size="small"
                         sx={{
-                          ...stageStyles[lead.stage],
+                          ...(stageStyles[lead.stage] ?? {}),
                           borderRadius: 999,
                           fontSize: 12,
                           fontWeight: 600,
@@ -440,6 +439,16 @@ export function LeadTableContainer({
                   </TableRow>
                 );
               })}
+
+              {leads.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} sx={{ py: 6, textAlign: "center" }}>
+                    <Typography color="text.secondary" variant="body2">
+                      No leads found.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </TableContainer>
@@ -449,11 +458,7 @@ export function LeadTableContainer({
         <Stack
           direction={{ xs: "column", md: "row" }}
           spacing={2}
-          sx={{
-            alignItems: { md: "center" },
-            justifyContent: "space-between",
-            p: 2.25,
-          }}
+          sx={{ alignItems: { md: "center" }, justifyContent: "space-between", p: 2.25 }}
         >
           <Typography color="text.secondary" sx={{ fontSize: 12 }} variant="body2">
             {paginationLabel}
@@ -476,23 +481,78 @@ export function LeadTableContainer({
                   color: "common.white",
                 },
               }}
+              onChange={(_, value) => onPageChange(value)}
             />
           </Box>
         </Stack>
       </Paper>
 
+      {/* Row action menu */}
       <Menu
         anchorEl={menuAnchorEl}
         id="lead-row-actions-menu"
         open={Boolean(menuAnchorEl)}
         onClose={handleCloseRowMenu}
       >
-        {rowActionItems.map((action) => (
-          <MenuItem key={action.key} onClick={handleCloseRowMenu}>
-            {action.label}
-          </MenuItem>
-        ))}
+        <MenuItem onClick={handleRowUpdateStage}>Update Stage</MenuItem>
+        <MenuItem sx={{ color: "error.main" }} onClick={handleRowDelete}>
+          Delete
+        </MenuItem>
       </Menu>
+
+      {/* Per-row stage update dialog */}
+      <Dialog open={stageDialogOpen} onClose={() => setStageDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Update Lead Stage</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Stage</InputLabel>
+            <Select
+              label="Stage"
+              value={stageDialogValue}
+              onChange={(e) => setStageDialogValue(e.target.value)}
+            >
+              {LEAD_STAGES.map((stage) => (
+                <MenuItem key={stage} value={stage}>
+                  {stage}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStageDialogOpen(false)}>Cancel</Button>
+          <Button disabled={actionLoading} variant="contained" onClick={handleStageDialogConfirm}>
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bulk stage change dialog */}
+      <Dialog open={bulkStageDialogOpen} onClose={() => setBulkStageDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Change Stage for {selectedLeadIds.length} Lead(s)</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>New Stage</InputLabel>
+            <Select
+              label="New Stage"
+              value={bulkStageValue}
+              onChange={(e) => setBulkStageValue(e.target.value)}
+            >
+              {LEAD_STAGES.map((stage) => (
+                <MenuItem key={stage} value={stage}>
+                  {stage}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkStageDialogOpen(false)}>Cancel</Button>
+          <Button disabled={actionLoading} variant="contained" onClick={handleBulkStageDialogConfirm}>
+            Apply
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

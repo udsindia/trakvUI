@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Box, Stack, Typography } from "@mui/material";
 import type { DashboardLeadPipelineDto } from "@/modules/dashboard/dashboard.types";
@@ -6,218 +5,50 @@ import { PanelCard, PanelLink } from "@/modules/dashboard/components/PanelCard";
 import { PipelineBars } from "@/modules/dashboard/components/PipelineBars";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 
-type DemoLead = {
-  assigned: string;
-  email: string;
-  lastContact: string;
-  name: string;
-  source: string;
-  sourceTone: "meta" | "referral" | "walkin";
-  stage: string;
-  stageTone: "new" | "contacted" | "qualified";
-  unattended?: boolean;
-  unassigned?: boolean;
-};
-
-const DEMO_LEADS: DemoLead[] = [
-  {
-    name: "Priya Sharma",
-    email: "priya@gmail.com",
-    source: "Meta Ads",
-    sourceTone: "meta",
-    stage: "Qualified",
-    stageTone: "qualified",
-    assigned: "AS",
-    lastContact: "Today 9:14am",
-  },
-  {
-    name: "Rohan Mehta",
-    email: "rohan@gmail.com",
-    source: "Referral",
-    sourceTone: "referral",
-    stage: "New",
-    stageTone: "new",
-    assigned: "—",
-    lastContact: "4 days ago",
-    unattended: true,
-  },
-  {
-    name: "Ananya Patel",
-    email: "ananya@yahoo.com",
-    source: "Meta Ads",
-    sourceTone: "meta",
-    stage: "Contacted",
-    stageTone: "contacted",
-    assigned: "RK",
-    lastContact: "Yesterday",
-  },
-  {
-    name: "Karan Singh",
-    email: "karan@hotmail.com",
-    source: "Walk-in",
-    sourceTone: "walkin",
-    stage: "New",
-    stageTone: "new",
-    assigned: "!",
-    lastContact: "3 days — unassigned",
-    unattended: true,
-    unassigned: true,
-  },
-  {
-    name: "Divya Nair",
-    email: "divya@gmail.com",
-    source: "Referral",
-    sourceTone: "referral",
-    stage: "Qualified",
-    stageTone: "qualified",
-    assigned: "AS",
-    lastContact: "18 Jun",
-  },
-  {
-    name: "Amit Verma",
-    email: "amit@gmail.com",
-    source: "Meta Ads",
-    sourceTone: "meta",
-    stage: "New",
-    stageTone: "new",
-    assigned: "—",
-    lastContact: "5 days ago",
-    unattended: true,
-  },
-];
-
-const SOURCE_STYLES = {
-  meta: { bgcolor: "#EEF2FF", color: "#4338CA" },
-  referral: { bgcolor: "#F0FDF4", color: "#166634" },
-  walkin: { bgcolor: "#FFF7ED", color: "#C2410C" },
-};
-
-const STAGE_STYLES = {
-  new: { bgcolor: "#E0F2FE", color: "#075985" },
-  contacted: { bgcolor: "#F0F9FA", color: "#005F6B" },
-  qualified: { bgcolor: "#DCFCE7", color: "#166534" },
-};
-
-type FilterKey = "all" | "unattended" | "unassigned" | "followup";
-
 type DashboardLeadsSectionProps = {
   leadsScope: string;
   pipeline?: DashboardLeadPipelineDto;
   showUnassigned: boolean;
 };
 
-function LeadFilterChips({
-  activeFilter,
-  onFilterChange,
-  showUnassigned,
-}: {
-  activeFilter: FilterKey;
-  onFilterChange: (filter: FilterKey) => void;
-  showUnassigned: boolean;
-}) {
-  const chips: { filter: FilterKey; label: string; tone?: "warn" | "danger" }[] = [
-    { filter: "all", label: "All (284)" },
-    { filter: "unattended", label: "⚠ Unattended (6)", tone: "warn" },
-    ...(showUnassigned ? [{ filter: "unassigned" as const, label: "Unassigned (4)", tone: "danger" as const }] : []),
-    { filter: "followup", label: "Follow-up Due (12)" },
-  ];
+const STAGE_PILL_COLORS = [
+  { bg: "#EFF6FF", text: "#1D4ED8" },
+  { bg: "#F0FDF4", text: "#15803D" },
+  { bg: "#FDF4FF", text: "#86198F" },
+  { bg: "#FFF7ED", text: "#C2410C" },
+  { bg: "#F1F5F9", text: "#475569" },
+];
 
+function EmptyState({ message }: { message: string }) {
   return (
-    <Stack direction="row" spacing={0.625} sx={{ flexShrink: 0, flexWrap: "wrap", mb: 0.875 }}>
-      {chips.map((chip) => {
-        const active = activeFilter === chip.filter;
-
-        return (
-          <Typography
-            component="button"
-            key={chip.filter}
-            sx={{
-              background:
-                active && chip.tone === "warn"
-                  ? "warning.main"
-                  : active && chip.tone === "danger"
-                    ? "error.main"
-                    : active
-                      ? "primary.main"
-                      : chip.tone === "warn"
-                        ? "#FFFBEB"
-                        : chip.tone === "danger"
-                          ? "#FEF2F2"
-                          : "#fff",
-              border: "1.5px solid",
-              borderColor:
-                active || !chip.tone
-                  ? active
-                    ? chip.tone === "warn"
-                      ? "warning.main"
-                      : chip.tone === "danger"
-                        ? "error.main"
-                        : "primary.main"
-                    : "divider"
-                  : chip.tone === "warn"
-                    ? "warning.main"
-                    : "error.main",
-              borderRadius: 10,
-              color:
-                active
-                  ? "#fff"
-                  : chip.tone === "warn"
-                    ? "#92400E"
-                    : chip.tone === "danger"
-                      ? "#991B1B"
-                      : "text.secondary",
-              cursor: "pointer",
-              fontSize: 10,
-              fontWeight: 700,
-              px: 1.25,
-              py: 0.375,
-              whiteSpace: "nowrap",
-              "&:hover": {
-                borderColor: "primary.main",
-                color: active ? "#fff" : "primary.main",
-              },
-            }}
-            onClick={() => onFilterChange(chip.filter)}
-          >
-            {chip.label}
-          </Typography>
-        );
-      })}
-    </Stack>
+    <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center", py: 3 }}>
+      <Typography sx={{ color: "text.disabled", fontSize: 12 }}>{message}</Typography>
+    </Box>
   );
 }
 
-export function DashboardLeadsSection({
-  leadsScope,
-  pipeline,
-  showUnassigned,
-}: DashboardLeadsSectionProps) {
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
-
-  const filteredLeads = DEMO_LEADS.filter((lead) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "unattended") return lead.unattended;
-    if (activeFilter === "unassigned") return lead.unassigned;
-    if (activeFilter === "followup") return lead.unattended;
-    return true;
-  });
-
-  const defaultStages = [
-    { label: "New", count: 420, color: "#007A87" },
-    { label: "Contacted", count: 336, color: "#1393A0" },
-    { label: "Qualified", count: 243, color: "#10B981" },
-    { label: "Applied", count: 159, color: "#F5820D" },
-    { label: "Enrolled", count: 92, color: "#8B5CF6" },
-  ];
+export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSectionProps) {
+  const stages = pipeline?.stages ?? [];
+  const total = pipeline?.total ?? 0;
 
   return (
     <Stack direction={{ xs: "column", lg: "row" }} spacing={1.25} sx={{ height: "100%", minHeight: 0 }}>
       <Stack spacing={1} sx={{ flex: 6, minHeight: 0, minWidth: 0 }}>
         <PanelCard
-          action={<PanelLink>Full view →</PanelLink>}
+          action={
+            <PanelLink>
+              <RouterLink style={{ color: "inherit", textDecoration: "none" }} to={leadRoutePaths.dashboard}>
+                Full view →
+              </RouterLink>
+            </PanelLink>
+          }
           title="Lead Pipeline"
         >
-          <PipelineBars stages={pipeline?.stages ?? defaultStages} />
+          {stages.length > 0 ? (
+            <PipelineBars stages={stages} />
+          ) : (
+            <EmptyState message="No data available" />
+          )}
         </PanelCard>
 
         <PanelCard
@@ -231,136 +62,102 @@ export function DashboardLeadsSection({
           grow
           title={leadsScope}
         >
-          <LeadFilterChips
-            activeFilter={activeFilter}
-            showUnassigned={showUnassigned}
-            onFilterChange={setActiveFilter}
-          />
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-            <Box component="table" sx={{ borderCollapse: "collapse", width: "100%" }}>
-              <Box component="thead">
-                <Box component="tr" sx={{ bgcolor: "#FAFBFC", position: "sticky", top: 0, zIndex: 1 }}>
-                  {["Lead", "Source", "Stage", "Assigned", "Last Contact"].map((header) => (
-                    <Box
-                      component="th"
-                      key={header}
-                      sx={{
-                        borderBottom: "1px solid",
-                        borderColor: "divider",
-                        color: "text.disabled",
-                        fontSize: 8,
-                        fontWeight: 700,
-                        letterSpacing: 0.6,
-                        px: 1.125,
-                        py: 0.625,
-                        textAlign: "left",
-                        textTransform: "uppercase",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {header}
-                    </Box>
-                  ))}
-                </Box>
+          {stages.length > 0 ? (
+            <Stack sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+              <Box
+                sx={{
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  pb: 0.75,
+                  px: 0.5,
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "text.disabled",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: 0.6,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Stage
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "text.disabled",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: 0.6,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Leads
+                </Typography>
               </Box>
-              <Box component="tbody">
-                {filteredLeads.map((lead) => (
+
+              {stages.map((stage, index) => {
+                const pill = STAGE_PILL_COLORS[index % STAGE_PILL_COLORS.length];
+
+                return (
                   <Box
-                    component="tr"
-                    key={lead.email}
+                    key={stage.label}
                     sx={{
-                      bgcolor: lead.unattended ? "#FFFBEB" : "transparent",
-                      "&:hover td": { bgcolor: lead.unattended ? "#FEF3C7" : "#FAFBFF" },
+                      alignItems: "center",
+                      borderBottom: "1px solid #F8FAFC",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      px: 0.5,
+                      py: 0.875,
+                      "&:hover": { bgcolor: "#FAFBFF" },
                     }}
                   >
-                    <Box component="td" sx={{ borderBottom: "1px solid #F8FAFC", px: 1.125, py: 0.75 }}>
-                      <Typography sx={{ fontSize: 11, fontWeight: 700 }}>{lead.name}</Typography>
-                      <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{lead.email}</Typography>
-                    </Box>
-                    <Box component="td" sx={{ borderBottom: "1px solid #F8FAFC", px: 1.125, py: 0.75 }}>
-                      <Box
-                        component="span"
-                        sx={{
-                          ...SOURCE_STYLES[lead.sourceTone],
-                          borderRadius: 0.5,
-                          fontSize: 8,
-                          fontWeight: 700,
-                          px: 0.625,
-                          py: 0.25,
-                        }}
-                      >
-                        {lead.source}
-                      </Box>
-                    </Box>
-                    <Box component="td" sx={{ borderBottom: "1px solid #F8FAFC", px: 1.125, py: 0.75 }}>
-                      <Box
-                        component="span"
-                        sx={{
-                          ...STAGE_STYLES[lead.stageTone],
-                          borderRadius: 10,
-                          display: "inline-flex",
-                          fontSize: 9,
-                          fontWeight: 700,
-                          px: 0.75,
-                          py: 0.25,
-                        }}
-                      >
-                        {lead.stage}
-                      </Box>
-                    </Box>
-                    <Box component="td" sx={{ borderBottom: "1px solid #F8FAFC", px: 1.125, py: 0.75 }}>
-                      <Box
-                        sx={{
-                          alignItems: "center",
-                          background:
-                            lead.assigned === "!"
-                              ? "#FEE2E2"
-                              : lead.assigned === "—"
-                                ? "divider"
-                                : "linear-gradient(135deg, #007A87, #15A6B8)",
-                          borderRadius: "50%",
-                          color: lead.assigned === "!" ? "#991B1B" : lead.assigned === "—" ? "text.disabled" : "#fff",
-                          display: "inline-flex",
-                          fontSize: 8,
-                          fontWeight: 700,
-                          height: 22,
-                          justifyContent: "center",
-                          width: 22,
-                        }}
-                      >
-                        {lead.assigned}
-                      </Box>
-                    </Box>
-                    <Box component="td" sx={{ borderBottom: "1px solid #F8FAFC", px: 1.125, py: 0.75 }}>
-                      {lead.unattended ? (
-                        <Box
-                          component="span"
-                          sx={{
-                            bgcolor: lead.unassigned ? "#FEE2E2" : "#FDE68A",
-                            borderRadius: 0.5,
-                            color: lead.unassigned ? "#991B1B" : "#92400E",
-                            fontSize: 8,
-                            fontWeight: 700,
-                            px: 0.625,
-                            py: 0.125,
-                          }}
-                        >
-                          {lead.lastContact}
-                        </Box>
-                      ) : (
-                        <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{lead.lastContact}</Typography>
-                      )}
+                    <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{stage.label}</Typography>
+                    <Box
+                      sx={{
+                        bgcolor: pill.bg,
+                        borderRadius: 10,
+                        color: pill.text,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        minWidth: 28,
+                        px: 1,
+                        py: 0.375,
+                        textAlign: "center",
+                      }}
+                    >
+                      {stage.count}
                     </Box>
                   </Box>
-                ))}
+                );
+              })}
+
+              <Box
+                sx={{
+                  alignItems: "center",
+                  borderTop: "1.5px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mt: 0.5,
+                  px: 0.5,
+                  pt: 0.875,
+                }}
+              >
+                <Typography sx={{ fontSize: 11, fontWeight: 700 }}>Total</Typography>
+                <Typography sx={{ color: "primary.main", fontSize: 12, fontWeight: 800 }}>{total}</Typography>
               </Box>
-            </Box>
-          </Box>
+            </Stack>
+          ) : (
+            <EmptyState message="No lead data available" />
+          )}
         </PanelCard>
       </Stack>
 
       <Stack spacing={1} sx={{ flex: 4, minHeight: 0, minWidth: 0 }}>
-        <PanelCard grow title="Lead Source">
+        <PanelCard grow title="Lead Source (Mock)">
           <Box
             sx={{
               alignItems: "center",
@@ -405,7 +202,7 @@ export function DashboardLeadsSection({
           </Stack>
         </PanelCard>
 
-        <PanelCard title="Conversion Snapshot">
+        <PanelCard title="Conversion Snapshot (Mock)">
           <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>
             {[
               { value: "22%", label: "Lead→Enrol", color: "primary.main" },

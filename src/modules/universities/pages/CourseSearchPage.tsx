@@ -92,7 +92,7 @@ function toSearchFilters(
 
 export function CourseSearchPage() {
   const navigate = useNavigate();
-  const { data: catalog, isLoading } = useUniversitiesCatalog();
+  const { data: catalog, isLoading, isError } = useUniversitiesCatalog();
   const universities = catalog?.universities ?? [];
   const courses = catalog?.courses ?? [];
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(MOCK_STUDENT);
@@ -253,6 +253,10 @@ export function CourseSearchPage() {
             {isLoading ? (
               <Typography color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
                 Loading courses...
+              </Typography>
+            ) : isError ? (
+              <Typography color="error" sx={{ py: 4, textAlign: "center" }}>
+                Failed to load courses. Please try again.
               </Typography>
             ) : (
               <>

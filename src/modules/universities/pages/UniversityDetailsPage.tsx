@@ -22,7 +22,7 @@ import { RequirementRow } from "@/modules/universities/components/RequirementRow
 import { UniversityHero } from "@/modules/universities/components/UniversityHero";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { courseDetailsPath, universitiesRoutePaths } from "@/modules/universities/universitiesRoutePaths";
-import { useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import { useUniversity, useUniversityCourses } from "@/modules/universities/useUniversitiesCatalog";
 import {
   getEligibilityChipSx,
   sectionCardHeaderSx,
@@ -43,12 +43,10 @@ function getEligibilityBadge(status: EligibilityStatus, warning?: string) {
 export function UniversityDetailsPage() {
   const { universityId } = useParams<{ universityId: string }>();
   const navigate = useNavigate();
-  const { data: catalog, isLoading } = useUniversitiesCatalog();
+  const { data: university, isLoading: universityLoading } = useUniversity(universityId);
+  const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
 
-  const university = catalog?.universities.find((entry) => entry.id === universityId);
-  const courses = catalog?.courses.filter((course) => course.universityId === universityId) ?? [];
-
-  if (isLoading) {
+  if (universityLoading || coursesLoading) {
     return <LoadingScreen />;
   }
 

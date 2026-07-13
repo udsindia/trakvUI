@@ -1,66 +1,25 @@
+import { universitiesApi } from "@/modules/universities/universitiesApi";
+import {
+  defaultUniversityType,
+  lakhsToTuitionAmount,
+  mapCourseToUi,
+  mapUniversityDetailToUi,
+  mapUniversitySummaryToUi,
+  parseDurationMonths,
+  toAlpha3CountryCode,
+  toApiStudyLevel,
+} from "@/modules/universities/universitiesMappers";
 import type { Course, University } from "@/modules/universities/universities.types";
-import { SEED_COURSES, SEED_UNIVERSITIES } from "@/modules/universities/universitiesSeedData";
-
-const STORAGE_KEY = "vutrak.universities.catalog";
 
 export type UniversitiesCatalog = {
   courses: Course[];
   universities: University[];
 };
 
-function readStoredCatalog(): UniversitiesCatalog | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as UniversitiesCatalog;
-    if (!Array.isArray(parsed.universities) || !Array.isArray(parsed.courses)) {
-      return null;
-    }
-
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function writeCatalog(catalog: UniversitiesCatalog) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(catalog));
-}
-
-function createSeedCatalog(): UniversitiesCatalog {
-  return {
-    universities: structuredClone(SEED_UNIVERSITIES),
-    courses: structuredClone(SEED_COURSES),
-  };
-}
-
-function loadCatalog(): UniversitiesCatalog {
-  return readStoredCatalog() ?? createSeedCatalog();
-}
-
-function createId(prefix: string, name: string) {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return `${prefix}-${slug || Date.now()}`;
-}
-
 export type UniversityInput = Omit<University, "id" | "generalRequirements"> & {
   id?: string;
   generalRequirements?: University["generalRequirements"];
+  universityType?: "PUBLIC" | "PRIVATE" | "RESEARCH_INTENSIVE";
 };
 
 export type CourseInput = Omit<
@@ -68,125 +27,111 @@ export type CourseInput = Omit<
   "id" | "eligibilityStatus" | "eligibilityPercent" | "eligibilityWarning" | "eligibilityHint"
 > & {
   id?: string;
+  code?: string;
+  subjectArea?: string;
+  courseUrl?: string;
 };
 
-function defaultCourseFields(input: CourseInput, id: string): Course {
-  return {
-    ...input,
-    id,
-    eligibilityStatus: "eligible",
-    requirements: input.requirements ?? [],
-    curriculum: input.curriculum ?? { semester1: [], semester2: [] },
-    ourData: input.ourData ?? {
-      studentsSent: 0,
-      accepted: 0,
-      visaApproved: 0,
-      avgCommission: "₹0",
-    },
-    keyDates: input.keyDates ?? {
-      applicationDeadline: "",
-      rollingAdmissions: false,
-      courseStart: "",
-      courseEnd: "",
-      pgwpEligible: "N/A",
-    },
-    fees: input.fees ?? {
-      tuitionPerYear: "",
-      applicationFee: input.applicationFee,
-      livingCosts: "",
-    },
-  };
-}
+export const universitiesCatalogQueryKey = ["universities-catalog"] as const;
+export const universityQueryKey = (universityId: string) =>
+  ["universities", universityId] as const;
+export const universityCoursesQueryKey = (universityId: string) =>
+  ["universities", universityId, "courses"] as const;
 
-function defaultUniversityFields(input: UniversityInput, id: string): University {
+async function fetchCatalog(): Promise<UniversitiesCatalog> {
+  const summaries = await universitiesApi.listAllUniversities();
+  const universities = summaries.map((summary) => mapUniversitySummaryToUi(summary));
+
+  const courseResults = await Promise.all(
+    summaries.map(async (summary) => {
+      const courses = await universitiesApi.listAllUniversityCourses(summary.id);
+      return courses.map((course) => mapCourseToUi(course, summary.id));
+    }),
+  );
+
   return {
-    ...input,
-    id,
-    generalRequirements: input.generalRequirements ?? [],
-    links: input.links ?? [],
-    trackRecord: input.trackRecord ?? {
-      studentsEnrolled: 0,
-      visasApproved: 0,
-      visaSuccessRate: 0,
-      avgApplicationDays: 0,
-      avgCommission: "₹0",
-    },
+    universities,
+    courses: courseResults.flat(),
   };
 }
 
 export const universitiesCatalogService = {
-  getCatalog(): UniversitiesCatalog {
-    return loadCatalog();
+  getCatalog: fetchCatalog,
+
+  getUniversities: async (): Promise<University[]> => {
+    const summaries = await universitiesApi.listAllUniversities();
+    return summaries.map((summary) => mapUniversitySummaryToUi(summary));
   },
 
-  resetToSeed(): UniversitiesCatalog {
-    const catalog = createSeedCatalog();
-    writeCatalog(catalog);
-    return catalog;
+  getUniversityById: async (id: string): Promise<University | undefined> => {
+    try {
+      const detail = await universitiesApi.getUniversity(id);
+      return mapUniversityDetailToUi(detail);
+    } catch {
+      return undefined;
+    }
   },
 
-  getUniversities(): University[] {
-    return loadCatalog().universities;
+  getCoursesByUniversityId: async (universityId: string): Promise<Course[]> => {
+    const courses = await universitiesApi.listAllUniversityCourses(universityId);
+    return courses.map((course) => mapCourseToUi(course, universityId));
   },
 
-  getCourses(): Course[] {
-    return loadCatalog().courses;
+  getCourseById: async (universityId: string, courseId: string): Promise<Course | undefined> => {
+    const courses = await universitiesCatalogService.getCoursesByUniversityId(universityId);
+    return courses.find((course) => course.id === courseId);
   },
 
-  getUniversityById(id: string): University | undefined {
-    return loadCatalog().universities.find((university) => university.id === id);
-  },
-
-  getCourseById(id: string): Course | undefined {
-    return loadCatalog().courses.find((course) => course.id === id);
-  },
-
-  getCoursesByUniversityId(universityId: string): Course[] {
-    return loadCatalog().courses.filter((course) => course.universityId === universityId);
-  },
-
-  saveUniversity(input: UniversityInput): University {
-    const catalog = loadCatalog();
-    const university = defaultUniversityFields(input, input.id ?? createId("uni", input.name));
-
-    const existingIndex = catalog.universities.findIndex((item) => item.id === university.id);
-    if (existingIndex >= 0) {
-      catalog.universities[existingIndex] = university;
-    } else {
-      catalog.universities.push(university);
+  saveUniversity: async (input: UniversityInput): Promise<University> => {
+    if (input.id) {
+      const updated = await universitiesApi.updateUniversity(input.id, {
+        name: input.name,
+        countryCode: toAlpha3CountryCode(input.countryCode),
+        city: input.city,
+        website: input.website || undefined,
+        universityType: input.universityType ?? defaultUniversityType(),
+        qsRanking: input.qsRank,
+      });
+      return mapUniversityDetailToUi(updated);
     }
 
-    writeCatalog(catalog);
-    return university;
+    const created = await universitiesApi.createUniversity({
+      name: input.name,
+      countryCode: toAlpha3CountryCode(input.countryCode),
+      city: input.city,
+      website: input.website || undefined,
+      universityType: input.universityType ?? defaultUniversityType(),
+      qsRanking: input.qsRank,
+    });
+
+    return mapUniversityDetailToUi({
+      ...created,
+      requirements: [],
+    });
   },
 
-  deleteUniversity(universityId: string): void {
-    const catalog = loadCatalog();
-    catalog.universities = catalog.universities.filter((university) => university.id !== universityId);
-    catalog.courses = catalog.courses.filter((course) => course.universityId !== universityId);
-    writeCatalog(catalog);
-  },
+  saveCourse: async (input: CourseInput): Promise<Course> => {
+    const currency = "GBP";
+    const created = await universitiesApi.createCourse(input.universityId, {
+      name: input.name,
+      code: input.code ?? input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32),
+      studyLevel: toApiStudyLevel(input.level),
+      subjectArea: input.subjectArea ?? "General",
+      durationMonths: parseDurationMonths(input.duration),
+      tuitionCurrency: currency,
+      tuitionAmount: lakhsToTuitionAmount(input.tuitionLakhs, currency),
+      courseUrl: input.courseUrl,
+    });
 
-  saveCourse(input: CourseInput): Course {
-    const catalog = loadCatalog();
-    const course = defaultCourseFields(input, input.id ?? createId("course", input.name));
-
-    const existingIndex = catalog.courses.findIndex((item) => item.id === course.id);
-    if (existingIndex >= 0) {
-      catalog.courses[existingIndex] = course;
-    } else {
-      catalog.courses.push(course);
-    }
-
-    writeCatalog(catalog);
-    return course;
-  },
-
-  deleteCourse(courseId: string): void {
-    const catalog = loadCatalog();
-    catalog.courses = catalog.courses.filter((course) => course.id !== courseId);
-    writeCatalog(catalog);
+    return mapCourseToUi(
+      {
+        id: created.id,
+        name: created.name,
+        studyLevel: created.studyLevel,
+        universityId: created.universityId,
+        isActive: created.isActive,
+      },
+      input.universityId,
+    );
   },
 };
-
-export const universitiesCatalogQueryKey = ["universities-catalog"] as const;
