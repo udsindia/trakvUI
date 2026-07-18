@@ -12,6 +12,7 @@ import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import MenuRounded from "@mui/icons-material/MenuRounded";
 import AdminPanelSettingsRounded from "@mui/icons-material/AdminPanelSettingsRounded";
 import PeopleRounded from "@mui/icons-material/PeopleRounded";
+import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import {
   isNavigationItemActive,
   type NavigationItem,
@@ -115,7 +116,23 @@ function SidebarContent({
   const mainItems = items.filter((item) =>
     ["dashboard", "lead", "applications", "universities"].includes(item.id),
   );
-  const engageItems = items.filter((item) => item.id === "activities");
+  const activitiesItem = items.find((item) => item.id === "activities");
+  const tasksItem = activitiesItem?.children?.find((child) => child.id.endsWith(".tasks"));
+  const engageItems = [
+    ...(activitiesItem
+      ? [{ ...activitiesItem, to: "/activities/feed", children: undefined }]
+      : []),
+    ...(tasksItem
+      ? [
+          {
+            ...tasksItem,
+            id: "tasks",
+            label: "Tasks",
+            icon: <TaskAltRounded />,
+          },
+        ]
+      : []),
+  ];
   const settingsItem = items.find((item) => item.id === "settings");
   const adminItems =
     settingsItem?.children?.map((child) => ({

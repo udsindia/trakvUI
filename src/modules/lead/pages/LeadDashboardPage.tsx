@@ -273,38 +273,6 @@ export function LeadDashboardPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
-        <PageHeader
-          actions={
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={1.5}
-              sx={{ width: { xs: "100%", md: "auto" } }}
-            >
-              <GlobalSearchBar
-                placeholder="Search leads..."
-                sx={{ width: { xs: "100%", md: 280 } }}
-                value={leadSearchQuery}
-                onSearch={handleSearchChange}
-              />
-              {canCreateLeads ? (
-                <Button
-                  component={RouterLink}
-                  startIcon={<AddRounded />}
-                  sx={{ minHeight: 44, px: 2.25, textTransform: "none" }}
-                  to={leadRoutePaths.create}
-                  variant="contained"
-                >
-                  Add Lead
-                </Button>
-              ) : null}
-            </Stack>
-          }
-          title="Leads"
-          subtitle=""
-        />
-      </Box>
-
       <Box
         sx={{
           display: "grid",

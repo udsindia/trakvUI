@@ -157,7 +157,7 @@ export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSe
       </Stack>
 
       <Stack spacing={1} sx={{ flex: 4, minHeight: 0, minWidth: 0 }}>
-        <PanelCard grow title="Lead Source (Mock)">
+        {/* <PanelCard grow title="Lead Source (Mock)">
           <Box
             sx={{
               alignItems: "center",
@@ -200,7 +200,7 @@ export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSe
               </Box>
             ))}
           </Stack>
-        </PanelCard>
+        </PanelCard> */}
 
         <PanelCard title="Conversion Snapshot (Mock)">
           <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>

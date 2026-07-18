@@ -65,7 +65,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     children: [
       {
         key: "tasks",
-        navLabel: "My Tasks",
+        navLabel: "Tasks",
         path: "tasks",
         description: "Manage follow-ups, priorities, and completion workflows.",
       },

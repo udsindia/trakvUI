@@ -14,7 +14,7 @@ export function PanelCard({ action, children, grow = false, title }: PanelCardPr
       sx={{
         bgcolor: "background.paper",
         border: "1px solid rgba(229,231,235,.5)",
-        borderRadius: 2.5,
+        borderRadius: 1.0,
         boxShadow: "0 4px 16px rgba(0,0,0,.07)",
         display: "flex",
         flex: grow ? 1 : undefined,

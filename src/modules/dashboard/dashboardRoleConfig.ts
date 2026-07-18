@@ -157,7 +157,6 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
     sectionTabs: [
       { id: "leads", label: "Leads" },
       { id: "activity", label: "Activity" },
-      { id: "tasks", label: "Tasks" },
     ],
     kpis: [],
     quickActions: [
@@ -211,7 +210,6 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
       { id: "leads", label: "My Leads" },
       { id: "applications", label: "My Applications" },
       { id: "activity", label: "Activity" },
-      { id: "tasks", label: "My Tasks" },
     ],
     kpis: [],
     quickActions: [

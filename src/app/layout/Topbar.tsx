@@ -92,7 +92,7 @@ export function Topbar({
   const defaultQuickActions: DashboardQuickAction[] = [
     { icon: "➕", label: "New Lead", href: "/leads/create" },
     { icon: "📄", label: "New Application", href: "/applications/create" },
-    { icon: "✅", label: "Create Task", href: "/activities/tasks" },
+    // { icon: "✅", label: "Tasks", href: "/activities/tasks" },
   ];
 
   const actionButtons = quickActions.length ? quickActions : defaultQuickActions;

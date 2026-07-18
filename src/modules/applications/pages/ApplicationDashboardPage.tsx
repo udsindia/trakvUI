@@ -99,7 +99,7 @@ export function ApplicationDashboardPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
+      {/* <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
         <PageHeader
           actions={
             <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ width: { xs: "100%", md: "auto" } }}>
@@ -125,7 +125,7 @@ export function ApplicationDashboardPage() {
           title="Applications"
           subtitle=""
         />
-      </Box>
+      </Box> */}
 
       <Box sx={{ display: "grid", flex: 1, gridTemplateColumns: { xs: "1fr", lg: "250px minmax(0, 1fr)" }, minHeight: 0 }}>
         <Box sx={{ borderColor: "#edf2f7", borderBottom: { xs: "1px solid", lg: 0 }, minHeight: 0, overflow: "hidden", px: { xs: 2.5, md: 3, lg: 0 }, py: { xs: 2.5, md: 3, lg: 3 }, width: "100%" }}>
