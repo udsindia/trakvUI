@@ -2,62 +2,73 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
-import { leadApi } from "@/modules/lead/leadApi";
+import { studentsApi } from "@/modules/applications/studentsApi";
 import type {
   CreateApplicationPayload,
   ApplicationFormValues,
 } from "@/modules/applications/applicationForm.types";
-import { useEffect } from "react";
 
 const defaultApplicationFormValues: ApplicationFormValues = {
-  studentName: "",
-  email: "",
-  phone: "",
-  targetCountry: "",
-  targetUniversity: "",
-  course: "",
+  studentId: "",
+  universityName: "",
+  courseName: "",
+  studyLevel: "",
+  destinationCountry: "",
   intakeMonth: "",
   intakeYear: new Date().getFullYear(),
+  tuitionFeeInr: "",
+  applicationFeeInr: "",
+  notes: "",
 };
 
 export function buildCreateApplicationPayload(values: ApplicationFormValues): CreateApplicationPayload {
+  const toNumber = (v: string) => (v.trim() === "" ? null : Number(v));
   return {
-    ...values,
-    stage: "Draft",
+    studentId: values.studentId,
+    universityName: values.universityName.trim(),
+    courseName: values.courseName.trim(),
+    studyLevel: values.studyLevel,
+    destinationCountry: values.destinationCountry.trim(),
+    intakeMonth: values.intakeMonth,
+    intakeYear: Number(values.intakeYear),
+    tuitionFeeInr: toNumber(values.tuitionFeeInr),
+    applicationFeeInr: toNumber(values.applicationFeeInr),
+    notes: values.notes.trim() || undefined,
   };
 }
 
-export function useApplicationFormController() {
+export function useApplicationFormController(preselectedStudentId?: string) {
   const navigate = useNavigate();
   const form = useForm<ApplicationFormValues>({
-    defaultValues: defaultApplicationFormValues,
+    defaultValues: {
+      ...defaultApplicationFormValues,
+      studentId: preselectedStudentId ?? "",
+    },
     mode: "onBlur",
     reValidateMode: "onChange",
   });
 
-  const { watch, setValue } = form;
-  const selectedLeadId = watch("leadId");
+  const { setValue } = form;
 
-  const { data: leads } = useQuery({
-    queryKey: ["leads"],
-    queryFn: leadApi.getLeads,
+  const { data: students } = useQuery({
+    queryKey: ["students"],
+    queryFn: studentsApi.getStudents,
   });
 
+  // Keep the form's studentId in sync if a preselected id arrives after mount.
   useEffect(() => {
-    if (selectedLeadId && leads) {
-      const lead = leads.find((l) => l.id === selectedLeadId);
-      if (lead) {
-        setValue("studentName", `${lead.firstName} ${lead.lastName}`.trim(), { shouldValidate: true });
-        setValue("email", lead.email, { shouldValidate: true });
-        setValue("phone", lead.phone, { shouldValidate: true });
-        if (lead.destinationCountries?.length > 0) {
-          setValue("targetCountry", lead.destinationCountries[0], { shouldValidate: true });
-        }
-      }
+    if (preselectedStudentId) {
+      setValue("studentId", preselectedStudentId, { shouldValidate: true });
     }
-  }, [selectedLeadId, leads, setValue]);
+  }, [preselectedStudentId, setValue]);
+
+  const studentOptions = students ?? [];
+  const lockedStudent = preselectedStudentId
+    ? studentOptions.find((s) => s.id === preselectedStudentId)
+    : undefined;
 
   const handleCancel = () => {
     form.reset(defaultApplicationFormValues);
@@ -66,18 +77,15 @@ export function useApplicationFormController() {
 
   const handleValidSubmit = async (values: ApplicationFormValues) => {
     const payload = buildCreateApplicationPayload(values);
-
     try {
       await applicationsApi.createApplication(payload);
       form.reset(defaultApplicationFormValues);
       navigate(applicationsRoutePaths.dashboard);
     } catch (error) {
       console.error("Failed to create application:", error);
-
       const isTimeout =
         axios.isAxiosError(error) &&
         (error.code === "ECONNABORTED" || error.message.toLowerCase().includes("timeout"));
-
       form.setError("root", {
         message: isTimeout
           ? "The server is warming up — your data is safe. Click Save Application to try again."
@@ -88,7 +96,9 @@ export function useApplicationFormController() {
 
   return {
     form,
-    leads: leads ?? [],
+    students: studentOptions,
+    lockedStudentName: lockedStudent ? lockedStudent.name : null,
+    isStudentLocked: Boolean(preselectedStudentId),
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
   };

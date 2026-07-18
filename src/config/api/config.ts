@@ -6,6 +6,7 @@ export const API_CONFIG = {
   activities: "/activities",
   tasks: "/tasks",
   applications: "/applications",
+  students: "/students",
   dashboard: "/dashboard",
   universities: "/universities",
   adminUniversities: "/admin/universities",

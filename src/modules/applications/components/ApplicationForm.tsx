@@ -1,6 +1,7 @@
 import type { FormEventHandler } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -14,19 +15,28 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { ApplicationFormValues } from "@/modules/applications/applicationForm.types";
-import type { BackendLead } from "@/modules/lead/leadApi";
+import { STUDY_LEVELS, type ApplicationFormValues } from "@/modules/applications/applicationForm.types";
+import type { StudentOption } from "@/modules/applications/studentsApi";
 
 type ApplicationFormProps = {
   form: UseFormReturn<ApplicationFormValues>;
-  leads: BackendLead[];
+  students: StudentOption[];
+  lockedStudentName: string | null;
+  isStudentLocked: boolean;
   onCancel: () => void;
   onSubmit: FormEventHandler<HTMLFormElement>;
 };
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 export function ApplicationForm({
   form,
-  leads,
+  students,
+  lockedStudentName,
+  isStudentLocked,
   onCancel,
   onSubmit,
 }: ApplicationFormProps) {
@@ -43,9 +53,7 @@ export function ApplicationForm({
   };
 
   const alwaysVisibleLabelSlotProps = {
-    inputLabel: {
-      shrink: true,
-    },
+    inputLabel: { shrink: true },
   } as const;
 
   return (
@@ -69,57 +77,64 @@ export function ApplicationForm({
             <Stack spacing={0.75}>
               <Typography variant="h6">Application Information</Typography>
               <Typography color="text.secondary" variant="body2">
-                Provide details for the student's university application.
+                Attach this application to a student and provide the university details.
               </Typography>
             </Stack>
 
             <Divider />
 
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
-                <Controller
-                  control={control}
-                  name="leadId"
-                  render={({ field }) => (
-                    <TextField
-                      error={Boolean(errors.leadId)}
-                      fullWidth
-                      helperText={errors.leadId?.message || "Optional: Select an existing lead to auto-fill details"}
-                      id={field.name}
-                      label="Select Lead (Optional)"
-                      select
-                      slotProps={alwaysVisibleLabelSlotProps}
-                      sx={fieldSx}
-                      {...field}
-                      value={field.value || ""}
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {leads.map((lead) => (
-                        <MenuItem key={lead.id} value={lead.id}>
-                          {lead.firstName} {lead.lastName} ({lead.email})
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  )}
-                />
-              </Grid>
+            {/* Student — locked when launched from a student, otherwise a picker */}
+            {isStudentLocked ? (
+              <TextField
+                fullWidth
+                label="Student"
+                value={lockedStudentName ?? "Selected student"}
+                slotProps={{ ...alwaysVisibleLabelSlotProps, input: { readOnly: true } }}
+                sx={fieldSx}
+              />
+            ) : (
+              <Controller
+                control={control}
+                name="studentId"
+                rules={{ required: "Please select a student." }}
+                render={({ field }) => (
+                  <Autocomplete
+                    options={students}
+                    getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, selected) => option.id === selected.id}
+                    value={students.find((s) => s.id === field.value) ?? null}
+                    onChange={(_, newValue) => field.onChange(newValue ? newValue.id : "")}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Student"
+                        required
+                        error={Boolean(errors.studentId)}
+                        helperText={errors.studentId?.message || "Select an existing student"}
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                      />
+                    )}
+                  />
+                )}
+              />
+            )}
 
+            <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={3}>
                   <Controller
                     control={control}
-                    name="studentName"
-                    rules={{ required: "Student name is required." }}
+                    name="universityName"
+                    rules={{ required: "University name is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.studentName)}
+                        error={Boolean(errors.universityName)}
                         fullWidth
-                        helperText={errors.studentName?.message}
+                        helperText={errors.universityName?.message}
                         id={field.name}
-                        label="Student Name"
-                        placeholder="Enter full name"
+                        label="University Name"
+                        placeholder="e.g. University of Toronto"
                         required
                         slotProps={alwaysVisibleLabelSlotProps}
                         sx={fieldSx}
@@ -130,26 +145,19 @@ export function ApplicationForm({
 
                   <Controller
                     control={control}
-                    name="email"
-                    rules={{
-                      pattern: {
-                        message: "Enter a valid email address.",
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      },
-                      required: "Email address is required.",
-                    }}
+                    name="courseName"
+                    rules={{ required: "Course is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.email)}
+                        error={Boolean(errors.courseName)}
                         fullWidth
-                        helperText={errors.email?.message}
+                        helperText={errors.courseName?.message}
                         id={field.name}
-                        label="Email Address"
-                        placeholder="name@example.com"
+                        label="Course"
+                        placeholder="e.g. MS Computer Science"
                         required
                         slotProps={alwaysVisibleLabelSlotProps}
                         sx={fieldSx}
-                        type="email"
                         {...field}
                       />
                     )}
@@ -157,35 +165,42 @@ export function ApplicationForm({
 
                   <Controller
                     control={control}
-                    name="phone"
-                    rules={{ required: "Phone number is required." }}
+                    name="studyLevel"
+                    rules={{ required: "Study level is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.phone)}
+                        error={Boolean(errors.studyLevel)}
                         fullWidth
-                        helperText={errors.phone?.message}
+                        helperText={errors.studyLevel?.message}
                         id={field.name}
-                        label="Phone Number"
-                        placeholder="+91 98765 43210"
+                        label="Study Level"
+                        select
                         required
                         slotProps={alwaysVisibleLabelSlotProps}
                         sx={fieldSx}
                         {...field}
-                      />
+                      >
+                        <MenuItem disabled value="">Select level</MenuItem>
+                        {STUDY_LEVELS.map((level) => (
+                          <MenuItem key={level} value={level}>
+                            {level.replace(/_/g, " ")}
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     )}
                   />
-                  
+
                   <Controller
                     control={control}
-                    name="targetCountry"
-                    rules={{ required: "Target country is required." }}
+                    name="destinationCountry"
+                    rules={{ required: "Destination country is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.targetCountry)}
+                        error={Boolean(errors.destinationCountry)}
                         fullWidth
-                        helperText={errors.targetCountry?.message}
+                        helperText={errors.destinationCountry?.message}
                         id={field.name}
-                        label="Target Country"
+                        label="Destination Country"
                         placeholder="e.g. Canada"
                         required
                         slotProps={alwaysVisibleLabelSlotProps}
@@ -199,46 +214,6 @@ export function ApplicationForm({
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={3}>
-                  <Controller
-                    control={control}
-                    name="targetUniversity"
-                    rules={{ required: "Target university is required." }}
-                    render={({ field }) => (
-                      <TextField
-                        error={Boolean(errors.targetUniversity)}
-                        fullWidth
-                        helperText={errors.targetUniversity?.message}
-                        id={field.name}
-                        label="Target University"
-                        placeholder="e.g. University of Toronto"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        {...field}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="course"
-                    rules={{ required: "Course is required." }}
-                    render={({ field }) => (
-                      <TextField
-                        error={Boolean(errors.course)}
-                        fullWidth
-                        helperText={errors.course?.message}
-                        id={field.name}
-                        label="Course"
-                        placeholder="e.g. MS Computer Science"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        {...field}
-                      />
-                    )}
-                  />
-
                   <Controller
                     control={control}
                     name="intakeMonth"
@@ -257,7 +232,7 @@ export function ApplicationForm({
                         {...field}
                       >
                         <MenuItem disabled value="">Select Month</MenuItem>
-                        {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
+                        {MONTHS.map((m) => (
                           <MenuItem key={m} value={m}>{m}</MenuItem>
                         ))}
                       </TextField>
@@ -283,7 +258,61 @@ export function ApplicationForm({
                       />
                     )}
                   />
+
+                  <Controller
+                    control={control}
+                    name="tuitionFeeInr"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        helperText="Optional"
+                        id={field.name}
+                        label="Tuition Fee (INR)"
+                        type="number"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="applicationFeeInr"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        helperText="Optional"
+                        id={field.name}
+                        label="Application Fee (INR)"
+                        type="number"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
                 </Stack>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  control={control}
+                  name="notes"
+                  render={({ field }) => (
+                    <TextField
+                      fullWidth
+                      helperText="Optional"
+                      id={field.name}
+                      label="Notes"
+                      multiline
+                      minRows={2}
+                      slotProps={alwaysVisibleLabelSlotProps}
+                      sx={fieldSx}
+                      {...field}
+                    />
+                  )}
+                />
               </Grid>
             </Grid>
 
@@ -305,9 +334,7 @@ export function ApplicationForm({
               </Button>
               <Button
                 disabled={isSubmitting}
-                startIcon={
-                  isSubmitting ? <CircularProgress color="inherit" size={16} /> : null
-                }
+                startIcon={isSubmitting ? <CircularProgress color="inherit" size={16} /> : null}
                 sx={{ minWidth: 140, textTransform: "none" }}
                 type="submit"
                 variant="contained"

@@ -1,11 +1,16 @@
 import { Box, Paper } from "@mui/material";
+import { useSearchParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationForm } from "@/modules/applications/components/ApplicationForm";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { useApplicationFormController } from "@/modules/applications/useApplicationFormController";
 
 export function AddApplicationPage() {
-  const { form, leads, handleCancel, handleFormSubmit } = useApplicationFormController();
+  const [searchParams] = useSearchParams();
+  // Case 2: launched from a student entry — ?studentId=<id> pre-selects & locks the student.
+  const preselectedStudentId = searchParams.get("studentId") ?? undefined;
+  const { form, students, lockedStudentName, isStudentLocked, handleCancel, handleFormSubmit } =
+    useApplicationFormController(preselectedStudentId);
 
   return (
     <Paper
@@ -46,7 +51,9 @@ export function AddApplicationPage() {
         >
           <ApplicationForm
             form={form}
-            leads={leads}
+            students={students}
+            lockedStudentName={lockedStudentName}
+            isStudentLocked={isStudentLocked}
             onCancel={handleCancel}
             onSubmit={handleFormSubmit}
           />

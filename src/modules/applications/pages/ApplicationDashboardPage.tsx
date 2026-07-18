@@ -1,88 +1,94 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AddRounded } from "@mui/icons-material";
-import { Box, Button, CircularProgress, Paper, Stack, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import { useAuth } from "@/app/auth/useAuth";
+import { Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
-import { PERMISSIONS } from "@/config/permissions/permissions";
 import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modules/applications/components/ApplicationQuickFilters";
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
-import { PageHeader } from "@/modules/lead/components/PageHeader";
-import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
-import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
-import { FilterPanel, getDefaultFilterPanelValues, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
-
-const quickFilterDefinitions: Omit<ApplicationQuickFilterTab, "count">[] = [
-  { key: "all", label: "All" },
-  { key: "processing", label: "Processing" },
-  { key: "visa_applied", label: "Visa Applied" },
-  { key: "approved", label: "Visa Approved" },
-];
-
-const filterConfig: FilterConfig[] = [
-  {
-    type: "dropdown",
-    label: "Target Country",
-    key: "country",
-    placeholder: "All Countries",
-    options: ["Canada", "Australia", "United Kingdom", "Germany", "USA"],
-  },
-  {
-    type: "dropdown",
-    label: "Stage",
-    key: "stage",
-    placeholder: "All Stages",
-    options: ["Draft", "Submitted", "Processing", "Visa Applied", "Visa Approved", "Visa Rejected", "Completed"],
-  },
-];
+import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 
 function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
   return {
     id: app.id,
-    studentName: app.studentName,
-    email: app.email,
-    targetCountry: app.targetCountry,
-    targetUniversity: app.targetUniversity,
-    course: app.course,
-    stage: app.stage,
+    studentName: app.studentName ?? "—",
+    email: app.email ?? "",
+    targetCountry: app.targetCountry ?? app.destinationCountry ?? "",
+    targetUniversity: app.targetUniversity ?? app.universityName ?? "",
+    course: app.course ?? app.courseName ?? "",
+    // Backend sends the current stage name (or outcome for un-staged apps); fall back safely.
+    stage: app.stage ?? app.currentStageName ?? app.outcome ?? "Unknown",
     createdAt: app.createdAt,
   };
 }
 
-function getStageKey(stage: string) {
-  if (stage === "Visa Applied") return "visa_applied";
-  if (stage === "Visa Approved") return "approved";
-  if (stage === "Processing" || stage === "Submitted") return "processing";
-  return stage.toLowerCase().replace(/\s+/g, "_");
-}
-
 export function ApplicationDashboardPage() {
-  const { hasPermissions } = useAuth();
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() => getDefaultFilterPanelValues(filterConfig));
+  const [filterValues, setFilterValues] = useState<FilterPanelValues>({ country: "", stage: "" });
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const canCreate = hasPermissions([PERMISSIONS.APPLICATIONS_MANAGE]);
 
   const { data: backendApps = [], isLoading, isError } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.getApplications,
   });
 
-  const appRows: ApplicationRow[] = backendApps.map(mapBackendApplicationToRow);
+  const appRows: ApplicationRow[] = useMemo(
+    () => backendApps.map(mapBackendApplicationToRow),
+    [backendApps],
+  );
 
-  const quickFilterTabs: ApplicationQuickFilterTab[] = quickFilterDefinitions.map((tab) => ({
-    ...tab,
-    count: tab.key === "all" ? appRows.length : appRows.filter((app) => getStageKey(app.stage) === tab.key).length,
-  }));
+  // Filter options are derived from the actual data so they always match real values.
+  const distinctCountries = useMemo(
+    () => Array.from(new Set(appRows.map((r) => r.targetCountry).filter(Boolean))).sort(),
+    [appRows],
+  );
+  const distinctStages = useMemo(
+    () => Array.from(new Set(appRows.map((r) => r.stage).filter(Boolean))).sort(),
+    [appRows],
+  );
 
-  const filteredRows = activeQuickFilter === "all"
-    ? appRows
-    : appRows.filter((app) => getStageKey(app.stage) === activeQuickFilter);
+  const filterConfig: FilterConfig[] = useMemo(
+    () => [
+      { type: "dropdown", label: "Target Country", key: "country", placeholder: "All Countries", options: distinctCountries },
+      { type: "dropdown", label: "Stage", key: "stage", placeholder: "All Stages", options: distinctStages },
+    ],
+    [distinctCountries, distinctStages],
+  );
+
+  const quickFilterTabs: ApplicationQuickFilterTab[] = useMemo(() => {
+    const perStage = distinctStages.map((stage) => ({
+      key: stage,
+      label: stage,
+      count: appRows.filter((r) => r.stage === stage).length,
+    }));
+    return [{ key: "all", label: "All", count: appRows.length }, ...perStage];
+  }, [appRows, distinctStages]);
+
+  const countryFilter = (filterValues.country as string) || "";
+  const stageFilter = (filterValues.stage as string) || "";
+  const query = searchQuery.trim().toLowerCase();
+
+  const filteredRows = useMemo(
+    () =>
+      appRows.filter((r) => {
+        if (activeQuickFilter !== "all" && r.stage !== activeQuickFilter) return false;
+        if (countryFilter && r.targetCountry !== countryFilter) return false;
+        if (stageFilter && r.stage !== stageFilter) return false;
+        if (query) {
+          const haystack = `${r.studentName} ${r.email} ${r.targetUniversity} ${r.course}`.toLowerCase();
+          if (!haystack.includes(query)) return false;
+        }
+        return true;
+      }),
+    [appRows, activeQuickFilter, countryFilter, stageFilter, query],
+  );
 
   const visibleCount = filteredRows.length;
-  const paginationLabel = visibleCount === 0 ? "Showing 0 of 0 applications" : `Showing 1-${visibleCount} of ${visibleCount} applications`;
+  const paginationLabel = visibleCount === 0
+    ? "Showing 0 of 0 applications"
+    : `Showing 1-${visibleCount} of ${visibleCount} applications`;
+
+  // Reserved for when the search bar is re-enabled.
+  void setSearchQuery;
 
   return (
     <Paper
@@ -99,34 +105,6 @@ export function ApplicationDashboardPage() {
         overflow: "hidden",
       }}
     >
-      {/* <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
-        <PageHeader
-          actions={
-            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ width: { xs: "100%", md: "auto" } }}>
-              <GlobalSearchBar
-                placeholder="Search applications..."
-                sx={{ width: { xs: "100%", md: 280 } }}
-                value={searchQuery}
-                onSearch={setSearchQuery}
-              />
-              {canCreate ? (
-                <Button
-                  component={RouterLink}
-                  startIcon={<AddRounded />}
-                  sx={{ minHeight: 44, px: 2.25, textTransform: "none" }}
-                  to={applicationsRoutePaths.create}
-                  variant="contained"
-                >
-                  Add Application
-                </Button>
-              ) : null}
-            </Stack>
-          }
-          title="Applications"
-          subtitle=""
-        />
-      </Box> */}
-
       <Box sx={{ display: "grid", flex: 1, gridTemplateColumns: { xs: "1fr", lg: "250px minmax(0, 1fr)" }, minHeight: 0 }}>
         <Box sx={{ borderColor: "#edf2f7", borderBottom: { xs: "1px solid", lg: 0 }, minHeight: 0, overflow: "hidden", px: { xs: 2.5, md: 3, lg: 0 }, py: { xs: 2.5, md: 3, lg: 3 }, width: "100%" }}>
           <FilterPanel filtersConfig={filterConfig} stickyTopOffset={0} width={250} values={filterValues} onFiltersChange={setFilterValues} />
