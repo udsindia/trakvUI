@@ -36,9 +36,15 @@ export const leadApi = {
 
   getLeads: async (): Promise<BackendLead[]> => {
     console.debug("[leadApi] getLeads called");
-    const response = await httpClient.get<BackendLead[]>(API_CONFIG.leads);
+    const response = await httpClient.get<BackendLead[] | { data: BackendLead[] }>(API_CONFIG.leads);
     console.debug("[leadApi] getLeads response:", response.data);
-    return response.data;
+    const payload = response.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray((payload as { data: BackendLead[] }).data)) {
+      return (payload as { data: BackendLead[] }).data;
+    }
+    console.warn("[leadApi] Unexpected response shape, returning empty array:", payload);
+    return [];
   },
 
   createLead: async (payload: CreateLeadPayload): Promise<BackendLead> => {

@@ -22,8 +22,15 @@ export interface BackendApplication {
 export const applicationsApi = {
   getApplications: async (): Promise<BackendApplication[]> => {
     console.debug("[applicationsApi] getApplications called");
-    const response = await httpClient.get<BackendApplication[]>(API_CONFIG.applications);
-    return response.data;
+    const response = await httpClient.get<BackendApplication[] | { data: BackendApplication[] }>(API_CONFIG.applications);
+    console.debug("[applicationsApi] getApplications response:", response.data);
+    const payload = response.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray((payload as { data: BackendApplication[] }).data)) {
+      return (payload as { data: BackendApplication[] }).data;
+    }
+    console.warn("[applicationsApi] Unexpected response shape, returning empty array:", payload);
+    return [];
   },
 
   createApplication: async (payload: CreateApplicationPayload): Promise<BackendApplication> => {
