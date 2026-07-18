@@ -108,7 +108,7 @@ export function CourseSearchPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
-  const [eligibleOnly, setEligibleOnly] = useState(defaultSearchSettings.eligibleOnly);
+  const [eligibleOnly, setEligibleOnly] = useState<boolean>(defaultSearchSettings.eligibleOnly);
   const [shortlistIds, setShortlistIds] = useState<string[]>(["ucd-msc-ds", "nci-msc-da"]);
 
   const baseResults = useMemo(

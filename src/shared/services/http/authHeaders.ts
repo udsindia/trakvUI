@@ -13,7 +13,7 @@ export function createAuthRequestConfig(config: AxiosRequestConfig = {}): AxiosR
     throw new Error("Authentication required. Sign in to access this resource.");
   }
 
-  const headers = AxiosHeaders.from(config.headers);
+  const headers = AxiosHeaders.from(config.headers as AxiosHeaders);
   headers.set("Authorization", `Bearer ${accessToken}`);
 
   return {

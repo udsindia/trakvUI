@@ -1,6 +1,7 @@
-import { alpha, type SxProps, type Theme } from "@mui/material/styles";
+import { alpha, type Theme } from "@mui/material/styles";
+import type { SystemStyleObject } from "@mui/system";
 
-export const universitiesPagePaperSx: SxProps<Theme> = {
+export const universitiesPagePaperSx: SystemStyleObject<Theme> = {
   bgcolor: "background.paper",
   border: "1px solid",
   borderColor: "#e9eff5",
@@ -11,28 +12,28 @@ export const universitiesPagePaperSx: SxProps<Theme> = {
   overflow: "hidden",
 };
 
-export const universitiesContentSx: SxProps<Theme> = {
+export const universitiesContentSx: SystemStyleObject<Theme> = {
   bgcolor: "#fcfdff",
   flex: 1,
   minHeight: 0,
   minWidth: 0,
 };
 
-export const sectionCardSx: SxProps<Theme> = {
+export const sectionCardSx: SystemStyleObject<Theme> = {
   border: "1px solid",
   borderColor: "#edf2f7",
   borderRadius: 2,
   boxShadow: "none",
 };
 
-export const sectionCardHeaderSx: SxProps<Theme> = {
+export const sectionCardHeaderSx: SystemStyleObject<Theme> = {
   borderBottom: "1px solid",
   borderColor: "#edf2f7",
   px: 2.25,
   py: 1.75,
 };
 
-export const tagChipSx: SxProps<Theme> = {
+export const tagChipSx: SystemStyleObject<Theme> = {
   bgcolor: "#f8fbfe",
   border: "1px solid",
   borderColor: "#edf2f7",
@@ -40,7 +41,9 @@ export const tagChipSx: SxProps<Theme> = {
   fontWeight: 600,
 };
 
-export function getRequirementStatusSx(status: "met" | "warn" | "miss"): SxProps<Theme> {
+export function getRequirementStatusSx(
+  status: "met" | "warn" | "miss",
+): (theme: Theme) => SystemStyleObject<Theme> {
   return (theme) => {
     const palette =
       status === "met"
@@ -58,7 +61,7 @@ export function getRequirementStatusSx(status: "met" | "warn" | "miss"): SxProps
 
 export function getEligibilityChipSx(
   status: "eligible" | "partial" | "not-eligible",
-): SxProps<Theme> {
+): (theme: Theme) => SystemStyleObject<Theme> {
   return (theme) => {
     if (status === "not-eligible") {
       return {
