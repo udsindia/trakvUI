@@ -74,8 +74,8 @@ export function buildCreateApplicationPayload(
   return {
     studentId: values.studentId,
     leadId: values.studentId,
-    targetUniversity: values.targetUniversity,
-    course: values.courseName,
+    universityName: values.targetUniversity,
+    courseName: values.courseName,
     studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",
     destinationCountry: country?.name ?? values.destinationCountry,
     intakeMonth: values.intakeMonth,

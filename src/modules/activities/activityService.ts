@@ -187,10 +187,12 @@ export interface TaskBoardItemDto {
 }
 
 export interface BackendTaskBoardResponse {
-  dueToday?: BackendTaskDto[];
-  inProgress?: BackendTaskDto[];
   overdue?: BackendTaskDto[];
   todo?: BackendTaskDto[];
+  inProgress?: BackendTaskDto[];
+  done?: BackendTaskDto[];
+  // Not returned by the backend today, kept optional for forward-compat.
+  dueToday?: BackendTaskDto[];
   upcoming?: BackendTaskDto[];
 }
 

@@ -61,7 +61,7 @@ export function DashboardApplicationsSection({ pipeline }: DashboardApplications
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
     .map((app) => {
-      const lead = leadsById.get(app.studentId);
+      const lead = leadsById.get(app.studentId ?? "");
       const stage = mapOutcomeToStage(app.outcome);
 
       return {
