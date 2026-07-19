@@ -17,10 +17,14 @@ import {
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { STUDY_LEVELS, type ApplicationFormValues } from "@/modules/applications/applicationForm.types";
 import type { StudentOption } from "@/modules/applications/studentsApi";
+import type { CountryDto, CourseDto, UniversitySummaryDto } from "@/modules/universities/universitiesApi.types";
 
 type ApplicationFormProps = {
   form: UseFormReturn<ApplicationFormValues>;
   students: StudentOption[];
+  countries: CountryDto[];
+  universities: UniversitySummaryDto[];
+  courses: CourseDto[];
   lockedStudentName: string | null;
   isStudentLocked: boolean;
   onCancel: () => void;
@@ -35,6 +39,9 @@ const MONTHS = [
 export function ApplicationForm({
   form,
   students,
+  countries,
+  universities,
+  courses,
   lockedStudentName,
   isStudentLocked,
   onCancel,
@@ -128,17 +135,37 @@ export function ApplicationForm({
                     name="universityName"
                     rules={{ required: "University name is required." }}
                     render={({ field }) => (
-                      <TextField
-                        error={Boolean(errors.universityName)}
-                        fullWidth
-                        helperText={errors.universityName?.message}
-                        id={field.name}
-                        label="University Name"
-                        placeholder="e.g. University of Toronto"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        {...field}
+                      <Autocomplete
+                        freeSolo
+                        options={universities}
+                        getOptionLabel={(option) => (typeof option === "string" ? option : option.name)}
+                        isOptionEqualToValue={(option, selected) =>
+                          option.name === (typeof selected === "string" ? selected : selected.name)
+                        }
+                        value={field.value || null}
+                        onChange={(_, newValue) =>
+                          field.onChange(typeof newValue === "string" ? newValue : newValue?.name ?? "")
+                        }
+                        onInputChange={(_, newInputValue, reason) => {
+                          if (reason === "input") field.onChange(newInputValue);
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            error={Boolean(errors.universityName)}
+                            fullWidth
+                            helperText={
+                              errors.universityName?.message ||
+                              "Select a Destination Country first to see matching universities"
+                            }
+                            id={field.name}
+                            label="University Name"
+                            placeholder="e.g. University of Toronto"
+                            required
+                            slotProps={alwaysVisibleLabelSlotProps}
+                            sx={fieldSx}
+                          />
+                        )}
                       />
                     )}
                   />
@@ -148,17 +175,37 @@ export function ApplicationForm({
                     name="courseName"
                     rules={{ required: "Course is required." }}
                     render={({ field }) => (
-                      <TextField
-                        error={Boolean(errors.courseName)}
-                        fullWidth
-                        helperText={errors.courseName?.message}
-                        id={field.name}
-                        label="Course"
-                        placeholder="e.g. MS Computer Science"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        {...field}
+                      <Autocomplete
+                        freeSolo
+                        options={courses}
+                        getOptionLabel={(option) => (typeof option === "string" ? option : option.name)}
+                        isOptionEqualToValue={(option, selected) =>
+                          option.name === (typeof selected === "string" ? selected : selected.name)
+                        }
+                        value={field.value || null}
+                        onChange={(_, newValue) =>
+                          field.onChange(typeof newValue === "string" ? newValue : newValue?.name ?? "")
+                        }
+                        onInputChange={(_, newInputValue, reason) => {
+                          if (reason === "input") field.onChange(newInputValue);
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            error={Boolean(errors.courseName)}
+                            fullWidth
+                            helperText={
+                              errors.courseName?.message ||
+                              "Select a University Name first to see matching courses"
+                            }
+                            id={field.name}
+                            label="Course"
+                            placeholder="e.g. MS Computer Science"
+                            required
+                            slotProps={alwaysVisibleLabelSlotProps}
+                            sx={fieldSx}
+                          />
+                        )}
                       />
                     )}
                   />
@@ -195,17 +242,34 @@ export function ApplicationForm({
                     name="destinationCountry"
                     rules={{ required: "Destination country is required." }}
                     render={({ field }) => (
-                      <TextField
-                        error={Boolean(errors.destinationCountry)}
-                        fullWidth
-                        helperText={errors.destinationCountry?.message}
-                        id={field.name}
-                        label="Destination Country"
-                        placeholder="e.g. Canada"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        {...field}
+                      <Autocomplete
+                        freeSolo
+                        options={countries}
+                        getOptionLabel={(option) => (typeof option === "string" ? option : option.name)}
+                        isOptionEqualToValue={(option, selected) =>
+                          option.name === (typeof selected === "string" ? selected : selected.name)
+                        }
+                        value={field.value || null}
+                        onChange={(_, newValue) =>
+                          field.onChange(typeof newValue === "string" ? newValue : newValue?.name ?? "")
+                        }
+                        onInputChange={(_, newInputValue, reason) => {
+                          if (reason === "input") field.onChange(newInputValue);
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            error={Boolean(errors.destinationCountry)}
+                            fullWidth
+                            helperText={errors.destinationCountry?.message}
+                            id={field.name}
+                            label="Destination Country"
+                            placeholder="e.g. Canada"
+                            required
+                            slotProps={alwaysVisibleLabelSlotProps}
+                            sx={fieldSx}
+                          />
+                        )}
                       />
                     )}
                   />

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
+import { universitiesApi } from "@/modules/universities/universitiesApi";
 import type {
   CreateApplicationPayload,
   ApplicationFormValues,
@@ -58,6 +59,32 @@ export function useApplicationFormController(preselectedStudentId?: string) {
     queryFn: studentsApi.getStudents,
   });
 
+  const { data: countries } = useQuery({
+    queryKey: ["countries"],
+    queryFn: universitiesApi.listCountries,
+  });
+
+  const selectedCountryName = form.watch("destinationCountry");
+  const selectedCountryCode = countries?.find((c) => c.name === selectedCountryName)?.code;
+
+  const { data: universities } = useQuery({
+    queryKey: ["universities", selectedCountryCode],
+    queryFn: () => universitiesApi.listAllUniversities({ countryCode: selectedCountryCode }),
+    enabled: Boolean(selectedCountryCode),
+  });
+
+  const selectedUniversityName = form.watch("universityName");
+  const selectedUniversityId = universities?.find((u) => u.name === selectedUniversityName)?.id;
+
+  const { data: courses } = useQuery({
+    queryKey: ["universityCourses", selectedUniversityId],
+    // availableOnly: false — this picker should list every course, not just ones
+    // with an open intake window (courses may have no course_intakes rows at all).
+    queryFn: () =>
+      universitiesApi.listAllUniversityCourses(selectedUniversityId as string, { availableOnly: false }),
+    enabled: Boolean(selectedUniversityId),
+  });
+
   // Keep the form's studentId in sync if a preselected id arrives after mount.
   useEffect(() => {
     if (preselectedStudentId) {
@@ -97,6 +124,9 @@ export function useApplicationFormController(preselectedStudentId?: string) {
   return {
     form,
     students: studentOptions,
+    countries: countries ?? [],
+    universities: universities ?? [],
+    courses: courses ?? [],
     lockedStudentName: lockedStudent ? lockedStudent.name : null,
     isStudentLocked: Boolean(preselectedStudentId),
     handleCancel,

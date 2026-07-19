@@ -2,6 +2,7 @@ import { API_CONFIG } from "@/config/api/config";
 import { createAuthRequestConfig } from "@/shared/services/http/authHeaders";
 import { httpClient } from "@/shared/services/http/client";
 import type {
+  CountryDto,
   CreateCoursePayload,
   CreateRequirementPayload,
   CreateUniversityPayload,
@@ -76,6 +77,14 @@ export const universitiesApi = {
     return fetchAllUniversityPages((page, size) =>
       universitiesApi.listUniversities({ ...params, page, size }),
     );
+  },
+
+  listCountries: async (): Promise<CountryDto[]> => {
+    const response = await httpClient.get<CountryDto[]>(
+      `${API_CONFIG.universities}/countries`,
+      createAuthRequestConfig(),
+    );
+    return response.data;
   },
 
   getUniversity: async (universityId: string): Promise<UniversityDetailDto> => {

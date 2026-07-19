@@ -9,8 +9,17 @@ export function AddApplicationPage() {
   const [searchParams] = useSearchParams();
   // Case 2: launched from a student entry — ?studentId=<id> pre-selects & locks the student.
   const preselectedStudentId = searchParams.get("studentId") ?? undefined;
-  const { form, students, lockedStudentName, isStudentLocked, handleCancel, handleFormSubmit } =
-    useApplicationFormController(preselectedStudentId);
+  const {
+    form,
+    students,
+    countries,
+    universities,
+    courses,
+    lockedStudentName,
+    isStudentLocked,
+    handleCancel,
+    handleFormSubmit,
+  } = useApplicationFormController(preselectedStudentId);
 
   return (
     <Paper
@@ -52,6 +61,9 @@ export function AddApplicationPage() {
           <ApplicationForm
             form={form}
             students={students}
+            countries={countries}
+            universities={universities}
+            courses={courses}
             lockedStudentName={lockedStudentName}
             isStudentLocked={isStudentLocked}
             onCancel={handleCancel}

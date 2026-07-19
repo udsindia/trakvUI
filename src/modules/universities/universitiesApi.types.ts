@@ -20,6 +20,11 @@ export interface UniversitiesPageResponse<T> {
   size: number;
 }
 
+export interface CountryDto {
+  code: string;
+  name: string;
+}
+
 export interface UniversitySummaryDto {
   id: string;
   name: string;
