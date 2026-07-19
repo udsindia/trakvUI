@@ -50,7 +50,15 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
 };
 
 function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return initials || "?";
 }
 
 export function ApplicationTableContainer({

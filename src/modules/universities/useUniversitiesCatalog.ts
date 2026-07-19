@@ -23,12 +23,41 @@ function useUniversitiesApiEnabled(extraEnabled = true) {
   return extraEnabled && hasToken && !isInitializing;
 }
 
+export const countriesQueryKey = ["universities", "countries"] as const;
+export const universitiesByCountryQueryKey = (countryCode: string) =>
+  ["universities", "by-country", countryCode] as const;
+
 export function useUniversitiesCatalog() {
   const apiEnabled = useUniversitiesApiEnabled();
 
   return useQuery({
     queryKey: universitiesCatalogQueryKey,
     queryFn: () => universitiesCatalogService.getCatalog(),
+    enabled: apiEnabled,
+  });
+}
+
+export function useCountries() {
+  const apiEnabled = useUniversitiesApiEnabled();
+
+  return useQuery({
+    queryKey: countriesQueryKey,
+    queryFn: () => universitiesApi.listCountries(),
+    enabled: apiEnabled,
+  });
+}
+
+export function useUniversitiesByCountry(countryCode: string | undefined) {
+  const apiEnabled = useUniversitiesApiEnabled(Boolean(countryCode));
+
+  return useQuery({
+    queryKey: universitiesByCountryQueryKey(countryCode ?? ""),
+    queryFn: async () => {
+      if (!countryCode) {
+        return [];
+      }
+      return universitiesApi.listAllUniversities({ countryCode });
+    },
     enabled: apiEnabled,
   });
 }
@@ -62,6 +91,22 @@ export function useUniversityCourses(universityId: string | undefined) {
 
       const courses = await universitiesApi.listAllUniversityCourses(universityId);
       return courses.map((course) => mapCourseToUi(course, universityId));
+    },
+    enabled: apiEnabled,
+  });
+}
+
+/** Raw course DTOs for forms that need studyLevel and other API fields. */
+export function useUniversityCourseOptions(universityId: string | undefined) {
+  const apiEnabled = useUniversitiesApiEnabled(Boolean(universityId));
+
+  return useQuery({
+    queryKey: [...universityCoursesQueryKey(universityId ?? ""), "options"] as const,
+    queryFn: async () => {
+      if (!universityId) {
+        return [];
+      }
+      return universitiesApi.listAllUniversityCourses(universityId);
     },
     enabled: apiEnabled,
   });

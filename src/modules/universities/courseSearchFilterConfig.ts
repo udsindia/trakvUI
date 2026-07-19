@@ -1,5 +1,4 @@
 import { courseSearchSettings, type CourseSearchSettings } from "@/config/universities/courseSearchSettings";
-import type { StudentProfile } from "@/modules/universities/universities.types";
 import {
   getDefaultFilterPanelValues,
   type FilterConfig,
@@ -8,13 +7,11 @@ import {
 
 type BuildFilterConfigContext = {
   countryCounts: Record<string, number>;
-  selectedStudent: StudentProfile | null;
   settings?: CourseSearchSettings;
 };
 
 export function buildCourseSearchFilterConfig({
   countryCounts,
-  selectedStudent,
   settings = courseSearchSettings,
 }: BuildFilterConfigContext): FilterConfig[] {
   const filters: FilterConfig[] = [];
@@ -75,32 +72,12 @@ export function buildCourseSearchFilterConfig({
     });
   }
 
-  if (filterSettings.eligibility.enabled) {
-    filters.push({
-      type: "checkbox-group",
-      label: filterSettings.eligibility.label,
-      key: filterSettings.eligibility.key,
-      options: selectedStudent
-        ? [
-            {
-              label: `Matches ${selectedStudent.name}`,
-              value: selectedStudent.id,
-            },
-          ]
-        : [],
-      helperText: selectedStudent
-        ? `IELTS ${selectedStudent.ieltsOverall} · ${selectedStudent.degree} ${selectedStudent.percentage}%`
-        : "Select a student in the search bar above",
-    });
-  }
-
   return filters;
 }
 
 export function getCourseSearchDefaultFilterValues(
   filterConfig: FilterConfig[],
   settings: CourseSearchSettings = courseSearchSettings,
-  selectedStudent?: StudentProfile | null,
 ): FilterPanelValues {
   const baseValues = getDefaultFilterPanelValues(filterConfig);
   const { defaults, filters } = settings;
@@ -112,12 +89,6 @@ export function getCourseSearchDefaultFilterValues(
     ...(filters.intake.enabled ? { [filters.intake.key]: defaults.intakes } : {}),
     ...(filters.tuition.enabled ? { [filters.tuition.key]: defaults.tuition } : {}),
     ...(filters.ielts.enabled ? { [filters.ielts.key]: defaults.ielts } : {}),
-    ...(filters.eligibility.enabled
-      ? {
-          [filters.eligibility.key]:
-            defaults.matchStudent && selectedStudent ? [selectedStudent.id] : [],
-        }
-      : {}),
   };
 }
 

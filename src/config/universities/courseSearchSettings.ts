@@ -105,7 +105,7 @@ export const courseSearchSettings = {
       helperText: "Filter by course IELTS requirement",
     } satisfies CourseSearchSliderFilterSetting,
     eligibility: {
-      enabled: true,
+      enabled: false,
       key: "eligibility",
       label: "Eligibility Match",
     },

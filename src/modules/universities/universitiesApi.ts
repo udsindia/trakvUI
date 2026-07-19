@@ -43,7 +43,9 @@ async function fetchAllCoursePages(
   const fetchPage = async (page: number, size: number) => {
     const response = await httpClient.get<UniversityCoursesPageResponse>(
       `${API_CONFIG.universities}/${universityId}/courses`,
-      createAuthRequestConfig({ params: { ...params, page, size } }),
+      createAuthRequestConfig({
+        params: { availableOnly: false, ...params, page, size },
+      }),
     );
     return response.data;
   };
@@ -101,7 +103,9 @@ export const universitiesApi = {
   ): Promise<UniversityCoursesPageResponse> => {
     const response = await httpClient.get<UniversityCoursesPageResponse>(
       `${API_CONFIG.universities}/${universityId}/courses`,
-      createAuthRequestConfig({ params }),
+      createAuthRequestConfig({
+        params: { availableOnly: false, ...params },
+      }),
     );
     return response.data;
   },

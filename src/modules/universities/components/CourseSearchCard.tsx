@@ -63,7 +63,8 @@ export function CourseSearchCard({
   onAddToShortlist,
   isShortlisted,
 }: CourseSearchCardProps) {
-  const isNotEligible = result.eligibilityStatus === "not-eligible";
+  const showEligibility = Boolean(studentName);
+  const isNotEligible = showEligibility && result.eligibilityStatus === "not-eligible";
 
   return (
     <Box
@@ -71,7 +72,8 @@ export function CourseSearchCard({
         bgcolor: "background.paper",
         border: "1px solid",
         borderColor: "#edf2f7",
-        borderLeft: result.eligibilityStatus === "partial" ? "3px solid" : undefined,
+        borderLeft:
+          showEligibility && result.eligibilityStatus === "partial" ? "3px solid" : undefined,
         borderLeftColor: "secondary.main",
         borderRadius: 2,
         cursor: "pointer",
@@ -140,23 +142,25 @@ export function CourseSearchCard({
         {result.university.qsRank ? (
           <Chip label={`QS #${result.university.qsRank}`} size="small" sx={tagChipSx} />
         ) : null}
-        <Chip
-          label={
-            result.eligibilityStatus === "not-eligible"
-              ? "Not eligible"
-              : result.eligibilityStatus === "partial"
-                ? "Eligible with notes"
-                : "Eligible"
-          }
-          size="small"
-          sx={getEligibilityChipSx(result.eligibilityStatus)}
-        />
+        {showEligibility ? (
+          <Chip
+            label={
+              result.eligibilityStatus === "not-eligible"
+                ? "Not eligible"
+                : result.eligibilityStatus === "partial"
+                  ? "Eligible with notes"
+                  : "Eligible"
+            }
+            size="small"
+            sx={getEligibilityChipSx(result.eligibilityStatus)}
+          />
+        ) : null}
         {result.intakes.map((intake) => (
           <Chip key={intake} label={intake} size="small" sx={tagChipSx} />
         ))}
         <Chip label={result.duration} size="small" sx={tagChipSx} />
         <Chip label={result.ieltsLabel} size="small" sx={tagChipSx} />
-        {result.eligibilityWarning ? (
+        {showEligibility && result.eligibilityWarning ? (
           <Chip
             label={result.eligibilityWarning}
             size="small"
@@ -171,14 +175,14 @@ export function CourseSearchCard({
         </Alert>
       ) : null}
 
-      {!isNotEligible && result.eligibilityPercent !== undefined ? (
+      {showEligibility && !isNotEligible && result.eligibilityPercent !== undefined ? (
         <EligibilityBar
-          label={studentName ? `Eligibility match for ${studentName.split(" ")[0]}` : "Eligibility match"}
+          label={`Eligibility match for ${studentName!.split(" ")[0]}`}
           percent={result.eligibilityPercent}
         />
       ) : null}
 
-      {!isNotEligible && result.eligibilityPercent === 100 ? (
+      {showEligibility && !isNotEligible && result.eligibilityPercent === 100 ? (
         <Chip
           color="success"
           label="All requirements fully met"

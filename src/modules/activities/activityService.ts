@@ -630,6 +630,7 @@ export const activityService = {
   async getTaskBoard(params: GetTaskBoardParams = {}): Promise<GetTaskBoardResponse> {
     const { data } = await httpClient.get<BackendTaskBoardResponse>(`${API_CONFIG.tasks}/board`);
     const tasks = [
+      ...(data.done ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "done")),
       ...(data.overdue ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "overdue")),
       ...(data.todo ?? []).map((task) => mapBackendTaskToBoardItem(normalizeTask(task), "todo")),
       ...(data.inProgress ?? []).map((task) =>

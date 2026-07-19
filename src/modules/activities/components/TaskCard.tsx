@@ -88,7 +88,7 @@ function TaskCardComponent({ task, onOpen }: TaskCardProps) {
       sx={{
         border: "1px solid",
         borderColor: "rgba(15, 23, 42, 0.06)",
-        borderRadius: 3.5,
+      borderRadius: 1.5,
         cursor: "pointer",
         p: 2,
         transition: (theme) =>

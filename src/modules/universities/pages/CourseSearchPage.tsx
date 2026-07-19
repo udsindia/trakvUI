@@ -15,31 +15,31 @@ import { courseSearchSettings } from "@/config/universities/courseSearchSettings
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { CourseSearchCard } from "@/modules/universities/components/CourseSearchCard";
 import { ShortlistTray } from "@/modules/universities/components/ShortlistTray";
-import { StudentSearchField } from "@/modules/universities/components/StudentSearchField";
 import {
   buildCourseSearchFilterConfig,
   getCourseSearchDefaultFilterValues,
   getCourseSearchSliderFallbacks,
 } from "@/modules/universities/courseSearchFilterConfig";
 import {
-  applyStudentEligibility,
   buildCourseSearchResults,
-  countEligibleCourses,
   filterCourseSearchResults,
   getCountryCounts,
   sortCourseSearchResults,
 } from "@/modules/universities/courseSearchUtils";
-import {
-  MOCK_STUDENT,
-  MOCK_STUDENTS,
-} from "@/modules/universities/universitiesMockData";
 import { useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
-import { courseDetailsPath, universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
+import {
+  courseDetailsPath,
+  universityDetailsPath,
+} from "@/modules/universities/universitiesRoutePaths";
 import {
   universitiesContentSx,
   universitiesPagePaperSx,
 } from "@/modules/universities/universitiesStyles";
-import type { CourseLevel, CourseSearchFilters, CourseSortOption, StudentProfile } from "@/modules/universities/universities.types";
+import type {
+  CourseLevel,
+  CourseSearchFilters,
+  CourseSortOption,
+} from "@/modules/universities/universities.types";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import type { FilterPanelValue, FilterPanelValues } from "@/shared/components/FilterPanel";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -55,7 +55,10 @@ function asStringArray(value: FilterPanelValue | undefined): string[] {
   return value.every((entry) => typeof entry === "string") ? value : [];
 }
 
-function asNumberRange(value: FilterPanelValue | undefined, fallback: [number, number]): [number, number] {
+function asNumberRange(
+  value: FilterPanelValue | undefined,
+  fallback: [number, number],
+): [number, number] {
   if (!Array.isArray(value) || value.length !== 2) {
     return fallback;
   }
@@ -72,8 +75,6 @@ function toSearchFilters(
   filterValues: FilterPanelValues,
   query: string,
   sort: CourseSortOption,
-  eligibleOnly: boolean,
-  selectedStudent: StudentProfile | null,
 ): CourseSearchFilters {
   return {
     query,
@@ -82,10 +83,8 @@ function toSearchFilters(
     intakes: asStringArray(filterValues[filterKeys.intake.key]),
     tuitionRange: asNumberRange(filterValues[filterKeys.tuition.key], sliderFallbacks.tuition),
     ieltsRange: asNumberRange(filterValues[filterKeys.ielts.key], sliderFallbacks.ielts),
-    eligibleOnly,
-    matchStudent: selectedStudent
-      ? asStringArray(filterValues[filterKeys.eligibility.key]).includes(selectedStudent.id)
-      : false,
+    eligibleOnly: false,
+    matchStudent: false,
     sort,
   };
 }
@@ -95,21 +94,17 @@ export function CourseSearchPage() {
   const { data: catalog, isLoading, isError } = useUniversitiesCatalog();
   const universities = catalog?.universities ?? [];
   const courses = catalog?.courses ?? [];
-  const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(MOCK_STUDENT);
+
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
     getCourseSearchDefaultFilterValues(
       buildCourseSearchFilterConfig({
         countryCounts: {},
-        selectedStudent: MOCK_STUDENT,
       }),
-      courseSearchSettings,
-      MOCK_STUDENT,
     ),
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
-  const [eligibleOnly, setEligibleOnly] = useState<boolean>(defaultSearchSettings.eligibleOnly);
-  const [shortlistIds, setShortlistIds] = useState<string[]>(["ucd-msc-ds", "nci-msc-da"]);
+  const [shortlistIds, setShortlistIds] = useState<string[]>([]);
 
   const baseResults = useMemo(
     () => buildCourseSearchResults(courses, universities),
@@ -119,41 +114,20 @@ export function CourseSearchPage() {
   const countryCounts = useMemo(() => getCountryCounts(baseResults), [baseResults]);
 
   const filterConfig = useMemo(
-    () => buildCourseSearchFilterConfig({ countryCounts, selectedStudent }),
-    [countryCounts, selectedStudent],
-  );
-
-  const resultsWithEligibility = useMemo(
-    () => applyStudentEligibility(baseResults, selectedStudent),
-    [baseResults, selectedStudent],
+    () => buildCourseSearchFilterConfig({ countryCounts }),
+    [countryCounts],
   );
 
   const filteredResults = useMemo(() => {
-    const filters = toSearchFilters(filterValues, searchQuery, sort, eligibleOnly, selectedStudent);
-    const filtered = filterCourseSearchResults(resultsWithEligibility, filters);
+    const filters = toSearchFilters(filterValues, searchQuery, sort);
+    const filtered = filterCourseSearchResults(baseResults, filters);
     return sortCourseSearchResults(filtered, sort);
-  }, [resultsWithEligibility, filterValues, searchQuery, sort, eligibleOnly, selectedStudent]);
+  }, [baseResults, filterValues, searchQuery, sort]);
 
   const shortlistItems = useMemo(
-    () => resultsWithEligibility.filter((result) => shortlistIds.includes(result.id)),
-    [resultsWithEligibility, shortlistIds],
+    () => baseResults.filter((result) => shortlistIds.includes(result.id)),
+    [baseResults, shortlistIds],
   );
-
-  const eligibleCount = countEligibleCourses(filteredResults);
-
-  const handleStudentChange = (student: StudentProfile | null) => {
-    setSelectedStudent(student);
-
-    setFilterValues((current) => {
-      const hadEligibilityFilter = asStringArray(current[filterKeys.eligibility.key]).length > 0;
-
-      return {
-        ...current,
-        [filterKeys.eligibility.key]:
-          hadEligibilityFilter && student ? [student.id] : [],
-      };
-    });
-  };
 
   const handleToggleShortlist = (courseId: string) => {
     setShortlistIds((current) =>
@@ -164,13 +138,10 @@ export function CourseSearchPage() {
   };
 
   const handleClearFilters = () => {
-    setFilterValues(getCourseSearchDefaultFilterValues(filterConfig, courseSearchSettings, selectedStudent));
-    setEligibleOnly(defaultSearchSettings.eligibleOnly);
+    setFilterValues(getCourseSearchDefaultFilterValues(filterConfig));
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
   };
-
-  const studentLabel = selectedStudent?.name ?? "selected student";
 
   return (
     <Paper
@@ -183,22 +154,21 @@ export function CourseSearchPage() {
       <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
         <PageHeader
           actions={
-            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ alignItems: "center" }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={1.5}
+              sx={{ alignItems: "center" }}
+            >
               <GlobalSearchBar
                 placeholder={courseSearchSettings.search.placeholder}
                 sx={{ width: { xs: "100%", md: 300 } }}
                 value={searchQuery}
                 onSearch={setSearchQuery}
               />
-              <StudentSearchField
-                students={MOCK_STUDENTS}
-                value={selectedStudent}
-                onChange={handleStudentChange}
-              />
               <FormControl size="small" sx={{ minWidth: 170 }}>
                 <Select
-                  value={sort}
                   sx={{ fontSize: 13 }}
+                  value={sort}
                   onChange={(event) => setSort(event.target.value as CourseSortOption)}
                 >
                   {courseSearchSettings.sort.options.map((option) => (
@@ -210,8 +180,8 @@ export function CourseSearchPage() {
               </FormControl>
             </Stack>
           }
+          subtitle="Browse courses across partner universities"
           title="Course Search"
-          subtitle="Universities & Courses"
         />
       </Box>
 
@@ -244,7 +214,13 @@ export function CourseSearchPage() {
             onFiltersChange={setFilterValues}
           />
           <Box sx={{ display: { xs: "block", lg: "none" }, mt: 1, px: 2 }}>
-            <Chip clickable label="Reset filters" size="small" variant="outlined" onClick={handleClearFilters} />
+            <Chip
+              clickable
+              label="Reset filters"
+              size="small"
+              variant="outlined"
+              onClick={handleClearFilters}
+            />
           </Box>
         </Box>
 
@@ -260,73 +236,60 @@ export function CourseSearchPage() {
               </Typography>
             ) : (
               <>
-            <Stack
-              direction="row"
-              flexWrap="wrap"
-              spacing={1}
-              sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.75, gap: 1 }}
-            >
-              <Typography color="text.secondary" sx={{ fontSize: 13 }}>
-                <Box component="span" sx={{ color: "text.primary", fontWeight: 700 }}>
-                  {filteredResults.length}
-                </Box>{" "}
-                courses found
-                {selectedStudent ? (
-                  <>
-                    {" · "}
-                    <Box component="span" sx={{ color: "secondary.main", fontWeight: 700 }}>
-                      {eligibleCount} eligible
-                    </Box>{" "}
-                    for {studentLabel}
-                  </>
-                ) : null}
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                <Chip
-                  clickable
-                  color={eligibleOnly ? "secondary" : "default"}
-                  label="Eligible only"
-                  size="small"
-                  variant={eligibleOnly ? "filled" : "outlined"}
-                  onClick={() => setEligibleOnly((current) => !current)}
-                />
-                <Chip
-                  clickable
-                  label="Reset filters"
-                  size="small"
-                  sx={{ display: { xs: "none", lg: "inline-flex" } }}
-                  variant="outlined"
-                  onClick={handleClearFilters}
-                />
-              </Stack>
-            </Stack>
-
-            <Stack spacing={1.25}>
-              {filteredResults.map((result) => (
-                <CourseSearchCard
-                  key={result.id}
-                  isShortlisted={shortlistIds.includes(result.id)}
-                  result={result}
-                  studentName={selectedStudent?.name}
-                  onAddToShortlist={() => handleToggleShortlist(result.id)}
-                  onViewCourse={() =>
-                    navigate(courseDetailsPath(result.universityId, result.id))
-                  }
-                  onViewUniversity={() => navigate(universityDetailsPath(result.universityId))}
-                />
-              ))}
-
-              {filteredResults.length === 0 ? (
-                <Box sx={{ py: 6, textAlign: "center" }}>
-                  <Typography color="text.secondary" sx={{ mb: 1 }}>
-                    No courses match your search.
-                  </Typography>
+                <Stack
+                  direction="row"
+                  flexWrap="wrap"
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                    gap: 1,
+                    justifyContent: "space-between",
+                    mb: 1.75,
+                  }}
+                >
                   <Typography color="text.secondary" sx={{ fontSize: 13 }}>
-                    Try clearing filters, turning off &quot;Eligible only&quot;, or changing the student profile.
+                    <Box component="span" sx={{ color: "text.primary", fontWeight: 700 }}>
+                      {filteredResults.length}
+                    </Box>{" "}
+                    courses found
                   </Typography>
-                </Box>
-              ) : null}
-            </Stack>
+                  <Chip
+                    clickable
+                    label="Reset filters"
+                    size="small"
+                    sx={{ display: { xs: "none", lg: "inline-flex" } }}
+                    variant="outlined"
+                    onClick={handleClearFilters}
+                  />
+                </Stack>
+
+                <Stack spacing={1.25}>
+                  {filteredResults.map((result) => (
+                    <CourseSearchCard
+                      key={result.id}
+                      isShortlisted={shortlistIds.includes(result.id)}
+                      result={result}
+                      onAddToShortlist={() => handleToggleShortlist(result.id)}
+                      onViewCourse={() =>
+                        navigate(courseDetailsPath(result.universityId, result.id))
+                      }
+                      onViewUniversity={() =>
+                        navigate(universityDetailsPath(result.universityId))
+                      }
+                    />
+                  ))}
+
+                  {filteredResults.length === 0 ? (
+                    <Box sx={{ py: 6, textAlign: "center" }}>
+                      <Typography color="text.secondary" sx={{ mb: 1 }}>
+                        No courses match your search.
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: 13 }}>
+                        Try clearing filters or searching by course, university, or city.
+                      </Typography>
+                    </Box>
+                  ) : null}
+                </Stack>
               </>
             )}
           </Box>

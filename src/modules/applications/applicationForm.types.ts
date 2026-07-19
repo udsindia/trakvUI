@@ -19,16 +19,24 @@ export const STUDY_LEVELS = [
 export type StudyLevel = (typeof STUDY_LEVELS)[number];
 
 export type ApplicationFormValues = {
-  studentId: string;
-  universityName: string;
+  studentId: string | '';
+  /** Selected university id — used to load courses; name is stored in targetUniversity. */
+  universityId: string;
+  targetUniversity: string;
+  /** Selected course id — used for the select value; name is stored in courseName. */
+  courseId: string;
   courseName: string;
   studyLevel: StudyLevel | "";
+  /** Destination country code from GET /universities/countries. */
   destinationCountry: string;
   intakeMonth: string;
   intakeYear: number;
   tuitionFeeInr: string;      // text input; converted to number on submit
   applicationFeeInr: string;  // text input; converted to number on submit
   notes: string;
+  studentName: string | '';
+  email: string | '';
+  phone: string | '';
 };
 
 export type VisaFormValues = {

@@ -5,8 +5,9 @@ import type { DashboardApplicationPipelineDto } from "@/modules/dashboard/dashbo
 import { PanelCard, PanelLink } from "@/modules/dashboard/components/PanelCard";
 import { PipelineBars } from "@/modules/dashboard/components/PipelineBars";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
-import { applicationsApi } from "@/modules/applications/applicationsApi";
+import { applicationsApi, mapOutcomeToStage } from "@/modules/applications/applicationsApi";
 import type { ApplicationStage } from "@/modules/applications/applicationForm.types";
+import { leadApi } from "@/modules/lead/leadApi";
 
 const STAGE_STYLES: Record<ApplicationStage, { bgcolor: string; color: string }> = {
   Draft: { bgcolor: "#F1F5F9", color: "#475569" },
@@ -48,9 +49,32 @@ export function DashboardApplicationsSection({ pipeline }: DashboardApplications
     retry: 1,
   });
 
+  const { data: leads = [] } = useQuery({
+    queryKey: ["leads"],
+    queryFn: leadApi.getLeads,
+    staleTime: 30_000,
+  });
+
+  const leadsById = new Map(leads.map((lead) => [lead.id, lead]));
+
   const recentApplications = [...(rawApplications ?? [])]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+    .slice(0, 5)
+    .map((app) => {
+      const lead = leadsById.get(app.studentId);
+      const stage = mapOutcomeToStage(app.outcome);
+
+      return {
+        id: app.id,
+        studentName: lead
+          ? `${lead.firstName} ${lead.lastName}`.trim()
+          : "Unknown student",
+        targetUniversity: app.universityName ?? "—",
+        course: app.courseName ?? "—",
+        stage,
+        createdAt: app.createdAt,
+      };
+    });
 
   const stages = pipeline?.stages ?? [];
 
@@ -92,7 +116,7 @@ export function DashboardApplicationsSection({ pipeline }: DashboardApplications
           ) : recentApplications.length > 0 ? (
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
               {recentApplications.map((app) => {
-                const stageStyle = STAGE_STYLES[app.stage as ApplicationStage] ?? {
+                const stageStyle = STAGE_STYLES[app.stage] ?? {
                   bgcolor: "#F1F5F9",
                   color: "#475569",
                 };

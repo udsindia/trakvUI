@@ -1,25 +1,27 @@
 import { Box, Paper } from "@mui/material";
-import { useSearchParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationForm } from "@/modules/applications/components/ApplicationForm";
-import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { useApplicationFormController } from "@/modules/applications/useApplicationFormController";
 
 export function AddApplicationPage() {
-  const [searchParams] = useSearchParams();
-  // Case 2: launched from a student entry — ?studentId=<id> pre-selects & locks the student.
-  const preselectedStudentId = searchParams.get("studentId") ?? undefined;
   const {
     form,
-    students,
+    leads,
     countries,
     universities,
     courses,
-    lockedStudentName,
-    isStudentLocked,
+    countriesLoading,
+    universitiesLoading,
+    coursesLoading,
+    countriesError,
+    universitiesError,
+    coursesError,
+    handleCountryChange,
+    handleUniversityChange,
+    handleCourseChange,
     handleCancel,
     handleFormSubmit,
-  } = useApplicationFormController(preselectedStudentId);
+  } = useApplicationFormController();
 
   return (
     <Paper
@@ -37,9 +39,9 @@ export function AddApplicationPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
+      {/* <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
         <PageHeader subtitle="Applications > New Application" title="Add New Application" />
-      </Box>
+      </Box> */}
 
       <Box
         sx={{
@@ -60,12 +62,19 @@ export function AddApplicationPage() {
         >
           <ApplicationForm
             form={form}
-            students={students}
+            leads={leads}
             countries={countries}
             universities={universities}
             courses={courses}
-            lockedStudentName={lockedStudentName}
-            isStudentLocked={isStudentLocked}
+            countriesLoading={countriesLoading}
+            universitiesLoading={universitiesLoading}
+            coursesLoading={coursesLoading}
+            countriesError={countriesError}
+            universitiesError={universitiesError}
+            coursesError={coursesError}
+            onCountryChange={handleCountryChange}
+            onUniversityChange={handleUniversityChange}
+            onCourseChange={handleCourseChange}
             onCancel={handleCancel}
             onSubmit={handleFormSubmit}
           />

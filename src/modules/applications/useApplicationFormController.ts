@@ -1,23 +1,33 @@
 import axios from "axios";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
-import { studentsApi } from "@/modules/applications/studentsApi";
-import { universitiesApi } from "@/modules/universities/universitiesApi";
+import { leadApi } from "@/modules/lead/leadApi";
 import type {
   CreateApplicationPayload,
   ApplicationFormValues,
 } from "@/modules/applications/applicationForm.types";
+import type { CountryDto } from "@/modules/universities/universitiesApi.types";
+import {
+  useCountries,
+  useUniversitiesByCountry,
+  useUniversityCourseOptions,
+} from "@/modules/universities/useUniversitiesCatalog";
 
 const defaultApplicationFormValues: ApplicationFormValues = {
   studentId: "",
-  universityName: "",
+  studentName: "",
+  email: "",
+  phone: "",
+  destinationCountry: "",
+  universityId: "",
+  targetUniversity: "",
+  courseId: "",
   courseName: "",
   studyLevel: "",
-  destinationCountry: "",
   intakeMonth: "",
   intakeYear: new Date().getFullYear(),
   tuitionFeeInr: "",
@@ -25,77 +35,140 @@ const defaultApplicationFormValues: ApplicationFormValues = {
   notes: "",
 };
 
-export function buildCreateApplicationPayload(values: ApplicationFormValues): CreateApplicationPayload {
-  const toNumber = (v: string) => (v.trim() === "" ? null : Number(v));
+function resolveCountryCode(
+  countries: CountryDto[],
+  countryNameOrCode: string,
+): string {
+  const needle = countryNameOrCode.trim().toLowerCase();
+  if (!needle) {
+    return "";
+  }
+
+  const byCode = countries.find((c) => c.code.toLowerCase() === needle);
+  if (byCode) {
+    return byCode.code;
+  }
+
+  const byName = countries.find((c) => c.name.toLowerCase() === needle);
+  if (byName) {
+    return byName.code;
+  }
+
+  return countries.find((c) => c.name.toLowerCase().includes(needle))?.code ?? "";
+}
+
+export function buildCreateApplicationPayload(
+  values: ApplicationFormValues,
+  countries: CountryDto[],
+): CreateApplicationPayload {
+  const country = countries.find((c) => c.code === values.destinationCountry);
+  const toOptionalNumber = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
   return {
     studentId: values.studentId,
-    universityName: values.universityName.trim(),
-    courseName: values.courseName.trim(),
-    studyLevel: values.studyLevel,
-    destinationCountry: values.destinationCountry.trim(),
+    universityName: values.targetUniversity,
+    courseName: values.courseName,
+    studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",
+    destinationCountry: country?.name ?? values.destinationCountry,
     intakeMonth: values.intakeMonth,
     intakeYear: Number(values.intakeYear),
-    tuitionFeeInr: toNumber(values.tuitionFeeInr),
-    applicationFeeInr: toNumber(values.applicationFeeInr),
+    tuitionFeeInr: toOptionalNumber(values.tuitionFeeInr),
+    applicationFeeInr: toOptionalNumber(values.applicationFeeInr),
     notes: values.notes.trim() || undefined,
   };
 }
 
-export function useApplicationFormController(preselectedStudentId?: string) {
+export function useApplicationFormController() {
   const navigate = useNavigate();
   const form = useForm<ApplicationFormValues>({
-    defaultValues: {
-      ...defaultApplicationFormValues,
-      studentId: preselectedStudentId ?? "",
-    },
+    defaultValues: defaultApplicationFormValues,
     mode: "onBlur",
     reValidateMode: "onChange",
   });
 
-  const { setValue } = form;
+  const { watch, setValue } = form;
+  const selectedLeadId = watch("studentId");
+  const destinationCountry = watch("destinationCountry");
+  const universityId = watch("universityId");
 
-  const { data: students } = useQuery({
-    queryKey: ["students"],
-    queryFn: studentsApi.getStudents,
+  const { data: leads } = useQuery({
+    queryKey: ["leads"],
+    queryFn: leadApi.getLeads,
   });
 
-  const { data: countries } = useQuery({
-    queryKey: ["countries"],
-    queryFn: universitiesApi.listCountries,
-  });
+  const {
+    data: countries = [],
+    isLoading: countriesLoading,
+    isError: countriesError,
+  } = useCountries();
 
-  const selectedCountryName = form.watch("destinationCountry");
-  const selectedCountryCode = countries?.find((c) => c.name === selectedCountryName)?.code;
+  const {
+    data: universities = [],
+    isLoading: universitiesLoading,
+    isError: universitiesError,
+  } = useUniversitiesByCountry(destinationCountry || undefined);
 
-  const { data: universities } = useQuery({
-    queryKey: ["universities", selectedCountryCode],
-    queryFn: () => universitiesApi.listAllUniversities({ countryCode: selectedCountryCode }),
-    enabled: Boolean(selectedCountryCode),
-  });
+  const {
+    data: courses = [],
+    isLoading: coursesLoading,
+    isError: coursesError,
+  } = useUniversityCourseOptions(universityId || undefined);
 
-  const selectedUniversityName = form.watch("universityName");
-  const selectedUniversityId = universities?.find((u) => u.name === selectedUniversityName)?.id;
-
-  const { data: courses } = useQuery({
-    queryKey: ["universityCourses", selectedUniversityId],
-    // availableOnly: false — this picker should list every course, not just ones
-    // with an open intake window (courses may have no course_intakes rows at all).
-    queryFn: () =>
-      universitiesApi.listAllUniversityCourses(selectedUniversityId as string, { availableOnly: false }),
-    enabled: Boolean(selectedUniversityId),
-  });
-
-  // Keep the form's studentId in sync if a preselected id arrives after mount.
   useEffect(() => {
-    if (preselectedStudentId) {
-      setValue("studentId", preselectedStudentId, { shouldValidate: true });
+    if (selectedLeadId && leads) {
+      const lead = leads.find((l) => l.id === selectedLeadId);
+      if (lead) {
+        setValue("studentName", `${lead.firstName} ${lead.lastName}`.trim(), {
+          shouldValidate: true,
+        });
+        setValue("email", lead.email, { shouldValidate: true });
+        setValue("phone", lead.phone, { shouldValidate: true });
+        if (lead.destinationCountries?.length > 0 && countries.length > 0) {
+          const code = resolveCountryCode(countries, lead.destinationCountries[0]);
+          if (code) {
+            setValue("destinationCountry", code, { shouldValidate: true });
+            setValue("universityId", "");
+            setValue("targetUniversity", "");
+            setValue("courseId", "");
+            setValue("courseName", "");
+            setValue("studyLevel", "");
+          }
+        }
+      }
     }
-  }, [preselectedStudentId, setValue]);
+  }, [selectedLeadId, leads, countries, setValue]);
 
-  const studentOptions = students ?? [];
-  const lockedStudent = preselectedStudentId
-    ? studentOptions.find((s) => s.id === preselectedStudentId)
-    : undefined;
+  const handleCountryChange = (countryCode: string) => {
+    setValue("destinationCountry", countryCode, { shouldValidate: true });
+    setValue("universityId", "");
+    setValue("targetUniversity", "");
+    setValue("courseId", "");
+    setValue("courseName", "");
+    setValue("studyLevel", "");
+  };
+
+  const handleUniversityChange = (nextUniversityId: string) => {
+    const university = universities.find((u) => u.id === nextUniversityId);
+    setValue("universityId", nextUniversityId, { shouldValidate: true });
+    setValue("targetUniversity", university?.name ?? "", { shouldValidate: true });
+    setValue("courseId", "");
+    setValue("courseName", "");
+    setValue("studyLevel", "");
+  };
+
+  const handleCourseChange = (courseId: string) => {
+    const course = courses.find((c) => c.id === courseId);
+    setValue("courseId", courseId, { shouldValidate: true });
+    setValue("courseName", course?.name ?? "", { shouldValidate: true });
+    setValue("studyLevel", course?.studyLevel ?? "", { shouldValidate: true });
+  };
 
   const handleCancel = () => {
     form.reset(defaultApplicationFormValues);
@@ -103,16 +176,20 @@ export function useApplicationFormController(preselectedStudentId?: string) {
   };
 
   const handleValidSubmit = async (values: ApplicationFormValues) => {
-    const payload = buildCreateApplicationPayload(values);
+    const payload = buildCreateApplicationPayload(values, countries);
+
     try {
       await applicationsApi.createApplication(payload);
       form.reset(defaultApplicationFormValues);
       navigate(applicationsRoutePaths.dashboard);
     } catch (error) {
       console.error("Failed to create application:", error);
+
       const isTimeout =
         axios.isAxiosError(error) &&
-        (error.code === "ECONNABORTED" || error.message.toLowerCase().includes("timeout"));
+        (error.code === "ECONNABORTED" ||
+          error.message.toLowerCase().includes("timeout"));
+
       form.setError("root", {
         message: isTimeout
           ? "The server is warming up — your data is safe. Click Save Application to try again."
@@ -123,12 +200,19 @@ export function useApplicationFormController(preselectedStudentId?: string) {
 
   return {
     form,
-    students: studentOptions,
-    countries: countries ?? [],
-    universities: universities ?? [],
-    courses: courses ?? [],
-    lockedStudentName: lockedStudent ? lockedStudent.name : null,
-    isStudentLocked: Boolean(preselectedStudentId),
+    leads: leads ?? [],
+    countries,
+    universities,
+    courses,
+    countriesLoading,
+    universitiesLoading,
+    coursesLoading,
+    countriesError,
+    universitiesError,
+    coursesError,
+    handleCountryChange,
+    handleUniversityChange,
+    handleCourseChange,
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
   };
