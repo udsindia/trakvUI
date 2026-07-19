@@ -19,7 +19,7 @@ export const STUDY_LEVELS = [
 export type StudyLevel = (typeof STUDY_LEVELS)[number];
 
 export type ApplicationFormValues = {
-  studentId: string | '';
+  studentId: string | "";
   /** Selected university id — used to load courses; name is stored in targetUniversity. */
   universityId: string;
   targetUniversity: string;
@@ -31,12 +31,12 @@ export type ApplicationFormValues = {
   destinationCountry: string;
   intakeMonth: string;
   intakeYear: number;
-  tuitionFeeInr: string;      // text input; converted to number on submit
-  applicationFeeInr: string;  // text input; converted to number on submit
+  tuitionFeeInr: string; // text input; converted to number on submit
+  applicationFeeInr: string; // text input; converted to number on submit
   notes: string;
-  studentName: string | '';
-  email: string | '';
-  phone: string | '';
+  studentName: string | "";
+  email: string | "";
+  phone: string | "";
 };
 
 export type VisaFormValues = {
@@ -61,6 +61,9 @@ export type CreateApplicationPayload = {
   tuitionFeeInr?: number | null;
   applicationFeeInr?: number | null;
   notes?: string;
+  targetUniversity?: string;
+  course?: string;
+  leadId?: string;
 };
 
 export type UpdateVisaPayload = VisaFormValues;
