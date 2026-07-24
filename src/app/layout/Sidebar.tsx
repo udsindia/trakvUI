@@ -22,6 +22,7 @@ import {
   SIDEBAR_WIDTH,
   TOPBAR_HEIGHT,
 } from "@/app/layout/layoutConstants";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 type SidebarNavItemProps = {
   collapsed: boolean;
@@ -44,14 +45,16 @@ function SidebarNavItem({ collapsed, item, onNavigate }: SidebarNavItemProps) {
       sx={{
         alignItems: "center",
         background: active ? sidebar.activeBg : "transparent",
-        borderRadius: 2,
+        // Explicit px: the theme radius multiplier would round nav rows into
+        // pills, which fights the squarer Meridian chrome.
+        borderRadius: "8px",
         boxShadow: active ? sidebar.activeShadow : "none",
         color: active ? sidebar.activeText : sidebar.text,
         display: "flex",
-        fontSize: 12,
+        fontSize: 12.5,
         fontWeight: 600,
         gap: 1.25,
-        mb: 0.125,
+        mb: 0.25,
         px: 1.125,
         py: 1,
         textDecoration: "none",
@@ -62,14 +65,14 @@ function SidebarNavItem({ collapsed, item, onNavigate }: SidebarNavItemProps) {
           color: active ? sidebar.activeText : sidebar.hoverText,
         },
         "& .MuiSvgIcon-root": {
-          fontSize: 18,
-          width: 18,
+          fontSize: 17,
+          width: 17,
         },
       }}
       to={item.to}
       onClick={onNavigate}
     >
-      <Box sx={{ flexShrink: 0, textAlign: "center", width: 18 }}>{item.icon}</Box>
+      <Box sx={{ flexShrink: 0, textAlign: "center", width: 17 }}>{item.icon}</Box>
       {!collapsed ? (
         <>
           <Box component="span" sx={{ flex: 1, minWidth: 0 }}>
@@ -151,11 +154,12 @@ function SidebarContent({
           <Typography
             sx={{
               color: sidebar.mutedText,
-              fontSize: 8,
-              fontWeight: 800,
-              letterSpacing: 1.4,
+              fontSize: 9.5,
+              fontWeight: 700,
+              letterSpacing: 1.1,
               px: 1.125,
-              py: 1,
+              pb: 0.75,
+              pt: 1.5,
               textTransform: "uppercase",
             }}
           >
@@ -178,11 +182,11 @@ function SidebarContent({
     <Stack sx={{ height: "100%" }}>
       <Stack
         direction="row"
-        spacing={1}
+        spacing={1.25}
         sx={{
           alignItems: "center",
           borderBottom: "1px solid",
-          borderColor: "divider",
+          borderColor: sidebar.line,
           flexShrink: 0,
           height: TOPBAR_HEIGHT,
           overflow: "hidden",
@@ -194,35 +198,61 @@ function SidebarContent({
           sx={{
             alignItems: "center",
             background: sidebar.brandGradient,
-            borderRadius: 2.25,
+            borderRadius: "9px",
             color: "#fff",
             display: "flex",
             flexShrink: 0,
-            fontSize: 13,
-            fontWeight: 900,
-            height: 32,
+            fontFamily: SERIF,
+            fontSize: 15,
+            fontWeight: 600,
+            height: 30,
             justifyContent: "center",
-            width: 32,
+            width: 30,
           }}
         >
           T
         </Box>
         {!collapsed ? (
-          <Typography noWrap sx={{ color: sidebar.strongText, fontSize: 14, fontWeight: 800 }}>
-            Trakv
-          </Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              noWrap
+              sx={{
+                color: sidebar.strongText,
+                fontFamily: SERIF,
+                fontSize: 16,
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
+                lineHeight: 1.1,
+              }}
+            >
+              Trakv
+            </Typography>
+            <Typography
+              noWrap
+              sx={{
+                color: sidebar.mutedText,
+                fontSize: 8.5,
+                fontWeight: 700,
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+              }}
+            >
+              Education CRM
+            </Typography>
+          </Box>
         ) : null}
         {showCollapseToggle && onToggleCollapse ? (
           <IconButton
             size="small"
             sx={{
               border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 1.75,
+              borderColor: sidebar.line,
+              borderRadius: "7px",
               color: sidebar.text,
               height: 26,
               ml: "auto",
               width: 26,
+              "&:hover": { bgcolor: sidebar.hoverBg },
             }}
             onClick={onToggleCollapse}
           >
@@ -246,7 +276,7 @@ function SidebarContent({
       <Box
         sx={{
           borderTop: "1px solid",
-          borderColor: "divider",
+          borderColor: sidebar.line,
           flexShrink: 0,
           px: 0.875,
           py: 1,
@@ -257,7 +287,8 @@ function SidebarContent({
           spacing={1.125}
           sx={{
             alignItems: "center",
-            borderRadius: 2,
+            bgcolor: collapsed ? "transparent" : sidebar.inset,
+            borderRadius: "10px",
             cursor: "pointer",
             overflow: "hidden",
             px: 1.125,
@@ -269,12 +300,15 @@ function SidebarContent({
           <Box
             sx={{
               alignItems: "center",
-              background: sidebar.brandGradient,
+              // Steel-teal, so the orange gradient stays reserved for the
+              // active nav row and primary CTAs.
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.secondary.light}, ${theme.palette.secondary.dark})`,
               borderRadius: "50%",
               color: "#fff",
               display: "flex",
               flexShrink: 0,
-              fontSize: 10,
+              fontSize: 10.5,
               fontWeight: 700,
               height: 30,
               justifyContent: "center",
@@ -285,10 +319,13 @@ function SidebarContent({
           </Box>
           {!collapsed ? (
             <Box sx={{ minWidth: 0 }}>
-              <Typography noWrap sx={{ color: sidebar.strongText, fontSize: 11, fontWeight: 700 }}>
+              <Typography
+                noWrap
+                sx={{ color: sidebar.strongText, fontSize: 11.5, fontWeight: 700, lineHeight: 1.25 }}
+              >
                 {userName}
               </Typography>
-              <Typography noWrap sx={{ color: sidebar.mutedText, fontSize: 9 }}>
+              <Typography noWrap sx={{ color: sidebar.mutedText, fontSize: 9.5 }}>
                 {primaryRole}
               </Typography>
             </Box>
@@ -329,7 +366,7 @@ export function Sidebar({
         sx={{
           background: (theme) => theme.palette.sidebar.bg,
           borderRight: "1px solid",
-          borderColor: "divider",
+          borderColor: (theme) => theme.palette.sidebar.line,
           display: { xs: "none", md: "flex" },
           flexDirection: "column",
           flexShrink: 0,
@@ -361,7 +398,9 @@ export function Sidebar({
         variant="temporary"
         onClose={onCloseMobile}
       >
-        <Box sx={{ width: SIDEBAR_WIDTH }}>
+        {/* Full height so SidebarContent's `height: 100%` resolves and the
+            user chip pins to the bottom instead of floating mid-drawer. */}
+        <Box sx={{ height: "100%", width: SIDEBAR_WIDTH }}>
           <SidebarContent
             collapsed={false}
             items={items}

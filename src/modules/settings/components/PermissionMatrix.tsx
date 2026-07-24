@@ -26,7 +26,7 @@ export function PermissionMatrix({ roles }: PermissionMatrixProps) {
     return (
       <Paper
         elevation={0}
-        sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 4 }}
+        sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 4 }}
       >
         <Typography color="text.secondary">No roles available to display.</Typography>
       </Paper>
@@ -37,7 +37,7 @@ export function PermissionMatrix({ roles }: PermissionMatrixProps) {
     <TableContainer
       component={Paper}
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
     >
       <Table size="small">
         <TableHead>

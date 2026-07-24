@@ -34,7 +34,7 @@ export function PermissionPicker({ control, disabled = false, errors }: Permissi
                 sx={{
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 2.5,
+                  borderRadius: "9px",
                   p: 2,
                 }}
               >

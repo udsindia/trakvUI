@@ -222,7 +222,7 @@ export function DashboardActivitySection() {
                       component="span"
                       sx={{
                         ...DUE_STYLES[tone],
-                        borderRadius: 1.25,
+                        borderRadius: "8px",
                         fontSize: 9,
                         fontWeight: 700,
                         px: 0.75,

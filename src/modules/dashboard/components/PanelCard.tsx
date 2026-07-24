@@ -13,23 +13,24 @@ export function PanelCard({ action, children, grow = false, title }: PanelCardPr
     <Box
       sx={{
         bgcolor: "background.paper",
-        border: "1px solid rgba(229,231,235,.5)",
-        borderRadius: 1.0,
-        boxShadow: "0 4px 16px rgba(0,0,0,.07)",
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: "12px",
+        boxShadow: "0 1px 2px rgba(16,40,52,.05)",
         display: "flex",
         flex: grow ? 1 : undefined,
         flexDirection: "column",
         minHeight: grow ? 0 : undefined,
         overflow: "hidden",
-        p: "11px 13px",
+        p: "14px 16px",
       }}
     >
       <Stack
         direction="row"
         spacing={1}
-        sx={{ alignItems: "center", flexShrink: 0, justifyContent: "space-between", mb: 1 }}
+        sx={{ alignItems: "center", flexShrink: 0, justifyContent: "space-between", mb: 1.25 }}
       >
-        <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{title}</Typography>
+        <Typography sx={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.1px" }}>{title}</Typography>
         {action}
       </Stack>
       <Box sx={{ display: "flex", flex: grow ? 1 : undefined, flexDirection: "column", minHeight: grow ? 0 : undefined }}>
@@ -46,10 +47,11 @@ export function PanelLink({ children, onClick }: { children: ReactNode; onClick?
       sx={{
         background: "none",
         border: "none",
-        color: "primary.main",
+        color: "secondary.main",
         cursor: "pointer",
-        fontSize: 10,
-        fontWeight: 600,
+        fontFamily: "inherit",
+        fontSize: 10.5,
+        fontWeight: 700,
         p: 0,
         "&:hover": { textDecoration: "underline" },
       }}

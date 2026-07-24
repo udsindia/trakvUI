@@ -17,8 +17,10 @@ import ListAltRounded from "@mui/icons-material/ListAltRounded";
 import NotificationsNoneRounded from "@mui/icons-material/NotificationsNoneRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
+import type { Theme } from "@mui/material/styles";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { MobileMenuButton } from "@/app/layout/Sidebar";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 import { getNavigationItems } from "@/app/layout/navbar/navigation";
 import { UserMenu } from "@/app/layout/navbar/UserMenu";
@@ -100,27 +102,44 @@ export function Topbar({
   const actionButtonIcons = [AddRounded, AssignmentRounded, TaskAltRounded];
 
   const primaryButtonSx = {
-    bgcolor: "primary.main",
-    borderRadius: 2,
+    background: (theme: Theme) =>
+      `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 52%, ${theme.palette.primary.dark} 100%)`,
+    border: "1px solid",
+    borderColor: "primary.dark",
+    borderRadius: "9px",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 4px 13px rgba(243,129,24,.28)",
     color: "#fff",
     display: { xs: "none", sm: "inline-flex" },
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: 700,
     minWidth: 0,
-    px: 1.25,
-    py: 0.625,
+    px: 1.375,
+    py: 0.75,
     textTransform: "none",
     whiteSpace: "nowrap",
-    "&:hover": { bgcolor: "primary.dark" },
+    "&:hover": {
+      background: "linear-gradient(135deg, #FFAE59 0%, #FF952B 100%)",
+      borderColor: "primary.main",
+    },
   } as const;
 
   const secondaryButtonSx = {
     ...primaryButtonSx,
-    bgcolor: "#fff",
+    background: "#fff",
+    borderColor: "divider",
+    boxShadow: "none",
+    color: "text.primary",
+    "&:hover": { background: "#F7FAFC", borderColor: "secondary.main", color: "secondary.main" },
+  } as const;
+
+  const iconButtonSx = {
     border: "1px solid",
     borderColor: "divider",
-    color: "text.primary",
-    "&:hover": { bgcolor: "#F0F9FA", borderColor: "primary.main" },
+    borderRadius: "9px",
+    color: "text.secondary",
+    height: 32,
+    width: 32,
+    "&:hover": { borderColor: "secondary.main", color: "secondary.main" },
   } as const;
 
   return (
@@ -142,8 +161,19 @@ export function Topbar({
       <MobileMenuButton onClick={onOpenMobileNavigation} />
 
       <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{pageTitle}</Typography>
-        <Typography sx={{ color: "text.disabled", fontSize: 9, mt: 0.125 }}>
+        <Typography
+          noWrap
+          sx={{
+            fontFamily: SERIF,
+            fontSize: 18,
+            fontWeight: 600,
+            letterSpacing: "-0.3px",
+            lineHeight: 1.15,
+          }}
+        >
+          {pageTitle}
+        </Typography>
+        <Typography noWrap sx={{ color: "text.disabled", fontSize: 10, mt: 0.125 }}>
           {formatPageSubtitle(tenantName)}
         </Typography>
       </Box>
@@ -154,13 +184,13 @@ export function Topbar({
         sx={{
           display: { xs: "none", sm: "block" },
           flex: 1,
-          maxWidth: 240,
+          maxWidth: 300,
           ml: 1.5,
           "& .MuiOutlinedInput-root": {
-            bgcolor: "#F0F4F8",
-            borderRadius: 2,
-            fontSize: 11,
-            height: 32,
+            bgcolor: "#F7FAFC",
+            borderRadius: "9px",
+            fontSize: 12,
+            height: 34,
           },
         }}
         slotProps={{
@@ -198,27 +228,20 @@ export function Topbar({
 
         <IconButton
           aria-label="notifications"
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            height: 32,
-            position: "relative",
-            width: 32,
-          }}
+          sx={{ ...iconButtonSx, position: "relative" }}
         >
-          <NotificationsNoneRounded sx={{ fontSize: 14 }} />
+          <NotificationsNoneRounded sx={{ fontSize: 15 }} />
           {notificationsCount > 0 ? (
             <Box
               sx={{
-                bgcolor: "secondary.main",
+                bgcolor: "primary.main",
                 border: "1.5px solid #fff",
                 borderRadius: "50%",
-                height: 5,
+                height: 7,
                 position: "absolute",
                 right: 5,
                 top: 5,
-                width: 5,
+                width: 7,
               }}
             />
           ) : null}
@@ -227,17 +250,10 @@ export function Topbar({
         <IconButton
           aria-label="tasks"
           component={RouterLink}
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            display: { xs: "none", sm: "inline-flex" },
-            height: 32,
-            width: 32,
-          }}
+          sx={{ ...iconButtonSx, display: { xs: "none", sm: "inline-flex" } }}
           to="/activities/tasks"
         >
-          <ListAltRounded sx={{ fontSize: 14 }} />
+          <ListAltRounded sx={{ fontSize: 15 }} />
         </IconButton>
 
         <Divider flexItem orientation="vertical" sx={{ display: { xs: "none", sm: "block" }, my: 1.25 }} />

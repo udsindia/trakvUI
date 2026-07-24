@@ -55,7 +55,7 @@ function ActivityRow({ activity }: { activity: DashboardActivityDto }) {
         sx={{
           alignItems: "center",
           bgcolor: meta.bg,
-          borderRadius: 1.25,
+          borderRadius: "8px",
           display: "flex",
           fontSize: 16,
           height: 36,
@@ -88,7 +88,7 @@ export function RecentActivitiesCard({ activities }: { activities: DashboardActi
       sx={{
         border: "1px solid",
         borderColor: "#e2e8f0",
-        borderRadius: 2,
+        borderRadius: "10px",
         overflow: "hidden",
       }}
     >

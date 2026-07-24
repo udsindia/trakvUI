@@ -17,7 +17,7 @@ function PipelineTrack({
     <Stack spacing={1.25}>
       <Box
         sx={{
-          borderRadius: 1.25,
+          borderRadius: "8px",
           display: "flex",
           height: 52,
           overflow: "hidden",
@@ -72,7 +72,7 @@ function PipelineCard({
       sx={{
         border: "1px solid",
         borderColor: "#e2e8f0",
-        borderRadius: 2,
+        borderRadius: "10px",
         overflow: "hidden",
       }}
     >

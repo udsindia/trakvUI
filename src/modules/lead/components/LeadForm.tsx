@@ -48,7 +48,7 @@ export function LeadForm({
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
       bgcolor: "background.paper",
-      borderRadius: 2.5,
+      borderRadius: "9px",
     },
   };
 
@@ -71,7 +71,7 @@ export function LeadForm({
       sx={{
         border: "1px solid",
         borderColor: "#e9eff5",
-        borderRadius: 3,
+        borderRadius: "12px",
         boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
       }}
     >

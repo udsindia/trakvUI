@@ -16,7 +16,7 @@ import type { RoleFormValues } from "@/modules/settings/settings.types";
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     bgcolor: "background.paper",
-    borderRadius: 2.5,
+    borderRadius: "9px",
   },
 };
 
@@ -45,7 +45,7 @@ export function RoleForm({
   return (
     <Card
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
     >
       <CardContent sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={3}>

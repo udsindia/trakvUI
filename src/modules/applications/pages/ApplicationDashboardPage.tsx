@@ -97,7 +97,7 @@ export function ApplicationDashboardPage() {
         bgcolor: "background.paper",
         border: "1px solid",
         borderColor: "#e9eff5",
-        borderRadius: 1,
+        borderRadius: "12px",
         display: "flex",
         flexDirection: "column",
         height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },

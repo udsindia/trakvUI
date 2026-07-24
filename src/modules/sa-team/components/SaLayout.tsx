@@ -84,7 +84,7 @@ function NavItemRow({ item }: { item: NavItem }) {
         <ListItemButton
           selected={isActive}
           sx={{
-            borderRadius: 1,
+            borderRadius: "12px",
             mx: 1,
             "&.Mui-selected": { bgcolor: "#e0f2f2" },
             "&.Mui-selected .MuiListItemIcon-root": { color: SA_TEAL },

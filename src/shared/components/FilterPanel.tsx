@@ -159,10 +159,10 @@ export function FilterPanel({
       borderColor: "#edf2f7",
     },
     "& .MuiOutlinedInput-root": {
-      bgcolor: "#f8fbfe",
-      borderRadius: 3,
-      boxShadow: "0 1px 2px rgba(15, 23, 42, 0.02)",
-      minHeight: 44,
+      bgcolor: "#F7FAFC",
+      borderRadius: "9px",
+      boxShadow: "none",
+      minHeight: 38,
     },
     "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
       borderColor: "#dbe6f0",
@@ -481,9 +481,9 @@ export function FilterPanel({
         <Button
           fullWidth
           sx={{
-            borderRadius: 2.5,
+            borderRadius: "9px",
             fontWeight: 700,
-            minHeight: 44,
+            minHeight: 38,
             textTransform: "none",
           }}
           variant="contained"

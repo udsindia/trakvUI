@@ -3,7 +3,9 @@ import PersonOffRounded from "@mui/icons-material/PersonOffRounded";
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
+import { AuthBrandLockup } from "@/app/auth/AuthShell";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 export function AccountInactivePage() {
   const { isActive, isAuthenticated, isInitializing, logout, user } = useAuth();
@@ -32,21 +34,19 @@ export function AccountInactivePage() {
       }}
     >
       <Card
-        elevation={0}
         sx={{
-          border: "1px solid",
-          borderColor: "divider",
-          maxWidth: 520,
+          maxWidth: 480,
           mx: "auto",
           width: "100%",
         }}
       >
         <CardContent sx={{ p: { xs: 3, md: 4 } }}>
           <Stack spacing={3}>
+            <AuthBrandLockup eyebrow="Education CRM" wordmark="VUTrak" />
             <Stack alignItems="center" spacing={1.5}>
-              <PersonOffRounded color="warning" sx={{ fontSize: 48 }} />
+              <PersonOffRounded color="warning" sx={{ fontSize: 44 }} />
               <Typography variant="overline">Account Status</Typography>
-              <Typography textAlign="center" variant="h5">
+              <Typography sx={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, textAlign: "center" }}>
                 Your account is not active
               </Typography>
               <Typography color="text.secondary" textAlign="center" variant="body2">

@@ -1,20 +1,11 @@
 import { useState } from "react";
 import LoginRounded from "@mui/icons-material/LoginRounded";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { AuthShell } from "@/app/auth/AuthShell";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
-
-const SA_TEAL = "#0d7a7a";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 export function SaLoginPage() {
   const navigate = useNavigate();
@@ -38,80 +29,93 @@ export function SaLoginPage() {
   }
 
   return (
-    <Box
-      sx={{
-        alignItems: "center",
-        bgcolor: "background.default",
-        display: "grid",
-        minHeight: "100vh",
-        px: 2,
-        py: 4,
-      }}
+    <AuthShell
+      accent="admin"
+      eyebrow="Super Admin"
+      wordmark="VUTrak SA"
+      headline="The control plane behind every consultancy."
+      subhead="Onboard tenants, manage platform users and roles, and configure the integrations that power each workspace."
+      points={[
+        "Provision and configure tenant workspaces",
+        "Manage platform-level users and permissions",
+        "Restricted to authorised platform administrators",
+      ]}
+      footnote="Restricted access · platform administrators only"
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: "1px solid",
-          borderColor: "divider",
-          maxWidth: 460,
-          mx: "auto",
-          width: "100%",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={3}>
-            <Stack spacing={1}>
-              <Typography color={SA_TEAL} variant="overline">
-                Super Admin Portal
-              </Typography>
-              <Typography variant="h5">Sign in to VUTrak SA</Typography>
-              <Typography color="text.secondary" variant="body2">
-                This portal is for platform administrators only.
-              </Typography>
-            </Stack>
+      <Stack spacing={3}>
+        <Stack spacing={0.75}>
+          <Typography
+            sx={{
+              color: "secondary.main",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}
+          >
+            Platform Administration
+          </Typography>
+          <Typography sx={{ fontFamily: SERIF, fontSize: 26, fontWeight: 600, letterSpacing: "-0.4px" }}>
+            Sign in to VUTrak SA
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            This portal is for platform administrators only.
+          </Typography>
+        </Stack>
 
-            {error && <Alert severity="error">{error}</Alert>}
+        {error && <Alert severity="error">{error}</Alert>}
 
-            <Box component="form" onSubmit={handleSubmit}>
-              <Stack spacing={2.5}>
-                <TextField
-                  autoComplete="username"
-                  label="Email"
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+        <Box component="form" onSubmit={handleSubmit}>
+          <Stack spacing={2.25}>
+            <TextField
+              autoComplete="username"
+              fullWidth
+              label="Email"
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-                <TextField
-                  autoComplete="current-password"
-                  label="Password"
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+            <TextField
+              autoComplete="current-password"
+              fullWidth
+              label="Password"
+              required
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-                <Button
-                  disabled={!email || !password || isLoading}
-                  startIcon={<LoginRounded />}
-                  type="submit"
-                  variant="contained"
-                  sx={{ bgcolor: SA_TEAL, "&:hover": { bgcolor: "#0a6060" } }}
-                >
-                  {isLoading ? "Signing In..." : "Sign In"}
-                </Button>
+            <Button
+              disabled={!email || !password || isLoading}
+              fullWidth
+              size="large"
+              startIcon={<LoginRounded />}
+              type="submit"
+              variant="contained"
+              sx={{
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.secondary.light}, ${theme.palette.secondary.dark})`,
+                border: "none",
+                boxShadow: "0 4px 13px rgba(43,123,151,.28)",
+                "&:hover": {
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                },
+              }}
+            >
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Button>
 
-                <Typography align="center" color="text.secondary" variant="body2">
-                  <RouterLink to="/login" style={{ color: "inherit" }}>
-                    Back to tenant login
-                  </RouterLink>
-                </Typography>
-              </Stack>
-            </Box>
+            <Typography align="center" color="text.secondary" variant="body2">
+              <RouterLink to="/login" style={{ color: "inherit", fontWeight: 600 }}>
+                Back to tenant login
+              </RouterLink>
+            </Typography>
           </Stack>
-        </CardContent>
-      </Card>
-    </Box>
+        </Box>
+      </Stack>
+    </AuthShell>
   );
 }

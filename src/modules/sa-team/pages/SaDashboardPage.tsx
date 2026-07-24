@@ -37,7 +37,7 @@ function StatCard({
   return (
     <Paper
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}
     >
       <Typography color="text.secondary" variant="overline">
         {label}
@@ -141,7 +141,7 @@ export function SaDashboardPage() {
                   sx={{
                     border: "1px solid",
                     borderColor: "divider",
-                    borderRadius: 2,
+                    borderRadius: "10px",
                     p: 2,
                     textAlign: "center",
                   }}
@@ -168,7 +168,7 @@ export function SaDashboardPage() {
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 elevation={0}
-                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+                sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
               >
                 <CardActionArea onClick={() => navigate("/sa/tenants")} sx={{ p: 3 }}>
                   <CardContent sx={{ p: 0 }}>
@@ -188,7 +188,7 @@ export function SaDashboardPage() {
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 elevation={0}
-                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+                sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
               >
                 <CardActionArea onClick={() => navigate("/sa/onboard")} sx={{ p: 3 }}>
                   <CardContent sx={{ p: 0 }}>
@@ -208,7 +208,7 @@ export function SaDashboardPage() {
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 elevation={0}
-                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+                sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
               >
                 <CardActionArea onClick={() => navigate("/sa/team")} sx={{ p: 3 }}>
                   <CardContent sx={{ p: 0 }}>

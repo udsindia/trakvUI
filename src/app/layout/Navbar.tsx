@@ -94,7 +94,7 @@ export function Navbar({
                   alignItems: "center",
                   background:
                     "linear-gradient(135deg, rgba(15,90,212,1) 0%, rgba(0,137,123,1) 100%)",
-                  borderRadius: 2.5,
+                  borderRadius: "9px",
                   color: "common.white",
                   display: "grid",
                   height: 42,

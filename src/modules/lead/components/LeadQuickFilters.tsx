@@ -42,10 +42,10 @@ export function LeadQuickFilters({
       elevation={0}
       sx={{
         border: "1px solid",
-        borderColor: "#edf2f7",
-        borderRadius: 4,
+        borderColor: "divider",
+        borderRadius: "12px",
         overflowX: "auto",
-        p: 2.25,
+        p: 1.25,
       }}
     >
       <Tabs
@@ -84,7 +84,7 @@ export function LeadQuickFilters({
                       gap: 1,
                     }}
                   >
-                    <Typography fontWeight={700} variant="body2">
+                    <Typography sx={{ fontSize: 12, fontWeight: 700 }} variant="body2">
                       {tab.label}
                     </Typography>
                     <Box
@@ -92,16 +92,16 @@ export function LeadQuickFilters({
                       sx={{
                         alignItems: "center",
                         backgroundColor: tone.badgeBg,
-                        borderRadius: 999,
+                        borderRadius: "7px",
                         color: tone.badgeColor,
                         display: "inline-flex",
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: 700,
                         justifyContent: "center",
                         lineHeight: 1,
-                        minWidth: 28,
-                        px: 1,
-                        py: 0.45,
+                        minWidth: 20,
+                        px: 0.75,
+                        py: 0.375,
                         textAlign: "center",
                       }}
                     >
@@ -110,15 +110,21 @@ export function LeadQuickFilters({
                   </Box>
                 }
                 sx={{
-                  bgcolor: "#f7fafc",
-                  borderRadius: 2.5,
-                  minHeight: 42,
+                  bgcolor: "#F7FAFC",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "9px",
+                  color: "text.secondary",
+                  minHeight: 34,
                   minWidth: "fit-content",
-                  px: 2,
-                  py: 1,
+                  px: 1.5,
+                  py: 0.75,
                   textTransform: "none",
+                  // Selected state uses the deep navigation teal, so the orange
+                  // accent stays reserved for primary actions.
                   "&.Mui-selected": {
-                    backgroundColor: "#2f87b7",
+                    backgroundColor: (theme) => theme.palette.sidebar.bg,
+                    borderColor: (theme) => theme.palette.sidebar.bg,
                     color: "common.white",
                   },
                   "&.Mui-selected .LeadQuickFilters-count": {

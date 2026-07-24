@@ -21,7 +21,7 @@ function ActivitySummaryCardComponent({
       sx={{
         border: "1px solid",
         borderColor: "divider",
-        borderRadius: 3,
+        borderRadius: "12px",
         p: 2.25,
       }}
     >

@@ -130,7 +130,7 @@ export function SaWhatsAppConfigPage() {
         </Typography>
       </Box>
 
-      <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}>
+      <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}>
         <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
           Select Tenant
         </Typography>
@@ -150,7 +150,7 @@ export function SaWhatsAppConfigPage() {
       </Paper>
 
       {selectedTenant && (
-        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}>
+        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}>
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
               Automated Setup (Embedded Signup)
@@ -188,7 +188,7 @@ export function SaWhatsAppConfigPage() {
       )}
 
       {selectedTenant && (
-        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}>
+        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}>
           {configQuery.isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
               <CircularProgress />

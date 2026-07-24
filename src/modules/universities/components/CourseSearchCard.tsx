@@ -32,11 +32,11 @@ export function EligibilityBar({ label = "Eligibility match", percent }: Eligibi
       <LinearProgress
         sx={{
           bgcolor: "#e1edf1",
-          borderRadius: 1,
+          borderRadius: "12px",
           height: 6,
           "& .MuiLinearProgress-bar": {
             bgcolor: "secondary.main",
-            borderRadius: 1,
+            borderRadius: "12px",
           },
         }}
         value={percent}
@@ -75,7 +75,7 @@ export function CourseSearchCard({
         borderLeft:
           showEligibility && result.eligibilityStatus === "partial" ? "3px solid" : undefined,
         borderLeftColor: "secondary.main",
-        borderRadius: 2,
+        borderRadius: "10px",
         cursor: "pointer",
         opacity: isNotEligible ? 0.75 : 1,
         p: 2,

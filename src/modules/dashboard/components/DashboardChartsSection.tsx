@@ -17,7 +17,7 @@ function SectionCard({
       sx={{
         border: "1px solid",
         borderColor: "#e2e8f0",
-        borderRadius: 2,
+        borderRadius: "10px",
         overflow: "hidden",
       }}
     >

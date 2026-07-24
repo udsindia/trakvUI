@@ -91,7 +91,7 @@ export function SaMetaAdsConfigPage() {
         </Typography>
       </Box>
 
-      <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}>
+      <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}>
         <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
           Select Tenant
         </Typography>
@@ -111,7 +111,7 @@ export function SaMetaAdsConfigPage() {
       </Paper>
 
       {selectedTenant && (
-        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 3 }}>
+        <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 3 }}>
           {configsQuery.isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
               <CircularProgress />

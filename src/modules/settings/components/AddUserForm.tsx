@@ -16,7 +16,7 @@ import type { AddUserFormValues, RoleDefinition } from "@/modules/settings/setti
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     bgcolor: "background.paper",
-    borderRadius: 2.5,
+    borderRadius: "9px",
   },
 };
 
@@ -36,7 +36,7 @@ export function AddUserForm({ form, onCancel, onSubmit, roles }: AddUserFormProp
   return (
     <Card
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, maxWidth: 760 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", maxWidth: 760 }}
     >
       <CardContent sx={{ p: { xs: 3, md: 4 } }}>
         {errors.root?.message ? (

@@ -23,7 +23,7 @@ export function DashboardGreeting({
       sx={{
         border: "1px solid",
         borderColor: "#e2e8f0",
-        borderRadius: 2,
+        borderRadius: "10px",
         p: { xs: 2, md: 2.5 },
       }}
     >
@@ -48,7 +48,7 @@ export function DashboardGreeting({
               sx={{
                 border: "1.5px solid",
                 borderColor: "#e2e8f0",
-                borderRadius: 1.25,
+                borderRadius: "8px",
                 color: "text.primary",
                 fontWeight: 600,
                 px: 1.75,

@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddRounded } from "@mui/icons-material";
-import { Box, Button, CircularProgress, Paper, Snackbar, Stack, Typography } from "@mui/material";
+import { AddRounded, TuneRounded } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Collapse,
+  Paper,
+  Snackbar,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
@@ -155,6 +166,10 @@ export function LeadDashboardPage() {
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
     getDefaultFilterPanelValues(filterConfig),
   );
+  const theme = useTheme();
+  // Matches the grid below, which only becomes a two-column layout at lg.
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -265,7 +280,7 @@ export function LeadDashboardPage() {
         bgcolor: "background.paper",
         border: "1px solid",
         borderColor: "#e9eff5",
-        borderRadius: 1,
+        borderRadius: "12px",
         display: "flex",
         flexDirection: "column",
         height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
@@ -283,25 +298,48 @@ export function LeadDashboardPage() {
       >
         <Box
           sx={{
-            borderColor: "#edf2f7",
+            borderColor: "divider",
             borderBottom: { xs: "1px solid", lg: 0 },
             maxHeight: { lg: "100%" },
             minHeight: 0,
             minWidth: 0,
             overflow: "hidden",
-            px: { xs: 2.5, md: 3, lg: 0 },
-            py: { xs: 2.5, md: 3, lg: 3 },
+            px: { xs: 2, md: 3, lg: 0 },
+            py: { xs: 1.5, md: 2, lg: 3 },
             width: "100%",
           }}
         >
-          <FilterPanel
+          {/*
+            Below lg the rail stacks above the table, so leaving it open would
+            push the actual leads a full screen down. Collapse it behind a
+            toggle there; on lg+ it stays a permanent sidebar.
+          */}
+          {!isDesktop ? (
+            <Button
+              fullWidth
+              startIcon={<TuneRounded sx={{ fontSize: 16 }} />}
+              sx={{
+                borderRadius: "9px",
+                color: "text.primary",
+                justifyContent: "flex-start",
+                px: 1.5,
+              }}
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              {filtersOpen ? "Hide filters" : "Show filters"}
+            </Button>
+          ) : null}
+
+          <Collapse in={isDesktop || filtersOpen} timeout={180} unmountOnExit>
+            <FilterPanel
             filtersConfig={filterConfig}
             stickyTopOffset={0}
-            width={250}
-            values={filterValues}
-            onFiltersChange={handleFilterChange}
-            onApplyFilters={handleFilterChange}
-          />
+              width={250}
+              values={filterValues}
+              onFiltersChange={handleFilterChange}
+              onApplyFilters={handleFilterChange}
+            />
+          </Collapse>
         </Box>
 
         <Box

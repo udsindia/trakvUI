@@ -90,7 +90,7 @@ export function RolesPage() {
           <TableContainer
             component={Paper}
             elevation={0}
-            sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+            sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
           >
             <Table>
               <TableHead>

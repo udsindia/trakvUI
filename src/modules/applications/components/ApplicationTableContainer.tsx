@@ -39,14 +39,18 @@ type ApplicationTableContainerProps = {
   paginationLabel: string;
 };
 
+/**
+ * Solid tints rather than alpha overlays, so chips read consistently on both
+ * the white row and the tinted hover/selected states.
+ */
 const stageStyles: Record<string, { backgroundColor: string; color: string }> = {
-  Draft: { backgroundColor: "rgba(15, 90, 212, 0.12)", color: "#0f5ad4" },
-  Submitted: { backgroundColor: "rgba(15, 90, 212, 0.12)", color: "#0f5ad4" },
-  Processing: { backgroundColor: "rgba(237, 108, 2, 0.14)", color: "#b35a00" },
-  "Visa Applied": { backgroundColor: "rgba(123, 31, 162, 0.14)", color: "#7b1fa2" },
-  "Visa Approved": { backgroundColor: "rgba(0, 137, 123, 0.14)", color: "#00796b" },
-  "Visa Rejected": { backgroundColor: "rgba(211, 47, 47, 0.14)", color: "#d32f2f" },
-  Completed: { backgroundColor: "rgba(0, 137, 123, 0.14)", color: "#00796b" },
+  Draft: { backgroundColor: "#EEF2F6", color: "#55707C" },
+  Submitted: { backgroundColor: "#E4EDFC", color: "#0F5AD4" },
+  Processing: { backgroundColor: "#FDEEDD", color: "#B35A00" },
+  "Visa Applied": { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
+  "Visa Approved": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  "Visa Rejected": { backgroundColor: "#FBE5E5", color: "#C0392F" },
+  Completed: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
 };
 
 function getInitials(name: string) {
@@ -86,8 +90,8 @@ export function ApplicationTableContainer({
         elevation={0}
         sx={{
           border: "1px solid",
-          borderColor: "#edf2f7",
-          borderRadius: 1,
+          borderColor: "divider",
+          borderRadius: "12px",
           display: "flex",
           flex: 1,
           flexDirection: "column",
@@ -96,7 +100,16 @@ export function ApplicationTableContainer({
         }}
       >
         <TableContainer sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          <Table stickyHeader sx={{ minWidth: 920 }}>
+          <Table
+            stickyHeader
+            sx={{
+              minWidth: 920,
+              // Sticky header needs an opaque ground; the rest of the head
+              // styling (tracked uppercase) comes from the theme.
+              "& .MuiTableHead-root .MuiTableCell-root": { bgcolor: "#F7FAFC" },
+              "& .MuiTableBody-root .MuiTableCell-root": { fontSize: 12.5, py: 1.15 },
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell>Student</TableCell>
@@ -112,17 +125,17 @@ export function ApplicationTableContainer({
               {applications.map((app) => (
                 <TableRow hover key={app.id}>
                   <TableCell sx={{ minWidth: 270 }}>
-                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Avatar sx={{ bgcolor: "#dbeaf6", color: "#2f6f94", fontSize: 13, fontWeight: 700, width: 38, height: 38 }}>
+                    <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
+                      <Avatar sx={{ bgcolor: "#DBEAF6", color: "#2F6F94", fontSize: 11, fontWeight: 700, width: 31, height: 31 }}>
                         {getInitials(app.studentName)}
                       </Avatar>
-                      <Stack spacing={0.2}>
-                        <Typography fontWeight={700} sx={{ fontSize: 14 }} variant="body2">
+                      <Stack spacing={0.125}>
+                        <Typography sx={{ fontSize: 12.5, fontWeight: 600 }} variant="body2">
                           <RouterLink to={`/applications/${app.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                             {app.studentName}
                           </RouterLink>
                         </Typography>
-                        <Typography color="text.secondary" sx={{ fontSize: 12 }} variant="caption">
+                        <Typography color="text.disabled" sx={{ fontSize: 10.5 }} variant="caption">
                           {app.email}
                         </Typography>
                       </Stack>
@@ -135,19 +148,22 @@ export function ApplicationTableContainer({
                     <Chip
                       label={app.stage}
                       size="small"
-                      sx={{
-                        ...(stageStyles[app.stage] || {}),
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
+                      sx={{ ...(stageStyles[app.stage] || {}) }}
                     />
                   </TableCell>
                   <TableCell sx={{ minWidth: 120 }}>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      sx={{ border: "1px solid #e4edf5", borderRadius: 2.5 }}
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "7px",
+                        color: "text.disabled",
+                        height: 28,
+                        width: 28,
+                        "&:hover": { borderColor: "secondary.main", color: "secondary.main" },
+                      }}
                       onClick={(event) => handleOpenRowMenu(event, app.id)}
                     >
                       <MoreVertRounded fontSize="small" />

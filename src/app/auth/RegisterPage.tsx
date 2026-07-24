@@ -15,6 +15,8 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { authService, getAuthErrorMessage } from "@/app/auth/authService";
+import { AuthBrandLockup } from "@/app/auth/AuthShell";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 interface RegisterFormValues {
   consultancyName: string;
@@ -45,7 +47,7 @@ const defaultValues: RegisterFormValues = {
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     bgcolor: "background.paper",
-    borderRadius: 2.5,
+    borderRadius: "9px",
   },
 };
 
@@ -99,21 +101,20 @@ export function RegisterPage() {
         py: 6,
       }}
     >
-      <Box sx={{ mb: 3, textAlign: "center" }}>
-        <Typography variant="overline">Get Started</Typography>
-        <Typography variant="h5">Create your consultancy account</Typography>
-        <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-          Set up your consultancy and the first admin user in one step.
-        </Typography>
-      </Box>
+      <Stack spacing={1.5} sx={{ alignItems: "center", mb: 3.5, maxWidth: 820, width: "100%" }}>
+        <AuthBrandLockup eyebrow="Education CRM" wordmark="VUTrak" />
+        <Stack spacing={0.5} sx={{ alignItems: "center", textAlign: "center" }}>
+          <Typography sx={{ fontFamily: SERIF, fontSize: 27, fontWeight: 600, letterSpacing: "-0.5px" }}>
+            Create your consultancy account
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            Set up your consultancy and the first admin user in one step.
+          </Typography>
+        </Stack>
+      </Stack>
 
       <Card
-        elevation={0}
         sx={{
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 3,
-          boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
           maxWidth: 820,
           width: "100%",
         }}
@@ -361,7 +362,7 @@ export function RegisterPage() {
                   fullWidth
                   size="large"
                   startIcon={isSubmitting ? <CircularProgress color="inherit" size={18} /> : null}
-                  sx={{ textTransform: "none", borderRadius: 2.5 }}
+                  sx={{ textTransform: "none", borderRadius: "9px" }}
                   type="submit"
                   variant="contained"
                 >

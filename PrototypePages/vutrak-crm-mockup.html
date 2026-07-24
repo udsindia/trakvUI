@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VUTrak CRM — Interactive Mockup</title>
+</head>
+<body>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --canvas:#EEF3F5; --surface:#FFFFFF; --surface-2:#F6F9FA; --surface-3:#EFF4F6;
+  --border:#E3EBEF; --border-strong:#D2DEE3;
+  --ink:#14232B; --ink-2:#55707C; --ink-3:#93A6AF;
+  --sidebar:#0F2E3A; --sidebar-2:#0B2530; --sidebar-line:rgba(255,255,255,.08);
+  --sidebar-txt:rgba(255,255,255,.74); --sidebar-muted:rgba(255,255,255,.42);
+  --brand:#F38118; --brand-light:#FF9E42; --brand-dark:#D96F0E;
+  --brand-grad:linear-gradient(135deg,#FF9E42 0%,#F38118 52%,#D96F0E 100%);
+  --teal:#2B7B97;
+  --ok:#12A56A; --ok-bg:#E1F5EC; --warn:#E8930C; --warn-bg:#FCF1DE;
+  --crit:#E5484D; --crit-bg:#FCE7E7; --info:#2F6FED; --info-bg:#E6EEFD;
+  --purple:#8257E6; --purple-bg:#EFE9FC; --teal-bg:#DEF1F0; --teal-fg:#0B6B6B;
+  --shadow-sm:0 1px 2px rgba(16,40,52,.06); --shadow:0 2px 10px rgba(16,40,52,.06);
+  --shadow-md:0 8px 26px rgba(16,40,52,.10); --r:14px; --r-sm:9px;
+  --sbw:242px;
+}
+:root[data-theme="dark"], html:root[data-theme="dark"]{ color-scheme:dark; }
+@media (prefers-color-scheme:dark){
+  :root{
+    --canvas:#0A1A21; --surface:#102730; --surface-2:#0E222B; --surface-3:#16323C;
+    --border:#1E3A44; --border-strong:#274752;
+    --ink:#EAF2F4; --ink-2:#9DB4BC; --ink-3:#6C8790;
+    --sidebar:#0A2029; --sidebar-2:#081920;
+    --teal-bg:#123C3C; --teal-fg:#7FD6D0;
+    --ok-bg:#0F3327; --warn-bg:#3A2C10; --crit-bg:#3A1B1D; --info-bg:#122744; --purple-bg:#241A3D;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 2px 10px rgba(0,0,0,.32); --shadow-md:0 10px 30px rgba(0,0,0,.42);
+  }
+}
+:root[data-theme="dark"]{
+  --canvas:#0A1A21; --surface:#102730; --surface-2:#0E222B; --surface-3:#16323C;
+  --border:#1E3A44; --border-strong:#274752;
+  --ink:#EAF2F4; --ink-2:#9DB4BC; --ink-3:#6C8790;
+  --sidebar:#0A2029; --sidebar-2:#081920;
+  --teal-bg:#123C3C; --teal-fg:#7FD6D0;
+  --ok-bg:#0F3327; --warn-bg:#3A2C10; --crit-bg:#3A1B1D; --info-bg:#122744; --purple-bg:#241A3D;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3); --shadow:0 2px 10px rgba(0,0,0,.32); --shadow-md:0 10px 30px rgba(0,0,0,.42);
+}
+:root[data-theme="light"]{
+  --canvas:#EEF3F5; --surface:#FFFFFF; --surface-2:#F6F9FA; --surface-3:#EFF4F6;
+  --border:#E3EBEF; --border-strong:#D2DEE3;
+  --ink:#14232B; --ink-2:#55707C; --ink-3:#93A6AF;
+  --sidebar:#0F2E3A; --sidebar-2:#0B2530;
+  --teal-bg:#DEF1F0; --teal-fg:#0B6B6B;
+  --ok-bg:#E1F5EC; --warn-bg:#FCF1DE; --crit-bg:#FCE7E7; --info-bg:#E6EEFD; --purple-bg:#EFE9FC;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ============ SHELL ============ */
+.app{display:grid;grid-template-columns:var(--sbw) 1fr;min-height:100vh}
+.sidebar{background:var(--sidebar);color:var(--sidebar-txt);position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;padding:0 12px 14px;overflow:hidden}
+.brand{display:flex;align-items:center;gap:11px;padding:16px 6px}
+.brand .logo{width:32px;height:32px;border-radius:9px;background:var(--brand-grad);display:grid;place-items:center;
+  color:#fff;font-weight:800;font-size:17px;box-shadow:0 4px 12px rgba(243,129,24,.35)}
+.brand b{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.2px;display:block;line-height:1.1}
+.brand small{color:var(--sidebar-muted);font-size:10px;letter-spacing:.3px}
+.sb-line{height:1px;background:var(--sidebar-line);margin:2px 0 4px}
+.nav-group{padding:8px 0 2px}
+.nav-label{font-size:9px;font-weight:800;letter-spacing:1.4px;color:var(--sidebar-muted);padding:6px 10px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;color:var(--sidebar-txt);
+  font-size:12.5px;font-weight:600;text-decoration:none;border:0;background:none;width:100%;text-align:left;
+  transition:background .13s,color .13s;position:relative}
+.nav-item svg{width:18px;height:18px;stroke:#B7CDD6;stroke-width:2;fill:none;flex:0 0 18px;transition:stroke .13s}
+.nav-item .badge{margin-left:auto;font-size:9.5px;font-weight:800;background:rgba(255,255,255,.13);color:#fff;
+  padding:1px 7px;border-radius:8px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item:hover svg{stroke:var(--brand-light)}
+.nav-item.active{background:var(--brand-grad);color:#fff;box-shadow:0 4px 14px rgba(243,129,24,.3)}
+.nav-item.active svg{stroke:#fff}
+.nav-item.active .badge{background:rgba(255,255,255,.22)}
+.sb-spacer{flex:1}
+.sb-user{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:11px;background:rgba(255,255,255,.06)}
+.sb-user .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#388CA9,#226279);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800}
+.sb-user b{color:#fff;font-size:11.5px;font-weight:700;display:block;line-height:1.2}
+.sb-user small{color:var(--sidebar-muted);font-size:9.5px}
+
+.main{min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:14px;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 22px;height:60px;flex:0 0 60px;position:sticky;top:0;z-index:5}
+.topbar h1{font-size:16px;font-weight:800;letter-spacing:-.2px;margin:0;line-height:1.15}
+.topbar .sub{font-size:10.5px;color:var(--ink-3);font-weight:500}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--surface-3);border:1px solid transparent;border-radius:9px;
+  padding:8px 12px;width:330px;max-width:34vw;color:var(--ink-3);font-size:12.5px}
+.tb-search svg{width:15px;height:15px;stroke:var(--ink-3);stroke-width:2;fill:none;flex:0 0 15px}
+.tb-search:focus-within{border-color:var(--brand);background:var(--surface)}
+.tb-search input{border:0;background:none;outline:0;color:var(--ink);font-size:12.5px;width:100%;font-family:inherit}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:9px;font-size:12px;font-weight:700;padding:9px 14px;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);transition:.15s;white-space:nowrap}
+.btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.2;fill:none}
+.btn:hover{border-color:var(--teal);color:var(--teal)}
+.btn.primary{background:var(--brand-grad);color:#fff;border-color:var(--brand-dark);box-shadow:0 4px 13px rgba(243,129,24,.28)}
+.btn.primary:hover{filter:brightness(1.05);color:#fff;transform:translateY(-1px)}
+.btn.icon{padding:0;width:36px;height:36px;justify-content:center}
+.btn.sm{padding:6px 10px;font-size:11px}
+.dot-notif{position:relative}
+.dot-notif::after{content:"";position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--brand);border:1.5px solid var(--surface)}
+
+.content{flex:1;overflow:auto;padding:18px 22px 40px}
+.view{display:none;animation:fade .22s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ============ PRIMITIVES ============ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-pad{padding:16px}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.muted{color:var(--ink-2)}.dim{color:var(--ink-3)}
+.h-title{font-size:20px;font-weight:800;letter-spacing:-.3px;margin:0}
+.h-sub{font-size:12px;color:var(--ink-2);margin:2px 0 0}
+.eyebrow{font-size:9.5px;font-weight:800;letter-spacing:.8px;color:var(--ink-3);text-transform:uppercase}
+.av{border-radius:50%;display:grid;place-items:center;font-weight:800;flex:0 0 auto}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:3px 9px;font-size:10.5px;font-weight:700}
+.pill .d{width:6px;height:6px;border-radius:50%}
+.st-new{background:var(--teal-bg);color:var(--teal-fg)} .st-new .d{background:var(--teal-fg)}
+.st-contacted{background:var(--info-bg);color:var(--info)} .st-contacted .d{background:var(--info)}
+.st-qualified{background:var(--purple-bg);color:var(--purple)} .st-qualified .d{background:var(--purple)}
+.st-proposal{background:var(--warn-bg);color:var(--brand-dark)} .st-proposal .d{background:var(--brand)}
+.score{display:inline-block;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:800}
+.sc-hi{background:var(--ok-bg);color:var(--ok)} .sc-mid{background:var(--warn-bg);color:var(--warn)} .sc-lo{background:var(--crit-bg);color:var(--crit)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-3);color:var(--ink-2)}
+.kebab{width:28px;height:28px;border-radius:7px;border:0;background:none;color:var(--ink-3);display:grid;place-items:center}
+.kebab:hover{background:var(--surface-3);color:var(--ink)}
+.kebab svg{width:16px;height:16px;fill:currentColor}
+.seg{display:inline-flex;background:var(--surface-3);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 13px;border-radius:6px;font-size:11px;font-weight:700;color:var(--ink-2)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+/* ============ DASHBOARD ============ */
+.greet-row{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.period{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px}
+.period button{border:0;background:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;color:var(--ink-2)}
+.period button.on{background:var(--teal-bg);color:var(--teal-fg)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.kpi{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent,var(--teal));
+  border-radius:12px;padding:13px 14px;box-shadow:var(--shadow);transition:transform .16s,box-shadow .16s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.kpi .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:var(--accent-bg,var(--teal-bg))}
+.kpi .lbl{font-size:9px;font-weight:800;letter-spacing:.6px;color:var(--ink-3);text-transform:uppercase}
+.kpi .val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.05}
+.kpi .delta{font-size:10px;font-weight:800;display:flex;align-items:center;gap:3px;margin-top:2px}
+.up{color:var(--ok)} .flat{color:var(--warn)}
+.attention{display:flex;align-items:center;gap:11px;background:var(--warn-bg);border:1px solid var(--warn);border-left:4px solid var(--warn);
+  border-radius:11px;padding:10px 14px;margin-bottom:14px;font-size:11.5px;color:var(--ink)}
+.attention .warn-ic{width:17px;height:17px;flex:0 0 17px}
+.attention a{color:var(--brand-dark);font-weight:800;text-decoration:none}
+.attention .x{margin-left:auto;color:var(--warn);background:none;border:0;font-size:15px;line-height:1}
+.board-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.col{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:9px}
+.col-head{display:flex;align-items:center;gap:8px;padding:5px 6px 9px}
+.col-head .d{width:8px;height:8px;border-radius:50%}
+.col-head b{font-size:11.5px;font-weight:800;color:var(--ink)}
+.col-head .cnt{font-size:9.5px;font-weight:800;background:var(--surface-3);color:var(--ink-2);padding:1px 7px;border-radius:8px}
+.col-head .add{margin-left:auto;color:var(--ink-3);font-size:16px;background:none;border:0}
+.lcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 11px;margin-bottom:8px;box-shadow:var(--shadow-sm);cursor:grab}
+.lcard:hover{border-color:var(--border-strong)}
+.lcard .lc-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.lcard b{font-size:12px;font-weight:700} .lcard .meta{font-size:10px;color:var(--ink-3)}
+.lcard .lc-bot{display:flex;align-items:center;gap:6px}
+
+/* ============ TABLE ============ */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.qtabs{display:flex;gap:5px;flex-wrap:wrap}
+.qtab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface);border-radius:9px;
+  padding:7px 13px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+.qtab .n{font-size:9.5px;font-weight:800;background:var(--surface-3);color:var(--ink-3);padding:1px 6px;border-radius:7px}
+.qtab.on{background:var(--sidebar);color:#fff;border-color:var(--sidebar)}
+.qtab.on .n{background:rgba(255,255,255,.2);color:#fff}
+.split{display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:start}
+.rail{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;box-shadow:var(--shadow)}
+.rail .vlabel{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--ink-3);padding:4px 8px 8px;text-transform:uppercase}
+.vitem{display:flex;align-items:center;justify-content:space-between;padding:8px 9px;border-radius:8px;font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.vitem:hover{background:var(--surface-3)}
+.vitem.on{background:var(--teal-bg);color:var(--teal-fg);font-weight:800}
+.vitem .n{font-size:10px;font-weight:800;color:var(--ink-3)} .vitem.on .n{color:var(--teal-fg)}
+.rail-add{font-size:11px;font-weight:800;color:var(--teal);padding:9px;background:none;border:0}
+table{width:100%;border-collapse:collapse}
+.tbl-wrap{overflow-x:auto;border-radius:12px}
+thead th{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:var(--ink-3);text-transform:uppercase;text-align:left;
+  padding:11px 14px;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:middle}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.sel{background:color-mix(in srgb,var(--teal-bg) 55%,var(--surface))}
+.tcell-user{display:flex;align-items:center;gap:10px}
+.tcell-user b{font-weight:700}.tcell-user .em{font-size:10.5px;color:var(--ink-3)}
+.cbx{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border-strong);background:var(--surface);display:inline-grid;place-items:center}
+.cbx.ck{background:var(--brand);border-color:var(--brand)}
+.cbx.ck::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);margin-top:-2px}
+.tfoot{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;font-size:11.5px;color:var(--ink-2);background:var(--surface);border-top:1px solid var(--border)}
+.pager{display:flex;gap:4px}
+.pager button{min-width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:700;color:var(--ink-2);padding:0 8px}
+.pager button.on{background:var(--sidebar);color:#fff;border-color:var(--sidebar)}
+
+/* ============ RECORD PAGE ============ */
+.rec-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.crumb{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-3);font-weight:600}
+.crumb b{color:var(--ink-2)}
+.rec-title{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.rec-title .arr{color:var(--ink-3)} .rec-title .to{color:var(--teal)}
+.rec-cols{display:grid;grid-template-columns:290px 1fr 280px;gap:14px;align-items:start}
+.prop{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:11.5px}
+.prop .k{color:var(--ink-3);font-weight:600} .prop .v{font-weight:700}
+.contact-row{display:flex;gap:8px;padding:6px 0;font-size:11.5px}
+.contact-row .k{color:var(--ink-3);font-weight:600;width:62px;flex:0 0 62px}
+.contact-row .v{font-weight:700}
+.hr{height:1px;background:var(--border);margin:12px 0}
+.stepper{display:flex;align-items:flex-start;gap:0;margin-top:6px}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;text-align:center}
+.step::before{content:"";position:absolute;top:13px;left:-50%;width:100%;height:2px;background:var(--border)}
+.step:first-child::before{display:none}
+.step.done::before,.step.cur::before{background:var(--ok)}
+.step .node{width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:grid;place-items:center;
+  font-size:11px;font-weight:800;color:var(--ink-3);position:relative;z-index:1}
+.step.done .node{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.cur .node{background:var(--brand-grad);border-color:var(--brand-dark);color:#fff;box-shadow:0 4px 12px rgba(243,129,24,.35)}
+.step .slbl{font-size:10px;font-weight:700;margin-top:7px;color:var(--ink-2)}
+.step.cur .slbl{color:var(--ink)}
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 16px}
+.tl-item::before{content:"";position:absolute;left:-19px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--teal)}
+.tl-item.acc::before{background:var(--teal)}
+.tl-item .tl-t{font-size:12px;font-weight:700} .tl-item .tl-m{font-size:11px;color:var(--ink-2)} .tl-item .tl-d{font-size:10px;color:var(--ink-3);margin-top:2px}
+.docs .doc{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:11.5px;font-weight:600}
+.docs .doc .tick{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:0 0 18px}
+.doc.ok .tick{background:var(--ok);color:#fff} .doc.pending .tick{background:var(--warn-bg);color:var(--warn);border:1.5px solid var(--warn)}
+.doc.ok .tick svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none}
+.textarea{width:100%;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);padding:9px 11px;font-size:11.5px;color:var(--ink);
+  font-family:inherit;resize:none;min-height:62px}
+.textarea:focus{outline:0;border-color:var(--brand);background:var(--surface)}
+
+/* ============ UNIVERSITIES ============ */
+.uni-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.uni{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);transition:.16s}
+.uni:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.uni .u-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.uni .u-logo{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:16px;color:#fff}
+.uni .u-stats{display:flex;gap:16px;margin:12px 0}
+.uni .u-stats div{font-size:11px;color:var(--ink-3)} .uni .u-stats b{display:block;font-size:15px;font-weight:800;color:var(--ink)}
+
+/* ============ KANBAN / TASKS ============ */
+.task{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:9px;box-shadow:var(--shadow-sm)}
+.task .t-tags{display:flex;gap:6px;margin-bottom:7px}
+.task b{font-size:12.5px;font-weight:700}
+.task .t-foot{display:flex;align-items:center;justify-content:space-between;margin-top:9px;font-size:10.5px;color:var(--ink-3)}
+.tag{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.tag.call{background:var(--info-bg);color:var(--info)} .tag.doc{background:var(--purple-bg);color:var(--purple)}
+.tag.follow{background:var(--teal-bg);color:var(--teal-fg)} .tag.urgent{background:var(--crit-bg);color:var(--crit)}
+
+/* ============ SETTINGS ============ */
+.set-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start}
+.matrix td,.matrix th{font-size:11.5px}
+.perm{width:16px;height:16px;border-radius:5px;display:inline-grid;place-items:center;background:var(--ok);color:#fff}
+.perm svg{width:10px;height:10px;stroke:#fff;stroke-width:3;fill:none}
+.perm.no{background:var(--surface-3);color:var(--ink-3)}
+.status-on{color:var(--ok);font-weight:700} .status-off{color:var(--ink-3);font-weight:700}
+.toggle{width:34px;height:19px;border-radius:20px;background:var(--ok);position:relative;display:inline-block}
+.toggle.off{background:var(--border-strong)}
+.toggle::after{content:"";position:absolute;top:2px;left:17px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.15s}
+.toggle.off::after{left:2px}
+
+.section-title{font-size:13px;font-weight:800;letter-spacing:-.2px;margin:0 0 2px}
+.mb14{margin-bottom:14px}.mt14{margin-top:14px}
+@media (max-width:1080px){.kpis{grid-template-columns:repeat(2,1fr)}.board,.uni-grid{grid-template-columns:repeat(2,1fr)}.rec-cols{grid-template-columns:1fr}.split{grid-template-columns:1fr}.set-grid{grid-template-columns:1fr}}
+@media (max-width:720px){.app{grid-template-columns:1fr}.sidebar{display:none}.kpis,.board,.uni-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="app">
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">V</div><div><b>VUTrak</b><small>Education CRM</small></div></div>
+    <div class="sb-line"></div>
+    <nav class="nav-group">
+      <div class="nav-label">Main</div>
+      <button class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+      <button class="nav-item" data-view="leads">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.6-5 5.5-5s5.5 2 5.5 5"/><path d="M17 8h4M19 6v4"/></svg>Leads<span class="badge">258</span></button>
+      <button class="nav-item" data-view="applications">
+        <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v5h5M9.5 13h5M9.5 16.5h5"/></svg>Applications<span class="badge">64</span></button>
+      <button class="nav-item" data-view="universities">
+        <svg viewBox="0 0 24 24"><path d="M12 4l9 4-9 4-9-4 9-4z"/><path d="M6 10v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>Universities</button>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Engage</div>
+      <button class="nav-item" data-view="activities">
+        <svg viewBox="0 0 24 24"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Activities</button>
+      <button class="nav-item" data-view="tasks">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg>Tasks<span class="badge">9</span></button>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-label">Admin</div>
+      <button class="nav-item" data-view="team">
+        <svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="2.6"/><circle cx="16" cy="9" r="2.6"/><path d="M3.5 18c0-2.5 2-4 4.5-4M16 14c2.5 0 4.5 1.5 4.5 4"/></svg>Team</button>
+      <button class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</button>
+    </nav>
+    <div class="sb-spacer"></div>
+    <div class="sb-user"><div class="av">MK</div><div><b>Murali Krishna</b><small>Super Admin</small></div></div>
+  </aside>
+
+  <!-- ========== MAIN ========== -->
+  <div class="main">
+    <header class="topbar">
+      <div><h1 id="pgTitle">Dashboard</h1><div class="sub" id="pgSub">Bright Future Overseas · Live</div></div>
+      <label class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input placeholder="Search leads, students, applications…"></label>
+      <div class="grow"></div>
+      <button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New Lead</button>
+      <button class="btn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New Task</button>
+      <button class="btn icon dot-notif" title="Notifications"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg></button>
+      <button class="btn icon" id="themeBtn" title="Toggle theme"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
+      <div class="av" style="width:34px;height:34px;background:linear-gradient(135deg,#388CA9,#226279);color:#fff;font-size:11px">MK</div>
+    </header>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="view active" id="v-dashboard">
+        <div class="greet-row">
+          <div><h2 class="h-title">Good morning, Murali 👋</h2><p class="h-sub">Here's what's happening across your pipeline today.</p></div>
+          <div class="period"><button>Today</button><button class="on">Week</button><button>Month</button><button>Quarter</button></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi" style="--accent:var(--teal);--accent-bg:var(--teal-bg)"><div class="ic">🎯</div><div><div class="lbl">New Leads</div><div class="val num">128</div><div class="delta up">▲ +12% vs last week</div></div></div>
+          <div class="kpi" style="--accent:var(--purple);--accent-bg:var(--purple-bg)"><div class="ic">📄</div><div><div class="lbl">Applications</div><div class="val num">64</div><div class="delta up">▲ +8% vs last week</div></div></div>
+          <div class="kpi" style="--accent:var(--ok);--accent-bg:var(--ok-bg)"><div class="ic">📈</div><div><div class="lbl">Conversion Rate</div><div class="val num">34%</div><div class="delta up">▲ +3% vs last week</div></div></div>
+          <div class="kpi" style="--accent:var(--brand);--accent-bg:var(--warn-bg)"><div class="ic">⏰</div><div><div class="lbl">Tasks Due</div><div class="val num">9</div><div class="delta flat">● 2 overdue</div></div></div>
+        </div>
+        <div class="attention">
+          <svg class="warn-ic" viewBox="0 0 24 24" style="stroke:var(--warn);stroke-width:2;fill:none"><path d="M12 3l9.5 16.5H2.5L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <span><b>3 high-intent leads</b> have had no contact in 48h. <a href="#">Review now →</a> &nbsp;·&nbsp; <b>2 applications</b> missing documents. <a href="#">Open →</a></span>
+          <button class="x">×</button>
+        </div>
+        <div class="card card-pad">
+          <div class="board-head">
+            <div><div class="section-title">Lead Pipeline</div><div class="dim" style="font-size:10.5px">258 leads in funnel · drag cards to move stage</div></div>
+            <div class="seg"><button class="on">Board</button><button>List</button></div>
+          </div>
+          <div class="board" id="dashBoard"></div>
+        </div>
+      </section>
+
+      <!-- ===== LEADS ===== -->
+      <section class="view" id="v-leads">
+        <div class="between mb14">
+          <div><h2 class="h-title">All Leads</h2><p class="h-sub">Track and convert prospective students across your pipeline.</p></div>
+          <div class="row"><button class="btn"><svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>Import</button><button class="btn">Export</button><button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add Lead</button></div>
+        </div>
+        <div class="toolbar">
+          <div class="qtabs">
+            <button class="qtab on">All <span class="n">258</span></button>
+            <button class="qtab">New <span class="n">96</span></button>
+            <button class="qtab">Contacted <span class="n">72</span></button>
+            <button class="qtab">Qualified <span class="n">54</span></button>
+            <button class="qtab">Proposal <span class="n">36</span></button>
+          </div>
+          <div class="grow"></div>
+          <label class="tb-search" style="width:230px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Search name, email, phone…"></label>
+          <button class="btn"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filters</button>
+        </div>
+        <div class="split">
+          <div class="rail">
+            <div class="vlabel">Saved Views</div>
+            <div class="vitem on">All leads <span class="n">258</span></div>
+            <div class="vitem">My leads <span class="n">41</span></div>
+            <div class="vitem">Unassigned <span class="n">18</span></div>
+            <div class="vitem">Hot (score ≥ 80) <span class="n">29</span></div>
+            <div class="vitem">New this week <span class="n">96</span></div>
+            <div class="vitem">Follow-up overdue <span class="n">7</span></div>
+            <div class="hr"></div>
+            <button class="rail-add">+ New saved view</button>
+          </div>
+          <div class="card" style="overflow:hidden">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th style="width:38px"></th><th>Student</th><th>Phone</th><th>Stage</th><th style="text-align:center">Score</th><th>Agent</th><th>Last Activity</th><th></th></tr></thead>
+                <tbody id="leadRows"></tbody>
+              </table>
+            </div>
+            <div class="tfoot"><span>Showing 1–7 of 258 leads</span><div class="pager"><button>‹</button><button class="on">1</button><button>2</button><button>3</button><button>…</button><button>11</button><button>›</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== APPLICATIONS (record page) ===== -->
+      <section class="view" id="v-applications">
+        <div class="rec-head">
+          <button class="btn icon" onclick="go('leads')"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="crumb">Applications <span>/</span> <b>Aisha Khan</b></div>
+          <div class="grow"></div>
+          <div class="seg"><button>Pipeline</button><button>List</button><button class="on">Record</button></div>
+        </div>
+        <div class="rec-head" style="margin-bottom:16px">
+          <div class="rec-title">Aisha Khan <span class="arr">→</span> <span class="to">University of Toronto</span>
+            <span class="pill st-contacted" style="margin-left:6px"><span class="d"></span>In Progress</span></div>
+          <div class="grow"></div>
+          <button class="btn">Close application</button>
+          <button class="btn primary">Move to next stage <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="rec-cols">
+          <!-- LEFT -->
+          <div>
+            <div class="card card-pad mb14">
+              <div class="row" style="gap:12px"><div class="av" style="width:48px;height:48px;background:#DBEAF6;color:#2F6F94;font-size:16px">AK</div>
+                <div><div style="font-size:15px;font-weight:800">Aisha Khan</div><div class="dim" style="font-size:10.5px;font-weight:700">Applicant · Lead #A-1042</div></div></div>
+              <div class="hr"></div>
+              <div class="contact-row"><span class="k">Email</span><span class="v">aisha.khan@gmail.com</span></div>
+              <div class="contact-row"><span class="k">Phone</span><span class="v">+91 98765 43210</span></div>
+              <div class="contact-row"><span class="k">Country</span><span class="v">Canada 🇨🇦</span></div>
+              <div class="contact-row"><span class="k">Agent</span><span class="v">Rahul Verma</span></div>
+            </div>
+            <div class="card card-pad">
+              <div class="eyebrow mb14">Application Details</div>
+              <div class="prop"><span class="k">University</span><span class="v" style="color:var(--teal)">U. of Toronto</span></div>
+              <div class="prop"><span class="k">Course</span><span class="v">MSc Computer Science</span></div>
+              <div class="prop"><span class="k">Study Level</span><span class="v">Postgraduate</span></div>
+              <div class="prop"><span class="k">Intake</span><span class="v">Sep 2026</span></div>
+              <div class="prop"><span class="k">Tuition</span><span class="v num">₹ 38,50,000</span></div>
+              <div class="prop"><span class="k">Application Fee</span><span class="v num">₹ 9,500</span></div>
+            </div>
+          </div>
+          <!-- CENTER -->
+          <div>
+            <div class="card card-pad mb14">
+              <div class="between mb14"><div class="section-title">Lifecycle Pipeline</div><span class="chip">Stage 3 of 5</span></div>
+              <div class="stepper">
+                <div class="step done"><div class="node">✓</div><div class="slbl">Enquiry</div></div>
+                <div class="step done"><div class="node">✓</div><div class="slbl">Application</div></div>
+                <div class="step cur"><div class="node">3</div><div class="slbl">Offer</div></div>
+                <div class="step"><div class="node">4</div><div class="slbl">Visa</div></div>
+                <div class="step"><div class="node">5</div><div class="slbl">Enrolled</div></div>
+              </div>
+            </div>
+            <div class="card card-pad">
+              <div class="between mb14"><div class="section-title">Activity Timeline</div><button class="btn sm">+ Log activity</button></div>
+              <div class="timeline">
+                <div class="tl-item acc"><div class="tl-t">Offer letter received</div><div class="tl-m">Conditional offer from U. of Toronto — pending IELTS 7.0.</div><div class="tl-d">Today · 9:24 AM · by Rahul Verma</div></div>
+                <div class="tl-item"><div class="tl-t">Application submitted</div><div class="tl-m">Portal reference #TOR-2026-88421 submitted successfully.</div><div class="tl-d">Jul 18 · 2:10 PM · by Rahul Verma</div></div>
+                <div class="tl-item"><div class="tl-t">Call — 12 min</div><div class="tl-m">Discussed SOP draft and financial documents checklist.</div><div class="tl-d">Jul 15 · 11:02 AM · by Aisha Khan (agent)</div></div>
+                <div class="tl-item"><div class="tl-t">Lead qualified</div><div class="tl-m">Budget confirmed, target intake Sep 2026.</div><div class="tl-d">Jul 10 · 4:45 PM</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- RIGHT -->
+          <div>
+            <div class="card card-pad mb14">
+              <div class="section-title mb14">Update Stage</div>
+              <div class="dim" style="font-size:11px;font-weight:700;margin-bottom:7px">Move to: <span style="color:var(--ink)">Visa</span></div>
+              <textarea class="textarea" placeholder="What changed? (min 10 characters)"></textarea>
+              <button class="btn primary" style="width:100%;justify-content:center;margin-top:10px">Confirm move</button>
+            </div>
+            <div class="card card-pad docs">
+              <div class="section-title mb14">Documents</div>
+              <div class="doc ok"><span class="tick"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 7"/></svg></span>Passport</div>
+              <div class="doc ok"><span class="tick"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 7"/></svg></span>Transcripts</div>
+              <div class="doc ok"><span class="tick"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 7"/></svg></span>Statement of Purpose</div>
+              <div class="doc pending"><span class="tick">!</span>IELTS score report</div>
+              <div class="doc pending"><span class="tick">!</span>Financial proof</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== UNIVERSITIES ===== -->
+      <section class="view" id="v-universities">
+        <div class="between mb14"><div><h2 class="h-title">Universities & Courses</h2><p class="h-sub">Partner institutions, programs and live application counts.</p></div>
+          <button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add University</button></div>
+        <div class="uni-grid" id="uniGrid"></div>
+      </section>
+
+      <!-- ===== ACTIVITIES ===== -->
+      <section class="view" id="v-activities">
+        <div class="between mb14"><div><h2 class="h-title">Activity Feed</h2><p class="h-sub">Everything happening across your team, in real time.</p></div>
+          <div class="seg"><button class="on">All</button><button>Calls</button><button>Notes</button><button>Emails</button></div></div>
+        <div class="card card-pad" style="max-width:760px">
+          <div class="timeline" id="feed"></div>
+        </div>
+      </section>
+
+      <!-- ===== TASKS ===== -->
+      <section class="view" id="v-tasks">
+        <div class="between mb14"><div><h2 class="h-title">Tasks</h2><p class="h-sub">Your follow-ups, document chases and calls — organized.</p></div>
+          <button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New Task</button></div>
+        <div class="board" style="grid-template-columns:repeat(3,1fr)" id="taskBoard"></div>
+      </section>
+
+      <!-- ===== TEAM ===== -->
+      <section class="view" id="v-team">
+        <div class="between mb14"><div><h2 class="h-title">Team</h2><p class="h-sub">Counsellors, agents and admins in your workspace.</p></div>
+          <button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Invite User</button></div>
+        <div class="card" style="overflow:hidden">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th style="text-align:right">Active</th></tr></thead>
+            <tbody id="teamRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="view" id="v-settings">
+        <div class="mb14"><h2 class="h-title">Settings</h2><p class="h-sub">Roles, permissions and workspace configuration.</p></div>
+        <div class="set-grid">
+          <div class="card" style="overflow:hidden">
+            <div class="card-pad" style="padding-bottom:6px"><div class="section-title">Role Permissions</div><div class="dim" style="font-size:11px">What each role can do across modules.</div></div>
+            <div class="tbl-wrap"><table class="matrix">
+              <thead><tr><th>Permission</th><th style="text-align:center">Super Admin</th><th style="text-align:center">Manager</th><th style="text-align:center">Counsellor</th><th style="text-align:center">Agent</th></tr></thead>
+              <tbody id="permRows"></tbody>
+            </table></div>
+          </div>
+          <div>
+            <div class="card card-pad mb14">
+              <div class="section-title mb14">Custom Roles</div>
+              <div class="between" style="padding:8px 0"><div class="row"><span class="chip" style="background:var(--purple-bg);color:var(--purple)">●</span><b style="font-size:12.5px">Senior Counsellor</b></div><span class="dim" style="font-size:11px">6 users</span></div>
+              <div class="between" style="padding:8px 0"><div class="row"><span class="chip" style="background:var(--info-bg);color:var(--info)">●</span><b style="font-size:12.5px">Front Desk</b></div><span class="dim" style="font-size:11px">2 users</span></div>
+              <div class="hr"></div><button class="rail-add" style="padding:2px 0">+ Create custom role</button>
+            </div>
+            <div class="card card-pad">
+              <div class="section-title mb14">Workspace</div>
+              <div class="between" style="padding:9px 0"><div><b style="font-size:12px">Tenant</b><div class="dim" style="font-size:11px">Bright Future Overseas</div></div></div>
+              <div class="between" style="padding:9px 0"><div><b style="font-size:12px">Lead auto-assignment</b><div class="dim" style="font-size:11px">Round-robin by country</div></div><span class="toggle"></span></div>
+              <div class="between" style="padding:9px 0"><div><b style="font-size:12px">SLA alerts</b><div class="dim" style="font-size:11px">Warn after 48h no contact</div></div><span class="toggle"></span></div>
+              <div class="between" style="padding:9px 0"><div><b style="font-size:12px">Public lead form</b><div class="dim" style="font-size:11px">Embed on website</div></div><span class="toggle off"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- data ----------
+const tones=[["#DBEAF6","#2F6F94"],["#F7D6CF","#8F4A39"],["#F1E9FE","#7C3AED"],["#DFF2E4","#367A4D"],["#F8E6C9","#A86B1F"],["#E3EBEF","#55707C"]];
+const scoreCls=s=>s>=80?'sc-hi':s>=70?'sc-mid':'sc-lo';
+const av=(i,init,size=30)=>`<span class="av" style="width:${size}px;height:${size}px;background:${tones[i%6][0]};color:${tones[i%6][1]};font-size:${size>26?10:9}px">${init}</span>`;
+
+const board={New:['#2B7B97',96,[['Aisha Khan','AK','Canada · MSc Computer Sci',82],['Marcus Lee','ML','Australia · Business',64]]],
+  Contacted:['#2F6FED',72,[['Rahul K','RK','UK · MBA Finance',71],['Sara Ahmed','SA','Germany · MEng',78]]],
+  Qualified:['#8257E6',54,[['Priya Sharma','PS','Australia · BSc Nursing',90]]],
+  Proposal:['#F38118',36,[['Sam Patel','SP','Germany · MSc Data',76]]]};
+function renderBoard(el){el.innerHTML=Object.entries(board).map(([stage,[color,cnt,cards]],i)=>{
+  return `<div class="col"><div class="col-head"><span class="d" style="background:${color}"></span><b>${stage}</b><span class="cnt">${cnt}</span><button class="add">+</button></div>
+  ${cards.map((c,j)=>`<div class="lcard"><div class="lc-top">${av(j,c[1],26)}<div><b>${c[0]}</b><div class="meta">${c[2]}</div></div></div>
+    <div class="lc-bot"><span class="score ${scoreCls(c[3])}">Score ${c[3]}</span></div></div>`).join('')}</div>`;
+}).join('')}
+
+const leads=[['Aisha Khan','AK','aisha.khan@gmail.com','+91 98765 43210','New',82,'Rahul Verma','RV','2h ago',true],
+['Marcus Lee','ML','marcus.lee@gmail.com','+61 400 123 456','Contacted',64,'Priya Menon','PM','Yesterday',false],
+['Priya Sharma','PS','priya.sharma@gmail.com','+91 90000 11223','Qualified',90,'Aisha Khan','AK','3h ago',false],
+['Sam Patel','SP','sam.patel@gmail.com','+49 151 2345 678','Proposal',76,'Rahul Verma','RV','1d ago',false],
+['Sara Ahmed','SA','sara.ahmed@gmail.com','+971 50 123 4567','Contacted',78,'Priya Menon','PM','5h ago',false],
+['David Chen','DC','david.chen@gmail.com','+1 415 555 0132','New',58,'Unassigned','—','30m ago',false],
+['Fatima Noor','FN','fatima.noor@gmail.com','+92 300 1234 567','Qualified',85,'Aisha Khan','AK','2d ago',false]];
+document.getElementById('leadRows').innerHTML=leads.map((l,i)=>{const[n,ini,em,ph,st,sc,ag,ai,la,sel]=l;
+  return `<tr class="${sel?'sel':''}"><td><span class="cbx ${sel?'ck':''}"></span></td>
+  <td><div class="tcell-user">${av(i,ini,32)}<div><b>${n}</b><div class="em">${em}</div></div></div></td>
+  <td class="num muted" style="font-weight:600">${ph}</td>
+  <td><span class="pill st-${st.toLowerCase()}"><span class="d"></span>${st}</span></td>
+  <td style="text-align:center"><span class="score ${scoreCls(sc)} num">${sc}</span></td>
+  <td><div class="row" style="gap:7px">${av(i+2,ai,22)}<span class="muted" style="font-weight:600">${ag}</span></div></td>
+  <td class="dim">${la}</td><td><button class="kebab"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button></td></tr>`;
+}).join('');
+
+const unis=[['University of Toronto','UT','#C0392B','Canada 🇨🇦',142,18,'₹32L–48L','Selective'],
+['University of Melbourne','UM','#2C3E50','Australia 🇦🇺',98,24,'₹28L–41L','Moderate'],
+['Technical University Munich','TM','#2980B9','Germany 🇩🇪',76,31,'₹6L–12L','Open'],
+['University of Manchester','UM','#6D28D9','UK 🇬🇧',110,22,'₹24L–36L','Selective'],
+['University of British Columbia','BC','#0E7490','Canada 🇨🇦',88,19,'₹30L–44L','Moderate'],
+['King’s College London','KC','#B91C1C','UK 🇬🇧',64,16,'₹27L–39L','Selective']];
+const accCls={Open:'st-new',Moderate:'st-contacted',Selective:'st-qualified'};
+document.getElementById('uniGrid').innerHTML=unis.map(u=>{const[n,ini,col,ctry,apps,courses,fee,acc]=u;
+  return `<div class="uni"><div class="u-top"><div class="u-logo" style="background:${col}">${ini}</div>
+   <div><b style="font-size:13.5px;font-weight:800;letter-spacing:-.2px">${n}</b><div class="dim" style="font-size:11px;margin-top:2px">${ctry}</div></div></div>
+   <div class="u-stats"><div><b class="num">${apps}</b>Active apps</div><div><b class="num">${courses}</b>Courses</div></div>
+   <div class="between"><span class="chip num">${fee}</span><span class="pill ${accCls[acc]}"><span class="d"></span>${acc}</span></div></div>`;
+}).join('');
+
+const feed=[['acc','Aisha Khan','Offer letter received from U. of Toronto','Today · 9:24 AM'],
+['','Rahul Verma','Logged a 12-min call with Sam Patel — SOP review','Today · 8:10 AM'],
+['','Priya Menon','Moved Sara Ahmed to Qualified','Yesterday · 5:40 PM'],
+['','System','Auto-assigned 6 new website leads by country','Yesterday · 9:00 AM'],
+['','Aisha Khan','Sent visa document checklist to Fatima Noor','Jul 20 · 3:22 PM'],
+['','Rahul Verma','Application submitted for Marcus Lee → U. Melbourne','Jul 19 · 11:15 AM']];
+document.getElementById('feed').innerHTML=feed.map(f=>`<div class="tl-item ${f[0]}"><div class="tl-t">${f[2]}</div><div class="tl-d">${f[3]} · by ${f[1]}</div></div>`).join('');
+
+const tasks={'To Do':[['urgent','Call David Chen — no contact 48h','Due today · High'],['follow','Follow up: Marcus Lee offer decision','Due tomorrow']],
+'In Progress':[['doc','Collect IELTS report — Aisha Khan','Due Jul 24'],['call','Counselling call — new UK leads','Due Jul 25']],
+'Done':[['doc','SOP finalized — Priya Sharma','Completed'],['follow','Sent fee structure — Sam Patel','Completed']]};
+document.getElementById('taskBoard').innerHTML=Object.entries(tasks).map(([col,items])=>
+ `<div class="col"><div class="col-head"><b>${col}</b><span class="cnt">${items.length}</span><button class="add">+</button></div>
+ ${items.map(t=>`<div class="task"><div class="t-tags"><span class="tag ${t[0]}">${t[0]}</span></div><b>${t[1]}</b><div class="t-foot"><span>${t[2]}</span>${av(3,'MK',20)}</div></div>`).join('')}</div>`).join('');
+
+const team=[['Murali Krishna','MK','murali@brightfuture.com','Super Admin','Active',true],
+['Rahul Verma','RV','rahul@brightfuture.com','Counsellor','Active',true],
+['Priya Menon','PM','priya@brightfuture.com','Manager','Active',true],
+['Aisha Khan','AK','aisha@brightfuture.com','Counsellor','Active',true],
+['Sana Ali','SA','sana@brightfuture.com','Agent','Invited',false]];
+document.getElementById('teamRows').innerHTML=team.map((t,i)=>{const[n,ini,em,role,st,on]=t;
+  return `<tr><td><div class="tcell-user">${av(i,ini,30)}<b>${n}</b></div></td><td class="muted">${em}</td>
+  <td><span class="chip">${role}</span></td><td><span class="${on?'status-on':'status-off'}">${on?'● '+st:'○ '+st}</span></td>
+  <td style="text-align:right"><span class="toggle ${on?'':'off'}"></span></td></tr>`;
+}).join('');
+
+const perms=[['View Leads',1,1,1,1],['Create / Edit Leads',1,1,1,1],['Delete Leads',1,1,0,0],['Manage Applications',1,1,1,0],
+['View Universities',1,1,1,1],['Manage Team',1,1,0,0],['Roles & Permissions',1,0,0,0],['Workspace Settings',1,0,0,0]];
+const tick='<span class="perm"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 7"/></svg></span>';
+const cross='<span class="perm no">–</span>';
+document.getElementById('permRows').innerHTML=perms.map(p=>`<tr><td style="font-weight:600">${p[0]}</td>${p.slice(1).map(v=>`<td style="text-align:center">${v?tick:cross}</td>`).join('')}</tr>`).join('');
+
+renderBoard(document.getElementById('dashBoard'));
+
+// ---------- navigation ----------
+const titles={dashboard:['Dashboard','Bright Future Overseas · Live'],leads:['Leads','258 total leads · 96 new this week'],
+applications:['Applications','64 active applications'],universities:['Universities','Partner institutions & programs'],
+activities:['Activities','Team activity, live'],tasks:['Tasks','9 due · 2 overdue'],team:['Team','Workspace members'],settings:['Settings','Roles & configuration']};
+function go(v){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.id==='v-'+v));
+  document.getElementById('pgTitle').textContent=titles[v][0];
+  document.getElementById('pgSub').textContent=titles[v][1];
+  document.querySelector('.content').scrollTop=0;
+}
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>go(b.dataset.view)));
+// leads table row click -> open application record
+document.getElementById('leadRows').addEventListener('click',()=>go('applications'));
+
+// segmented + period + qtab + view toggles (visual)
+function groupToggle(sel,cls){document.querySelectorAll(sel).forEach(g=>g.addEventListener('click',e=>{
+  const btn=e.target.closest('button, .vitem, .qtab');if(!btn||!g.contains(btn))return;
+  [...g.children].forEach(c=>c.classList.remove(cls));btn.classList.add(cls);}));}
+groupToggle('.seg','on');groupToggle('.period','on');
+document.querySelector('.qtabs').addEventListener('click',e=>{const b=e.target.closest('.qtab');if(!b)return;
+  document.querySelectorAll('.qtab').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+document.querySelectorAll('.rail').forEach(r=>r.addEventListener('click',e=>{const v=e.target.closest('.vitem');if(!v)return;
+  r.querySelectorAll('.vitem').forEach(x=>x.classList.remove('on'));v.classList.add('on');}));
+
+// theme toggle
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark');
+  document.documentElement.setAttribute('data-theme',next);
+});
+</script>
+</body>
+</html>

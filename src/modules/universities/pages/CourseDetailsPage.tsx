@@ -299,7 +299,7 @@ function StatTile({
         bgcolor: highlight ? (theme) => `${theme.palette.secondary.main}10` : "#f8fbfe",
         border: "1px solid",
         borderColor: "#edf2f7",
-        borderRadius: 2,
+        borderRadius: "10px",
         p: 1.5,
         textAlign: "center",
       }}

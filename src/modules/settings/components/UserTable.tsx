@@ -23,9 +23,9 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
     <TableContainer
       component={Paper}
       elevation={0}
-      sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3 }}
+      sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
     >
-      <Table>
+      <Table sx={{ "& .MuiTableBody-root .MuiTableCell-root": { fontSize: 12.5, py: 1.15 } }}>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
@@ -39,16 +39,21 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
           {users.map((user) => (
             <TableRow key={user.id} hover>
               <TableCell>
-                <Typography sx={{ fontWeight: 600 }}>{user.name}</Typography>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>{user.name}</Typography>
               </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.roleLabel}</TableCell>
+              <TableCell sx={{ color: "text.secondary" }}>{user.email}</TableCell>
+              <TableCell>
+                <Chip label={user.roleLabel} size="small" sx={{ bgcolor: "#EEF2F6", color: "text.secondary" }} />
+              </TableCell>
               <TableCell>
                 <Chip
-                  color={user.active ? "success" : "default"}
                   label={user.active ? "Active" : "Inactive"}
                   size="small"
-                  variant="outlined"
+                  sx={
+                    user.active
+                      ? { bgcolor: "#E1F5EC", color: "#0B7A57" }
+                      : { bgcolor: "#EEF2F6", color: "text.disabled" }
+                  }
                 />
               </TableCell>
               {canManageUsers ? (

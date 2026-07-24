@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VUTrak CRM — Meridian layout, VUTrak colours</title>
+</head>
+<body>
+<style>
+/* ================= MERIDIAN — tokens ================= */
+:root{
+  --paper:#EFF1F5; --surface:#FFFFFF; --surface-2:#F7F8FB; --surface-3:#EDEFF5;
+  --line:#E3E6EF; --line-2:#D4D9E6;
+  --ink:#171B2B; --ink-2:#565E76; --ink-3:#939AAF;
+  --primary:#2E39C9; --primary-600:#242DA6; --primary-tint:#EAECFB;
+  --gold:#A8760F; --gold-2:#C9971F; --gold-tint:#F5EDD9;
+  --pos:#0C9268; --pos-bg:#E1F3EB; --warn:#C4830D; --warn-bg:#F7EFDA;
+  --neg:#CE4038; --neg-bg:#FAE3E1; --sky:#2566C7; --sky-bg:#E5EDFA;
+  --plum:#7A3EA8; --plum-bg:#F0E8F8;
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --r:10px; --r-sm:7px; --sbw:236px;
+  --sh:0 1px 2px rgba(23,27,43,.05);
+  --sh-md:0 6px 22px rgba(23,27,43,.09);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#0B0E18; --surface:#141827; --surface-2:#10131F; --surface-3:#1B2032;
+    --line:#252B40; --line-2:#333A52;
+    --ink:#ECEFF7; --ink-2:#A0A7BF; --ink-3:#6B7391;
+    --primary:#7178F2; --primary-600:#5C63E2; --primary-tint:#1D2140;
+    --gold:#D8A845; --gold-2:#E4BC68; --gold-tint:#2E2614;
+    --pos:#3DBE92; --pos-bg:#10301F;
+    --warn:#DDA53A; --warn-bg:#2E2614; --neg:#E8635B; --neg-bg:#361D1C;
+    --sky:#6BA0F0; --sky-bg:#152741; --plum:#B287D8; --plum-bg:#291C3A;
+    --sh:0 1px 2px rgba(0,0,0,.35); --sh-md:0 8px 26px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B0E18; --surface:#141827; --surface-2:#10131F; --surface-3:#1B2032;
+  --line:#252B40; --line-2:#333A52;
+  --ink:#ECEFF7; --ink-2:#A0A7BF; --ink-3:#6B7391;
+  --primary:#7178F2; --primary-600:#5C63E2; --primary-tint:#1D2140;
+  --gold:#D8A845; --gold-2:#E4BC68; --gold-tint:#2E2614;
+  --pos:#3DBE92; --pos-bg:#10301F; --warn:#DDA53A; --warn-bg:#2E2614;
+  --neg:#E8635B; --neg-bg:#361D1C; --sky:#6BA0F0; --sky-bg:#152741;
+  --plum:#B287D8; --plum-bg:#291C3A;
+  --sh:0 1px 2px rgba(0,0,0,.35); --sh-md:0 8px 26px rgba(0,0,0,.5);
+}
+:root[data-theme="light"]{
+  --paper:#EFF1F5; --surface:#FFFFFF; --surface-2:#F7F8FB; --surface-3:#EDEFF5;
+  --line:#E3E6EF; --line-2:#D4D9E6;
+  --ink:#171B2B; --ink-2:#565E76; --ink-3:#939AAF;
+  --primary:#2E39C9; --primary-600:#242DA6; --primary-tint:#EAECFB;
+  --gold:#A8760F; --gold-2:#C9971F; --gold-tint:#F5EDD9;
+  --pos:#0C9268; --pos-bg:#E1F3EB; --warn:#C4830D; --warn-bg:#F7EFDA;
+  --neg:#CE4038; --neg-bg:#FAE3E1; --sky:#2566C7; --sky-bg:#E5EDFA;
+  --plum:#7A3EA8; --plum-bg:#F0E8F8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.num{font-variant-numeric:tabular-nums}
+.serif{font-family:var(--serif)}
+.lbl{font-size:9.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink-3)}
+
+/* ================= shell ================= */
+.app{display:grid;grid-template-columns:var(--sbw) 1fr;min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);height:100vh;position:sticky;top:0;
+  display:flex;flex-direction:column;padding:0 14px 16px;overflow:hidden}
+.mark{display:flex;align-items:center;gap:11px;padding:20px 6px 18px}
+.mark .glyph{width:30px;height:30px;border:1.5px solid var(--primary);border-radius:50%;display:grid;place-items:center;
+  color:var(--primary);position:relative;flex:0 0 30px}
+.mark .glyph::before{content:"";position:absolute;inset:6px 13px;border-left:1.5px solid var(--primary)}
+.mark .glyph::after{content:"";position:absolute;left:3px;right:3px;top:14px;height:1.5px;background:var(--primary);opacity:.55}
+.mark b{font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:-.2px;display:block;line-height:1}
+.mark small{font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.grp{padding:9px 0 3px}
+.grp .lbl{padding:6px 8px}
+.nav{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;
+  padding:8px 9px;border-radius:var(--r-sm);color:var(--ink-2);font-size:12.5px;font-weight:600;transition:.13s}
+.nav svg{width:16px;height:16px;stroke:var(--ink-3);stroke-width:1.8;fill:none;flex:0 0 16px;transition:.13s}
+.nav .ct{margin-left:auto;font-size:10px;font-weight:700;color:var(--ink-3)}
+.nav:hover{background:var(--surface-3);color:var(--ink)}
+.nav:hover svg{stroke:var(--primary)}
+.nav.on{background:var(--primary);color:#fff}
+.nav.on svg{stroke:#fff}.nav.on .ct{color:rgba(255,255,255,.72)}
+.side .sp{flex:1}
+.me{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.me .av{width:30px;height:30px;border-radius:50%;background:var(--primary-tint);color:var(--primary);
+  display:grid;place-items:center;font-size:10.5px;font-weight:700}
+.me b{font-size:11.5px;display:block;line-height:1.25}
+.me small{font-size:9.5px;color:var(--ink-3)}
+
+.main{min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.top{display:flex;align-items:center;gap:14px;padding:0 26px;height:62px;flex:0 0 62px;
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.top h1{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.3px;margin:0;line-height:1.1}
+.top .sub{font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+.find{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);
+  border-radius:var(--r-sm);padding:7px 11px;width:300px;max-width:30vw}
+.find svg{width:14px;height:14px;stroke:var(--ink-3);stroke-width:1.8;fill:none;flex:0 0 14px}
+.find input{border:0;background:none;outline:0;width:100%;font-size:12px;color:var(--ink);font-family:inherit}
+.find:focus-within{border-color:var(--primary);background:var(--surface)}
+.gr{flex:1}
+.b{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);
+  color:var(--ink);border-radius:var(--r-sm);padding:8px 13px;font-size:12px;font-weight:600;transition:.14s;white-space:nowrap}
+.b svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
+.b:hover{border-color:var(--primary);color:var(--primary)}
+.b.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.b.pri:hover{background:var(--primary-600);border-color:var(--primary-600);color:#fff}
+.b.ic{padding:0;width:34px;height:34px;justify-content:center}
+.b.sm{padding:5px 10px;font-size:11px}
+.wrap{flex:1;overflow:auto;padding:24px 26px 48px}
+.view{display:none}.view.on{display:block;animation:in .2s ease}
+@keyframes in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ================= primitives ================= */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.pad{padding:18px 20px}
+.row{display:flex;align-items:center;gap:10px}
+.btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mut{color:var(--ink-2)}.dim{color:var(--ink-3)}
+.ttl{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.4px;margin:0}
+.tsub{font-size:12.5px;color:var(--ink-2);margin:3px 0 0}
+.sec{font-size:13px;font-weight:700;letter-spacing:-.1px;margin:0}
+.hr{height:1px;background:var(--line);margin:14px 0}
+.av{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:0 0 auto}
+.tag{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:700}
+.tag .d{width:5px;height:5px;border-radius:50%;background:currentColor}
+.t-new{background:var(--primary-tint);color:var(--primary)}
+.t-contacted{background:var(--sky-bg);color:var(--sky)}
+.t-qualified{background:var(--plum-bg);color:var(--plum)}
+.t-proposal{background:var(--gold-tint);color:var(--gold)}
+.t-pos{background:var(--pos-bg);color:var(--pos)}.t-warn{background:var(--warn-bg);color:var(--warn)}
+.t-neg{background:var(--neg-bg);color:var(--neg)}.t-ghost{background:var(--surface-3);color:var(--ink-2)}
+.sc{font-family:var(--serif);font-size:14px;font-weight:600}
+.sc.hi{color:var(--gold)}.sc.mid{color:var(--ink)}.sc.lo{color:var(--ink-3)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 13px;font-size:11px;font-weight:600;color:var(--ink-2);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--primary);color:#fff}
+.kb{width:26px;height:26px;border:0;background:none;color:var(--ink-3);border-radius:5px;display:grid;place-items:center}
+.kb:hover{background:var(--surface-3);color:var(--ink)}.kb svg{width:15px;height:15px;fill:currentColor}
+
+/* ================= stat band ================= */
+.band{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:18px}
+.stat{padding:16px 20px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat .fig{font-family:var(--serif);font-size:31px;font-weight:600;letter-spacing:-1px;line-height:1.05;margin-top:7px}
+.stat .fig sup{font-size:15px;font-weight:600;letter-spacing:0;margin-left:1px}
+.stat .ft{display:flex;align-items:flex-end;justify-content:space-between;margin-top:7px;gap:10px}
+.stat .dl{font-size:10.5px;font-weight:700}
+.up{color:var(--pos)}.dn{color:var(--neg)}.fl{color:var(--warn)}
+
+/* ================= funnel ================= */
+.fn{display:flex;flex-direction:column;gap:13px;margin-top:4px}
+.fn-row{display:grid;grid-template-columns:96px 1fr 62px;align-items:center;gap:12px}
+.fn-row .nm{font-size:11.5px;font-weight:600;color:var(--ink-2)}
+.fn-bar{height:26px;background:var(--surface-3);border-radius:5px;overflow:hidden;position:relative}
+.fn-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:10px;
+  font-size:11px;font-weight:700;color:#fff;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.fn-row .cv{font-size:11px;font-weight:700;color:var(--ink-3);text-align:right}
+.fn-row .cv b{color:var(--ink-2)}
+
+/* ================= attention ================= */
+.att{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.att:last-child{border-bottom:0}
+.att .sev{width:3px;border-radius:3px;flex:0 0 3px}
+.att b{font-size:12px;font-weight:700;display:block}
+.att .m{font-size:11.5px;color:var(--ink-2)}
+.att .go{margin-left:auto;font-size:11px;font-weight:700;color:var(--primary);border:0;background:none;white-space:nowrap;align-self:center}
+
+/* ================= list rows ================= */
+.lr{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lr:last-child{border-bottom:0}
+.lr b{font-size:12px;font-weight:600}
+.lr .m{font-size:10.5px;color:var(--ink-3)}
+
+/* ================= table ================= */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3);
+  text-align:left;padding:11px 16px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.cu{display:flex;align-items:center;gap:10px}
+.cu b{font-weight:600}.cu .em{font-size:10.5px;color:var(--ink-3)}
+.ck{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--line-2);background:var(--surface);display:inline-grid;place-items:center}
+.ck.on{background:var(--primary);border-color:var(--primary)}
+.ck.on::after{content:"";width:8px;height:4px;border-left:1.8px solid #fff;border-bottom:1.8px solid #fff;transform:rotate(-45deg);margin-top:-2px}
+.tf{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2)}
+.pg{display:flex;gap:3px}
+.pg button{min-width:27px;height:27px;border:1px solid var(--line);background:var(--surface);border-radius:5px;font-size:11px;font-weight:600;color:var(--ink-2);padding:0 7px}
+.pg button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* rail */
+.split{display:grid;grid-template-columns:198px 1fr;gap:18px;align-items:start}
+.vi{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;border-radius:var(--r-sm);
+  font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.vi:hover{background:var(--surface-3)}
+.vi.on{background:var(--primary-tint);color:var(--primary);font-weight:700}
+.vi .n{font-size:10px;color:var(--ink-3)}.vi.on .n{color:var(--primary)}
+
+/* ================= record ================= */
+.rc{display:grid;grid-template-columns:288px 1fr 272px;gap:18px;align-items:start}
+.crumb{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-3);font-weight:600}
+.rt{font-family:var(--serif);font-size:25px;font-weight:600;letter-spacing:-.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rt .ar{color:var(--ink-3);font-family:var(--sans);font-size:18px}
+.rt .to{color:var(--primary)}
+.pr{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:11.5px}
+.pr .k{color:var(--ink-3);font-weight:600}.pr .v{font-weight:600;text-align:right}
+/* milestones */
+.ms{display:flex;margin-top:10px}
+.ms .m{flex:1;position:relative;text-align:center}
+.ms .m::before{content:"";position:absolute;top:12px;left:-50%;width:100%;height:2px;background:var(--line-2)}
+.ms .m:first-child::before{display:none}
+.ms .m.done::before{background:var(--gold)}
+.ms .m.cur::before{background:var(--gold)}
+.ms .nd{width:25px;height:25px;border-radius:50%;background:var(--surface);border:2px solid var(--line-2);
+  display:grid;place-items:center;margin:0 auto;position:relative;z-index:1;font-size:10px;font-weight:700;color:var(--ink-3)}
+.ms .m.done .nd{background:var(--gold);border-color:var(--gold);color:#fff}
+.ms .m.cur .nd{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-tint)}
+.ms .lb{font-size:10px;font-weight:600;color:var(--ink-3);margin-top:8px}
+.ms .m.cur .lb,.ms .m.done .lb{color:var(--ink-2)}
+/* timeline */
+.tl{position:relative;padding-left:20px}
+.tl::before{content:"";position:absolute;left:4px;top:5px;bottom:5px;width:1px;background:var(--line-2)}
+.ti{position:relative;padding-bottom:17px}
+.ti::before{content:"";position:absolute;left:-20px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--surface);border:2px solid var(--line-2)}
+.ti.k::before{border-color:var(--primary);background:var(--primary)}
+.ti.g::before{border-color:var(--gold);background:var(--gold)}
+.ti .h{font-size:12px;font-weight:600}.ti .m{font-size:11.5px;color:var(--ink-2)}
+.ti .d{font-size:10px;color:var(--ink-3);margin-top:2px}
+/* docs */
+.dc{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:11.5px;font-weight:600;border-bottom:1px solid var(--line)}
+.dc:last-child{border-bottom:0}
+.dc .s{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex:0 0 16px}
+.dc.y .s{background:var(--pos);color:#fff}.dc.y .s svg{width:9px;height:9px;stroke:#fff;stroke-width:3.4;fill:none}
+.dc.n .s{border:1.5px dashed var(--warn);color:var(--warn);font-size:9px;font-weight:800}
+.ta{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);padding:9px 11px;
+  font-size:11.5px;font-family:inherit;color:var(--ink);resize:none;min-height:60px}
+.ta:focus{outline:0;border-color:var(--primary);background:var(--surface)}
+
+/* ================= universities ================= */
+.ug{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.uc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);transition:.16s}
+.uc:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+.crest{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;font-family:var(--serif);
+  font-size:16px;font-weight:600;color:#fff;letter-spacing:-.5px}
+.uc .un{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:-.2px;line-height:1.25}
+.ust{display:flex;gap:22px;margin:15px 0 13px}
+.ust .k{font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.ust .v{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.1}
+
+/* ================= board ================= */
+.bd{display:grid;gap:16px}
+.bc{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:11px}
+.bh{display:flex;align-items:center;gap:8px;padding:3px 4px 11px}
+.bh b{font-size:11.5px;font-weight:700}
+.bh .n{font-size:9.5px;font-weight:700;color:var(--ink-3);background:var(--surface-3);padding:1px 7px;border-radius:9px}
+.bh .pl{margin-left:auto;border:0;background:none;color:var(--ink-3);font-size:15px;line-height:1}
+.tk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px;margin-bottom:8px;box-shadow:var(--sh)}
+.tk b{font-size:12px;font-weight:600;display:block;margin:6px 0}
+.tk .f{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--ink-3)}
+
+/* ================= settings ================= */
+.sg{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start}
+.pm{width:15px;height:15px;border-radius:4px;display:inline-grid;place-items:center;background:var(--primary)}
+.pm svg{width:9px;height:9px;stroke:#fff;stroke-width:3.4;fill:none}
+.pm.no{background:var(--surface-3)}
+.sw{width:32px;height:18px;border-radius:20px;background:var(--pos);position:relative;display:inline-block}
+.sw.off{background:var(--line-2)}
+.sw::after{content:"";position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.15s}
+.sw.off::after{left:2px}
+.g2{display:grid;grid-template-columns:1.45fr 1fr;gap:18px;align-items:start}
+.mb18{margin-bottom:18px}
+/* ================= course search ================= */
+.ctx{display:flex;align-items:center;gap:14px;background:var(--primary-tint);border:1px solid var(--primary);
+  border-radius:var(--r);padding:11px 15px;margin-bottom:16px;flex-wrap:wrap}
+.ctx .fx{display:flex;gap:6px;flex-wrap:wrap}
+.ctx .fx span{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:2px 9px;
+  font-size:10.5px;font-weight:600;color:var(--ink-2)}
+.csg{display:grid;grid-template-columns:234px 1fr;gap:18px;align-items:start}
+.fac{border-bottom:1px solid var(--line);padding:13px 0}
+.fac:last-child{border-bottom:0;padding-bottom:0}
+.fac>.lbl{display:block;margin-bottom:9px}
+.fo{display:flex;align-items:center;gap:8px;padding:3.5px 0;font-size:11.5px;color:var(--ink-2);cursor:pointer}
+.fo .bx{width:14px;height:14px;border:1.5px solid var(--line-2);border-radius:4px;display:grid;place-items:center;flex:0 0 14px}
+.fo.on{color:var(--ink);font-weight:600}
+.fo.on .bx{background:var(--primary);border-color:var(--primary)}
+.fo.on .bx::after{content:"";width:7px;height:3.5px;border-left:1.7px solid #fff;border-bottom:1.7px solid #fff;transform:rotate(-45deg);margin-top:-2px}
+.fo .n{margin-left:auto;font-size:10px;color:var(--ink-3);font-weight:600}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{border:1px solid var(--line-2);background:var(--surface);border-radius:20px;padding:4px 10px;
+  font-size:10.5px;font-weight:600;color:var(--ink-2)}
+.fchip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.rng{height:3px;background:var(--line-2);border-radius:3px;position:relative;margin:16px 6px 10px}
+.rng .fl{position:absolute;height:100%;background:var(--primary);border-radius:3px;left:6%;right:22%}
+.rng .h{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--primary);transform:translate(-50%,-50%)}
+.rngv{display:flex;justify-content:space-between;font-size:10.5px;font-weight:600;color:var(--ink-2)}
+.csbar{display:flex;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap}
+.cr{display:flex;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px;box-shadow:var(--sh);margin-bottom:11px;transition:.15s}
+.cr:hover{box-shadow:var(--sh-md);border-color:var(--line-2)}
+.cr .cn{font-family:var(--serif);font-size:15.5px;font-weight:600;letter-spacing:-.2px;line-height:1.25}
+.cr .uni{font-size:11.5px;color:var(--ink-2);font-weight:600;margin-top:3px}
+.cr .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cr .rq{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.cr .rt{margin-left:auto;flex:0 0 176px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;text-align:right}
+.fee{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1}
+.feek{font-size:9px;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-top:3px}
+.mt{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700}
+.m-hi{background:var(--gold-tint);color:var(--gold)}
+.m-md{background:var(--sky-bg);color:var(--sky)}
+.m-lo{background:var(--surface-3);color:var(--ink-3)}
+.rc2{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px}
+.r-ok{background:var(--pos-bg);color:var(--pos)}
+.r-wn{background:var(--warn-bg);color:var(--warn)}
+.r-no{background:var(--neg-bg);color:var(--neg)}
+.star{border:0;background:none;color:var(--ink-3);font-size:15px;line-height:1;padding:2px}
+.star.on{color:var(--gold)}
+.tray{position:sticky;bottom:14px;margin-top:16px;background:var(--ink);color:var(--paper);
+  border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh-md)}
+.tray b{font-size:12.5px}
+.tray .tb{border:1px solid rgba(128,128,128,.45);background:none;color:inherit;border-radius:var(--r-sm);
+  padding:6px 12px;font-size:11.5px;font-weight:600}
+.tray .tb.k{background:var(--primary);border-color:var(--primary);color:#fff}
+@media (max-width:1140px){.csg{grid-template-columns:1fr}.cr{flex-wrap:wrap}.cr .rt{flex:1 0 100%;align-items:flex-start;text-align:left}}
+/* ================= capture / forms ================= */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.field label{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-3)}
+.field label .rq2{color:var(--neg)}
+.inp{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);padding:7px 10px;
+  font-size:11.5px;font-family:inherit;color:var(--ink);width:100%}
+.inp:focus{outline:0;border-color:var(--primary)}
+.banner{display:flex;gap:12px;align-items:flex-start;background:var(--primary-tint);border:1px solid var(--primary);
+  border-radius:var(--r);padding:13px 15px;margin-bottom:16px;font-size:11.5px;line-height:1.55}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;background:var(--surface);
+  border:1px solid var(--line);padding:2px 7px;border-radius:5px;font-weight:600;white-space:nowrap}
+.vbox{background:var(--pos-bg);border:1px solid var(--pos);border-radius:var(--r-sm);padding:10px 12px;font-size:11px}
+.vbox .vh{display:flex;align-items:center;gap:7px;font-weight:700;color:var(--pos);margin-bottom:3px}
+.vbox .vh svg{width:12px;height:12px;stroke:var(--pos);stroke-width:3.2;fill:none}
+.drop{border:1.5px dashed var(--line-2);border-radius:var(--r-sm);padding:12px;text-align:center;
+  font-size:11px;color:var(--ink-3);font-weight:600}
+/* ================= student record ================= */
+.shead{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:16px}
+.shead .nm{font-family:var(--serif);font-size:25px;font-weight:600;letter-spacing:-.5px;line-height:1.1}
+.shead .fx{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.shead .fx span{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:2px 9px;
+  font-size:10.5px;font-weight:600;color:var(--ink-2)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+.tab{border:0;background:none;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary);font-weight:700}
+.tab .n{font-size:10px;font-weight:700;background:var(--surface-3);color:var(--ink-3);padding:1px 6px;border-radius:8px;margin-left:6px}
+.tab.on .n{background:var(--primary-tint);color:var(--primary)}
+.tpane{display:none}.tpane.on{display:block}
+.sumstrip{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;margin-bottom:16px;box-shadow:var(--sh);flex-wrap:wrap}
+.sumstrip>div{padding:12px 18px;border-right:1px solid var(--line);flex:1;min-width:150px}
+.sumstrip>div:last-child{border-right:0}
+.sumstrip .v{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.1;margin-top:3px}
+.grp-row td{background:var(--surface-2);font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--ink-3);padding:8px 16px}
+/* ================= compare ================= */
+.cmpwrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--sh)}
+.cmp{width:100%;border-collapse:separate;border-spacing:0;min-width:820px}
+.cmp th,.cmp td{padding:11px 15px;border-bottom:1px solid var(--line);font-size:12px;text-align:left;vertical-align:middle}
+.cmp .attr{width:186px;font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--ink-3);background:var(--surface-2);white-space:nowrap}
+.cmp thead th{vertical-align:top;border-bottom:1px solid var(--line-2);position:relative;
+  text-transform:none;letter-spacing:normal;color:var(--ink);font-size:12px;font-weight:400;padding-top:14px}
+.cmp tbody tr:last-child td,.cmp tbody tr:last-child th{border-bottom:0}
+.cmp tbody tr:hover td{background:var(--surface-2)}
+.best{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.best::after{content:"BEST";font-size:8px;font-weight:800;letter-spacing:.7px;background:var(--gold-tint);
+  color:var(--gold);padding:1.5px 5px;border-radius:4px}
+.ch{display:flex;flex-direction:column;gap:7px;min-width:196px;padding-right:16px}
+.ch .cx{position:absolute;top:12px;right:10px;border:0;background:none;color:var(--ink-3);font-size:15px;line-height:1;padding:2px}
+.ch .cx:hover{color:var(--neg)}
+.commit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);padding:14px 16px;margin-top:16px;box-shadow:var(--sh)}
+.pf{display:flex;flex-direction:column;gap:4px}
+.pf span{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-3)}
+.sel{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);padding:6px 9px;
+  font-size:11.5px;font-weight:600;color:var(--ink);font-family:inherit}
+.done{background:var(--pos-bg);border:1px solid var(--pos);border-left:4px solid var(--pos);
+  border-radius:var(--r);padding:15px 17px;margin-top:16px}
+.done .dh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.done .tick{width:19px;height:19px;border-radius:50%;background:var(--pos);display:grid;place-items:center;flex:0 0 19px}
+.done .tick svg{width:11px;height:11px;stroke:#fff;stroke-width:3.4;fill:none}
+.wrow{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:11.5px;flex-wrap:wrap}
+/* ================= universities / shortlist ================= */
+.fbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);padding:11px 13px;margin-bottom:16px;box-shadow:var(--sh)}
+.fbar .sep{width:1px;height:20px;background:var(--line)}
+.usplit{display:grid;grid-template-columns:290px 1fr;gap:18px;align-items:start}
+.uitem{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-sm);
+  cursor:pointer;border:1px solid transparent;margin-bottom:2px}
+.uitem:hover{background:var(--surface-2)}
+.uitem.on{background:var(--primary-tint);border-color:var(--primary)}
+.uitem .un2{font-size:12.5px;font-weight:600;line-height:1.25}
+.uitem .uc2{font-size:10.5px;color:var(--ink-3);margin-top:1px}
+.uitem .n{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ink-3)}
+.uitem.on .n{color:var(--primary)}
+.cid{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;font-weight:600;
+  background:var(--surface-3);color:var(--ink-2);padding:2px 7px;border-radius:5px;white-space:nowrap}
+.sl-pri{background:var(--gold-tint);color:var(--gold)}
+.sl-bak{background:var(--sky-bg);color:var(--sky)}
+.sl-saf{background:var(--pos-bg);color:var(--pos)}
+@media (max-width:1140px){.usplit{grid-template-columns:1fr}}
+@media (max-width:1140px){.band{grid-template-columns:repeat(2,1fr)}.stat:nth-child(2){border-right:0}
+  .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--line)}
+  .rc,.g2,.sg,.split{grid-template-columns:1fr}.ug{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:760px){.app{grid-template-columns:1fr}.side{display:none}.band{grid-template-columns:1fr}
+  .stat{border-right:0;border-bottom:1px solid var(--line)}.ug{grid-template-columns:1fr}}
+
+/* ============================================================
+   Density — tuned for 13–14" laptops (~700–760px usable height).
+   Laptops are WIDE and SHORT, so vertical rhythm is the budget.
+   ============================================================ */
+.wrap{padding:15px 20px 24px}
+.top{height:54px;flex:0 0 54px}
+.top h1{font-size:17px}
+.ttl{font-size:18px}
+.tsub{font-size:11.5px;margin-top:1px}
+.mb18{margin-bottom:11px}
+.pad{padding:13px 15px}
+.g2,.rc,.split,.csg,.usplit{gap:13px}
+.hr{margin:10px 0}
+
+/* stat band */
+.band{margin-bottom:11px}
+.stat{padding:11px 15px}
+.stat .fig{font-size:25px}
+.stat .fig sup{font-size:13px}
+.stat .ft{margin-top:5px}
+
+/* funnel */
+.fn{gap:8px;margin-top:2px}
+.fn-bar{height:21px}
+.fn-row{grid-template-columns:84px 1fr 52px;gap:10px}
+
+/* lists */
+.att{padding:8px 0}
+.lr{padding:7px 0}
+.ti{padding-bottom:12px}
+
+/* tables */
+thead th{padding:8px 14px}
+tbody td{padding:8px 14px}
+.tf{padding:9px 14px}
+.cmp th,.cmp td{padding:8px 14px}
+
+/* record / student */
+.tabs{margin-bottom:13px}
+.tab{padding:8px 13px}
+.shead{margin-bottom:12px}
+.shead .nm{font-size:21px}
+.rt{font-size:21px}
+.pr{padding:5px 0}
+.contact-row{padding:5px 0}
+.sumstrip{margin-bottom:11px}
+.sumstrip>div{padding:9px 15px}
+.sumstrip .v{font-size:17px}
+.ms{margin-top:6px}
+.dc{padding:6px 0}
+
+/* search / browse chrome */
+.ctx{padding:9px 13px;margin-bottom:11px}
+.fbar{padding:8px 11px;margin-bottom:11px}
+.banner{padding:10px 13px;margin-bottom:11px}
+.csbar{margin-bottom:10px}
+.fac{padding:10px 0}
+.fo{padding:2.5px 0}
+.cr{padding:12px;margin-bottom:8px}
+.cr .meta{margin-top:7px}
+.cr .rq{margin-top:7px}
+.uc{padding:16px}
+.ust{margin:11px 0 10px}
+.uitem{padding:7px 9px}
+.commit{padding:12px 15px;margin-top:12px}
+.done{padding:13px 15px;margin-top:12px}
+.tk{padding:10px;margin-bottom:7px}
+.bc{padding:9px}
+
+/* ---- Compact mode: one more notch for small screens ---- */
+:root[data-density="compact"] .wrap{padding:9px 14px 16px}
+:root[data-density="compact"] .top{height:48px;flex:0 0 48px}
+:root[data-density="compact"] .pad{padding:9px 12px}
+:root[data-density="compact"] .g2,:root[data-density="compact"] .rc,
+:root[data-density="compact"] .split,:root[data-density="compact"] .csg,
+:root[data-density="compact"] .usplit{gap:9px}
+:root[data-density="compact"] .ttl{font-size:16px}
+:root[data-density="compact"] .tsub{display:none}
+:root[data-density="compact"] .mb18{margin-bottom:8px}
+:root[data-density="compact"] .stat{padding:8px 12px}
+:root[data-density="compact"] .stat .fig{font-size:21px}
+:root[data-density="compact"] tbody td{padding:5.5px 12px}
+:root[data-density="compact"] thead th{padding:6px 12px}
+:root[data-density="compact"] .fn{gap:6px}
+:root[data-density="compact"] .fn-bar{height:18px}
+:root[data-density="compact"] .cr{padding:9px;margin-bottom:6px}
+:root[data-density="compact"] .cr .meta,:root[data-density="compact"] .cr .rq{margin-top:5px}
+:root[data-density="compact"] .lr,:root[data-density="compact"] .att{padding:5px 0}
+:root[data-density="compact"] .ti{padding-bottom:9px}
+:root[data-density="compact"] .ctx,:root[data-density="compact"] .fbar,
+:root[data-density="compact"] .banner{padding:7px 11px;margin-bottom:8px}
+:root[data-density="compact"] .sumstrip>div{padding:7px 12px}
+:root[data-density="compact"] .sumstrip .v{font-size:15px}
+:root[data-density="compact"] .shead{margin-bottom:9px}
+:root[data-density="compact"] .shead .nm{font-size:19px}
+:root[data-density="compact"] .fac{padding:8px 0}
+
+/* short viewports: drop the biggest vertical luxuries automatically */
+@media (max-height:820px){
+  .stat .fig{font-size:23px}
+  .wrap{padding-bottom:18px}
+}
+
+
+/* even card heights */
+.g2{align-items:stretch}
+.g2>.card{height:100%}
+
+/* ============================================================
+   VUTrak brand theme — token overlay on the Meridian structure.
+   Declared last so it wins the cascade without touching components.
+   ============================================================ */
+:root{
+  --paper:#F0F6F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --surface-3:#E7F0F4;
+  --line:#E1EDF1; --line-2:#CBDFE6;
+  --ink:#1E293B; --ink-2:#64748B; --ink-3:#94A3B8;
+  --primary:#F38118; --primary-600:#D96F0E; --primary-tint:#FDEEDD;
+  /* the "highlight / achievement" slot becomes VUTrak steel-teal */
+  --gold:#1F6E86; --gold-2:#2B7B97; --gold-tint:#DCEDF2;
+  --pos:#0E9F6E; --pos-bg:#E1F5EC; --warn:#C4830D; --warn-bg:#FBF0DA;
+  --neg:#DC4B4B; --neg-bg:#FBE5E5; --sky:#0F5AD4; --sky-bg:#E4EDFC;
+  --plum:#7B1FA2; --plum-bg:#F3E7F8;
+  --side-bg:#11333F; --side-line:rgba(255,255,255,.08);
+  --side-txt:rgba(255,255,255,.74); --side-mut:rgba(255,255,255,.42);
+  --brand-grad:linear-gradient(135deg,#FF9E42 0%,#F38118 52%,#D96F0E 100%);
+  /* stage chips follow VUTrak semantics: new=teal, proposal=orange */
+  --c-new-bg:#DEF1F0; --c-new-fg:#0B6B6B;
+  --c-con-bg:#E4EDFC; --c-con-fg:#0F5AD4;
+  --c-qua-bg:#F3E7F8; --c-qua-fg:#7B1FA2;
+  --c-pro-bg:#FDEEDD; --c-pro-fg:#B35A00;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#08222B; --surface:#0E2E39; --surface-2:#0B2731; --surface-3:#143B48;
+    --line:#1B4351; --line-2:#265767;
+    --ink:#E8F3F6; --ink-2:#9DB8C1; --ink-3:#6D8C97;
+    --primary:#FF9E42; --primary-600:#F38118; --primary-tint:#3A2716;
+    --gold:#63B8CF; --gold-2:#7CC7DB; --gold-tint:#123642;
+    --pos:#3DBE92; --pos-bg:#0F3327; --warn:#DDA53A; --warn-bg:#332812;
+    --neg:#E8635B; --neg-bg:#3A1E1D; --sky:#6BA0F0; --sky-bg:#132B47;
+    --plum:#C08FDA; --plum-bg:#2C1E38;
+    --side-bg:#0A2029;
+    --c-new-bg:#12403F; --c-new-fg:#7FD6D0;
+    --c-con-bg:#132B47; --c-con-fg:#8AB4F5;
+    --c-qua-bg:#2C1E38; --c-qua-fg:#C08FDA;
+    --c-pro-bg:#3A2716; --c-pro-fg:#FFB871;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#08222B; --surface:#0E2E39; --surface-2:#0B2731; --surface-3:#143B48;
+  --line:#1B4351; --line-2:#265767;
+  --ink:#E8F3F6; --ink-2:#9DB8C1; --ink-3:#6D8C97;
+  --primary:#FF9E42; --primary-600:#F38118; --primary-tint:#3A2716;
+  --gold:#63B8CF; --gold-2:#7CC7DB; --gold-tint:#123642;
+  --pos:#3DBE92; --pos-bg:#0F3327; --warn:#DDA53A; --warn-bg:#332812;
+  --neg:#E8635B; --neg-bg:#3A1E1D; --sky:#6BA0F0; --sky-bg:#132B47;
+  --plum:#C08FDA; --plum-bg:#2C1E38;
+  --side-bg:#0A2029;
+  --c-new-bg:#12403F; --c-new-fg:#7FD6D0;
+  --c-con-bg:#132B47; --c-con-fg:#8AB4F5;
+  --c-qua-bg:#2C1E38; --c-qua-fg:#C08FDA;
+  --c-pro-bg:#3A2716; --c-pro-fg:#FFB871;
+}
+:root[data-theme="light"]{
+  --paper:#F0F6F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --surface-3:#E7F0F4;
+  --line:#E1EDF1; --line-2:#CBDFE6;
+  --ink:#1E293B; --ink-2:#64748B; --ink-3:#94A3B8;
+  --primary:#F38118; --primary-600:#D96F0E; --primary-tint:#FDEEDD;
+  --gold:#1F6E86; --gold-2:#2B7B97; --gold-tint:#DCEDF2;
+  --pos:#0E9F6E; --pos-bg:#E1F5EC; --warn:#C4830D; --warn-bg:#FBF0DA;
+  --neg:#DC4B4B; --neg-bg:#FBE5E5; --sky:#0F5AD4; --sky-bg:#E4EDFC;
+  --plum:#7B1FA2; --plum-bg:#F3E7F8;
+  --side-bg:#11333F;
+  --c-new-bg:#DEF1F0; --c-new-fg:#0B6B6B;
+  --c-con-bg:#E4EDFC; --c-con-fg:#0F5AD4;
+  --c-qua-bg:#F3E7F8; --c-qua-fg:#7B1FA2;
+  --c-pro-bg:#FDEEDD; --c-pro-fg:#B35A00;
+}
+
+/* ---- VUTrak signature: deep steel-teal navigation ---- */
+.side{background:var(--side-bg);border-right:1px solid rgba(255,255,255,.07)}
+.mark b{color:#fff}
+.mark small{color:var(--side-mut)}
+.mark .glyph{border-color:#FF9E42;color:#FF9E42}
+.mark .glyph::before{border-left-color:#FF9E42}
+.mark .glyph::after{background:#FF9E42}
+.side .grp>.lbl{color:var(--side-mut)}
+.nav{color:var(--side-txt)}
+.nav svg{stroke:#B7CDD6}
+.nav .ct{color:var(--side-mut)}
+.nav:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav:hover svg{stroke:#FF9E42}
+.nav.on{background:var(--brand-grad);color:#fff;box-shadow:0 4px 14px rgba(243,129,24,.30)}
+.nav.on svg{stroke:#fff}
+.nav.on .ct{color:rgba(255,255,255,.8)}
+.me{border-top:1px solid rgba(255,255,255,.1)}
+.me b{color:#fff}
+.me small{color:var(--side-mut)}
+.me .av{background:linear-gradient(135deg,#388CA9,#226279);color:#fff}
+
+/* ---- glossy orange CTA, per the VUTrak button system ---- */
+.b.pri{background:var(--brand-grad);border-color:#D96F0E;color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 13px rgba(243,129,24,.28)}
+.b.pri:hover{background:linear-gradient(135deg,#FFAE59 0%,#FF952B 100%);border-color:#F38118;color:#fff}
+.tray .tb.k{background:var(--brand-grad);border-color:#D96F0E}
+
+/* ---- stage chips keep VUTrak semantics ---- */
+.t-new{background:var(--c-new-bg);color:var(--c-new-fg)}
+.t-contacted{background:var(--c-con-bg);color:var(--c-con-fg)}
+.t-qualified{background:var(--c-qua-bg);color:var(--c-qua-fg)}
+.t-proposal{background:var(--c-pro-bg);color:var(--c-pro-fg)}
+
+</style>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="side">
+    <div class="mark"><div class="glyph"></div><div><b>VUTrak</b><small>Education CRM</small></div></div>
+    <nav class="grp">
+      <div class="lbl">Overview</div>
+      <button class="nav on" data-v="dashboard"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="8" rx="1"/><rect x="13.5" y="3.5" width="7" height="5" rx="1"/><rect x="13.5" y="11.5" width="7" height="9" rx="1"/><rect x="3.5" y="14.5" width="7" height="6" rx="1"/></svg>Dashboard</button>
+      <button class="nav" data-v="leads"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.3"/><path d="M3.5 19.5c0-3.1 2.5-5.2 5.5-5.2s5.5 2.1 5.5 5.2"/><path d="M17.5 8.5h4M19.5 6.5v4"/></svg>Leads<span class="ct">258</span></button>
+      <button class="nav" data-v="applications"><svg viewBox="0 0 24 24"><path d="M7 3.5h6.5L18 8v12.5H7z"/><path d="M13 3.5V8h5M10 13h5M10 16.5h5"/></svg>Applications<span class="ct">64</span></button>
+      <button class="nav" data-v="universities"><svg viewBox="0 0 24 24"><path d="M12 4l9 3.8-9 3.8-9-3.8L12 4z"/><path d="M6.5 10v5c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6v-5"/></svg>Universities</button>
+      <button class="nav" data-v="coursesearch"><svg viewBox="0 0 24 24"><path d="M4 5.6A1.6 1.6 0 015.6 4H11v15.5H5.6A1.6 1.6 0 014 17.9z"/><path d="M11 4h5.4A1.6 1.6 0 0118 5.6V9.5"/><circle cx="16.8" cy="16" r="3.1"/><path d="M19.1 18.3l2.2 2.2"/></svg>Course search</button>
+    </nav>
+    <nav class="grp">
+      <div class="lbl">Engage</div>
+      <button class="nav" data-v="activities"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.2 6L13 5.5 15 12h6"/></svg>Activity</button>
+      <button class="nav" data-v="tasks"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.2l2.6 2.6 5-5.4"/></svg>Tasks<span class="ct">9</span></button>
+    </nav>
+    <nav class="grp">
+      <div class="lbl">Workspace</div>
+      <button class="nav" data-v="team"><svg viewBox="0 0 24 24"><circle cx="8.5" cy="9" r="2.7"/><circle cx="15.5" cy="9" r="2.7"/><path d="M3.5 18.5c0-2.4 2.2-3.9 5-3.9M15.5 14.6c2.8 0 5 1.5 5 3.9"/></svg>Team</button>
+      <button class="nav" data-v="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.8M12 18.7v2.8M2.5 12h2.8M18.7 12h2.8M5.2 5.2l2 2M16.8 16.8l2 2M18.8 5.2l-2 2M7.2 16.8l-2 2"/></svg>Settings</button>
+    </nav>
+    <div class="sp"></div>
+    <div class="me"><div class="av">MK</div><div><b>Murali Krishna</b><small>Super Admin</small></div></div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="top">
+      <div><h1 id="pt">Dashboard</h1><div class="sub" id="ps">Bright Future Overseas</div></div>
+      <div class="gr"></div>
+      <label class="find"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5l-3.6-3.6"/></svg><input placeholder="Search students, applications, universities…"></label>
+      <button class="b ic" title="Notifications"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none"><path d="M6.5 9.5a5.5 5.5 0 1111 0c0 4.5 1.8 5.5 1.8 5.5H4.7s1.8-1 1.8-5.5z"/><path d="M10.2 19a2 2 0 003.6 0"/></svg></button>
+      <button class="b ic" id="dens" title="Toggle density"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button><button class="b ic" id="th" title="Theme"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12H5M19 12h2.4M5.4 5.4l1.7 1.7M16.9 16.9l1.7 1.7M18.6 5.4l-1.7 1.7M7.1 16.9l-1.7 1.7"/></svg></button>
+      <button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>New lead</button>
+    </header>
+
+    <div class="wrap">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="view on" id="v-dashboard">
+        <div class="btw mb18">
+          <div><h2 class="ttl">Good morning, Murali</h2><p class="tsub">Week of 20–26 July · 258 leads and 64 applications in flight.</p></div>
+          <div class="seg" id="per"><button>Today</button><button class="on">Week</button><button>Month</button><button>Quarter</button></div>
+        </div>
+
+        <div class="band" id="band"></div>
+
+        <div class="g2 mb18">
+          <div class="card pad">
+            <div class="btw"><div><div class="sec">Conversion funnel</div><div class="dim" style="font-size:11px">Enquiry through to enrolment · this month</div></div>
+              <span class="tag t-pos"><span class="d"></span>34% overall</span></div>
+            <div class="fn" id="fn"></div>
+          </div>
+          <div class="card pad">
+            <div class="btw" style="margin-bottom:6px"><div class="sec">Needs attention</div><span class="tag t-ghost">5</span></div>
+            <div id="att"></div>
+          </div>
+        </div>
+
+        <div class="g2">
+          <div class="card pad">
+            <div class="btw" style="margin-bottom:8px"><div class="sec">Today's tasks</div><button class="b sm">View all</button></div>
+            <div id="dtasks"></div>
+          </div>
+          <div class="card pad">
+            <div class="btw" style="margin-bottom:8px"><div class="sec">Recent activity</div><button class="b sm">Open feed</button></div>
+            <div class="tl" id="dfeed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== LEADS ===== -->
+      <section class="view" id="v-leads">
+        <div class="btw mb18">
+          <div><h2 class="ttl">Leads</h2><p class="tsub">Every prospective student, and where they are in the journey.</p></div>
+          <div class="row"><button class="b">Import</button><button class="b">Export</button><button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>Add lead</button></div>
+        </div>
+        <div class="split">
+          <div>
+            <div class="card pad" style="padding:12px">
+              <div class="lbl" style="padding:4px 8px 8px">Views</div>
+              <div id="views"></div>
+              <div class="hr" style="margin:10px 0"></div>
+              <button class="b sm" style="width:100%;justify-content:center">+ Save current view</button>
+            </div>
+          </div>
+          <div>
+            <div class="row mb18" style="flex-wrap:wrap;gap:8px">
+              <div class="seg" id="qf"><button class="on">All</button><button>New</button><button>Contacted</button><button>Qualified</button><button>Proposal</button></div>
+              <div class="gr"></div>
+              <label class="find" style="width:210px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5l-3.6-3.6"/></svg><input placeholder="Filter by name or email…"></label>
+              <button class="b"><svg viewBox="0 0 24 24"><path d="M3.5 5.5h17l-6.5 7.5v5.5l-4-2v-3.5z"/></svg>Filters</button>
+            </div>
+            <div class="card" style="overflow:hidden">
+              <div class="tw"><table>
+                <thead><tr><th style="width:36px"></th><th>Student</th><th>Destination</th><th>Stage</th><th>Score</th><th>Counsellor</th><th>Last touch</th><th></th></tr></thead>
+                <tbody id="lrows"></tbody>
+              </table></div>
+              <div class="tf"><span>1–7 of 258</span><div class="pg"><button>‹</button><button class="on">1</button><button>2</button><button>3</button><button>11</button><button>›</button></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== APPLICATIONS LIST (capture queue) ===== -->
+      <section class="view" id="v-applications">
+        <div class="btw mb18">
+          <div><h2 class="ttl">Applications</h2><p class="tsub">Submissions happen on university portals — this is where they get recorded and verified.</p></div>
+          <button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>New application</button>
+        </div>
+
+        <div class="banner">
+          <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--primary);stroke-width:1.8;fill:none;flex:0 0 17px;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.4"/></svg>
+          <div><b>Two ways an application gets marked submitted.</b><br>
+          Paste the portal reference when you submit — or forward the university's confirmation email to
+          <span class="mono">apply@brightfuture.trakv.in</span> and we match it to the student automatically and mark it verified.
+          Anything marked submitted without a reference stays <b>unverified</b> and appears below.</div>
+        </div>
+
+        <div class="row mb18" style="flex-wrap:wrap;gap:8px">
+          <div class="seg"><button class="on">All 64</button><button>Unverified 2</button><button>No reference 1</button><button>Stale &gt; 7 days 2</button></div>
+          <span class="gr"></span>
+          <label class="find" style="width:220px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5l-3.6-3.6"/></svg><input placeholder="Student, course or reference…"></label>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <div class="tw"><table>
+            <thead><tr><th>Student</th><th>Course</th><th>Stage</th><th>Submission</th><th>Portal reference</th><th>Days in stage</th><th>Counsellor</th><th></th></tr></thead>
+            <tbody id="appRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== APPLICATION RECORD ===== -->
+      <section class="view" id="v-apprecord">
+        <div class="btw" style="margin-bottom:14px">
+          <div class="crumb"><button class="b ic" onclick="go('leads')" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+            Applications <span>/</span> <b style="color:var(--ink-2)">Aisha Khan</b></div>
+          <div class="seg"><button>Pipeline</button><button>List</button><button class="on">Record</button></div>
+        </div>
+        <div class="btw mb18" style="align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="rt">Aisha Khan <span class="ar">→</span> <span class="to">University of Toronto</span></div>
+            <div class="row" style="margin-top:8px;gap:7px"><span class="tag t-contacted"><span class="d"></span>In progress</span>
+              <span class="tag t-ghost">MSc Computer Science</span><span class="tag t-ghost">Sep 2026 intake</span></div>
+          </div>
+          <div class="row"><button class="b">Close application</button><button class="b pri">Advance to Visa <svg viewBox="0 0 24 24"><path d="M5.5 12h13M13 6.5l6 5.5-6 5.5"/></svg></button></div>
+        </div>
+        <div class="rc">
+          <div>
+            <div class="card pad mb18">
+              <div class="row" style="gap:12px"><div class="av" style="width:46px;height:46px;background:var(--primary-tint);color:var(--primary);font-size:15px;font-family:var(--serif)">AK</div>
+                <div><div style="font-family:var(--serif);font-size:16px;font-weight:600">Aisha Khan</div><div class="dim" style="font-size:10.5px;font-weight:600">Lead #A-1042 · since Jul 2</div></div></div>
+              <div class="hr"></div>
+              <div class="pr"><span class="k">Email</span><span class="v">aisha.khan@gmail.com</span></div>
+              <div class="pr"><span class="k">Phone</span><span class="v num">+91 98765 43210</span></div>
+              <div class="pr"><span class="k">Destination</span><span class="v">Canada</span></div>
+              <div class="pr"><span class="k">Counsellor</span><span class="v">Rahul Verma</span></div>
+              <div class="pr"><span class="k">Lead score</span><span class="v"><span class="sc hi">82</span></span></div>
+            </div>
+            <div class="card pad">
+              <div class="lbl" style="margin-bottom:10px">Application detail</div>
+              <div class="pr"><span class="k">University</span><span class="v" style="color:var(--primary)">U. of Toronto</span></div>
+              <div class="pr"><span class="k">Course</span><span class="v">MSc Computer Science</span></div>
+              <div class="pr"><span class="k">Study level</span><span class="v">Postgraduate</span></div>
+              <div class="pr"><span class="k">Intake</span><span class="v">Sep 2026</span></div>
+              <div class="pr"><span class="k">Tuition</span><span class="v num">₹ 38,50,000</span></div>
+              <div class="pr"><span class="k">Application fee</span><span class="v num">₹ 9,500</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card pad mb18">
+              <div class="btw" style="margin-bottom:4px"><div class="sec">Lifecycle</div><span class="dim" style="font-size:11px;font-weight:600">Stage 3 of 5 · 18 days elapsed</span></div>
+              <div class="ms">
+                <div class="m done"><div class="nd">✓</div><div class="lb">Enquiry</div></div>
+                <div class="m done"><div class="nd">✓</div><div class="lb">Application</div></div>
+                <div class="m cur"><div class="nd">3</div><div class="lb">Offer</div></div>
+                <div class="m"><div class="nd">4</div><div class="lb">Visa</div></div>
+                <div class="m"><div class="nd">5</div><div class="lb">Enrolled</div></div>
+              </div>
+            </div>
+            <div class="card pad">
+              <div class="btw" style="margin-bottom:14px"><div class="sec">Timeline</div><button class="b sm">Log activity</button></div>
+              <div class="tl" id="rtl"></div>
+            </div>
+          </div>
+          <div>
+            <!-- how the external submission got captured -->
+            <div class="card pad mb18">
+              <div class="btw" style="margin-bottom:11px"><div class="sec">Submission</div>
+                <span class="tag t-pos"><span class="d"></span>Verified</span></div>
+              <div class="pr"><span class="k">Portal</span><span class="v">U of T — Slate</span></div>
+              <div class="pr"><span class="k">Reference</span><span class="v"><span class="mono">TOR-2026-88421</span></span></div>
+              <div class="pr"><span class="k">Submitted</span><span class="v">18 Jul 2026</span></div>
+              <div class="pr"><span class="k">Recorded by</span><span class="v">Rahul Verma</span></div>
+              <div class="vbox" style="margin-top:10px">
+                <div class="vh"><svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>Matched to confirmation email</div>
+                <div style="color:var(--ink-2)">“Your application has been received” from <b>admissions@utoronto.ca</b> · 18 Jul 2:12 PM</div>
+              </div>
+              <button class="b sm" style="width:100%;justify-content:center;margin-top:10px">View evidence</button>
+            </div>
+
+            <div class="card pad mb18">
+              <div class="sec" style="margin-bottom:10px">Advance stage</div>
+              <div style="font-size:11px;color:var(--ink-3);font-weight:600;margin-bottom:9px">Next: <span style="color:var(--ink)">Visa</span></div>
+              <div class="field"><label>Visa application reference <span class="rq2">*</span></label>
+                <input class="inp" placeholder="e.g. IRCC-2026-11402"></div>
+              <textarea class="ta" placeholder="Note for the audit trail (min 10 characters)"></textarea>
+              <div class="drop" style="margin-top:9px">Attach confirmation — PDF, screenshot or email</div>
+              <button class="b pri" style="width:100%;justify-content:center;margin-top:10px">Confirm advance</button>
+              <div class="dim" style="font-size:10.5px;margin-top:8px;text-align:center">A stage cannot advance without a reference and a note.</div>
+            </div>
+            <div class="card pad">
+              <div class="btw" style="margin-bottom:8px"><div class="sec">Documents</div><span class="tag t-warn">3 of 5</span></div>
+              <div id="docs"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== UNIVERSITIES ===== -->
+      <section class="view" id="v-universities">
+        <div class="btw mb18"><div><h2 class="ttl">Universities &amp; courses</h2><p class="tsub">Browse partner institutions, filter their programmes and shortlist for a student.</p></div>
+          <button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>Add university</button></div>
+
+        <!-- a shortlist needs an owner -->
+        <div class="ctx">
+          <div class="row" style="gap:10px">
+            <span class="av" style="width:34px;height:34px;background:var(--surface);color:var(--primary);font-size:11px;font-family:var(--serif)">AK</span>
+            <div><div style="font-size:12.5px;font-weight:700">Shortlisting for Aisha Khan</div>
+              <div style="font-size:10.5px;color:var(--ink-2)">Saved courses attach to her record</div></div>
+          </div>
+          <span class="gr"></span>
+          <span class="tag t-proposal"><span class="d"></span>4 courses shortlisted</span>
+          <button class="b sm">Change student</button>
+        </div>
+
+        <!-- filters -->
+        <div class="fbar">
+          <label class="find" style="width:230px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5l-3.6-3.6"/></svg><input placeholder="University or course…"></label>
+          <span class="sep"></span>
+          <div class="chipset" id="uf-country"></div>
+          <span class="sep"></span>
+          <div class="chipset" id="uf-level"></div>
+          <span class="sep"></span>
+          <div class="chipset" id="uf-disc"></div>
+          <span class="gr"></span>
+          <label class="fo on" style="padding:0"><span class="bx"></span>Shortlisted only</label>
+        </div>
+
+        <div class="usplit">
+          <div class="card pad" style="padding:12px">
+            <div class="lbl" style="padding:2px 8px 9px">Institutions <span style="color:var(--ink-2)">· 6 of 24</span></div>
+            <div id="ulist"></div>
+          </div>
+          <div>
+            <div class="card" style="overflow:hidden;margin-bottom:18px">
+              <div class="pad btw" style="padding:15px 16px 13px">
+                <div class="row" style="gap:12px">
+                  <span class="crest" id="selCrest" style="width:38px;height:38px;font-size:14px;border-radius:8px;background:#2E39C9">UT</span>
+                  <div><div style="font-family:var(--serif);font-size:16px;font-weight:600" id="selName">University of Toronto</div>
+                    <div class="dim" style="font-size:11px" id="selMeta">Toronto, Canada · 18 courses · 142 live applications</div></div>
+                </div>
+                <button class="b sm">Open profile</button>
+              </div>
+              <div class="tw"><table>
+                <thead><tr><th>Course</th><th>Course ID</th><th>Level</th><th>Duration</th><th>Intake</th><th>Entry</th><th>Tuition</th><th style="text-align:center">Shortlist</th></tr></thead>
+                <tbody id="ucourses"></tbody>
+              </table></div>
+            </div>
+
+            <!-- the persisted shortlist -->
+            <div class="card" style="overflow:hidden">
+              <div class="pad btw" style="padding:15px 16px 12px">
+                <div><div class="sec">Aisha's shortlist</div>
+                  <div class="dim" style="font-size:11px">Stored against her record by course ID · drives the application step</div></div>
+                <button class="b sm pri">Create applications</button>
+              </div>
+              <div class="tw"><table>
+                <thead><tr><th>Course ID</th><th>Course</th><th>University</th><th>Preference</th><th>Added</th><th></th></tr></thead>
+                <tbody id="slrows"></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== STUDENT RECORD ===== -->
+      <section class="view" id="v-student">
+        <div class="crumb" style="margin-bottom:12px"><button class="b ic" onclick="go('leads')" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+          Leads <span>/</span> <b style="color:var(--ink-2)">Aisha Khan</b></div>
+
+        <div class="shead">
+          <span class="av" style="width:52px;height:52px;background:var(--primary-tint);color:var(--primary);font-size:17px;font-family:var(--serif)">AK</span>
+          <div>
+            <div class="nm">Aisha Khan</div>
+            <div class="fx"><span>Lead #A-1042</span><span>GPA 3.6 / 4.0</span><span>IELTS 7.0</span><span>Budget ₹40L</span><span>Canada</span><span>Sep 2026</span></div>
+          </div>
+          <span class="gr"></span>
+          <span class="tag t-qualified"><span class="d"></span>Qualified</span>
+          <button class="b">Log activity</button>
+          <button class="b pri">Create application</button>
+        </div>
+
+        <div class="tabs" id="stabs">
+          <button class="tab" data-t="overview">Overview</button>
+          <button class="tab on" data-t="shortlist">Shortlist<span class="n">4</span></button>
+          <button class="tab" data-t="apps">Applications<span class="n">1</span></button>
+          <button class="tab" data-t="act">Activity</button>
+          <button class="tab" data-t="docs">Documents<span class="n">3/5</span></button>
+        </div>
+
+        <!-- SHORTLIST -->
+        <div class="tpane on" id="t-shortlist">
+          <div class="sumstrip">
+            <div><span class="lbl">Courses</span><div class="v num">4</div></div>
+            <div><span class="lbl">Countries</span><div class="v num">3</div></div>
+            <div><span class="lbl">Cost range</span><div class="v num">₹38–101L</div></div>
+            <div><span class="lbl">Converted</span><div class="v num">1 <span style="font-size:12px;font-family:var(--sans);color:var(--ink-3);font-weight:600">of 4</span></div></div>
+            <div><span class="lbl">Nearest deadline</span><div class="v num" style="color:var(--neg)">12 days</div></div>
+          </div>
+
+          <div class="btw" style="margin-bottom:11px">
+            <div style="font-size:12px;color:var(--ink-2)">Grouped by preference · <span class="dim">added by Rahul Verma</span></div>
+            <div class="row" style="gap:8px"><button class="b sm">Compare</button><button class="b sm">Export for student</button>
+              <button class="b sm pri">Create applications</button></div>
+          </div>
+
+          <div class="card" style="overflow:hidden">
+            <div class="tw"><table>
+              <thead><tr><th style="width:36px"></th><th>Course</th><th>Course ID</th><th>University</th><th>Match</th><th>Est. cost</th><th>Deadline</th><th>Status</th><th></th></tr></thead>
+              <tbody id="slTab"></tbody>
+            </table></div>
+          </div>
+          <div class="dim" style="font-size:11px;margin-top:10px">Removing a course here does not affect an application already created from it.</div>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="tpane" id="t-overview">
+          <div class="g2">
+            <div class="card pad">
+              <div class="sec" style="margin-bottom:12px">Profile</div>
+              <div class="pr"><span class="k">Email</span><span class="v">aisha.khan@gmail.com</span></div>
+              <div class="pr"><span class="k">Phone</span><span class="v num">+91 98765 43210</span></div>
+              <div class="pr"><span class="k">Source</span><span class="v">Website enquiry</span></div>
+              <div class="pr"><span class="k">Counsellor</span><span class="v">Rahul Verma</span></div>
+              <div class="pr"><span class="k">Created</span><span class="v">2 July 2026</span></div>
+              <div class="pr"><span class="k">Lead score</span><span class="v"><span class="sc hi">82</span></span></div>
+            </div>
+            <div class="card pad">
+              <div class="sec" style="margin-bottom:12px">Next actions</div>
+              <div class="lr"><span class="tag t-neg">Due</span><div><b>Collect IELTS score report</b><div class="m">Blocking the Toronto application</div></div></div>
+              <div class="lr"><span class="tag t-ghost">Tue</span><div><b>Confirm Sep 2026 intake preference</b><div class="m">Before offer expiry</div></div></div>
+              <div class="lr"><span class="tag t-ghost">Fri</span><div><b>Financial proof walkthrough</b><div class="m">Call scheduled 5:30 PM</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- APPLICATIONS -->
+        <div class="tpane" id="t-apps">
+          <div class="card" style="overflow:hidden">
+            <div class="tw"><table>
+              <thead><tr><th>Course ID</th><th>Application</th><th>Stage</th><th>Outcome</th><th>Updated</th><th></th></tr></thead>
+              <tbody><tr>
+                <td><span class="cid">TOR-CS-501</span></td>
+                <td><b style="font-weight:600">MSc Computer Science</b><div class="dim" style="font-size:10.5px">University of Toronto</div></td>
+                <td><span class="tag t-proposal"><span class="d"></span>Offer</span></td>
+                <td><span class="tag t-contacted"><span class="d"></span>In progress</span></td>
+                <td class="dim">Today 9:24 AM</td>
+                <td style="text-align:right"><button class="b sm" onclick="go('apprecord')">Open</button></td></tr></tbody>
+            </table></div>
+          </div>
+          <div class="dim" style="font-size:11px;margin-top:10px">3 shortlisted courses have not been converted to applications yet.</div>
+        </div>
+
+        <!-- ACTIVITY -->
+        <div class="tpane" id="t-act"><div class="card pad" style="max-width:700px"><div class="tl" id="stl"></div></div></div>
+
+        <!-- DOCUMENTS -->
+        <div class="tpane" id="t-docs"><div class="card pad" style="max-width:520px">
+          <div class="btw" style="margin-bottom:8px"><div class="sec">Documents</div><span class="tag t-warn">3 of 5</span></div>
+          <div id="sdocs"></div></div></div>
+      </section>
+
+      <!-- ===== COURSE SEARCH ===== -->
+      <section class="view" id="v-coursesearch">
+        <div class="btw mb18">
+          <div><h2 class="ttl">Course search</h2><p class="tsub">Find programmes your student actually qualifies for, then apply in one step.</p></div>
+          <div class="row"><button class="b">Saved searches</button><button class="b">Clear all</button></div>
+        </div>
+
+        <!-- student context: the thing that makes this a CRM search, not a catalogue -->
+        <div class="ctx">
+          <div class="row" style="gap:10px">
+            <span class="av" style="width:34px;height:34px;background:var(--surface);color:var(--primary);font-size:11px;font-family:var(--serif)">AK</span>
+            <div><div style="font-size:12.5px;font-weight:700">Matching for Aisha Khan</div>
+              <div style="font-size:10.5px;color:var(--ink-2)">Results are scored against her profile</div></div>
+          </div>
+          <div class="fx">
+            <span>GPA 3.6 / 4.0</span><span>IELTS 7.0</span><span>Budget ₹40L</span><span>Prefers Canada</span><span>Sep 2026</span>
+          </div>
+          <span class="gr"></span>
+          <button class="b sm">Change student</button>
+        </div>
+
+        <div class="csg">
+          <!-- facets -->
+          <div class="card pad" style="padding:6px 16px 16px">
+            <div class="fac">
+              <span class="lbl">Destination</span>
+              <div id="f-dest"></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Study level</span>
+              <div class="chipset" id="f-lvl"></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Discipline</span>
+              <div id="f-disc"></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Intake</span>
+              <div class="chipset" id="f-intake"></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Annual tuition</span>
+              <div class="rng"><span class="fl"></span><span class="h" style="left:6%"></span><span class="h" style="left:78%"></span></div>
+              <div class="rngv"><span>₹5L</span><span>₹40L</span></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Entry requirements</span>
+              <div id="f-req"></div>
+            </div>
+            <div class="fac">
+              <span class="lbl">Extras</span>
+              <div id="f-extra"></div>
+            </div>
+          </div>
+
+          <!-- results -->
+          <div>
+            <div class="csbar">
+              <label class="find" style="flex:1;min-width:220px;max-width:none"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M19.5 19.5l-3.6-3.6"/></svg>
+                <input value="computer science" placeholder="Course, keyword or discipline…"></label>
+              <div class="seg"><button class="on">Best match</button><button>Lowest fee</button><button>Deadline</button></div>
+            </div>
+            <div class="btw" style="margin-bottom:11px">
+              <div style="font-size:12px;color:var(--ink-2)"><b style="color:var(--ink)">42 courses</b> match · <span class="dim">6 shown</span></div>
+              <div class="dim" style="font-size:11px;font-weight:600">4 meet every requirement</div>
+            </div>
+            <div id="crs"></div>
+            <div class="tray">
+              <b>2 courses selected</b>
+              <span style="font-size:11.5px;opacity:.75">University of Toronto · UBC</span>
+              <span class="gr"></span>
+              <button class="tb">Compare</button>
+              <button class="tb">Add to shortlist</button>
+              <button class="tb k">Start application</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== COMPARE ===== -->
+      <section class="view" id="v-compare">
+        <div class="btw" style="margin-bottom:14px">
+          <div class="crumb"><button class="b ic" onclick="go('coursesearch')" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+            Course search <span>/</span> <b style="color:var(--ink-2)">Compare</b></div>
+          <label class="fo on" style="padding:0"><span class="bx"></span>Show differences only</label>
+        </div>
+        <div class="btw mb18">
+          <div><h2 class="ttl">Compare 3 courses</h2><p class="tsub">Scored against Aisha Khan · best value in each row is marked.</p></div>
+          <button class="b">Export as PDF for student</button>
+        </div>
+
+        <div class="cmpwrap"><table class="cmp"><thead><tr><th class="attr"></th><th id="ch1"></th><th id="ch2"></th><th id="ch3"></th></tr></thead>
+          <tbody id="cmpbody"></tbody></table></div>
+
+        <!-- commit step: this is where a comparison becomes part of the student record -->
+        <div class="commit">
+          <div><div style="font-size:12.5px;font-weight:700">Add to Aisha Khan's shortlist</div>
+            <div class="dim" style="font-size:11px">Set a preference tier for each, then save to her record.</div></div>
+          <span class="gr"></span>
+          <div class="pf"><span>Toronto</span><select class="sel"><option>Primary</option><option>Backup</option><option>Safety</option></select></div>
+          <div class="pf"><span>UBC</span><select class="sel"><option selected>Backup</option><option>Primary</option><option>Safety</option></select></div>
+          <div class="pf"><span>Manchester</span><select class="sel"><option selected>Safety</option><option>Primary</option><option>Backup</option></select></div>
+          <button class="b pri" id="addSl">Add 3 to shortlist</button>
+        </div>
+
+        <!-- what actually happened -->
+        <div class="done" id="slDone" style="display:none">
+          <div class="dh"><span class="tick"><svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg></span>
+            <b style="font-size:13px">3 courses added to Aisha Khan's shortlist</b></div>
+          <div id="wrote"></div>
+          <div class="row" style="gap:8px;margin-top:12px">
+            <button class="b sm" onclick="go('student')">View on her record</button>
+            <button class="b sm pri" onclick="go('applications')">Create applications</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ACTIVITY ===== -->
+      <section class="view" id="v-activities">
+        <div class="btw mb18"><div><h2 class="ttl">Activity</h2><p class="tsub">Everything your team has done, newest first.</p></div>
+          <div class="seg"><button class="on">All</button><button>Calls</button><button>Notes</button><button>Stages</button></div></div>
+        <div class="card pad" style="max-width:720px"><div class="tl" id="afeed"></div></div>
+      </section>
+
+      <!-- ===== TASKS ===== -->
+      <section class="view" id="v-tasks">
+        <div class="btw mb18"><div><h2 class="ttl">Tasks</h2><p class="tsub">Follow-ups, document chases and calls.</p></div>
+          <button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>New task</button></div>
+        <div class="bd" style="grid-template-columns:repeat(3,1fr)" id="tb"></div>
+      </section>
+
+      <!-- ===== TEAM ===== -->
+      <section class="view" id="v-team">
+        <div class="btw mb18"><div><h2 class="ttl">Team</h2><p class="tsub">Counsellors, managers and admins in this workspace.</p></div>
+          <button class="b pri"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg>Invite</button></div>
+        <div class="card" style="overflow:hidden"><div class="tw"><table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Leads</th><th>Status</th><th style="text-align:right">Enabled</th></tr></thead>
+          <tbody id="trows"></tbody></table></div></div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="view" id="v-settings">
+        <div class="mb18"><h2 class="ttl">Settings</h2><p class="tsub">Roles, automation and workspace configuration.</p></div>
+        <div class="sg">
+          <div class="card" style="overflow:hidden">
+            <div class="pad" style="padding-bottom:8px"><div class="sec">Role permissions</div><div class="dim" style="font-size:11.5px">What each role can do across modules.</div></div>
+            <div class="tw"><table>
+              <thead><tr><th>Capability</th><th style="text-align:center">Admin</th><th style="text-align:center">Manager</th><th style="text-align:center">Counsellor</th><th style="text-align:center">Agent</th></tr></thead>
+              <tbody id="prows"></tbody></table></div>
+          </div>
+          <div>
+            <div class="card pad mb18"><div class="sec" style="margin-bottom:10px">Automation</div>
+              <div class="btw" style="padding:9px 0"><div><b style="font-size:12px">Round-robin assignment</b><div class="dim" style="font-size:11px">Distribute new leads by destination</div></div><span class="sw"></span></div>
+              <div class="btw" style="padding:9px 0;border-top:1px solid var(--line)"><div><b style="font-size:12px">SLA breach alerts</b><div class="dim" style="font-size:11px">Warn after 48h with no contact</div></div><span class="sw"></span></div>
+              <div class="btw" style="padding:9px 0;border-top:1px solid var(--line)"><div><b style="font-size:12px">Document reminders</b><div class="dim" style="font-size:11px">Nudge students every 3 days</div></div><span class="sw"></span></div>
+              <div class="btw" style="padding:9px 0;border-top:1px solid var(--line)"><div><b style="font-size:12px">Public enquiry form</b><div class="dim" style="font-size:11px">Embed on your website</div></div><span class="sw off"></span></div>
+            </div>
+            <div class="card pad"><div class="sec" style="margin-bottom:10px">Custom roles</div>
+              <div class="lr"><span class="tag t-qualified"><span class="d"></span>Senior Counsellor</span><span class="gr"></span><span class="dim" style="font-size:11px">6 users</span></div>
+              <div class="lr"><span class="tag t-contacted"><span class="d"></span>Front Desk</span><span class="gr"></span><span class="dim" style="font-size:11px">2 users</span></div>
+              <button class="b sm" style="margin-top:12px;width:100%;justify-content:center">+ Create role</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const tone=[["var(--primary-tint)","var(--primary)"],["var(--sky-bg)","var(--sky)"],["var(--plum-bg)","var(--plum)"],
+["var(--gold-tint)","var(--gold)"],["var(--pos-bg)","var(--pos)"],["var(--surface-3)","var(--ink-2)"]];
+const av=(i,t,s=30)=>`<span class="av" style="width:${s}px;height:${s}px;background:${tone[i%6][0]};color:${tone[i%6][1]};font-size:${s>26?10.5:9.5}px">${t}</span>`;
+const mkChip=a=>a.map(c=>`<button class="fchip ${c[1]?'on':''}">${c[0]}</button>`).join('');
+function spark(vals,color){
+  const w=64,h=20,mx=Math.max(...vals),mn=Math.min(...vals),rg=(mx-mn)||1;
+  const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-((v-mn)/rg)*(h-3)-1.5).toFixed(1)}`).join(' ');
+  const last=pts.split(' ').pop().split(',');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="${color}"/></svg>`;
+}
+
+/* ---------- stat band ---------- */
+const stats=[["New leads","128","",[88,96,92,110,104,118,128],"var(--primary)","up","+12%"],
+["Applications","64","",[41,44,48,52,50,58,64],"var(--primary)","up","+8%"],
+["Conversion","34","%",[27,29,28,31,30,33,34],"var(--pos)","up","+3 pts"],
+["Avg. days to offer","23","",[31,30,28,27,26,24,23],"var(--gold)","up","−8 days"]];
+$('#band').innerHTML=stats.map(s=>`<div class="stat"><div class="lbl">${s[0]}</div>
+  <div class="fig num">${s[1]}${s[2]?`<sup>${s[2]}</sup>`:''}</div>
+  <div class="ft"><span class="dl ${s[5]}">${s[6]}</span>${spark(s[3],s[4])}</div></div>`).join('');
+
+/* ---------- funnel ---------- */
+const fn=[["Enquiry",258,"var(--primary)"],["Contacted",196,"var(--sky)"],["Qualified",128,"var(--plum)"],
+["Application",64,"var(--gold)"],["Offer",41,"var(--gold-2)"],["Enrolled",22,"var(--pos)"]];
+$('#fn').innerHTML=fn.map((f,i)=>{const pct=(f[1]/fn[0][1]*100),conv=i?Math.round(f[1]/fn[i-1][1]*100):100;
+  return `<div class="fn-row"><span class="nm">${f[0]}</span>
+  <div class="fn-bar"><div class="fn-fill" style="width:${Math.max(pct,9)}%;background:${f[2]}">${f[1]}</div></div>
+  <span class="cv">${i?`<b>${conv}%</b>`:'—'}</span></div>`;}).join('');
+
+/* ---------- attention ---------- */
+const att=[["var(--neg)","3 leads breached SLA","No contact in 48h · Toronto, Melbourne intake"],
+["var(--warn)","2 applications missing documents","IELTS report and financial proof outstanding"],
+["var(--warn)","Offer expiring in 4 days","Sam Patel · TU Munich must respond by 26 Jul"],
+["var(--primary)","6 unassigned website leads","Auto-assignment paused for Germany"],
+["var(--gold)","Priya Sharma accepted an offer","Move to visa stage to continue"]];
+$('#att').innerHTML=att.map(a=>`<div class="att"><span class="sev" style="background:${a[0]}"></span>
+  <div><b>${a[1]}</b><div class="m">${a[2]}</div></div><button class="go">Open</button></div>`).join('');
+
+/* ---------- dashboard tasks + feed ---------- */
+const dt=[["Call David Chen","Overdue by 1 day","t-neg","Overdue"],["Collect IELTS — Aisha Khan","Due today 4:00 PM","t-warn","Today"],
+["Counselling call — UK cohort","Due today 5:30 PM","t-warn","Today"],["Fee structure to Sam Patel","Due tomorrow","t-ghost","Tue"]];
+$('#dtasks').innerHTML=dt.slice(0,3).map((t,i)=>`<div class="lr">${av(i,'MK',24)}<div><b>${t[0]}</b><div class="m">${t[1]}</div></div>
+  <span class="gr"></span><span class="tag ${t[2]}">${t[3]}</span></div>`).join('');
+const feed=[["g","Offer received — U. of Toronto","Aisha Khan · conditional on IELTS 7.0","Today 9:24 AM"],
+["k","Call logged, 12 min","Rahul Verma with Sam Patel — SOP review","Today 8:10 AM"],
+["","Stage moved to Qualified","Sara Ahmed by Priya Menon","Yesterday 5:40 PM"],
+["","6 leads auto-assigned","Website enquiries routed by destination","Yesterday 9:00 AM"]];
+const tlHtml=a=>a.map(f=>`<div class="ti ${f[0]}"><div class="h">${f[1]}</div><div class="m">${f[2]}</div><div class="d">${f[3]}</div></div>`).join('');
+$('#dfeed').innerHTML=tlHtml(feed.slice(0,3));
+$('#afeed').innerHTML=tlHtml(feed.concat([["","Application submitted","Marcus Lee → U. Melbourne, ref #MEL-88421","Jul 19 11:15 AM"],
+["","Visa checklist sent","Fatima Noor · 5 documents requested","Jul 18 3:22 PM"],
+["k","Lead qualified","Priya Sharma · budget confirmed, Sep 2026","Jul 15 2:05 PM"]]));
+
+/* ---------- leads ---------- */
+const views=[["All leads",258,1],["My leads",41,0],["Unassigned",18,0],["High intent",29,0],["New this week",96,0],["SLA breached",7,0]];
+$('#views').innerHTML=views.map(v=>`<div class="vi ${v[2]?'on':''}">${v[0]}<span class="n num">${v[1]}</span></div>`).join('');
+const leads=[["Aisha Khan","AK","aisha.khan@gmail.com","Canada","New",82,"Rahul Verma","2h ago",1],
+["Marcus Lee","ML","marcus.lee@gmail.com","Australia","Contacted",64,"Priya Menon","Yesterday",0],
+["Priya Sharma","PS","priya.sharma@gmail.com","Australia","Qualified",90,"Aisha Khan","3h ago",0],
+["Sam Patel","SP","sam.patel@gmail.com","Germany","Proposal",76,"Rahul Verma","1d ago",0],
+["Sara Ahmed","SA","sara.ahmed@gmail.com","Germany","Contacted",78,"Priya Menon","5h ago",0],
+["David Chen","DC","david.chen@gmail.com","United States","New",58,"Unassigned","30m ago",0],
+["Fatima Noor","FN","fatima.noor@gmail.com","United Kingdom","Qualified",85,"Aisha Khan","2d ago",0]];
+const scCls=s=>s>=80?'hi':s>=68?'mid':'lo';
+$('#lrows').innerHTML=leads.map((l,i)=>{const[n,t,e,d,st,sc,c,lt,on]=l;
+ return `<tr><td><span class="ck ${on?'on':''}"></span></td>
+ <td><div class="cu">${av(i,t,31)}<div><b>${n}</b><div class="em">${e}</div></div></div></td>
+ <td class="mut">${d}</td>
+ <td><span class="tag t-${st.toLowerCase()}"><span class="d"></span>${st}</span></td>
+ <td><span class="sc ${scCls(sc)} num">${sc}</span></td>
+ <td class="mut">${c}</td><td class="dim">${lt}</td>
+ <td><button class="kb"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button></td></tr>`;}).join('');
+
+/* ---------- record ---------- */
+$('#rtl').innerHTML=tlHtml([["g","Offer letter received","Conditional offer — pending IELTS 7.0 overall","Today 9:24 AM · Rahul Verma"],
+["k","Application submitted","Portal reference #TOR-2026-88421","Jul 18 2:10 PM · Rahul Verma"],
+["","Call — 12 minutes","Discussed SOP draft and financial documents","Jul 15 11:02 AM · Aisha Khan"],
+["","Lead qualified","Budget confirmed, target intake Sep 2026","Jul 10 4:45 PM · Priya Menon"]]);
+const docs=[["Passport",1],["Academic transcripts",1],["Statement of purpose",1],["IELTS score report",0],["Financial proof",0]];
+$('#docs').innerHTML=docs.map(d=>`<div class="dc ${d[1]?'y':'n'}"><span class="s">${d[1]?'<svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>':'!'}</span>${d[0]}
+ <span class="gr" style="flex:1"></span><span class="dim" style="font-size:10.5px;font-weight:600">${d[1]?'Verified':'Awaiting'}</span></div>`).join('');
+
+/* ---------- universities ---------- */
+const unis=[["University of Toronto","UT","#2E39C9","Canada",142,18,"₹32–48L","Selective"],
+["University of Melbourne","UM","#7A3EA8","Australia",98,24,"₹28–41L","Moderate"],
+["Technical University Munich","TM","#0C9268","Germany",76,31,"₹6–12L","Open"],
+["University of Manchester","MA","#A8760F","United Kingdom",110,22,"₹24–36L","Selective"],
+["University of British Columbia","BC","#2566C7","Canada",88,19,"₹30–44L","Moderate"],
+["King's College London","KC","#CE4038","United Kingdom",64,16,"₹27–39L","Selective"]];
+// filter chips
+$('#uf-country').innerHTML=mkChip([["Canada",1],["UK",0],["Australia",0],["Germany",0]]);
+$('#uf-level').innerHTML=mkChip([["UG",0],["PG",1],["PhD",0]]);
+$('#uf-disc').innerHTML=mkChip([["Computing",1],["Business",0],["Engineering",0],["Health",0]]);
+
+// institution list
+$('#ulist').innerHTML=unis.map((u,i)=>`<div class="uitem ${i===0?'on':''}">
+  <span class="crest" style="background:${u[2]};width:32px;height:32px;font-size:12px;border-radius:7px">${u[1]}</span>
+  <div style="min-width:0"><div class="un2">${u[0]}</div><div class="uc2">${u[3]}</div></div>
+  <span class="n num">${u[5]}</span></div>`).join('');
+
+// courses for the selected institution — courseId is the key everything hangs off
+const ucourses=[
+["TOR-CS-501","MSc Computer Science","PG","2 years","Sep 2026","IELTS 7.0 · GPA 3.4","₹38.5L",1],
+["TOR-SE-533","MEng Software Engineering","PG","2 years","Jan 2027","IELTS 6.5 · GPA 3.2","₹36.8L",1],
+["TOR-DS-512","MSc Data Science","PG","2 years","Sep 2026","IELTS 7.0 · GPA 3.5","₹39.2L",0],
+["TOR-AI-524","MSc Applied Computing (AI)","PG","16 months","Sep 2026","IELTS 7.0 · GPA 3.5","₹41.0L",0],
+["TOR-CS-201","BSc Computer Science","UG","4 years","Sep 2026","IELTS 6.5","₹31.5L",0]];
+$('#ucourses').innerHTML=ucourses.map(c=>`<tr>
+  <td><b style="font-weight:600">${c[1]}</b></td>
+  <td><span class="cid">${c[0]}</span></td>
+  <td><span class="tag t-ghost">${c[2]}</span></td>
+  <td class="mut">${c[3]}</td><td class="mut">${c[4]}</td>
+  <td class="dim" style="font-size:11.5px">${c[5]}</td>
+  <td class="num" style="font-weight:600">${c[6]}</td>
+  <td style="text-align:center"><button class="star ${c[7]?'on':''}" title="Shortlist">${c[7]?'★':'☆'}</button></td></tr>`).join('');
+
+// the persisted shortlist rows — one row per courseId on the student's record
+const shortlist=[
+["TOR-CS-501","MSc Computer Science","University of Toronto","Primary","sl-pri","22 Jul"],
+["UBC-AI-410","MSc Artificial Intelligence","U. of British Columbia","Backup","sl-bak","22 Jul"],
+["MAN-DS-330","MSc Data Science","University of Manchester","Backup","sl-bak","20 Jul"],
+["TUM-IN-120","MSc Informatics","Technical University Munich","Safety","sl-saf","20 Jul"]];
+$('#slrows').innerHTML=shortlist.map(s=>`<tr>
+  <td><span class="cid">${s[0]}</span></td>
+  <td><b style="font-weight:600">${s[1]}</b></td>
+  <td class="mut">${s[2]}</td>
+  <td><span class="tag ${s[4]}"><span class="d"></span>${s[3]}</span></td>
+  <td class="dim">${s[5]}</td>
+  <td style="text-align:right"><button class="b sm">Apply</button></td></tr>`).join('');
+// institution selection
+$('#ulist').addEventListener('click',e=>{const it=e.target.closest('.uitem');if(!it)return;
+  document.querySelectorAll('#ulist .uitem').forEach(x=>x.classList.remove('on'));it.classList.add('on');});
+// shortlist toggle
+$('#ucourses').addEventListener('click',e=>{const s=e.target.closest('.star');if(!s)return;
+  const on=s.classList.toggle('on');s.textContent=on?'★':'☆';});
+
+/* ---------- tasks ---------- */
+const tasks={"To do":[["t-neg","Overdue","Call David Chen — no contact in 48h","Was due 21 Jul"],["t-ghost","Follow-up","Confirm Marcus Lee offer decision","Due tomorrow"]],
+"In progress":[["t-warn","Documents","Collect IELTS report — Aisha Khan","Due 24 Jul"],["t-contacted","Call","Counselling call — new UK leads","Due 25 Jul"]],
+"Done":[["t-pos","Documents","SOP finalised — Priya Sharma","Completed 20 Jul"],["t-pos","Follow-up","Fee structure sent — Sam Patel","Completed 19 Jul"]]};
+$('#tb').innerHTML=Object.entries(tasks).map(([c,items])=>`<div class="bc"><div class="bh"><b>${c}</b><span class="n">${items.length}</span><button class="pl">+</button></div>
+ ${items.map((t,i)=>`<div class="tk"><span class="tag ${t[0]}">${t[1]}</span><b>${t[2]}</b><div class="f"><span>${t[3]}</span>${av(i+1,'MK',20)}</div></div>`).join('')}</div>`).join('');
+
+/* ---------- team ---------- */
+const team=[["Murali Krishna","MK","murali@brightfuture.com","Admin",0,"Active",1],
+["Priya Menon","PM","priya@brightfuture.com","Manager",62,"Active",1],
+["Rahul Verma","RV","rahul@brightfuture.com","Counsellor",84,"Active",1],
+["Aisha Khan","AK","aisha@brightfuture.com","Counsellor",71,"Active",1],
+["Sana Ali","SA","sana@brightfuture.com","Agent",0,"Invited",0]];
+$('#trows').innerHTML=team.map((t,i)=>`<tr><td><div class="cu">${av(i,t[1],29)}<b>${t[0]}</b></div></td>
+ <td class="mut">${t[2]}</td><td><span class="tag t-ghost">${t[3]}</span></td><td class="num mut">${t[4]||'—'}</td>
+ <td><span class="tag ${t[6]?'t-pos':'t-ghost'}"><span class="d"></span>${t[5]}</span></td>
+ <td style="text-align:right"><span class="sw ${t[6]?'':'off'}"></span></td></tr>`).join('');
+
+/* ---------- permissions ---------- */
+const caps=[["View leads",1,1,1,1],["Create and edit leads",1,1,1,1],["Delete leads",1,1,0,0],["Manage applications",1,1,1,0],
+["Advance lifecycle stage",1,1,1,0],["View universities",1,1,1,1],["Manage team",1,1,0,0],["Roles and permissions",1,0,0,0],["Workspace settings",1,0,0,0]];
+const yes='<span class="pm"><svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg></span>',no='<span class="pm no"></span>';
+$('#prows').innerHTML=caps.map(c=>`<tr><td style="font-weight:600">${c[0]}</td>${c.slice(1).map(v=>`<td style="text-align:center">${v?yes:no}</td>`).join('')}</tr>`).join('');
+
+/* ---------- course search ---------- */
+const student={gpa:3.6,ielts:7.0,budget:40};
+const facets={
+ dest:[["Canada",18,1],["United Kingdom",12,0],["Australia",7,0],["Germany",9,1],["Ireland",4,0],["United States",6,0]],
+ disc:[["Computer Science",14,1],["Data & AI",9,1],["Engineering",11,0],["Business",16,0],["Health Sciences",8,0]],
+ req:[["I meet the IELTS requirement",26,1],["No GRE / GMAT required",31,0],["Accepts 15-year education",12,0]],
+ extra:[["Scholarship available",17,0],["Application fee waiver",8,0],["3-year post-study work",21,1]]
+};
+const mkOpt=a=>a.map(o=>`<div class="fo ${o[2]?'on':''}"><span class="bx"></span>${o[0]}<span class="n">${o[1]}</span></div>`).join('');
+$('#f-dest').innerHTML=mkOpt(facets.dest);
+$('#f-disc').innerHTML=mkOpt(facets.disc);
+$('#f-req').innerHTML=mkOpt(facets.req);
+$('#f-extra').innerHTML=mkOpt(facets.extra);
+$('#f-lvl').innerHTML=mkChip([["Foundation",0],["Undergraduate",0],["Postgraduate",1],["PhD",0],["Diploma",0]]);
+$('#f-intake').innerHTML=mkChip([["Jan 2026",0],["May 2026",0],["Sep 2026",1],["Jan 2027",0]]);
+
+// name, university, initials, crest, city/country, level, duration, intake, tuition(L), appFee, ielts, gpa, deadline, extras[], match
+const courses=[
+["MSc Computer Science","University of Toronto","UT","#2E39C9","Toronto, Canada","Postgraduate","2 years","Sep 2026",38.5,"₹9,500",7.0,3.4,"Closes in 12 days",["3-yr PSW"],96],
+["MSc Artificial Intelligence","University of British Columbia","BC","#2566C7","Vancouver, Canada","Postgraduate","2 years","Sep 2026",36.2,"₹8,200",6.5,3.2,"Closes in 24 days",["Scholarship","3-yr PSW"],92],
+["MSc Data Science","University of Manchester","MA","#A8760F","Manchester, UK","Postgraduate","1 year","Sep 2026",28.4,"No fee",6.5,3.0,"Closes in 31 days",["Scholarship","Fee waiver"],87],
+["MSc Informatics","Technical University Munich","TM","#0C9268","Munich, Germany","Postgraduate","2 years","Oct 2026",8.6,"No fee",6.5,3.5,"Closes in 40 days",["Scholarship","Low tuition"],81],
+["Master of Information Technology","University of Melbourne","UM","#7A3EA8","Melbourne, Australia","Postgraduate","2 years","Feb 2027",41.8,"₹11,000",6.5,3.0,"Closes in 68 days",["3-yr PSW"],74],
+["MSc Software Engineering","King's College London","KC","#CE4038","London, UK","Postgraduate","1 year","Sep 2026",32.1,"₹7,400",7.5,3.5,"Closes in 19 days",["Scholarship"],61]];
+
+// eligibility is derived from the student's real profile; the match score is editorial
+function evaluate(c){
+  const [,,,,,,,,fee,,ielts,gpa]=c, chips=[];
+  if(student.ielts>=ielts) chips.push(['r-ok',`IELTS ${ielts} met`]);
+  else chips.push(['r-no',`IELTS ${(ielts-student.ielts).toFixed(1)} short`]);
+  if(student.gpa>=gpa) chips.push(['r-ok',`GPA ${gpa} met`]);
+  else chips.push(['r-no',`GPA ${gpa} needed`]);
+  if(fee<=student.budget) chips.push(['r-ok','Within budget']);
+  else chips.push(['r-wn',`₹${(fee-student.budget).toFixed(1)}L over budget`]);
+  return {chips,score:c[14]};
+}
+$('#crs').innerHTML=courses.map((c,i)=>{
+  const [name,uni,ini,crest,loc,lvl,dur,intake,fee,appFee,,,deadline,extras]=c;
+  const ev=evaluate(c);
+  const mc=ev.score>=90?'m-hi':ev.score>=78?'m-md':'m-lo';
+  const urgent=parseInt(deadline.replace(/\D+/g,''),10)<=20;
+  return `<div class="cr">
+   <span class="crest" style="background:${crest};width:40px;height:40px;font-size:14px;border-radius:8px">${ini}</span>
+   <div style="min-width:0;flex:1">
+     <div class="cn">${name}</div>
+     <div class="uni">${uni} · <span class="dim" style="font-weight:500">${loc}</span></div>
+     <div class="meta">
+       <span class="tag t-ghost">${lvl}</span><span class="tag t-ghost">${dur}</span>
+       <span class="tag t-ghost">${intake}</span>
+       ${extras.map(x=>`<span class="tag ${x==='Scholarship'?'t-proposal':'t-ghost'}">${x}</span>`).join('')}
+       <span class="tag ${urgent?'t-neg':'t-ghost'}">${deadline}</span>
+     </div>
+     <div class="rq">${ev.chips.map(ch=>`<span class="rc2 ${ch[0]}">${ch[1]}</span>`).join('')}</div>
+   </div>
+   <div class="rt">
+     <span class="mt ${mc}">${ev.score}% match</span>
+     <div><div class="fee num">₹${fee}L</div><div class="feek">per year · app fee ${appFee}</div></div>
+     <div class="row" style="gap:6px">
+       <button class="star ${i<2?'on':''}" title="Shortlist">${i<2?'★':'☆'}</button>
+       <button class="b sm">Compare</button>
+       <button class="b sm pri">Apply</button>
+     </div>
+   </div></div>`;
+}).join('');
+
+/* ---------- applications list: the capture queue ---------- */
+// student, course, university, stage, submission state, reference, days in stage, counsellor
+const apps=[
+["Aisha Khan","AK","MSc Computer Science","University of Toronto","Offer","verified","TOR-2026-88421",4,"Rahul Verma"],
+["Priya Sharma","PS","BSc Nursing","University of Melbourne","Visa","verified","MEL-2026-40118",3,"Aisha Khan"],
+["Sam Patel","SP","MSc Informatics","Technical University Munich","Offer","verified","TUM-2026-77310",6,"Rahul Verma"],
+["Marcus Lee","ML","Master of Information Technology","University of Melbourne","Application","unverified","MEL-2026-99120",9,"Priya Menon"],
+["Fatima Noor","FN","MSc Data Science","University of Manchester","Application","unverified","MAN-2026-51044",6,"Aisha Khan"],
+["Sara Ahmed","SA","MEng Mechanical","Technical University Munich","Application","none","",12,"Priya Menon"]];
+const subChip={
+  verified:['t-pos','Verified'],
+  unverified:['t-warn','Recorded, unverified'],
+  none:['t-neg','Not recorded']};
+$('#appRows').innerHTML=apps.map((a,i)=>{
+  const [n,ini,course,uni,stage,sub,ref,days,who]=a;
+  const [cls,label]=subChip[sub];
+  const stale=days>7;
+  return `<tr>
+   <td><div class="cu">${av(i,ini,29)}<b style="font-weight:600">${n}</b></div></td>
+   <td><b style="font-weight:600">${course}</b><div class="dim" style="font-size:10.5px">${uni}</div></td>
+   <td><span class="tag t-ghost">${stage}</span></td>
+   <td><span class="tag ${cls}"><span class="d"></span>${label}</span></td>
+   <td>${ref?`<span class="mono">${ref}</span>`:'<span class="dim" style="font-size:11px">— none —</span>'}</td>
+   <td><span class="num ${stale?'':'mut'}" style="${stale?'color:var(--neg);font-weight:700':'font-weight:600'}">${days}d</span></td>
+   <td class="mut">${who}</td>
+   <td style="text-align:right">${sub==='verified'
+     ?`<button class="b sm" onclick="go('apprecord')">Open</button>`
+     :`<button class="b sm pri">Record submission</button>`}</td></tr>`;}).join('');
+
+/* ---------- student record ---------- */
+// one row per shortlisted courseId, grouped by preference tier
+const slFull=[
+ ["Primary","sl-pri",[["TOR-CS-501","MSc Computer Science","University of Toronto",96,"₹101L","12 days",1,"Applied","t-pos"]]],
+ ["Backup","sl-bak",[["UBC-AI-410","MSc Artificial Intelligence","U. of British Columbia",92,"₹95.4L","24 days",0,"Shortlisted","t-ghost"],
+   ["MAN-DS-330","MSc Data Science","University of Manchester",87,"₹38.4L","31 days",0,"Shortlisted","t-ghost"]]],
+ ["Safety","sl-saf",[["TUM-IN-120","MSc Informatics","Technical University Munich",81,"₹29.2L","40 days",0,"Shortlisted","t-ghost"]]]];
+$('#slTab').innerHTML=slFull.map(([tier,cls,items])=>
+ `<tr class="grp-row"><td colspan="9">${tier} · ${items.length} course${items.length>1?'s':''}</td></tr>`+
+ items.map(r=>{const urgent=parseInt(r[5])<=20;
+  return `<tr><td><span class="ck ${r[6]?'on':''}"></span></td>
+   <td><b style="font-weight:600">${r[1]}</b></td>
+   <td><span class="cid">${r[0]}</span></td>
+   <td class="mut">${r[2]}</td>
+   <td><span class="mt ${r[3]>=90?'m-hi':r[3]>=78?'m-md':'m-lo'}">${r[3]}%</span></td>
+   <td class="num" style="font-weight:600">${r[4]}</td>
+   <td><span class="tag ${urgent?'t-neg':'t-ghost'}">${r[5]}</span></td>
+   <td><span class="tag ${r[8]}"><span class="d"></span>${r[7]}</span></td>
+   <td style="text-align:right">${r[6]?'<button class="b sm" onclick="go(\'apprecord\')">Open</button>':'<button class="b sm pri">Apply</button>'}</td></tr>`;}).join('')).join('');
+
+$('#stl').innerHTML=tlHtml([["g","Offer letter received","Conditional offer from U. of Toronto","Today 9:24 AM · Rahul Verma"],
+["k","3 courses added to shortlist","Toronto, UBC and Manchester compared","22 Jul 11:40 AM · Rahul Verma"],
+["","Application submitted","MSc Computer Science, ref #TOR-2026-88421","Jul 18 2:10 PM · Rahul Verma"],
+["","Lead qualified","Budget confirmed, target intake Sep 2026","Jul 10 4:45 PM · Priya Menon"]]);
+$('#sdocs').innerHTML=$('#docs').innerHTML;
+
+$('#stabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('#stabs .tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  document.querySelectorAll('#v-student .tpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+t.dataset.t));});
+
+/* ---------- compare ---------- */
+const cmp=[
+ {id:"TOR-CS-501",name:"MSc Computer Science",uni:"University of Toronto",ini:"UT",crest:"#2E39C9",match:96,
+  loc:"Toronto, Canada",dur:"2 years",intake:"Sep 2026",tuit:38.5,total:77.0,appFee:"₹9,500",live:12,
+  ielts:7.0,gpa:3.4,schol:"—",psw:3,dead:"12 days",back:"Up to 5"},
+ {id:"UBC-AI-410",name:"MSc Artificial Intelligence",uni:"U. of British Columbia",ini:"BC",crest:"#2566C7",match:92,
+  loc:"Vancouver, Canada",dur:"2 years",intake:"Sep 2026",tuit:36.2,total:72.4,appFee:"₹8,200",live:11.5,
+  ielts:6.5,gpa:3.2,schol:"₹6L merit",psw:3,dead:"24 days",back:"Up to 6"},
+ {id:"MAN-DS-330",name:"MSc Data Science",uni:"University of Manchester",ini:"MA",crest:"#A8760F",match:87,
+  loc:"Manchester, UK",dur:"1 year",intake:"Sep 2026",tuit:28.4,total:28.4,appFee:"No fee",live:10,
+  ielts:6.5,gpa:3.0,schol:"₹4L merit",psw:2,dead:"31 days",back:"Up to 8"}];
+cmp.forEach(c=>c.est=+(c.total+c.live*(c.dur.startsWith('1')?1:2)).toFixed(1));
+
+// column headers
+cmp.forEach((c,i)=>{$('#ch'+(i+1)).innerHTML=`<button class="cx">×</button><div class="ch">
+  <div class="row" style="gap:9px"><span class="crest" style="background:${c.crest};width:30px;height:30px;font-size:11px;border-radius:7px">${c.ini}</span>
+  <span class="mt ${c.match>=90?'m-hi':c.match>=78?'m-md':'m-lo'}">${c.match}% match</span></div>
+  <div style="font-family:var(--serif);font-size:14px;font-weight:600;line-height:1.25">${c.name}</div>
+  <div class="dim" style="font-size:11px;font-weight:600">${c.uni}</div></div>`;});
+
+// rows: [label, valueFn, bestFn(optional -> index of winner(s))]
+const lo=k=>{const m=Math.min(...cmp.map(c=>c[k]));return cmp.map(c=>c[k]===m);};
+const hi=k=>{const m=Math.max(...cmp.map(c=>c[k]));return cmp.map(c=>c[k]===m);};
+const rows=[
+ ["Course ID",c=>`<span class="cid">${c.id}</span>`],
+ ["Location",c=>c.loc],
+ ["Duration",c=>c.dur],
+ ["Intake",c=>c.intake],
+ ["Tuition / year",c=>`<span class="num">₹${c.tuit}L</span>`,lo('tuit')],
+ ["Total tuition",c=>`<span class="num">₹${c.total}L</span>`,lo('total')],
+ ["Living cost / year",c=>`<span class="num">₹${c.live}L</span>`,lo('live')],
+ ["Estimated total cost",c=>`<span class="num" style="font-family:var(--serif);font-size:15px">₹${c.est}L</span>`,lo('est')],
+ ["Application fee",c=>c.appFee],
+ ["IELTS required",c=>`${c.ielts.toFixed(1)} <span class="rc2 ${student.ielts>=c.ielts?'r-ok':'r-no'}">${student.ielts>=c.ielts?'met':(c.ielts-student.ielts).toFixed(1)+' short'}</span>`,lo('ielts')],
+ ["GPA required",c=>`${c.gpa.toFixed(1)} <span class="rc2 ${student.gpa>=c.gpa?'r-ok':'r-no'}">${student.gpa>=c.gpa?'met':'short'}</span>`,lo('gpa')],
+ ["Scholarship",c=>c.schol==='—'?'<span class="dim">None listed</span>':`<span class="tag t-proposal">${c.schol}</span>`],
+ ["Post-study work",c=>`${c.psw} years`,hi('psw')],
+ ["Backlogs accepted",c=>c.back],
+ ["Application deadline",c=>`<span class="tag ${parseInt(c.dead)<=20?'t-neg':'t-ghost'}">${c.dead}</span>`]];
+$('#cmpbody').innerHTML=rows.map(r=>{
+  const best=r[2]||null;
+  return `<tr><th class="attr">${r[0]}</th>${cmp.map((c,i)=>
+    `<td>${best&&best[i]?`<span class="best">${r[1](c)}</span>`:r[1](c)}</td>`).join('')}</tr>`;}).join('');
+
+// commit -> writes one shortlist row per courseId against the student
+$('#addSl').addEventListener('click',()=>{
+  const prefs=[...document.querySelectorAll('.commit .sel')].map(s=>s.value);
+  $('#wrote').innerHTML=cmp.map((c,i)=>`<div class="wrow"><span class="cid">${c.id}</span>
+    <b style="font-weight:600">${c.name}</b><span class="dim">${c.uni}</span>
+    <span class="gr"></span><span class="tag ${prefs[i]==='Primary'?'sl-pri':prefs[i]==='Backup'?'sl-bak':'sl-saf'}"><span class="d"></span>${prefs[i]}</span></div>`).join('')
+    +`<div class="dim" style="font-size:11px;margin-top:8px">Saved to Aisha Khan (Lead #A-1042) · re-adding an existing course updates its preference instead of duplicating.</div>`;
+  $('#slDone').style.display='block';
+  $('#addSl').textContent='Added ✓';
+  $('#slDone').scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
+/* ---------- nav ---------- */
+const meta={dashboard:["Dashboard","Bright Future Overseas"],leads:["Leads","258 total · 96 new this week"],
+applications:["Applications","64 active · 2 unverified · 1 with no reference"],
+apprecord:["Application","Aisha Khan → University of Toronto"],universities:["Universities","24 partner institutions"],
+coursesearch:["Course search","Matching for Aisha Khan"],compare:["Compare","3 courses · Aisha Khan"],
+student:["Aisha Khan","Lead #A-1042 · Qualified"],
+activities:["Activity","Team feed, live"],tasks:["Tasks","9 open · 2 overdue"],team:["Team","5 members"],settings:["Settings","Roles and automation"]};
+// sub-views keep their parent section lit in the sidebar
+const navOwner={student:'leads',compare:'coursesearch',apprecord:'applications'};
+function go(v){
+  const lit=navOwner[v]||v;
+  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.v===lit));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+  $('#pt').textContent=meta[v][0];$('#ps').textContent=meta[v][1];$('.wrap').scrollTop=0;
+}
+document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+$('#lrows').addEventListener('click',()=>go('student'));
+// any "Compare" affordance opens the comparison view
+document.addEventListener('click',e=>{const b=e.target.closest('button');
+  if(b&&/^compare$/i.test(b.textContent.trim()))go('compare');});
+document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');
+  if(!b||!g.contains(b))return;[...g.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');}));
+document.querySelectorAll('#views').forEach(r=>r.addEventListener('click',e=>{const v=e.target.closest('.vi');if(!v)return;
+  r.querySelectorAll('.vi').forEach(x=>x.classList.remove('on'));v.classList.add('on');}));
+$('#dens').addEventListener('click',()=>{const r=document.documentElement;const c=r.getAttribute('data-density')==='compact';r.setAttribute('data-density',c?'cosy':'compact');});
+$('#th').addEventListener('click',()=>{const c=document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme',c==='dark'?'light':c==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));});
+</script>
+</body>
+</html>

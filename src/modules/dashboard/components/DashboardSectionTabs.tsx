@@ -28,7 +28,7 @@ export function DashboardSectionTabs({
           bgcolor: "background.paper",
           border: "1px solid",
           borderColor: "divider",
-          borderRadius: 2.5,
+          borderRadius: "9px",
           boxShadow: "0 1px 4px rgba(0,0,0,.05)",
           p: 0.5,
           width: "fit-content",
@@ -45,7 +45,7 @@ export function DashboardSectionTabs({
                 alignItems: "center",
                 background: active ? "#E6F7F9" : "transparent",
                 border: "none",
-                borderRadius: 1.75,
+                borderRadius: "9px",
                 boxShadow: active ? "0 2px 8px rgba(0,122,135,.12)" : "none",
                 color: active ? "text.primary" : "text.secondary",
                 cursor: "pointer",
@@ -70,7 +70,7 @@ export function DashboardSectionTabs({
                   component="span"
                   sx={{
                     bgcolor: active ? "primary.main" : "secondary.main",
-                    borderRadius: 2.5,
+                    borderRadius: "9px",
                     color: active ? "#fff" : "#fff",
                     fontSize: 8,
                     fontWeight: 800,

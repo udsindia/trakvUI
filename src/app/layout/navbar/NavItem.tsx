@@ -238,7 +238,7 @@ export function NavItem({
         component={!hasChildren && item.to ? NavLink : "button"}
         selected={active}
         sx={{
-          borderRadius: 3,
+          borderRadius: "12px",
           minHeight: 52,
           pl: 1.5 + depth * 1.5,
           pr: 1.5,
@@ -264,7 +264,7 @@ export function NavItem({
                 component={NavLink}
                 selected={item.to === location.pathname}
                 sx={{
-                  borderRadius: 3,
+                  borderRadius: "12px",
                   minHeight: 48,
                   pl: 3 + depth * 1.5,
                   pr: 1.5,

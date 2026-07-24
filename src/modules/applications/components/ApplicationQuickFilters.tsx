@@ -31,7 +31,7 @@ export function ApplicationQuickFilters({
       sx={{
         border: "1px solid",
         borderColor: "#edf2f7",
-        borderRadius: 4,
+        borderRadius: "12px",
         overflowX: "auto",
         p: 2.25,
       }}
@@ -98,7 +98,7 @@ export function ApplicationQuickFilters({
               }
               sx={{
                 bgcolor: "#f7fafc",
-                borderRadius: 2.5,
+                borderRadius: "9px",
                 minHeight: 42,
                 minWidth: "fit-content",
                 px: 2,

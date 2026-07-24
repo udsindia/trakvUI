@@ -28,7 +28,7 @@ export function DashboardAttentionStrip({ items }: DashboardAttentionStripProps)
         borderColor: hasDanger ? "#FECACA" : "#FDE68A",
         borderLeft: "4px solid",
         borderLeftColor: hasDanger ? "error.main" : "warning.main",
-        borderRadius: 2,
+        borderRadius: "10px",
         flexShrink: 0,
         fontSize: 11,
         px: 1.5,

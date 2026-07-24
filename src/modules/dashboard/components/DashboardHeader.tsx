@@ -51,7 +51,7 @@ export function DashboardHeader({
                 background: active ? "#E6F7F9" : "#fff",
                 border: "1.5px solid",
                 borderColor: active ? "primary.main" : "divider",
-                borderRadius: 1.5,
+                borderRadius: "10px",
                 color: active ? "text.primary" : "text.secondary",
                 cursor: "pointer",
                 fontSize: 10,

@@ -82,7 +82,7 @@ export function MyTasks() {
         sx={{
           border: "1px solid",
           borderColor: "divider",
-          borderRadius: 4,
+          borderRadius: "12px",
           display: "flex",
           flexDirection: "column",
           height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },

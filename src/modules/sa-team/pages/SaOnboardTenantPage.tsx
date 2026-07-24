@@ -98,7 +98,7 @@ export function SaOnboardTenantPage() {
       {step === 3 ? (
         <Paper
           elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 4, textAlign: "center" }}
+          sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 4, textAlign: "center" }}
         >
           <CheckCircleRounded sx={{ color: "#2e7d32", fontSize: 56, mb: 2 }} />
           <Typography variant="h5" gutterBottom>
@@ -126,7 +126,7 @@ export function SaOnboardTenantPage() {
       ) : (
         <Paper
           elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, p: 4 }}
+          sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 4 }}
         >
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>

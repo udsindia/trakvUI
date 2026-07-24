@@ -13,9 +13,11 @@ import {
 } from "@mui/material";
 import { Navigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { isMockAuthEnabled } from "@/app/auth/authService";
+import { AuthShell } from "@/app/auth/AuthShell";
 import { useAuth } from "@/app/auth/useAuth";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import QRCode from "@/shared/components/QRCodeGenerator";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 export function LoginPage() {
   const { error, isActive, isAuthenticated, isInitializing, isLoggingIn, login, isTrialExpired } = useAuth();
@@ -75,7 +77,7 @@ export function LoginPage() {
                   bgcolor: "background.paper",
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 2,
+                  borderRadius: "10px",
                   p: 2,
                 }}
               >
@@ -101,110 +103,114 @@ export function LoginPage() {
   }
 
   return (
-    <Box
-      sx={{
-        alignItems: "center",
-        bgcolor: "background.default",
-        display: "grid",
-        minHeight: "100vh",
-        px: 2,
-        py: 4,
-      }}
+    <AuthShell
+      eyebrow="Education CRM"
+      wordmark="VUTrak"
+      headline="Guide every student from first enquiry to enrolment."
+      subhead="One workspace for leads, applications, universities and the people who move them forward."
+      points={[
+        "Track applications across every university and intake",
+        "Never miss a follow-up or a document deadline",
+        "See your whole pipeline convert, stage by stage",
+      ]}
     >
-      <Card
-        elevation={0}
-        sx={{
-          border: "1px solid",
-          borderColor: "divider",
-          maxWidth: 460,
-          mx: "auto",
-          width: "100%",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={3}>
-            <Stack spacing={1}>
-              <Typography variant="overline">Authentication</Typography>
-              <Typography variant="h5">Sign in to EduTrack</Typography>
-              <Typography color="text.secondary" variant="body2">
-                {isMockAuthEnabled
-                  ? "Mock auth is active for demos. Use any non-empty password, and set the identifier to admin, counsellor, application, activity, or analyst to switch personas."
-                  : "Credentials login is wired through the auth service, and SSO can be added later without changing the application shell."}
-              </Typography>
-            </Stack>
+      <Stack spacing={3}>
+        <Stack spacing={0.75}>
+          <Typography
+            sx={{
+              color: "text.disabled",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}
+          >
+            Welcome back
+          </Typography>
+          <Typography sx={{ fontFamily: SERIF, fontSize: 26, fontWeight: 600, letterSpacing: "-0.4px" }}>
+            Sign in to your workspace
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            {isMockAuthEnabled
+              ? "Mock auth is active for demos. Use any non-empty password, and set the identifier to admin, counsellor, application, activity, or analyst to switch personas."
+              : "Enter your credentials to continue."}
+          </Typography>
+        </Stack>
 
-            {isMockAuthEnabled && (
-              <Alert severity="info">
-                Demo examples: <strong>admin@demo.local</strong>,{" "}
-                <strong>counsellor@demo.local</strong>,{" "}
-                <strong>application@demo.local</strong>,{" "}
-                <strong>activity@demo.local</strong>, or{" "}
-                <strong>analyst@demo.local</strong>. Any password will sign in.
-              </Alert>
-            )}
+        {isMockAuthEnabled && (
+          <Alert severity="info">
+            Demo examples: <strong>admin@demo.local</strong>,{" "}
+            <strong>counsellor@demo.local</strong>,{" "}
+            <strong>application@demo.local</strong>,{" "}
+            <strong>activity@demo.local</strong>, or{" "}
+            <strong>analyst@demo.local</strong>. Any password will sign in.
+          </Alert>
+        )}
 
-            {registrationSuccess && (
-              <Alert severity="success">
-                Account created successfully. Sign in to continue.
-              </Alert>
-            )}
+        {registrationSuccess && (
+          <Alert severity="success">
+            Account created successfully. Sign in to continue.
+          </Alert>
+        )}
 
-            {error && <Alert severity="error">{error}</Alert>}
+        {error && <Alert severity="error">{error}</Alert>}
 
-            <Box
-              component="form"
-              onSubmit={async (event) => {
-                event.preventDefault();
+        <Box
+          component="form"
+          onSubmit={async (event) => {
+            event.preventDefault();
 
-                try {
-                  await login({
-                    identifier,
-                    password,
-                    strategy: "credentials",
-                  });
-                } catch {
-                  return;
-                }
-              }}
+            try {
+              await login({
+                identifier,
+                password,
+                strategy: "credentials",
+              });
+            } catch {
+              return;
+            }
+          }}
+        >
+          <Stack spacing={2.25}>
+            <TextField
+              autoComplete="username"
+              fullWidth
+              label="Email or Username"
+              required
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+            />
+
+            <TextField
+              autoComplete="current-password"
+              fullWidth
+              label="Password"
+              required
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+
+            <Button
+              disabled={!identifier || !password || isLoggingIn}
+              fullWidth
+              size="large"
+              startIcon={<LoginRounded />}
+              type="submit"
+              variant="contained"
             >
-              <Stack spacing={2.5}>
-                <TextField
-                  autoComplete="username"
-                  label="Email or Username"
-                  required
-                  value={identifier}
-                  onChange={(event) => setIdentifier(event.target.value)}
-                />
+              {isLoggingIn ? "Signing In..." : "Sign In"}
+            </Button>
 
-                <TextField
-                  autoComplete="current-password"
-                  label="Password"
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-
-                <Button
-                  disabled={!identifier || !password || isLoggingIn}
-                  startIcon={<LoginRounded />}
-                  type="submit"
-                  variant="contained"
-                >
-                  {isLoggingIn ? "Signing In..." : "Sign In"}
-                </Button>
-
-                <Typography align="center" color="text.secondary" variant="body2">
-                  New consultancy?{" "}
-                  <RouterLink to="/register" style={{ color: "inherit", fontWeight: 600 }}>
-                    Sign up
-                  </RouterLink>
-                </Typography>
-              </Stack>
-            </Box>
+            <Typography align="center" color="text.secondary" variant="body2">
+              New consultancy?{" "}
+              <RouterLink to="/register" style={{ color: "inherit", fontWeight: 700 }}>
+                Sign up
+              </RouterLink>
+            </Typography>
           </Stack>
-        </CardContent>
-      </Card>
-    </Box>
+        </Box>
+      </Stack>
+    </AuthShell>
   );
 }

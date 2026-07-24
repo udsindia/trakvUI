@@ -5,7 +5,7 @@ export const universitiesPagePaperSx: SystemStyleObject<Theme> = {
   bgcolor: "background.paper",
   border: "1px solid",
   borderColor: "#e9eff5",
-  borderRadius: 1,
+  borderRadius: "12px",
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
@@ -22,7 +22,7 @@ export const universitiesContentSx: SystemStyleObject<Theme> = {
 export const sectionCardSx: SystemStyleObject<Theme> = {
   border: "1px solid",
   borderColor: "#edf2f7",
-  borderRadius: 2,
+  borderRadius: "10px",
   boxShadow: "none",
 };
 

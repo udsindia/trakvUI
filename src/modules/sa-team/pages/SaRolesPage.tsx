@@ -101,7 +101,7 @@ export function SaRolesPage() {
             sx={{
               border: "1px solid",
               borderColor: "divider",
-              borderRadius: 3,
+              borderRadius: "12px",
               width: 260,
               flexShrink: 0,
             }}
@@ -134,7 +134,7 @@ export function SaRolesPage() {
               sx={{
                 border: "1px solid",
                 borderColor: "divider",
-                borderRadius: 3,
+                borderRadius: "12px",
                 flex: 1,
                 p: 3,
               }}

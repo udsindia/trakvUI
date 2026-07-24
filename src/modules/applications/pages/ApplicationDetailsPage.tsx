@@ -127,8 +127,8 @@ export function ApplicationDetailsPage() {
       sx={{
         bgcolor: "background.paper",
         border: "1px solid",
-        borderColor: "#e9eff5",
-        borderRadius: 1,
+        borderColor: "divider",
+        borderRadius: "12px",
         display: "flex",
         flexDirection: "column",
         minHeight: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
@@ -151,7 +151,7 @@ export function ApplicationDetailsPage() {
         <Box sx={{ marginInline: "auto", maxWidth: 1000, width: "100%" }}>
           <Stack spacing={4}>
             {/* Lifecycle pipeline */}
-            <Card elevation={0} sx={{ border: "1px solid #e9eff5", borderRadius: 3 }}>
+            <Card>
               <CardContent>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3}>
                   <Typography variant="h6">Lifecycle Pipeline</Typography>
@@ -162,7 +162,19 @@ export function ApplicationDetailsPage() {
                   />
                 </Stack>
                 {stages.length > 0 ? (
-                  <Stepper activeStep={currentIndex < 0 ? 0 : currentIndex} alternativeLabel>
+                  <Stepper
+                    activeStep={currentIndex < 0 ? 0 : currentIndex}
+                    alternativeLabel
+                    sx={{
+                      // Cleared milestones read steel-teal; the stage in play
+                      // takes the brand orange so "where are we now" is instant.
+                      "& .MuiStepIcon-root.Mui-completed": { color: "secondary.main" },
+                      "& .MuiStepIcon-root.Mui-active": { color: "primary.main" },
+                      "& .MuiStepConnector-line": { borderColor: "divider" },
+                      "& .MuiStepLabel-label": { fontSize: 11, fontWeight: 600 },
+                      "& .MuiStepLabel-label.Mui-active": { fontWeight: 700 },
+                    }}
+                  >
                     {stages.map((s) => (
                       <Step key={s.id} completed={Boolean(s.exitedAt)}>
                         <StepLabel>{s.stageName}</StepLabel>
@@ -180,7 +192,7 @@ export function ApplicationDetailsPage() {
             <Grid container spacing={3}>
               {/* Read-only application info */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Card elevation={0} sx={{ border: "1px solid #e9eff5", borderRadius: 3, height: "100%" }}>
+                <Card sx={{ height: "100%" }}>
                   <CardContent>
                     <Typography variant="h6" mb={2}>Application Info</Typography>
                     <Divider sx={{ mb: 2 }} />
@@ -205,7 +217,7 @@ export function ApplicationDetailsPage() {
 
               {/* Actions: move stage / close */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Card elevation={0} sx={{ border: "1px solid #e9eff5", borderRadius: 3 }}>
+                <Card>
                   <CardContent>
                     <Typography variant="h6" mb={2}>Update Stage</Typography>
                     <Divider sx={{ mb: 2 }} />
@@ -296,7 +308,7 @@ export function ApplicationDetailsPage() {
             </Grid>
 
             {/* Stage history */}
-            <Card elevation={0} sx={{ border: "1px solid #e9eff5", borderRadius: 3 }}>
+            <Card>
               <CardContent>
                 <Typography variant="h6" mb={2}>Stage History</Typography>
                 <Divider sx={{ mb: 2 }} />
