@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Box, Paper } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { AlertBanner } from "@/modules/lead/components/AlertBanner";
@@ -7,7 +8,12 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { useLeadFormController } from "@/modules/lead/useLeadFormController";
 
 export function AddLeadPage() {
-  const { form, handleCancel, handleFormSubmit } = useLeadFormController();
+  const { form, agentOptions, handleCancel, handleFormSubmit } = useLeadFormController();
+
+  const options = useMemo(
+    () => ({ ...leadFormOptions, agentOptions }),
+    [agentOptions],
+  );
 
   return (
     <Paper
@@ -51,7 +57,7 @@ export function AddLeadPage() {
           </Box>
           <LeadForm
             form={form}
-            options={leadFormOptions}
+            options={options}
             onCancel={handleCancel}
             onSubmit={handleFormSubmit}
           />

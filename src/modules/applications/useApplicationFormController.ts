@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
-import { leadApi } from "@/modules/lead/leadApi";
+import { studentsApi } from "@/modules/applications/studentsApi";
 import type {
   CreateApplicationPayload,
   ApplicationFormValues,
@@ -35,28 +35,6 @@ const defaultApplicationFormValues: ApplicationFormValues = {
   notes: "",
 };
 
-function resolveCountryCode(
-  countries: CountryDto[],
-  countryNameOrCode: string,
-): string {
-  const needle = countryNameOrCode.trim().toLowerCase();
-  if (!needle) {
-    return "";
-  }
-
-  const byCode = countries.find((c) => c.code.toLowerCase() === needle);
-  if (byCode) {
-    return byCode.code;
-  }
-
-  const byName = countries.find((c) => c.name.toLowerCase() === needle);
-  if (byName) {
-    return byName.code;
-  }
-
-  return countries.find((c) => c.name.toLowerCase().includes(needle))?.code ?? "";
-}
-
 export function buildCreateApplicationPayload(
   values: ApplicationFormValues,
   countries: CountryDto[],
@@ -73,7 +51,6 @@ export function buildCreateApplicationPayload(
 
   return {
     studentId: values.studentId,
-    leadId: values.studentId,
     universityName: values.targetUniversity,
     courseName: values.courseName,
     courseId: values.courseId || undefined,
@@ -96,13 +73,13 @@ export function useApplicationFormController() {
   });
 
   const { watch, setValue } = form;
-  const selectedLeadId = watch("studentId");
+  const selectedStudentId = watch("studentId");
   const destinationCountry = watch("destinationCountry");
   const universityId = watch("universityId");
 
-  const { data: leads } = useQuery({
-    queryKey: ["leads"],
-    queryFn: leadApi.getLeads,
+  const { data: students } = useQuery({
+    queryKey: ["students"],
+    queryFn: studentsApi.getStudents,
   });
 
   const {
@@ -124,28 +101,15 @@ export function useApplicationFormController() {
   } = useUniversityCourseOptions(universityId || undefined);
 
   useEffect(() => {
-    if (selectedLeadId && leads) {
-      const lead = leads.find((l) => l.id === selectedLeadId);
-      if (lead) {
-        setValue("studentName", `${lead.firstName} ${lead.lastName}`.trim(), {
-          shouldValidate: true,
-        });
-        setValue("email", lead.email, { shouldValidate: true });
-        setValue("phone", lead.phone, { shouldValidate: true });
-        if (lead.destinationCountries?.length > 0 && countries.length > 0) {
-          const code = resolveCountryCode(countries, lead.destinationCountries[0]);
-          if (code) {
-            setValue("destinationCountry", code, { shouldValidate: true });
-            setValue("universityId", "");
-            setValue("targetUniversity", "");
-            setValue("courseId", "");
-            setValue("courseName", "");
-            setValue("studyLevel", "");
-          }
-        }
+    if (selectedStudentId && students) {
+      const student = students.find((s) => s.id === selectedStudentId);
+      if (student) {
+        setValue("studentName", student.name, { shouldValidate: true });
+        setValue("email", student.email, { shouldValidate: true });
+        setValue("phone", student.phone, { shouldValidate: true });
       }
     }
-  }, [selectedLeadId, leads, countries, setValue]);
+  }, [selectedStudentId, students, setValue]);
 
   const handleCountryChange = (countryCode: string) => {
     setValue("destinationCountry", countryCode, { shouldValidate: true });
@@ -202,7 +166,7 @@ export function useApplicationFormController() {
 
   return {
     form,
-    leads: leads ?? [],
+    students: students ?? [],
     countries,
     universities,
     courses,

@@ -1,16 +1,21 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { leadFormOptions } from "@/modules/lead/leadForm.options";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadService } from "@/modules/lead/leadService";
 import { selectAuthTenant } from "@/app/auth/authSlice";
 import { useAppSelector } from "@/app/store/hooks";
+import { usersApi } from "@/modules/settings/usersApi";
 import type {
+  AgentOption,
   CreateLeadPayload,
   LeadFormValues,
 } from "@/modules/lead/leadForm.types";
+
+function displayName(user: { name?: string; firstName?: string; lastName?: string; email: string }) {
+  return user.name ?? ([user.firstName, user.lastName].filter(Boolean).join(" ") || user.email);
+}
 
 const defaultLeadFormValues: LeadFormValues = {
   agent: "",
@@ -25,7 +30,10 @@ const defaultLeadFormValues: LeadFormValues = {
   tags: [],
 };
 
-export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayload {
+export function buildCreateLeadPayload(
+  values: LeadFormValues,
+  agentOptions: AgentOption[] = [],
+): CreateLeadPayload {
   // Split "John Doe" → firstName="John", lastName="Doe"
   const nameParts = values.name.trim().split(/\s+/);
   const firstName = nameParts[0] ?? "";
@@ -41,7 +49,7 @@ export function buildCreateLeadPayload(values: LeadFormValues): CreateLeadPayloa
   const intakeDate = new Date(values.intakeDate);
   const intakeMonth = intakeDate.toLocaleString("en-US", { month: "long" }) || "January";
   const year = isNaN(intakeDate.getFullYear()) ? new Date().getFullYear() : intakeDate.getFullYear();
-  const assignedAgent = leadFormOptions.agentOptions.find(
+  const assignedAgent = agentOptions.find(
     (agentOption) => agentOption.agentId === values.agent,
   );
 
@@ -67,10 +75,21 @@ export function useLeadFormController() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenant = useAppSelector(selectAuthTenant);
+  const tenantId = tenant?.tenantId;
   const form = useForm<LeadFormValues>({
     defaultValues: defaultLeadFormValues,
     mode: "onBlur",
     reValidateMode: "onChange",
+  });
+
+  const { data: agentOptions = [] } = useQuery({
+    queryKey: ["users", tenantId],
+    queryFn: () => usersApi.getUsers(tenantId!),
+    enabled: Boolean(tenantId),
+    select: (users): AgentOption[] =>
+      users
+        .filter((u) => (u.isActive ?? u.active ?? true))
+        .map((u) => ({ agentId: u.id, agentName: displayName(u) })),
   });
 
   const handleCancel = () => {
@@ -79,7 +98,7 @@ export function useLeadFormController() {
   };
 
   const handleValidSubmit = async (values: LeadFormValues) => {
-    const payload = buildCreateLeadPayload(values);
+    const payload = buildCreateLeadPayload(values, agentOptions);
     payload.tenantId = tenant?.tenantId;
 
     try {
@@ -104,6 +123,7 @@ export function useLeadFormController() {
 
   return {
     form,
+    agentOptions,
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
   };

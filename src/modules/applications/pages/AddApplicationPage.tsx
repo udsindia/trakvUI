@@ -6,7 +6,7 @@ import { useApplicationFormController } from "@/modules/applications/useApplicat
 export function AddApplicationPage() {
   const {
     form,
-    leads,
+    students,
     countries,
     universities,
     courses,
@@ -62,7 +62,7 @@ export function AddApplicationPage() {
         >
           <ApplicationForm
             form={form}
-            leads={leads}
+            students={students}
             countries={countries}
             universities={universities}
             courses={courses}

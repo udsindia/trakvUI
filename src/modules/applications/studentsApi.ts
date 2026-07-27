@@ -6,6 +6,7 @@ export interface StudentOption {
   id: string;
   name: string;
   email: string;
+  phone: string;
 }
 
 /** Backend StudentSummaryDTO (only the fields we need). */
@@ -14,6 +15,7 @@ interface BackendStudentSummary {
   firstName?: string;
   lastName?: string;
   email?: string;
+  phone?: string;
 }
 
 /** The list endpoint returns a Spring Page ({ content: [...] }); older builds returned a raw array. */
@@ -32,6 +34,7 @@ export const studentsApi = {
       id: s.id,
       name: `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim() || s.email || s.id,
       email: s.email ?? "",
+      phone: s.phone ?? "",
     }));
   },
 };

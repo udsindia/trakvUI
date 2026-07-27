@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { ApplicationFormValues } from "@/modules/applications/applicationForm.types";
-import type { BackendLead } from "@/modules/lead/leadApi";
+import type { StudentOption } from "@/modules/applications/studentsApi";
 import type {
   CountryDto,
   CourseDto,
@@ -24,7 +24,7 @@ import type {
 
 type ApplicationFormProps = {
   form: UseFormReturn<ApplicationFormValues>;
-  leads: BackendLead[];
+  students: StudentOption[];
   countries: CountryDto[];
   universities: UniversitySummaryDto[];
   courses: CourseDto[];
@@ -43,7 +43,7 @@ type ApplicationFormProps = {
 
 export function ApplicationForm({
   form,
-  leads,
+  students,
   countries,
   universities,
   courses,
@@ -170,7 +170,7 @@ export function ApplicationForm({
                       fullWidth
                       helperText={errors.studentId?.message || "Optional: Select an existing student to auto-fill details"}
                       id={field.name}
-                      label="Select Lead / Student (Optional)"
+                      label="Select Student (Optional)"
                       select
                       slotProps={alwaysVisibleLabelSlotProps}
                       sx={fieldSx}
@@ -180,9 +180,9 @@ export function ApplicationForm({
                       <MenuItem value="">
                         <em>None</em>
                       </MenuItem>
-                      {leads.map((lead) => (
-                        <MenuItem key={lead.id} value={lead.id}>
-                          {lead.firstName} {lead.lastName} ({lead.email})
+                      {students.map((student) => (
+                        <MenuItem key={student.id} value={student.id}>
+                          {student.name} ({student.email})
                         </MenuItem>
                       ))}
                     </TextField>
