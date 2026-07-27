@@ -309,11 +309,17 @@ export function LeadForm({
                       <MenuItem disabled value="">
                         Select agent
                       </MenuItem>
-                      {options.agentOptions.map((agentOption) => (
-                        <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
-                          {agentOption.agentName}
+                      {options.agentOptions.length === 0 ? (
+                        <MenuItem disabled value="__none">
+                          No active counsellors — add one in User Management
                         </MenuItem>
-                      ))}
+                      ) : (
+                        options.agentOptions.map((agentOption) => (
+                          <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
+                            {agentOption.agentName}
+                          </MenuItem>
+                        ))
+                      )}
                     </TextField>
                   )}
                 />

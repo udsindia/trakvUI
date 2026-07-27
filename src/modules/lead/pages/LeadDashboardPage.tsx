@@ -2,16 +2,15 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AddRounded, TuneRounded } from "@mui/icons-material";
 import {
+  Badge,
   Box,
   Button,
   CircularProgress,
-  Collapse,
+  Drawer,
   Paper,
   Snackbar,
   Stack,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
@@ -29,6 +28,7 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
 import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
+import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import {
   FilterPanel,
@@ -50,11 +50,13 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
 
 const filterConfig: FilterConfig[] = [
   {
+    // Options are injected at runtime from the real counsellor list
+    // (see dynamicFilterConfig); this entry only defines the control.
     type: "dropdown",
     label: "Agent",
     key: "agent",
     placeholder: "All Agents",
-    options: ["Aisha Khan", "Rahul Verma", "Priya Menon"],
+    options: [],
   },
   {
     type: "dropdown",
@@ -82,6 +84,33 @@ const filterConfig: FilterConfig[] = [
     key: "dateRange",
   },
 ];
+
+/** Counts how many filter groups are set away from their default — drives the
+ *  badge on the Filters button so folded filters aren't out of sight, out of mind. */
+function countActiveFilters(values: FilterPanelValues, config: FilterConfig[]): number {
+  return config.reduce((count, fc) => {
+    const value = values[fc.key];
+    switch (fc.type) {
+      case "dropdown":
+        return count + (typeof value === "string" && value ? 1 : 0);
+      case "slider": {
+        if (Array.isArray(value) && value.length === 2) {
+          const [min, max] = value as [number, number];
+          if (min !== fc.min || max !== fc.max) return count + 1;
+        }
+        return count;
+      }
+      case "checkbox-group":
+        return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "date-range": {
+        const range = value as DateRangeFilterValue | undefined;
+        return count + (range && (range.startDate || range.endDate) ? 1 : 0);
+      }
+      default:
+        return count;
+    }
+  }, 0);
+}
 
 function formatLastActivity(isoString: string | null): string {
   if (!isoString) return "—";
@@ -160,27 +189,43 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 }
 
 export function LeadDashboardPage() {
-  const { hasPermissions } = useAuth();
+  const { hasPermissions, tenant } = useAuth();
   const queryClient = useQueryClient();
+  const tenantId = tenant?.tenantId ?? "";
 
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
     getDefaultFilterPanelValues(filterConfig),
   );
-  const theme = useTheme();
-  // Matches the grid below, which only becomes a two-column layout at lg.
-  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [snack, setSnack] = useState<string | null>(null);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
+  const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   const { data: backendLeads = [], isLoading, isError } = useQuery({
     queryKey: ["leads"],
     queryFn: leadApi.getLeads,
   });
+
+  // Real counsellors added via User Management feed the Agent filter, so it
+  // stays in sync with who actually exists in the tenant.
+  const usersQuery = useQuery({
+    enabled: Boolean(tenantId),
+    queryKey: ["settings", "users", tenantId],
+    queryFn: () => usersService.getUsers(tenantId),
+  });
+
+  const dynamicFilterConfig = useMemo<FilterConfig[]>(() => {
+    const counsellorNames = (usersQuery.data ?? [])
+      .filter((user) => user.active)
+      .map((user) => user.name);
+    return filterConfig.map((config) =>
+      config.key === "agent" ? { ...config, options: counsellorNames } : config,
+    );
+  }, [usersQuery.data]);
 
   const leadRows: LeadRow[] = useMemo(
     () => backendLeads.map(mapBackendLeadToRow),
@@ -274,72 +319,64 @@ export function LeadDashboardPage() {
   };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        bgcolor: "background.paper",
-        border: "1px solid",
-        borderColor: "#e9eff5",
-        borderRadius: "12px",
-        display: "flex",
-        flexDirection: "column",
-        height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
-        minHeight: 0,
-        overflow: "hidden",
-      }}
-    >
-      <Box
+    <>
+      <Paper
+        elevation={0}
         sx={{
-          display: "grid",
-          flex: 1,
-          gridTemplateColumns: { xs: "1fr", lg: "250px minmax(0, 1fr)" },
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "#e9eff5",
+          borderRadius: "12px",
+          display: "flex",
+          flexDirection: "column",
+          // Fill the viewport below the topbar: subtract the topbar height plus
+          // the <main> wrapper's vertical padding (py:1.25 → 20px total).
+          height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 20}px)` },
           minHeight: 0,
+          overflow: "hidden",
         }}
       >
+        {/* Toolbar: quick-filter pills fill the row; advanced filters fold
+            behind the Filters button (opens the drawer below). */}
         <Box
           sx={{
+            borderBottom: "1px solid",
             borderColor: "divider",
-            borderBottom: { xs: "1px solid", lg: 0 },
-            maxHeight: { lg: "100%" },
-            minHeight: 0,
-            minWidth: 0,
-            overflow: "hidden",
-            px: { xs: 2, md: 3, lg: 0 },
-            py: { xs: 1.5, md: 2, lg: 3 },
-            width: "100%",
+            display: "flex",
+            flexShrink: 0,
+            px: { xs: 1.5, md: 2 },
+            py: { xs: 1, md: 1 },
           }}
         >
-          {/*
-            Below lg the rail stacks above the table, so leaving it open would
-            push the actual leads a full screen down. Collapse it behind a
-            toggle there; on lg+ it stays a permanent sidebar.
-          */}
-          {!isDesktop ? (
-            <Button
-              fullWidth
-              startIcon={<TuneRounded sx={{ fontSize: 16 }} />}
-              sx={{
-                borderRadius: "9px",
-                color: "text.primary",
-                justifyContent: "flex-start",
-                px: 1.5,
-              }}
-              onClick={() => setFiltersOpen((open) => !open)}
-            >
-              {filtersOpen ? "Hide filters" : "Show filters"}
-            </Button>
-          ) : null}
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", width: "100%" }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LeadQuickFilters
+                activeKey={activeQuickFilter}
+                tabs={quickFilterTabs}
+                onChange={handleQuickFilterChange}
+              />
+            </Box>
 
-          <Collapse in={isDesktop || filtersOpen} timeout={180} unmountOnExit>
-            <FilterPanel
-            filtersConfig={filterConfig}
-            stickyTopOffset={0}
-              width={250}
-              values={filterValues}
-              onFiltersChange={handleFilterChange}
-              onApplyFilters={handleFilterChange}
-            />
-          </Collapse>
+            <Badge
+              badgeContent={activeFilterCount}
+              color="primary"
+              overlap="rectangular"
+              sx={{ flexShrink: 0, "& .MuiBadge-badge": { fontWeight: 700 } }}
+            >
+              <Button
+                startIcon={<TuneRounded sx={{ fontSize: 18 }} />}
+                variant="outlined"
+                sx={{
+                  borderRadius: "9px",
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                }}
+                onClick={() => setDrawerOpen(true)}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </Stack>
         </Box>
 
         <Box
@@ -348,21 +385,12 @@ export function LeadDashboardPage() {
             display: "flex",
             flex: 1,
             flexDirection: "column",
-            gap: 2.25,
             minHeight: 0,
             minWidth: 0,
-            pb: { xs: 1, md: 2 },
-            pl: { xs: 2, md: 2 },
-            pr: { xs: 2, md: 2 },
-            pt: { xs: 2, md: 2 },
+            px: { xs: 1.5, md: 1.5 },
+            py: { xs: 1.5, md: 1.5 },
           }}
         >
-          <LeadQuickFilters
-            activeKey={activeQuickFilter}
-            tabs={quickFilterTabs}
-            onChange={handleQuickFilterChange}
-          />
-
           {isLoading ? (
             <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
               <CircularProgress size={32} />
@@ -386,14 +414,35 @@ export function LeadDashboardPage() {
             />
           )}
         </Box>
-      </Box>
 
-      <Snackbar
-        autoHideDuration={3500}
-        message={snack}
-        open={Boolean(snack)}
-        onClose={() => setSnack(null)}
-      />
-    </Paper>
+        <Snackbar
+          autoHideDuration={3500}
+          message={snack}
+          open={Boolean(snack)}
+          onClose={() => setSnack(null)}
+        />
+      </Paper>
+
+      {/* Advanced filters, folded behind the toolbar button. Same FilterPanel,
+          same handlers — only its home changed from a sidebar to a drawer. */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        slotProps={{ paper: { sx: { display: "flex", flexDirection: "column", width: { xs: "100%", sm: 360 } } } }}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <FilterPanel
+          filtersConfig={dynamicFilterConfig}
+          sx={{ height: "100%" }}
+          values={filterValues}
+          width="100%"
+          onFiltersChange={handleFilterChange}
+          onApplyFilters={(values) => {
+            handleFilterChange(values);
+            setDrawerOpen(false);
+          }}
+        />
+      </Drawer>
+    </>
   );
 }

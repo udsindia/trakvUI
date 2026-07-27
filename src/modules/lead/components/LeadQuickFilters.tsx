@@ -43,9 +43,9 @@ export function LeadQuickFilters({
       sx={{
         border: "1px solid",
         borderColor: "divider",
-        borderRadius: "12px",
+        borderRadius: "10px",
         overflowX: "auto",
-        p: 1.25,
+        p: 0.625,
       }}
     >
       <Tabs
@@ -113,12 +113,12 @@ export function LeadQuickFilters({
                   bgcolor: "#F7FAFC",
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: "9px",
+                  borderRadius: "8px",
                   color: "text.secondary",
-                  minHeight: 34,
+                  minHeight: 28,
                   minWidth: "fit-content",
-                  px: 1.5,
-                  py: 0.75,
+                  px: 1.25,
+                  py: 0.375,
                   textTransform: "none",
                   // Selected state uses the deep navigation teal, so the orange
                   // accent stays reserved for primary actions.

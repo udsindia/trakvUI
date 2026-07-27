@@ -1,13 +1,42 @@
+import { useMemo } from "react";
 import { Box, Paper } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { AlertBanner } from "@/modules/lead/components/AlertBanner";
 import { LeadForm } from "@/modules/lead/components/LeadForm";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
+import type { AgentOption } from "@/modules/lead/leadForm.types";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { useLeadFormController } from "@/modules/lead/useLeadFormController";
+import { usersService } from "@/modules/settings/usersService";
 
 export function AddLeadPage() {
-  const { form, handleCancel, handleFormSubmit } = useLeadFormController();
+  const { tenant } = useAuth();
+  const tenantId = tenant?.tenantId ?? "";
+
+  // Real team members (counsellors) added via User Management, so the
+  // "Assigned Agent" field reflects who actually exists in the tenant.
+  const usersQuery = useQuery({
+    enabled: Boolean(tenantId),
+    queryKey: ["settings", "users", tenantId],
+    queryFn: () => usersService.getUsers(tenantId),
+  });
+
+  const agentOptions: AgentOption[] = useMemo(
+    () =>
+      (usersQuery.data ?? [])
+        .filter((user) => user.active)
+        .map((user) => ({ agentId: user.id, agentName: user.name })),
+    [usersQuery.data],
+  );
+
+  const options = useMemo(
+    () => ({ ...leadFormOptions, agentOptions }),
+    [agentOptions],
+  );
+
+  const { form, handleCancel, handleFormSubmit } = useLeadFormController(agentOptions);
 
   return (
     <Paper
@@ -20,7 +49,8 @@ export function AddLeadPage() {
         display: "flex",
         flexDirection: "column",
         minHeight: {
-          lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)`,
+          // Topbar height + the <main> wrapper's vertical padding (py:1.25 → 20px).
+          lg: `calc(100vh - ${NAVBAR_HEIGHT + 20}px)`,
         },
         overflow: "hidden",
       }}
@@ -51,7 +81,7 @@ export function AddLeadPage() {
           </Box>
           <LeadForm
             form={form}
-            options={leadFormOptions}
+            options={options}
             onCancel={handleCancel}
             onSubmit={handleFormSubmit}
           />

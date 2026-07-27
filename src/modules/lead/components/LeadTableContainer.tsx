@@ -28,10 +28,6 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import {
-  BulkActionsBar,
-  type BulkAction,
-} from "@/shared/components/BulkActionsBar";
 import { SERIF } from "@/shared/ui/vutrakTheme";
 
 export type LeadRow = {
@@ -241,52 +237,13 @@ export function LeadTableContainer({
     }
   };
 
-  const bulkActions: BulkAction[] = [
-    {
-      key: "change-stage",
-      label: "Change Stage",
-      disabled: !hasSelection || actionLoading,
-      variant: "contained",
-      sx: {
-        "&.Mui-disabled": { bgcolor: "#edf5fa", color: "#9fb5c6" },
-        "&:not(.Mui-disabled)": { bgcolor: "#5f9fc6", color: "common.white" },
-      },
-      onClick: () => {
-        setBulkStageValue("Contacted");
-        setBulkStageDialogOpen(true);
-      },
-    },
-    {
-      key: "delete",
-      label: "Delete",
-      disabled: !hasSelection || actionLoading,
-      variant: "contained",
-      sx: {
-        "&.Mui-disabled": { bgcolor: "#fdecef", color: "#d6a2ac" },
-        "&:not(.Mui-disabled)": { bgcolor: "#ef6b7b", color: "common.white" },
-      },
-      onClick: handleBulkDelete,
-    },
-  ];
+  const handleBulkChangeStage = () => {
+    setBulkStageValue("Contacted");
+    setBulkStageDialogOpen(true);
+  };
 
   return (
-    <Box sx={{ display: "flex", flex: 1, flexDirection: "column", gap: 2, minHeight: 0 }}>
-      <Paper
-        elevation={0}
-        sx={{ border: "1px solid", borderColor: "#edf2f7", borderRadius: "12px" }}
-      >
-        <BulkActionsBar
-          actions={bulkActions}
-          allSelected={allVisibleRowsSelected}
-          indeterminate={hasPartialSelection}
-          itemLabel="lead"
-          onClearSelection={handleClearSelection}
-          onSelectAllChange={handleToggleAllRows}
-          selectedCount={selectedLeadIds.length}
-          totalCount={leads.length}
-        />
-      </Paper>
-
+    <Box sx={{ display: "flex", flex: 1, flexDirection: "column", minHeight: 0 }}>
       <Paper
         elevation={0}
         sx={{
@@ -300,27 +257,108 @@ export function LeadTableContainer({
           overflow: "auto",
         }}
       >
+        {/* Selection strip — only takes space while rows are selected, so the
+            table sits flush to the toolbar the rest of the time. */}
+        {hasSelection ? (
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              bgcolor: "#F0F9FB",
+              borderBottom: "1px solid",
+              borderColor: "#dcecf0",
+              flexShrink: 0,
+              px: 2,
+              py: 0.75,
+            }}
+          >
+            <Typography sx={{ color: "text.secondary", fontSize: 12, fontWeight: 600 }}>
+              {selectedLeadIds.length} selected
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <Button
+              size="small"
+              sx={{ color: "text.secondary", fontSize: 12, textTransform: "none" }}
+              onClick={handleClearSelection}
+            >
+              Clear
+            </Button>
+            <Button
+              disabled={actionLoading}
+              size="small"
+              sx={{
+                bgcolor: "#5f9fc6",
+                borderRadius: "8px",
+                color: "common.white",
+                fontSize: 12,
+                fontWeight: 700,
+                px: 1.5,
+                textTransform: "none",
+                "&:hover": { bgcolor: "#4f8fb6" },
+              }}
+              onClick={handleBulkChangeStage}
+            >
+              Change Stage
+            </Button>
+            <Button
+              disabled={actionLoading}
+              size="small"
+              sx={{
+                bgcolor: "#ef6b7b",
+                borderRadius: "8px",
+                color: "common.white",
+                fontSize: 12,
+                fontWeight: 700,
+                px: 1.5,
+                textTransform: "none",
+                "&:hover": { bgcolor: "#df5b6b" },
+              }}
+              onClick={handleBulkDelete}
+            >
+              Delete
+            </Button>
+          </Stack>
+        ) : null}
+
         <TableContainer sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <Table
             stickyHeader
             sx={{
-              minWidth: 920,
+              minWidth: 820,
               // Header styling now comes from the theme (tracked uppercase on a
               // tinted ground); only the sticky background needs restating so
               // rows don't show through while scrolling.
               "& .MuiTableHead-root .MuiTableCell-root": {
                 bgcolor: "#F7FAFC",
+                lineHeight: 1.3,
+                py: 0.5,
               },
+              // Match the prototype's tight 8px vertical rhythm so more rows fit.
               "& .MuiTableBody-root .MuiTableCell-root": {
-                py: 1.15,
+                py: 1,
               },
             }}
           >
             <TableHead>
               <TableRow>
-                <TableCell padding="checkbox" />
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={allVisibleRowsSelected}
+                    disabled={leads.length === 0}
+                    indeterminate={hasPartialSelection}
+                    size="small"
+                    sx={{
+                      color: "#CBDFE6",
+                      "&.Mui-checked": { color: "primary.main" },
+                      "&.MuiCheckbox-indeterminate": { color: "primary.main" },
+                    }}
+                    onChange={(event) => handleToggleAllRows(event.target.checked)}
+                  />
+                </TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Phone</TableCell>
+                <TableCell>Country</TableCell>
                 <TableCell>Stage</TableCell>
                 <TableCell align="center">Score</TableCell>
                 <TableCell>Agent</TableCell>
@@ -353,7 +391,7 @@ export function LeadTableContainer({
                       />
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 270 }}>
+                    <TableCell sx={{ minWidth: 200 }}>
                       <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
                         <Avatar
                           sx={{
@@ -377,13 +415,19 @@ export function LeadTableContainer({
                       </Stack>
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 150 }}>
-                      <Typography color="text.secondary" sx={{ fontSize: 12, fontWeight: 500 }} variant="body2">
-                        {lead.phone}
+                    <TableCell sx={{ minWidth: 120 }}>
+                      <Typography color="text.secondary" noWrap sx={{ fontSize: 12, fontWeight: 500 }} variant="body2">
+                        {lead.phone || "—"}
                       </Typography>
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 120 }}>
+                    <TableCell sx={{ minWidth: 92 }}>
+                      <Typography sx={{ fontSize: 12.5 }} variant="body2">
+                        {lead.country || "—"}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell sx={{ minWidth: 104 }}>
                       <Chip
                         label={lead.stage}
                         size="small"
@@ -391,13 +435,13 @@ export function LeadTableContainer({
                       />
                     </TableCell>
 
-                    <TableCell align="center" sx={{ minWidth: 84 }}>
+                    <TableCell align="center" sx={{ minWidth: 66 }}>
                       <Typography
                         component="span"
                         sx={{
                           color: getScoreColor(lead.score),
                           fontFamily: SERIF,
-                          fontSize: 14.5,
+                          fontSize: 14,
                           fontWeight: 600,
                         }}
                       >
@@ -405,7 +449,7 @@ export function LeadTableContainer({
                       </Typography>
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 190 }}>
+                    <TableCell sx={{ minWidth: 140 }}>
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <Avatar
                           sx={{
@@ -424,8 +468,8 @@ export function LeadTableContainer({
                       </Stack>
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 110 }}>
-                      <Typography color="text.disabled" sx={{ fontSize: 11.5 }} variant="body2">
+                    <TableCell sx={{ minWidth: 108 }}>
+                      <Typography color="text.disabled" noWrap sx={{ fontSize: 11.5 }} variant="body2">
                         {lead.lastActivity}
                       </Typography>
                     </TableCell>
@@ -457,7 +501,7 @@ export function LeadTableContainer({
 
               {leads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ py: 6, textAlign: "center" }}>
+                  <TableCell colSpan={9} sx={{ py: 6, textAlign: "center" }}>
                     <Typography color="text.secondary" variant="body2">
                       No leads found.
                     </Typography>
@@ -472,8 +516,8 @@ export function LeadTableContainer({
 
         <Stack
           direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          sx={{ alignItems: { md: "center" }, justifyContent: "space-between", p: 2.25 }}
+          spacing={1.5}
+          sx={{ alignItems: { md: "center" }, justifyContent: "space-between", px: 2, py: 1 }}
         >
           <Typography color="text.secondary" sx={{ fontSize: 12 }} variant="body2">
             {paginationLabel}
