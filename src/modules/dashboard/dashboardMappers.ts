@@ -167,7 +167,7 @@ function buildKpiCard(key: DashboardKpiCardKey, kpi: BackendDashboardResponse["k
         deltaTone: "flat",
         icon: "🎓",
         label: "Active Students",
-        value: "—",
+        value: kpi.activeStudents != null ? formatCount(kpi.activeStudents) : "—",
       };
     case "TASKS_DUE_TODAY":
       return {
