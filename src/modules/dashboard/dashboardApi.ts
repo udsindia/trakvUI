@@ -71,6 +71,7 @@ export interface BackendDashboardKpiDto {
   newLeads?: number;
   overdueTasks?: number;
   revenueReceived?: number;
+  activeStudents?: number;
 }
 
 export interface BackendDashboardPerformanceMetricDto {
