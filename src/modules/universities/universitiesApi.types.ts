@@ -77,6 +77,22 @@ export interface CourseDto {
   isActive?: boolean;
   universityId?: string;
   createdAt?: string;
+  intakeAvailable?: boolean;
+  applicationDeadline?: string;
+  deadlineDaysRemaining?: number;
+  applicationFeeCurrency?: string;
+  applicationFeeAmount?: number;
+  livingCostCurrency?: string;
+  livingCostAmount?: number;
+  courseStartDate?: string;
+  courseEndDate?: string;
+  pgwpEligible?: boolean | null;
+  scholarshipNote?: string;
+  studentsSent?: number;
+  accepted?: number;
+  visaApproved?: number;
+  avgCommission?: number | null;
+  commissionCurrency?: string | null;
 }
 
 export interface UniversityCoursesPageResponse {

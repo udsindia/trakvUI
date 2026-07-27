@@ -54,6 +54,7 @@ export type CreateApplicationPayload = {
   assignedTo?: string;
   universityName: string;
   courseName: string;
+  courseId?: string;
   studyLevel: string;
   destinationCountry: string;
   intakeMonth: string;

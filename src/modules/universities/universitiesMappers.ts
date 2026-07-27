@@ -20,6 +20,13 @@ const COUNTRY_ALPHA3_TO_UI: Record<string, { alpha2: string; name: string; flag:
   CAN: { alpha2: "CA", name: "Canada", flag: "🇨🇦" },
   NZL: { alpha2: "NZ", name: "New Zealand", flag: "🇳🇿" },
   USA: { alpha2: "US", name: "United States", flag: "🇺🇸" },
+  SGP: { alpha2: "SG", name: "Singapore", flag: "🇸🇬" },
+  CHE: { alpha2: "CH", name: "Switzerland", flag: "🇨🇭" },
+  DEU: { alpha2: "DE", name: "Germany", flag: "🇩🇪" },
+  FRA: { alpha2: "FR", name: "France", flag: "🇫🇷" },
+  JPN: { alpha2: "JP", name: "Japan", flag: "🇯🇵" },
+  NLD: { alpha2: "NL", name: "Netherlands", flag: "🇳🇱" },
+  SWE: { alpha2: "SE", name: "Sweden", flag: "🇸🇪" },
 };
 
 const ALPHA2_TO_ALPHA3: Record<string, string> = Object.fromEntries(
@@ -107,6 +114,44 @@ function tuitionToLakhs(amount?: number, currency = "GBP") {
 
   const rate = CURRENCY_TO_INR_RATE[currency.toUpperCase()] ?? 80;
   return Math.round((amount * rate) / 100_000 * 10) / 10;
+}
+
+function formatMoney(amount?: number, currency?: string) {
+  if (!amount) {
+    return "";
+  }
+
+  return `${currency ?? ""} ${amount.toLocaleString()}`.trim();
+}
+
+function formatDate(dateStr?: string) {
+  if (!dateStr) {
+    return "—";
+  }
+
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatAvgCommission(amount?: number | null, currency?: string | null) {
+  if (!amount) {
+    return "₹0";
+  }
+
+  return `${currency ?? "₹"} ${Math.round(amount).toLocaleString()}`.trim();
+}
+
+function formatPgwpEligible(pgwpEligible?: boolean | null) {
+  if (pgwpEligible === true) {
+    return "Yes";
+  }
+  if (pgwpEligible === false) {
+    return "No";
+  }
+  return "N/A";
 }
 
 function formatDuration(durationMonths?: number) {
@@ -205,6 +250,9 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
   const ieltsMin =
     course.studyLevel === "UNDERGRADUATE" || course.studyLevel === "DIPLOMA" ? 6.0 : 6.5;
 
+  const applicationFee = formatMoney(course.applicationFeeAmount, course.applicationFeeCurrency);
+  const deadline = course.applicationDeadline ? formatDate(course.applicationDeadline) : "";
+
   return {
     id: course.id,
     universityId: course.universityId ?? universityId,
@@ -216,30 +264,31 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),
     ieltsMin,
     ieltsLabel: `IELTS ${ieltsMin}+`,
-    applicationFee: "",
-    deadline: "",
+    applicationFee,
+    deadline,
     eligibilityStatus: "eligible",
     curriculum: { semester1: [], semester2: [] },
     requirements: [],
     keyDates: {
-      applicationDeadline: "",
-      rollingAdmissions: false,
-      courseStart: "",
-      courseEnd: "",
-      pgwpEligible: "N/A",
+      applicationDeadline: deadline,
+      rollingAdmissions: !course.applicationDeadline,
+      courseStart: formatDate(course.courseStartDate),
+      courseEnd: formatDate(course.courseEndDate),
+      pgwpEligible: formatPgwpEligible(course.pgwpEligible),
     },
     fees: {
       tuitionPerYear: course.tuitionAmount
         ? `${course.tuitionCurrency ?? ""} ${course.tuitionAmount.toLocaleString()}`.trim()
         : "",
-      applicationFee: "",
-      livingCosts: "",
+      applicationFee,
+      livingCosts: formatMoney(course.livingCostAmount, course.livingCostCurrency),
+      scholarshipNote: course.scholarshipNote,
     },
     ourData: {
-      studentsSent: 0,
-      accepted: 0,
-      visaApproved: 0,
-      avgCommission: "₹0",
+      studentsSent: course.studentsSent ?? 0,
+      accepted: course.accepted ?? 0,
+      visaApproved: course.visaApproved ?? 0,
+      avgCommission: formatAvgCommission(course.avgCommission, course.commissionCurrency),
     },
   };
 }
