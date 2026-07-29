@@ -27,6 +27,8 @@ type LeadFormProps = {
   onCancel: () => void;
   onSubmit: FormEventHandler<HTMLFormElement>;
   options: LeadFormOptions;
+  /** Show the "Assigned Agent" field. Hidden for roles without LEAD_ASSIGN. */
+  canAssign?: boolean;
 };
 
 export function LeadForm({
@@ -34,6 +36,7 @@ export function LeadForm({
   onCancel,
   onSubmit,
   options,
+  canAssign = true,
 }: LeadFormProps) {
   const {
     control,
@@ -287,42 +290,44 @@ export function LeadForm({
                   )}
                 />
 
-                <Controller
-                  control={control}
-                  name="agent"
-                  rules={{
-                    required: "Assigned agent is required.",
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      error={Boolean(errors.agent)}
-                      fullWidth
-                      helperText={errors.agent?.message}
-                      id={field.name}
-                      label="Assigned Agent"
-                      required
-                      select
-                      slotProps={alwaysVisibleLabelSlotProps}
-                      sx={fieldSx}
-                      {...field}
-                    >
-                      <MenuItem disabled value="">
-                        Select agent
-                      </MenuItem>
-                      {options.agentOptions.length === 0 ? (
-                        <MenuItem disabled value="__none">
-                          No active counsellors — add one in User Management
+                {canAssign ? (
+                  <Controller
+                    control={control}
+                    name="agent"
+                    rules={{
+                      required: "Assigned agent is required.",
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.agent)}
+                        fullWidth
+                        helperText={errors.agent?.message}
+                        id={field.name}
+                        label="Assigned Agent"
+                        required
+                        select
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      >
+                        <MenuItem disabled value="">
+                          Select agent
                         </MenuItem>
-                      ) : (
-                        options.agentOptions.map((agentOption) => (
-                          <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
-                            {agentOption.agentName}
+                        {options.agentOptions.length === 0 ? (
+                          <MenuItem disabled value="__none">
+                            No active counsellors — add one in User Management
                           </MenuItem>
-                        ))
-                      )}
-                    </TextField>
-                  )}
-                />
+                        ) : (
+                          options.agentOptions.map((agentOption) => (
+                            <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
+                              {agentOption.agentName}
+                            </MenuItem>
+                          ))
+                        )}
+                      </TextField>
+                    )}
+                  />
+                ) : null}
 
                 <Controller
                   control={control}

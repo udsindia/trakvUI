@@ -203,6 +203,7 @@ export function LeadDashboardPage() {
   const [snack, setSnack] = useState<string | null>(null);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
+  const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   const { data: backendLeads = [], isLoading, isError } = useQuery({
@@ -213,19 +214,49 @@ export function LeadDashboardPage() {
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
   const usersQuery = useQuery({
-    enabled: Boolean(tenantId),
+    enabled: Boolean(tenantId) && canAssignLeads,
     queryKey: ["settings", "users", tenantId],
     queryFn: () => usersService.getUsers(tenantId),
   });
 
+  // Distinct Source and Country values come from the backend so the drawer's
+  // options reflect the tenant's actual leads instead of a hardcoded list.
+  const sourcesQuery = useQuery({
+    queryKey: ["leads", "sources"],
+    queryFn: leadApi.getSources,
+  });
+  const countriesQuery = useQuery({
+    queryKey: ["leads", "countries"],
+    queryFn: leadApi.getCountries,
+  });
+
   const dynamicFilterConfig = useMemo<FilterConfig[]>(() => {
-    const counsellorNames = (usersQuery.data ?? [])
-      .filter((user) => user.active)
-      .map((user) => user.name);
-    return filterConfig.map((config) =>
-      config.key === "agent" ? { ...config, options: counsellorNames } : config,
-    );
-  }, [usersQuery.data]);
+    // The filter matches leads by agent *name*, so collapse duplicate names to a
+    // single option — otherwise React sees repeated keys and the repeats are
+    // indistinguishable anyway.
+    const counsellorNames = Array.from(
+      new Set(
+        (usersQuery.data ?? [])
+          .filter((user) => user.active)
+          .map((user) => user.name)
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+    // Backend-provided distinct values; fall back to the static defaults until
+    // the queries resolve (or if they return nothing) so the control never empties.
+    const sourceOptions = sourcesQuery.data?.length ? sourcesQuery.data : undefined;
+    const countryOptions = countriesQuery.data?.length ? countriesQuery.data : undefined;
+    return filterConfig
+      // Roles that can't assign leads (e.g. counsellors) can't read the team
+      // list, so drop the Agent filter for them entirely.
+      .filter((config) => config.key !== "agent" || canAssignLeads)
+      .map((config) => {
+        if (config.key === "agent") return { ...config, options: counsellorNames };
+        if (config.key === "source" && sourceOptions) return { ...config, options: sourceOptions };
+        if (config.key === "country" && countryOptions) return { ...config, options: countryOptions };
+        return config;
+      });
+  }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
   const leadRows: LeadRow[] = useMemo(
     () => backendLeads.map(mapBackendLeadToRow),
@@ -356,6 +387,17 @@ export function LeadDashboardPage() {
                 onChange={handleQuickFilterChange}
               />
             </Box>
+
+            <GlobalSearchBar
+              placeholder="Search name, email, phone…"
+              value={leadSearchQuery}
+              onSearch={handleSearchChange}
+              sx={{
+                flexShrink: 0,
+                width: { xs: 150, sm: 200, md: 240 },
+                "& .MuiOutlinedInput-root": { boxShadow: "none", height: 38 },
+              }}
+            />
 
             <Badge
               badgeContent={activeFilterCount}

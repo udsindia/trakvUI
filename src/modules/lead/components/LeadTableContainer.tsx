@@ -436,17 +436,23 @@ export function LeadTableContainer({
                     </TableCell>
 
                     <TableCell align="center" sx={{ minWidth: 66 }}>
-                      <Typography
-                        component="span"
-                        sx={{
-                          color: getScoreColor(lead.score),
-                          fontFamily: SERIF,
-                          fontSize: 14,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {lead.score}
-                      </Typography>
+                      {lead.score ? (
+                        <Typography
+                          component="span"
+                          sx={{
+                            color: getScoreColor(lead.score),
+                            fontFamily: SERIF,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {lead.score}
+                        </Typography>
+                      ) : (
+                        <Typography component="span" color="text.disabled" sx={{ fontSize: 13 }}>
+                          —
+                        </Typography>
+                      )}
                     </TableCell>
 
                     <TableCell sx={{ minWidth: 140 }}>

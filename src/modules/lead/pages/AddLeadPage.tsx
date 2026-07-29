@@ -3,6 +3,7 @@ import { Box, Paper } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { AlertBanner } from "@/modules/lead/components/AlertBanner";
 import { LeadForm } from "@/modules/lead/components/LeadForm";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
@@ -12,13 +13,16 @@ import { useLeadFormController } from "@/modules/lead/useLeadFormController";
 import { usersService } from "@/modules/settings/usersService";
 
 export function AddLeadPage() {
-  const { tenant } = useAuth();
+  const { tenant, hasPermissions } = useAuth();
   const tenantId = tenant?.tenantId ?? "";
+  // Only users who can assign leads see (and need) the agent list; others
+  // (e.g. counsellors) can't read the team endpoint, so don't fetch it.
+  const canAssign = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
 
   // Real team members (counsellors) added via User Management, so the
   // "Assigned Agent" field reflects who actually exists in the tenant.
   const usersQuery = useQuery({
-    enabled: Boolean(tenantId),
+    enabled: Boolean(tenantId) && canAssign,
     queryKey: ["settings", "users", tenantId],
     queryFn: () => usersService.getUsers(tenantId),
   });
@@ -80,6 +84,7 @@ export function AddLeadPage() {
             <AlertBanner />
           </Box>
           <LeadForm
+            canAssign={canAssign}
             form={form}
             options={options}
             onCancel={handleCancel}

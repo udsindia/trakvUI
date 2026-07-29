@@ -41,6 +41,18 @@ export const leadApi = {
     return response.data;
   },
 
+  // Distinct filter values, sourced from the backend so the drawer reflects the
+  // tenant's real data rather than a hardcoded list.
+  getSources: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/sources`);
+    return response.data;
+  },
+
+  getCountries: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/countries`);
+    return response.data;
+  },
+
   createLead: async (payload: CreateLeadPayload): Promise<BackendLead> => {
     console.debug("[leadApi] createLead payload:", payload);
     const response = await httpClient.post<BackendLead>(API_CONFIG.leads, payload);
