@@ -65,6 +65,7 @@ export const customRolesStorage = {
       roleName,
       name: payload.name.trim(),
       description: payload.description?.trim(),
+      scopeLevel: payload.scopeLevel,
       permissions: payload.permissions,
       type: "custom",
     };
@@ -87,6 +88,7 @@ export const customRolesStorage = {
       roleName: payload.name.trim().replace(/\s+/g, "_").toUpperCase(),
       name: payload.name.trim(),
       description: payload.description?.trim(),
+      scopeLevel: payload.scopeLevel,
       permissions: payload.permissions,
     };
 

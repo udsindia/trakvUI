@@ -11,7 +11,11 @@ import {
   TextField,
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { AddUserFormValues, RoleDefinition } from "@/modules/settings/settings.types";
+import type {
+  AddUserFormValues,
+  RoleDefinition,
+  TenantUser,
+} from "@/modules/settings/settings.types";
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -25,9 +29,10 @@ type AddUserFormProps = {
   onCancel: () => void;
   onSubmit: () => void;
   roles: RoleDefinition[];
+  supervisors: TenantUser[];
 };
 
-export function AddUserForm({ form, onCancel, onSubmit, roles }: AddUserFormProps) {
+export function AddUserForm({ form, onCancel, onSubmit, roles, supervisors }: AddUserFormProps) {
   const {
     control,
     formState: { errors, isSubmitting },
@@ -140,6 +145,30 @@ export function AddUserForm({ form, onCancel, onSubmit, roles }: AddUserFormProp
                       {roles.map((role) => (
                         <MenuItem key={role.id} value={role.id}>
                           {role.name} ({role.roleName})
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Controller
+                  control={control}
+                  name="supervisorId"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      helperText="Manager or admin who supervises this user (drives team visibility)."
+                      label="Supervisor"
+                      select
+                      sx={fieldSx}
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {supervisors.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name} — {user.roleLabel}
                         </MenuItem>
                       ))}
                     </TextField>

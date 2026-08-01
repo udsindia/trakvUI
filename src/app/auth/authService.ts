@@ -39,9 +39,8 @@ const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
   SUPER_ADMIN: ROLES.SUPER_ADMIN,
   COUNSELLOR: ROLES.COUNSELLOR,
   COUNSELOR: ROLES.COUNSELLOR,
-  APPLICATION_MANAGER: ROLES.APPLICATION_MANAGER,
-  ACTIVITY_MANAGER: ROLES.ACTIVITY_MANAGER,
-  ANALYST: ROLES.ANALYST,
+  MANAGER: ROLES.MANAGER,
+  LEAD_MANAGER: ROLES.LEAD_MANAGER,
 };
 
 const AUTH_STORAGE_KEY = "edutrack.auth.session";
@@ -81,19 +80,14 @@ const mockPersonas: MockPersona[] = [
     roles: [ROLES.COUNSELLOR],
   },
   {
-    fallbackName: "Demo Application Manager",
-    keywords: ["application", "applications"],
-    roles: [ROLES.APPLICATION_MANAGER],
+    fallbackName: "Demo Manager",
+    keywords: ["manager", "team lead"],
+    roles: [ROLES.MANAGER],
   },
   {
-    fallbackName: "Demo Activity Manager",
-    keywords: ["activity", "activities"],
-    roles: [ROLES.ACTIVITY_MANAGER],
-  },
-  {
-    fallbackName: "Demo Analyst",
-    keywords: ["analyst", "reporting"],
-    roles: [ROLES.ANALYST],
+    fallbackName: "Demo Lead Manager",
+    keywords: ["lead manager", "qualifier"],
+    roles: [ROLES.LEAD_MANAGER],
   },
 ];
 

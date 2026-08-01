@@ -14,7 +14,7 @@ export const dashboardService = {
     const response = await dashboardApi.getDashboard(dateRange);
 
     return {
-      data: mapDashboardResponse(response),
+      data: mapDashboardResponse(response, period),
       generatedAt: response.generatedAt,
       source: "live",
     };

@@ -7,6 +7,8 @@ import type {
   DashboardSectionKey,
 } from "@/modules/dashboard/dashboardApi";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { fromBackendLeadStage } from "@/modules/lead/leadStageMappers";
+import type { DashboardPeriod } from "@/modules/dashboard/dashboardDateRange";
 import type {
   DashboardActivityChartPointDto,
   DashboardApplicationPipelineDto,
@@ -17,14 +19,19 @@ import type {
   DashboardWidgetVisibility,
 } from "@/modules/dashboard/dashboard.types";
 
+// Colours only — the label is resolved through the shared `fromBackendLeadStage`
+// mapper (see mapDashboardResponse) so the dashboard and the leads page can never
+// drift on stage wording again (e.g. "Proposal" vs "Proposal Sent"). Keys mirror
+// the leads vocabulary in leadStageMappers.
 const LEAD_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
   NEW: { label: "New", color: "#4f46e5" },
   CONTACTED: { label: "Contacted", color: "#7c3aed" },
   QUALIFIED: { label: "Qualified", color: "#ec4899" },
-  APPLIED: { label: "Applied", color: "#ef4444" },
-  CONVERTED: { label: "Converted", color: "#f97316" },
-  ENROLLED: { label: "Enrolled", color: "#10b981" },
+  PROPOSAL_SENT: { label: "Proposal", color: "#f59e0b" },
+  NEGOTIATION: { label: "Negotiation", color: "#d97706" },
+  CONVERTED: { label: "Converted", color: "#10b981" },
   LOST: { label: "Lost", color: "#94a3b8" },
+  ARCHIVED: { label: "Archived", color: "#64748b" },
 };
 
 const APPLICATION_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
@@ -43,9 +50,8 @@ const PERFORMANCE_COLORS = ["#0f5ad4", "#10b981", "#f59e0b", "#7c3aed", "#ef4444
 const TEMPLATE_ROLE_LABELS: Record<string, string> = {
   AGENCY_ADMIN: ROLE_LABELS[ROLES.AGENCY_ADMIN],
   SUPER_ADMIN: ROLE_LABELS[ROLES.SUPER_ADMIN],
-  APPLICATION_MANAGER: ROLE_LABELS[ROLES.APPLICATION_MANAGER],
-  ACTIVITY_MANAGER: ROLE_LABELS[ROLES.ACTIVITY_MANAGER],
-  ANALYST: ROLE_LABELS[ROLES.ANALYST],
+  MANAGER: ROLE_LABELS[ROLES.MANAGER],
+  LEAD_MANAGER: ROLE_LABELS[ROLES.LEAD_MANAGER],
   COUNSELLOR: ROLE_LABELS[ROLES.COUNSELLOR],
 };
 
@@ -104,21 +110,38 @@ function mapPipelineStage(stage: string, config: Record<string, { color: string;
   };
 }
 
-function buildKpiCard(key: DashboardKpiCardKey, kpi: BackendDashboardResponse["kpi"]): DashboardKpiDto {
+/**
+ * Sub-label for period-scoped KPIs (New Leads, Revenue) so the caption tracks the
+ * selected period instead of a fixed timeframe — otherwise "New Leads … Today"
+ * shows while viewing the Quarter, and "Revenue … Month to date" while viewing the Week.
+ */
+const PERIOD_DELTA_LABEL: Record<DashboardPeriod, string> = {
+  today: "Today",
+  week: "This week",
+  month: "This month",
+  quarter: "This quarter",
+};
+
+function buildKpiCard(
+  key: DashboardKpiCardKey,
+  kpi: BackendDashboardResponse["kpi"],
+  period: DashboardPeriod,
+): DashboardKpiDto {
+  const periodLabel = PERIOD_DELTA_LABEL[period];
   switch (key) {
     case "REVENUE_RECEIVED":
       return {
         accent: "purple",
-        delta: "Month to date",
+        delta: periodLabel,
         deltaTone: "flat",
         icon: "💰",
-        label: "Revenue (MTD)",
+        label: "Revenue",
         value: kpi.revenueReceived != null ? formatCurrency(kpi.revenueReceived) : "—",
       };
     case "NEW_LEADS":
       return {
         accent: "blue",
-        delta: "Today",
+        delta: periodLabel,
         deltaTone: "flat",
         icon: "👤",
         label: "New Leads",
@@ -206,7 +229,10 @@ export interface DashboardViewModel {
   widgets: DashboardWidgetVisibility;
 }
 
-export function mapDashboardResponse(response: BackendDashboardResponse): DashboardViewModel {
+export function mapDashboardResponse(
+  response: BackendDashboardResponse,
+  period: DashboardPeriod,
+): DashboardViewModel {
   const { capabilities, kpi } = response;
   const sectionOrder = response.sectionOrder?.length
     ? response.sectionOrder
@@ -229,6 +255,8 @@ export function mapDashboardResponse(response: BackendDashboardResponse): Dashbo
 
   const leadStages = response.leadPipeline.stages.map((stage) => ({
     ...mapPipelineStage(stage.stage, LEAD_STAGE_CONFIG),
+    // Label comes from the shared leads mapper so wording stays identical across pages.
+    label: fromBackendLeadStage(stage.stage),
     count: stage.count,
   }));
 
@@ -243,7 +271,7 @@ export function mapDashboardResponse(response: BackendDashboardResponse): Dashbo
     quickActions: quickActionKeys
       .map((key) => QUICK_ACTION_CONFIG[key])
       .filter((action): action is DashboardQuickAction => Boolean(action)),
-    kpis: kpiCards.map((key) => buildKpiCard(key, kpi)),
+    kpis: kpiCards.map((key) => buildKpiCard(key, kpi, period)),
     sectionOrder,
     widgets,
     leadPipeline: widgets.leadPipeline

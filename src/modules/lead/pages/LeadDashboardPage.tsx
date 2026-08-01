@@ -134,7 +134,10 @@ function mapBackendLeadToRow(lead: BackendLead): LeadRow {
     score: lead.score ?? 0,
     lastActivity: formatLastActivity(lead.lastActivityAt),
     nextAction: "",
+    // `country` is the first destination for the table cell; `countries` keeps the
+    // full list so the Country filter matches leads whose match isn't the first one.
     country: lead.destinationCountries?.[0] ?? "",
+    countries: lead.destinationCountries ?? [],
     createdAt: lead.createdAt ?? "",
   };
 }
@@ -162,7 +165,7 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
     if (agentFilter && row.agent !== agentFilter) return false;
 
     const countryFilter = values.country as string | undefined;
-    if (countryFilter && row.country !== countryFilter) return false;
+    if (countryFilter && !row.countries.includes(countryFilter)) return false;
 
     const scoreFilter = values.score as [number, number] | undefined;
     if (Array.isArray(scoreFilter)) {
@@ -204,6 +207,7 @@ export function LeadDashboardPage() {
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
+  const canDeleteLeads = hasPermissions([PERMISSIONS.LEAD_DELETE]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   const { data: backendLeads = [], isLoading, isError } = useQuery({
@@ -445,6 +449,7 @@ export function LeadDashboardPage() {
             </Box>
           ) : (
             <LeadTableContainer
+              canDelete={canDeleteLeads}
               leads={pagedRows}
               page={clampedPage}
               pageCount={pageCount}

@@ -1,0 +1,45 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: T
+        - generic [ref=e8]:
+          - paragraph [ref=e9]: Trakv
+          - paragraph [ref=e10]: Education CRM
+        - button [ref=e11] [cursor=pointer]
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - paragraph [ref=e16]: Main
+          - link "Dashboard" [ref=e17] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=e23] [cursor=pointer]:
+            - /url: /leads
+        - generic [ref=e28]:
+          - paragraph [ref=e29]: Engage
+          - link "Activities" [ref=e30] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=e35] [cursor=pointer]:
+            - /url: /activities/tasks
+      - generic [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: RR
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Raghava Reddy
+          - paragraph [ref=e45]: AGENCY_ADMIN
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - generic [ref=e48]:
+        - paragraph [ref=e49]: Dashboard
+        - paragraph [ref=e50]: Fri, 31 Jul 2026 · Raghava Reddy
+      - generic [ref=e52]:
+        - textbox "Search leads, students, apps…" [ref=e56]
+        - group
+      - generic [ref=e57]:
+        - button [ref=e58] [cursor=pointer]
+        - button [ref=e62] [cursor=pointer]
+        - separator [ref=e66]
+        - button "notifications" [ref=e67] [cursor=pointer]
+        - link "tasks" [ref=e71] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=e74]
+        - button "RR" [ref=e77] [cursor=pointer]
+    - main [ref=e79]

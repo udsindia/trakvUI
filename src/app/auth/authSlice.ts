@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
 import { authService, getAuthErrorMessage } from "@/app/auth/authService";
+import { queryClient } from "@/shared/services/query/queryClient";
 import type {
   AuthLoginRequest,
   AuthSession,
@@ -54,7 +55,11 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async (request, { rejectWithValue }) => {
   try {
-    return await authService.login(request);
+    const session = await authService.login(request);
+    // Drop any cached query data from a previous session so the new user never
+    // sees the prior user's records (same-tenant query keys otherwise collide).
+    queryClient.clear();
+    return session;
   } catch (error) {
     return rejectWithValue(getAuthErrorMessage(error));
   }
@@ -62,6 +67,7 @@ export const login = createAsyncThunk<
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   authService.clearSession();
+  queryClient.clear();
 });
 
 const authSlice = createSlice({

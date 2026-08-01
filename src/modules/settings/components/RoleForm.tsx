@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -92,6 +93,26 @@ export function RoleForm({
                     rows={2}
                     sx={fieldSx}
                   />
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="scopeLevel"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    disabled={isReadOnly}
+                    fullWidth
+                    helperText="Which records users with this role can see."
+                    label="Visibility scope"
+                    select
+                    sx={fieldSx}
+                  >
+                    <MenuItem value="SELF">Own records only</MenuItem>
+                    <MenuItem value="TEAM">Their team&apos;s records</MenuItem>
+                    <MenuItem value="TENANT">All tenant records</MenuItem>
+                  </TextField>
                 )}
               />
 

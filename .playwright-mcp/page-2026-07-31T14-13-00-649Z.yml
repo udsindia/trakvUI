@@ -1,0 +1,56 @@
+- generic [ref=f9e3]:
+  - complementary [ref=f9e4]:
+    - generic [ref=f9e5]:
+      - generic [ref=f9e6]:
+        - generic [ref=f9e7]: T
+        - generic [ref=f9e8]:
+          - paragraph [ref=f9e9]: Trakv
+          - paragraph [ref=f9e10]: Education CRM
+        - button [ref=f9e11] [cursor=pointer]
+      - generic [ref=f9e14]:
+        - generic [ref=f9e15]:
+          - paragraph [ref=f9e16]: Main
+          - link "Dashboard" [ref=f9e17] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f9e23] [cursor=pointer]:
+            - /url: /leads
+          - link "Applications" [ref=f9e28] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f9e33] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f9e38]:
+          - paragraph [ref=f9e39]: Engage
+          - link "Activities" [ref=f9e40] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f9e45] [cursor=pointer]:
+            - /url: /activities/tasks
+        - generic [ref=f9e50]:
+          - paragraph [ref=f9e51]: Admin
+          - link "User Management" [ref=f9e52] [cursor=pointer]:
+            - /url: /settings/team
+          - link "Role Management" [ref=f9e57] [cursor=pointer]:
+            - /url: /settings/roles
+      - generic [ref=f9e64] [cursor=pointer]:
+        - generic [ref=f9e65]: AU
+        - generic [ref=f9e66]:
+          - paragraph [ref=f9e67]: Admin User
+          - paragraph [ref=f9e68]: AGENCY_ADMIN
+  - generic [ref=f9e69]:
+    - banner [ref=f9e70]:
+      - generic [ref=f9e71]:
+        - paragraph [ref=f9e72]: Courses
+        - paragraph [ref=f9e73]: Fri, 31 Jul 2026 · Admin User
+      - generic [ref=f9e75]:
+        - textbox "Search leads, students, apps…" [ref=f9e79]
+        - group
+      - generic [ref=f9e80]:
+        - button [ref=f9e81] [cursor=pointer]
+        - button [ref=f9e85] [cursor=pointer]
+        - separator [ref=f9e89]
+        - button "notifications" [ref=f9e90] [cursor=pointer]
+        - link "tasks" [ref=f9e94] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f9e97]
+        - button "AU" [ref=f9e100] [cursor=pointer]
+    - main [ref=f9e102]:
+      - progressbar [ref=f9e106]

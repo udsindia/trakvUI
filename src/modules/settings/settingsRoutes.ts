@@ -27,9 +27,9 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     index: true,
     key: "team-index",
     anyOfPermissions: [
-      PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
-      PERMISSIONS.USERS_VIEW,
+      PERMISSIONS.SETTINGS_MANAGE,
+      PERMISSIONS.USER_MANAGE,
+      PERMISSIONS.USER_VIEW,
     ],
   },
   {
@@ -37,34 +37,34 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "team",
     path: "team",
     anyOfPermissions: [
-      PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
-      PERMISSIONS.USERS_VIEW,
+      PERMISSIONS.SETTINGS_MANAGE,
+      PERMISSIONS.USER_MANAGE,
+      PERMISSIONS.USER_VIEW,
     ],
   },
   {
     Component: AddUserPage,
     key: "add-user",
     path: "team/create",
-    anyOfPermissions: [PERMISSIONS.TEAM_INVITE, PERMISSIONS.USERS_MANAGE],
+    anyOfPermissions: [PERMISSIONS.USER_MANAGE],
   },
   {
     Component: RolesPage,
     key: "roles",
     path: "roles",
-    anyOfPermissions: [PERMISSIONS.ROLES_VIEW, PERMISSIONS.SETTINGS_TENANT],
+    anyOfPermissions: [PERMISSIONS.ROLE_VIEW, PERMISSIONS.SETTINGS_MANAGE],
   },
   {
     Component: CreateRolePage,
     key: "create-role",
     path: "roles/create",
-    requiredPermissions: [PERMISSIONS.ROLES_MANAGE],
+    requiredPermissions: [PERMISSIONS.ROLE_MANAGE],
   },
   {
     Component: EditRolePage,
     key: "edit-role",
     path: "roles/:roleId/edit",
-    anyOfPermissions: [PERMISSIONS.ROLES_VIEW, PERMISSIONS.ROLES_MANAGE],
+    anyOfPermissions: [PERMISSIONS.ROLE_VIEW, PERMISSIONS.ROLE_MANAGE],
   },
 ];
 

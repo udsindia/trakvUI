@@ -21,6 +21,10 @@ export interface ModuleNavigationItemDefinition {
   description?: string;
   icon?: ModuleIconKey;
   children?: ModuleNavigationItemDefinition[];
+  /** User must have every permission in this list for this item to be visible. */
+  requiredPermissions?: PermissionKey[];
+  /** User must have at least one permission in this list for this item to be visible. */
+  anyOfPermissions?: PermissionKey[];
 }
 
 export interface ModuleDefinition extends ModuleNavigationItemDefinition {
@@ -30,8 +34,4 @@ export interface ModuleDefinition extends ModuleNavigationItemDefinition {
   icon: ModuleIconKey;
   order: number;
   allowedRoles: RoleKey[];
-  /** User must have every permission in this list to access the module. */
-  requiredPermissions?: PermissionKey[];
-  /** User must have at least one permission in this list to access the module. */
-  anyOfPermissions?: PermissionKey[];
 }

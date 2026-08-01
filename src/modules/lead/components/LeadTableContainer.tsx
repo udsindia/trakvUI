@@ -32,6 +32,7 @@ import { SERIF } from "@/shared/ui/vutrakTheme";
 
 export type LeadRow = {
   country: string;
+  countries: string[];
   createdAt: string;
   email: string;
   id: string;
@@ -49,6 +50,8 @@ export const LEAD_STAGES = ["New", "Contacted", "Qualified", "Proposal"] as cons
 export type LeadStage = (typeof LEAD_STAGES)[number];
 
 type LeadTableContainerProps = {
+  /** Gates the Delete affordances (row menu + bulk bar) on LEAD_DELETE. */
+  canDelete: boolean;
   leads: LeadRow[];
   onBulkDelete: (ids: string[]) => Promise<void>;
   onDeleteLead: (id: string) => Promise<void>;
@@ -133,6 +136,7 @@ function getScoreColor(score: number) {
 }
 
 export function LeadTableContainer({
+  canDelete,
   leads,
   onBulkDelete,
   onDeleteLead,
@@ -184,7 +188,7 @@ export function LeadTableContainer({
   const handleRowDelete = async () => {
     if (!activeLeadId) return;
     const lead = leads.find((l) => l.id === activeLeadId);
-    if (!window.confirm(`Delete lead "${lead?.name ?? activeLeadId}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete lead "${lead?.name ?? activeLeadId}"? It will be archived and removed from your active leads.`)) return;
     handleCloseRowMenu();
     setActionLoading(true);
     try {
@@ -216,7 +220,7 @@ export function LeadTableContainer({
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Delete ${selectedLeadIds.length} selected lead(s)? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete ${selectedLeadIds.length} selected lead(s)? They will be archived and removed from your active leads.`)) return;
     setActionLoading(true);
     try {
       await onBulkDelete(selectedLeadIds);
@@ -301,23 +305,25 @@ export function LeadTableContainer({
             >
               Change Stage
             </Button>
-            <Button
-              disabled={actionLoading}
-              size="small"
-              sx={{
-                bgcolor: "#ef6b7b",
-                borderRadius: "8px",
-                color: "common.white",
-                fontSize: 12,
-                fontWeight: 700,
-                px: 1.5,
-                textTransform: "none",
-                "&:hover": { bgcolor: "#df5b6b" },
-              }}
-              onClick={handleBulkDelete}
-            >
-              Delete
-            </Button>
+            {canDelete ? (
+              <Button
+                disabled={actionLoading}
+                size="small"
+                sx={{
+                  bgcolor: "#ef6b7b",
+                  borderRadius: "8px",
+                  color: "common.white",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  px: 1.5,
+                  textTransform: "none",
+                  "&:hover": { bgcolor: "#df5b6b" },
+                }}
+                onClick={handleBulkDelete}
+              >
+                Delete
+              </Button>
+            ) : null}
           </Stack>
         ) : null}
 
@@ -560,9 +566,11 @@ export function LeadTableContainer({
         onClose={handleCloseRowMenu}
       >
         <MenuItem onClick={handleRowUpdateStage}>Update Stage</MenuItem>
-        <MenuItem sx={{ color: "error.main" }} onClick={handleRowDelete}>
-          Delete
-        </MenuItem>
+        {canDelete ? (
+          <MenuItem sx={{ color: "error.main" }} onClick={handleRowDelete}>
+            Delete
+          </MenuItem>
+        ) : null}
       </Menu>
 
       {/* Per-row stage update dialog */}

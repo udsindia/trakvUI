@@ -18,18 +18,18 @@ export const universitiesRoutes: UniversitiesRouteDefinition[] = [
     Component: CourseSearchPage,
     index: true,
     key: "search",
-    requiredPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+    requiredPermissions: [PERMISSIONS.UNIVERSITY_VIEW],
   },
   {
     Component: UniversityDetailsPage,
     key: "university",
     path: ":universityId",
-    requiredPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+    requiredPermissions: [PERMISSIONS.UNIVERSITY_VIEW],
   },
   {
     Component: CourseDetailsPage,
     key: "course",
     path: ":universityId/courses/:courseId",
-    requiredPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+    requiredPermissions: [PERMISSIONS.UNIVERSITY_VIEW],
   },
 ];

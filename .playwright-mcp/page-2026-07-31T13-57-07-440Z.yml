@@ -1,0 +1,42 @@
+- generic [ref=f7e216]:
+  - generic [ref=f7e217]:
+    - generic [ref=f7e220]:
+      - generic [ref=f7e221]: V
+      - generic [ref=f7e222]:
+        - paragraph [ref=f7e223]: VUTrak
+        - paragraph [ref=f7e224]: Education CRM
+    - generic [ref=f7e225]:
+      - paragraph [ref=f7e226]: Guide every student from first enquiry to enrolment.
+      - paragraph [ref=f7e227]: One workspace for leads, applications, universities and the people who move them forward.
+      - generic [ref=f7e228]:
+        - paragraph [ref=f7e231]: Track applications across every university and intake
+        - paragraph [ref=f7e234]: Never miss a follow-up or a document deadline
+        - paragraph [ref=f7e237]: See your whole pipeline convert, stage by stage
+    - paragraph [ref=f7e238]: © 2026 VUTrak
+  - generic [ref=f7e241]:
+    - generic [ref=f7e242]:
+      - paragraph [ref=f7e243]: Welcome back
+      - paragraph [ref=f7e244]: Sign in to your workspace
+      - paragraph [ref=f7e245]: Enter your credentials to continue.
+    - generic [ref=f7e247]:
+      - generic [ref=f7e248]:
+        - generic:
+          - text: Email or Username
+          - generic: "*"
+        - generic [ref=f7e249]:
+          - textbox "Email or Username" [ref=f7e250]
+          - group:
+            - generic: Email or Username *
+      - generic [ref=f7e251]:
+        - generic:
+          - text: Password
+          - generic: "*"
+        - generic [ref=f7e252]:
+          - textbox "Password" [ref=f7e253]
+          - group:
+            - generic: Password *
+      - button "Sign In" [disabled]
+      - paragraph [ref=f7e254]:
+        - text: New consultancy?
+        - link "Sign up" [ref=f7e255] [cursor=pointer]:
+          - /url: /register

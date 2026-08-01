@@ -1,0 +1,50 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - generic [ref=f7e5]:
+      - generic [ref=f7e6]:
+        - generic [ref=f7e7]: T
+        - generic [ref=f7e8]:
+          - paragraph [ref=f7e9]: Trakv
+          - paragraph [ref=f7e10]: Education CRM
+        - button [ref=f7e11] [cursor=pointer]
+      - generic [ref=f7e14]:
+        - generic [ref=f7e15]:
+          - paragraph [ref=f7e16]: Main
+          - link "Dashboard" [ref=f7e17] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f7e23] [cursor=pointer]:
+            - /url: /leads
+          - link "Applications" [ref=f7e28] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f7e33] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f7e38]:
+          - paragraph [ref=f7e39]: Engage
+          - link "Activities" [ref=f7e40] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f7e45] [cursor=pointer]:
+            - /url: /activities/tasks
+      - generic [ref=f7e51] [cursor=pointer]:
+        - generic [ref=f7e52]: MK
+        - generic [ref=f7e53]:
+          - paragraph [ref=f7e54]: Murali Krishna
+          - paragraph [ref=f7e55]: COUNSELLOR
+  - generic [ref=f7e56]:
+    - banner [ref=f7e57]:
+      - generic [ref=f7e58]:
+        - paragraph [ref=f7e59]: Dashboard
+        - paragraph [ref=f7e60]: Fri, 31 Jul 2026 · Murali Krishna
+      - generic [ref=f7e62]:
+        - textbox "Search leads, students, apps…" [ref=f7e66]
+        - group
+      - generic [ref=f7e67]:
+        - button [ref=f7e68] [cursor=pointer]
+        - button [ref=f7e72] [cursor=pointer]
+        - separator [ref=f7e76]
+        - button "notifications" [ref=f7e77] [cursor=pointer]
+        - link "tasks" [ref=f7e81] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f7e84]
+        - button "MK" [ref=f7e87] [cursor=pointer]
+    - main [ref=f7e89]:
+      - progressbar [ref=f7e93]

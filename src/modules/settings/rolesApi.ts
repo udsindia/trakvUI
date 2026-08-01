@@ -12,6 +12,7 @@ export interface BackendRole {
   id: string;
   roleName: string;
   description?: string;
+  scopeLevel?: string;
   permissions: BackendPermission[];
   system?: boolean;
   createdAt?: string;
@@ -21,6 +22,7 @@ export interface BackendRole {
 export interface UpsertRolePayload {
   roleName: string;
   description?: string;
+  scopeLevel: string;
   permissions: PermissionKey[];
 }
 

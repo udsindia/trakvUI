@@ -6,12 +6,23 @@ export interface BackendUser {
   firstName?: string;
   lastName?: string;
   name?: string;
+  fullName?: string;
   email: string;
   phone?: string;
   roleId?: string;
+  roleName?: string;
   role?: string;
+  supervisorId?: string;
   active?: boolean;
   isActive?: boolean;
+}
+
+export interface UpdateUserPayload {
+  roleId?: string;
+  supervisorId?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
 }
 
 export const usersApi = {
@@ -21,6 +32,14 @@ export const usersApi = {
       {
         params: { tenantId },
       },
+    );
+    return response.data;
+  },
+
+  updateUser: async (userId: string, payload: UpdateUserPayload): Promise<BackendUser> => {
+    const response = await httpClient.patch<BackendUser>(
+      `${API_CONFIG.users}/${userId}`,
+      payload,
     );
     return response.data;
   },

@@ -1,0 +1,158 @@
+- generic [ref=f7e1]:
+  - generic [ref=f7e258]:
+    - complementary [ref=f7e259]:
+      - generic [ref=f7e260]:
+        - generic [ref=f7e261]:
+          - generic [ref=f7e262]: T
+          - generic [ref=f7e263]:
+            - paragraph [ref=f7e264]: Trakv
+            - paragraph [ref=f7e265]: Education CRM
+          - button [ref=f7e266] [cursor=pointer]
+        - generic [ref=f7e269]:
+          - generic [ref=f7e270]:
+            - paragraph [ref=f7e271]: Main
+            - link [ref=f7e463] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=f7e277]: Dashboard
+            - link [ref=f7e464] [cursor=pointer]:
+              - /url: /leads
+              - generic [ref=f7e282]: Lead Management
+            - link [ref=f7e465] [cursor=pointer]:
+              - /url: /applications
+              - generic [ref=f7e287]: Applications
+            - link [ref=f7e466] [cursor=pointer]:
+              - /url: /universities
+              - generic [ref=f7e292]: Courses
+          - generic [ref=f7e293]:
+            - paragraph [ref=f7e294]: Engage
+            - link [ref=f7e467] [cursor=pointer]:
+              - /url: /activities/feed
+              - generic [ref=f7e299]: Activities
+            - link [ref=f7e468] [cursor=pointer]:
+              - /url: /activities/tasks
+              - generic [ref=f7e304]: Tasks
+          - generic [ref=f7e305]:
+            - paragraph [ref=f7e306]: Admin
+            - link [ref=f7e469] [cursor=pointer]:
+              - /url: /settings/team
+              - generic [ref=f7e311]: User Management
+        - generic [ref=f7e313] [cursor=pointer]:
+          - generic [ref=f7e314]: TM
+          - generic [ref=f7e315]:
+            - paragraph [ref=f7e316]: test manager
+            - paragraph [ref=f7e317]: MANAGER
+    - generic [ref=f7e318]:
+      - banner [ref=f7e319]:
+        - generic [ref=f7e320]:
+          - paragraph [ref=f7e321]: Dashboard
+          - paragraph [ref=f7e322]: Fri, 31 Jul 2026 · test manager
+        - generic [ref=f7e324]:
+          - textbox [ref=f7e470]:
+            - /placeholder: Search leads, students, apps…
+          - group
+        - generic [ref=f7e329]:
+          - button [ref=f7e471] [cursor=pointer]: New Lead
+          - button [ref=f7e472] [cursor=pointer]: New Application
+          - separator [ref=f7e338]
+          - button [ref=f7e473] [cursor=pointer]
+          - link [ref=f7e474] [cursor=pointer]:
+            - /url: /activities/tasks
+          - separator [ref=f7e346]
+          - button [ref=f7e475] [cursor=pointer]:
+            - generic [ref=f7e350]: TM
+      - main [ref=f7e351]:
+        - generic [ref=f7e353]:
+          - generic [ref=f7e354]:
+            - generic [ref=f7e355]:
+              - paragraph [ref=f7e356]: Good evening, test manager 👋
+              - paragraph [ref=f7e357]: Team overview and pipeline health.
+            - generic [ref=f7e358]:
+              - paragraph [ref=f7e359]: "Period:"
+              - button [ref=f7e476] [cursor=pointer]: Today
+              - button [ref=f7e477] [cursor=pointer]: Week
+              - button [ref=f7e478] [cursor=pointer]: Month
+              - button [ref=f7e479] [cursor=pointer]: Quarter
+          - generic [ref=f7e364]:
+            - generic [ref=f7e365]:
+              - paragraph [ref=f7e368]: New Leads
+              - generic [ref=f7e369]: "2"
+              - paragraph [ref=f7e373]: This week
+            - generic [ref=f7e374]:
+              - paragraph [ref=f7e377]: Active Students
+              - generic [ref=f7e378]: "1"
+              - paragraph [ref=f7e382]: Current portfolio
+            - generic [ref=f7e383]:
+              - paragraph [ref=f7e386]: Overdue Tasks
+              - generic [ref=f7e387]: "1"
+              - paragraph [ref=f7e391]: Needs attention
+            - generic [ref=f7e392]:
+              - paragraph [ref=f7e395]: Conversion Rate
+              - generic [ref=f7e396]: 0.0%
+              - paragraph [ref=f7e400]: Lead to enrolment
+          - generic [ref=f7e401]:
+            - generic [ref=f7e402]:
+              - button [ref=f7e480] [cursor=pointer]: Leads
+              - button [ref=f7e481] [cursor=pointer]: Applications
+              - button [ref=f7e482] [cursor=pointer]: Team
+              - button [ref=f7e483] [cursor=pointer]: Activity
+            - paragraph [ref=f7e407]:
+              - text: Showing
+              - strong [ref=f7e408]: team-wide
+              - text: data
+          - generic [ref=f7e410]:
+            - generic [ref=f7e411]:
+              - generic [ref=f7e412]:
+                - generic [ref=f7e413]:
+                  - paragraph [ref=f7e414]: Lead Pipeline
+                  - button [ref=f7e484] [cursor=pointer]:
+                    - link [ref=f7e485]:
+                      - /url: /leads
+                      - text: Full view →
+                - generic [ref=f7e418]:
+                  - generic [ref=f7e419]:
+                    - paragraph [ref=f7e420]: Contacted
+                    - generic [ref=f7e421]: "1"
+                    - paragraph [ref=f7e423]: —
+                  - generic [ref=f7e424]:
+                    - paragraph [ref=f7e425]: Qualified
+                    - generic [ref=f7e426]: "1"
+                    - paragraph [ref=f7e428]: 100%
+              - generic [ref=f7e429]:
+                - generic [ref=f7e430]:
+                  - paragraph [ref=f7e431]: All team leads
+                  - button [ref=f7e486] [cursor=pointer]:
+                    - link [ref=f7e487]:
+                      - /url: /leads
+                      - text: All leads →
+                - generic [ref=f7e435]:
+                  - generic [ref=f7e436]:
+                    - paragraph [ref=f7e437]: Stage
+                    - paragraph [ref=f7e438]: Leads
+                  - generic [ref=f7e439]:
+                    - paragraph [ref=f7e440]: Contacted
+                    - generic [ref=f7e441]: "1"
+                  - generic [ref=f7e442]:
+                    - paragraph [ref=f7e443]: Qualified
+                    - generic [ref=f7e444]: "1"
+                  - generic [ref=f7e445]:
+                    - paragraph [ref=f7e446]: Total
+                    - paragraph [ref=f7e447]: "2"
+            - generic [ref=f7e449]:
+              - paragraph [ref=f7e451]: Performance
+              - generic [ref=f7e453]:
+                - generic [ref=f7e454]:
+                  - paragraph [ref=f7e455]: 0%
+                  - paragraph [ref=f7e456]: Conversion Rate
+                - generic [ref=f7e457]:
+                  - paragraph [ref=f7e458]: 100%
+                  - paragraph [ref=f7e459]: Task Completion Rate
+                - generic [ref=f7e460]:
+                  - paragraph [ref=f7e461]: "2"
+                  - paragraph [ref=f7e462]: Total Active Leads
+  - menu [ref=f7e490]:
+    - generic [ref=f7e491]:
+      - heading "test manager" [level=6] [ref=f7e492]
+      - paragraph [ref=f7e493]: MANAGER
+    - separator [ref=f7e494]
+    - menuitem "Profile settings coming soon" [disabled]
+    - menuitem "Logout" [ref=f7e495] [cursor=pointer]

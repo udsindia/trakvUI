@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Box, LinearProgress, Stack } from "@mui/material";
+import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 import { useAuth } from "@/app/auth/useAuth";
 import { DashboardAttentionStrip } from "@/modules/dashboard/components/DashboardAttentionStrip";
 import { DashboardHeader } from "@/modules/dashboard/components/DashboardHeader";
@@ -45,7 +46,19 @@ export default function DashboardModule() {
     : sectionTabs[0]?.id ?? "leads";
 
   return (
-    <Stack spacing={1} sx={{ display: "flex", flexDirection: "column", gap: 1, minHeight: 0 }}>
+    <Stack
+      spacing={1}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        // Fill the viewport below the topbar (matching the leads page): subtract the
+        // topbar height plus the <main> wrapper's vertical padding (py:1.25 → 20px).
+        height: { lg: `calc(100vh - ${TOPBAR_HEIGHT + 20}px)` },
+        minHeight: 0,
+        overflow: "hidden",
+      }}
+    >
       {dashboardQuery.isLoading ? <LinearProgress /> : null}
 
       {dashboardQuery.isError ? (
@@ -72,10 +85,11 @@ export default function DashboardModule() {
         onSectionChange={setActiveSection}
       />
 
-      <Box sx={{ flex: 1, minHeight: { xs: 480, lg: 520 } }}>
+      <Box sx={{ flex: 1, minHeight: { xs: 480, lg: 0 }, overflow: "hidden" }}>
         {currentSection === "leads" ? (
           <DashboardLeadsSection
             leadsScope={roleConfig.leadsScope}
+            performance={dashboard?.performance}
             pipeline={dashboard?.leadPipeline}
             showUnassigned={roleConfig.showUnassigned}
           />

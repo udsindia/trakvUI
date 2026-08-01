@@ -1,0 +1,132 @@
+- generic [ref=f7e1]:
+  - generic [ref=f7e3]:
+    - complementary [ref=f7e4]:
+      - generic [ref=f7e5]:
+        - generic [ref=f7e6]:
+          - generic [ref=f7e7]: T
+          - generic [ref=f7e8]:
+            - paragraph [ref=f7e9]: Trakv
+            - paragraph [ref=f7e10]: Education CRM
+          - button [ref=f7e11] [cursor=pointer]
+        - generic [ref=f7e14]:
+          - generic [ref=f7e15]:
+            - paragraph [ref=f7e16]: Main
+            - link [ref=f7e185] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=f7e22]: Dashboard
+            - link [ref=f7e186] [cursor=pointer]:
+              - /url: /leads
+              - generic [ref=f7e27]: Lead Management
+            - link [ref=f7e187] [cursor=pointer]:
+              - /url: /applications
+              - generic [ref=f7e32]: Applications
+            - link [ref=f7e188] [cursor=pointer]:
+              - /url: /universities
+              - generic [ref=f7e37]: Courses
+          - generic [ref=f7e38]:
+            - paragraph [ref=f7e39]: Engage
+            - link [ref=f7e189] [cursor=pointer]:
+              - /url: /activities/feed
+              - generic [ref=f7e44]: Activities
+            - link [ref=f7e190] [cursor=pointer]:
+              - /url: /activities/tasks
+              - generic [ref=f7e49]: Tasks
+        - generic [ref=f7e51] [cursor=pointer]:
+          - generic [ref=f7e52]: MK
+          - generic [ref=f7e53]:
+            - paragraph [ref=f7e54]: Murali Krishna
+            - paragraph [ref=f7e55]: COUNSELLOR
+    - generic [ref=f7e56]:
+      - banner [ref=f7e57]:
+        - generic [ref=f7e58]:
+          - paragraph [ref=f7e59]: Dashboard
+          - paragraph [ref=f7e60]: Fri, 31 Jul 2026 · Murali Krishna
+        - generic [ref=f7e62]:
+          - textbox [ref=f7e191]:
+            - /placeholder: Search leads, students, apps…
+          - group
+        - generic [ref=f7e67]:
+          - button [ref=f7e192] [cursor=pointer]: New Lead
+          - button [ref=f7e193] [cursor=pointer]: New Application
+          - separator [ref=f7e76]
+          - button [ref=f7e194] [cursor=pointer]
+          - link [ref=f7e195] [cursor=pointer]:
+            - /url: /activities/tasks
+          - separator [ref=f7e84]
+          - button [ref=f7e196] [cursor=pointer]:
+            - generic [ref=f7e88]: MK
+      - main [ref=f7e89]:
+        - generic [ref=f7e96]:
+          - generic [ref=f7e97]:
+            - generic [ref=f7e98]:
+              - paragraph [ref=f7e99]: Good evening, Murali Krishna 👋
+              - paragraph [ref=f7e100]: Your leads and tasks for today.
+            - generic [ref=f7e101]:
+              - paragraph [ref=f7e102]: "Period:"
+              - button [ref=f7e197] [cursor=pointer]: Today
+              - button [ref=f7e198] [cursor=pointer]: Week
+              - button [ref=f7e199] [cursor=pointer]: Month
+              - button [ref=f7e200] [cursor=pointer]: Quarter
+          - generic [ref=f7e107]:
+            - generic [ref=f7e108]:
+              - paragraph [ref=f7e111]: Tasks Due Today
+              - generic [ref=f7e112]: —
+              - paragraph [ref=f7e116]: Due today
+            - generic [ref=f7e117]:
+              - paragraph [ref=f7e120]: New Leads
+              - generic [ref=f7e121]: "0"
+              - paragraph [ref=f7e125]: This week
+            - generic [ref=f7e126]:
+              - paragraph [ref=f7e129]: Active Students
+              - generic [ref=f7e130]: "0"
+              - paragraph [ref=f7e134]: Current portfolio
+            - generic [ref=f7e135]:
+              - paragraph [ref=f7e138]: Overdue Tasks
+              - generic [ref=f7e139]: "0"
+              - paragraph [ref=f7e143]: All caught up
+          - generic [ref=f7e144]:
+            - generic [ref=f7e145]:
+              - button [ref=f7e201] [cursor=pointer]: My Leads
+              - button [ref=f7e202] [cursor=pointer]: My Applications
+              - button [ref=f7e203] [cursor=pointer]: Activity
+            - paragraph [ref=f7e149]:
+              - text: Showing
+              - strong [ref=f7e150]: my assigned
+              - text: leads only
+          - generic [ref=f7e152]:
+            - generic [ref=f7e153]:
+              - generic [ref=f7e154]:
+                - generic [ref=f7e155]:
+                  - paragraph [ref=f7e156]: Lead Pipeline
+                  - button [ref=f7e204] [cursor=pointer]:
+                    - link [ref=f7e205]:
+                      - /url: /leads
+                      - text: Full view →
+                - paragraph [ref=f7e161]: No data available
+              - generic [ref=f7e162]:
+                - generic [ref=f7e163]:
+                  - paragraph [ref=f7e164]: My assigned leads
+                  - button [ref=f7e206] [cursor=pointer]:
+                    - link [ref=f7e207]:
+                      - /url: /leads
+                      - text: All leads →
+                - paragraph [ref=f7e169]: No lead data available
+            - generic [ref=f7e171]:
+              - paragraph [ref=f7e173]: Performance
+              - generic [ref=f7e175]:
+                - generic [ref=f7e176]:
+                  - paragraph [ref=f7e177]: 0%
+                  - paragraph [ref=f7e178]: Conversion Rate
+                - generic [ref=f7e179]:
+                  - paragraph [ref=f7e180]: 100%
+                  - paragraph [ref=f7e181]: Task Completion Rate
+                - generic [ref=f7e182]:
+                  - paragraph [ref=f7e183]: "0"
+                  - paragraph [ref=f7e184]: Total Active Leads
+  - menu [ref=f7e210]:
+    - generic [ref=f7e211]:
+      - heading "Murali Krishna" [level=6] [ref=f7e212]
+      - paragraph [ref=f7e213]: COUNSELLOR
+    - separator [ref=f7e214]
+    - menuitem "Profile settings coming soon" [disabled]
+    - menuitem "Logout" [ref=f7e215] [cursor=pointer]

@@ -1,0 +1,269 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - complementary [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - generic [ref=f2e6]:
+          - generic [ref=f2e7]: T
+          - generic [ref=f2e8]:
+            - paragraph [ref=f2e9]: Trakv
+            - paragraph [ref=f2e10]: Education CRM
+          - button [ref=f2e11] [cursor=pointer]
+        - generic [ref=f2e14]:
+          - generic [ref=f2e15]:
+            - paragraph [ref=f2e16]: Main
+            - link [ref=f2e359] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=f2e22]: Dashboard
+            - link [ref=f2e360] [cursor=pointer]:
+              - /url: /leads
+              - generic [ref=f2e27]: Lead Management
+            - link [ref=f2e361] [cursor=pointer]:
+              - /url: /applications
+              - generic [ref=f2e32]: Applications
+            - link [ref=f2e362] [cursor=pointer]:
+              - /url: /universities
+              - generic [ref=f2e37]: Courses
+          - generic [ref=f2e38]:
+            - paragraph [ref=f2e39]: Engage
+            - link [ref=f2e363] [cursor=pointer]:
+              - /url: /activities/feed
+              - generic [ref=f2e44]: Activities
+            - link [ref=f2e364] [cursor=pointer]:
+              - /url: /activities/tasks
+              - generic [ref=f2e49]: Tasks
+          - generic [ref=f2e50]:
+            - paragraph [ref=f2e51]: Admin
+            - link [ref=f2e365] [cursor=pointer]:
+              - /url: /settings/team
+              - generic [ref=f2e56]: User Management
+            - link [ref=f2e366] [cursor=pointer]:
+              - /url: /settings/roles
+              - generic [ref=f2e62]: Role Management
+        - generic [ref=f2e64] [cursor=pointer]:
+          - generic [ref=f2e65]: TM
+          - generic [ref=f2e66]:
+            - paragraph [ref=f2e67]: test manager
+            - paragraph [ref=f2e68]: MANAGER
+    - generic [ref=f2e69]:
+      - banner [ref=f2e70]:
+        - generic [ref=f2e71]:
+          - paragraph [ref=f2e72]: Lead Management
+          - paragraph [ref=f2e73]: Fri, 31 Jul 2026 · test manager
+        - generic [ref=f2e75]:
+          - textbox [ref=f2e367]:
+            - /placeholder: Search leads, students, apps…
+          - group
+        - generic [ref=f2e80]:
+          - button [ref=f2e368] [cursor=pointer]: New Lead
+          - button [ref=f2e369] [cursor=pointer]: New Application
+          - separator [ref=f2e89]
+          - button [ref=f2e370] [cursor=pointer]
+          - link [ref=f2e371] [cursor=pointer]:
+            - /url: /activities/tasks
+          - separator [ref=f2e97]
+          - button [ref=f2e372] [cursor=pointer]:
+            - generic [ref=f2e101]: TM
+      - main [ref=f2e102]:
+        - generic [ref=f2e109]:
+          - generic [ref=f2e111]:
+            - tablist [ref=f2e373]:
+              - tab [selected] [ref=f2e374] [cursor=pointer]:
+                - generic [ref=f2e119]:
+                  - paragraph [ref=f2e120]: All
+                  - generic [ref=f2e121]: "6"
+              - tab [ref=f2e375] [cursor=pointer]:
+                - generic [ref=f2e123]:
+                  - paragraph [ref=f2e124]: New
+                  - generic [ref=f2e125]: "4"
+              - tab [ref=f2e376] [cursor=pointer]:
+                - generic [ref=f2e127]:
+                  - paragraph [ref=f2e128]: Contacted
+                  - generic [ref=f2e129]: "1"
+              - tab [ref=f2e377] [cursor=pointer]:
+                - generic [ref=f2e131]:
+                  - paragraph [ref=f2e132]: Qualified
+                  - generic [ref=f2e133]: "1"
+              - tab [ref=f2e378] [cursor=pointer]:
+                - generic [ref=f2e135]:
+                  - paragraph [ref=f2e136]: Proposal
+                  - generic [ref=f2e137]: "0"
+            - generic [ref=f2e139]:
+              - textbox [ref=f2e379]:
+                - /placeholder: Search name, email, phone…
+              - group
+            - button [ref=f2e380] [cursor=pointer]: Filters
+          - generic [ref=f2e151]:
+            - table [ref=f2e153]:
+              - rowgroup [ref=f2e154]:
+                - row [ref=f2e381]:
+                  - columnheader [ref=f2e156]:
+                    - checkbox [ref=f2e158] [cursor=pointer]
+                  - columnheader [ref=f2e382]: Name
+                  - columnheader [ref=f2e383]: Phone
+                  - columnheader [ref=f2e384]: Country
+                  - columnheader [ref=f2e385]: Stage
+                  - columnheader [ref=f2e386]: Score
+                  - columnheader [ref=f2e387]: Agent
+                  - columnheader [ref=f2e388]: Last Activity
+                  - columnheader [ref=f2e389]: Action
+              - rowgroup [ref=f2e169]:
+                - row [ref=f2e390]:
+                  - cell [ref=f2e171]:
+                    - checkbox [ref=f2e173] [cursor=pointer]
+                  - cell [ref=f2e391]:
+                    - generic [ref=f2e177]:
+                      - generic [ref=f2e178]: UU
+                      - generic [ref=f2e179]:
+                        - paragraph [ref=f2e180]: UDS UDS
+                        - generic [ref=f2e181]: uds@gmail.com
+                  - cell [ref=f2e392]:
+                    - paragraph [ref=f2e183]: "+919871230919"
+                  - cell [ref=f2e393]:
+                    - paragraph [ref=f2e185]: United Kingdom
+                  - cell [ref=f2e394]:
+                    - generic [ref=f2e187]: Contacted
+                  - cell [ref=f2e395]: —
+                  - cell [ref=f2e396]:
+                    - generic [ref=f2e191]:
+                      - generic [ref=f2e192]: MR
+                      - paragraph [ref=f2e193]: MK Reddy
+                  - cell [ref=f2e397]:
+                    - paragraph [ref=f2e195]: 27 Jul, 07:30 pm
+                  - cell [ref=f2e398]:
+                    - button [ref=f2e399] [cursor=pointer]
+                - row [ref=f2e400]:
+                  - cell [ref=f2e201]:
+                    - checkbox [ref=f2e203] [cursor=pointer]
+                  - cell [ref=f2e401]:
+                    - generic [ref=f2e207]:
+                      - generic [ref=f2e208]: TL
+                      - paragraph [ref=f2e210]: Test Lead 1
+                  - cell [ref=f2e402]:
+                    - paragraph [ref=f2e212]: —
+                  - cell [ref=f2e403]:
+                    - paragraph [ref=f2e214]: —
+                  - cell [ref=f2e404]:
+                    - generic [ref=f2e216]: Qualified
+                  - cell [ref=f2e405]: —
+                  - cell [ref=f2e406]:
+                    - generic [ref=f2e220]:
+                      - generic [ref=f2e221]: MR
+                      - paragraph [ref=f2e222]: MK Reddy
+                  - cell [ref=f2e407]:
+                    - paragraph [ref=f2e224]: 27 Jul, 05:43 pm
+                  - cell [ref=f2e408]:
+                    - button [ref=f2e409] [cursor=pointer]
+                - row [ref=f2e410]:
+                  - cell [ref=f2e230]:
+                    - checkbox [ref=f2e232] [cursor=pointer]
+                  - cell [ref=f2e411]:
+                    - generic [ref=f2e236]:
+                      - generic [ref=f2e237]: NN
+                      - generic [ref=f2e238]:
+                        - paragraph [ref=f2e239]: Naresh Naresh
+                        - generic [ref=f2e240]: harishnarakatla4271@gmail.com
+                  - cell [ref=f2e412]:
+                    - paragraph [ref=f2e242]: "+91987654322"
+                  - cell [ref=f2e413]:
+                    - paragraph [ref=f2e244]: United Kingdom
+                  - cell [ref=f2e414]:
+                    - generic [ref=f2e246]: New
+                  - cell [ref=f2e415]: —
+                  - cell [ref=f2e416]:
+                    - generic [ref=f2e250]:
+                      - generic [ref=f2e251]: MR
+                      - paragraph [ref=f2e252]: MK Reddy
+                  - cell [ref=f2e417]:
+                    - paragraph [ref=f2e254]: 19 Jul, 04:54 pm
+                  - cell [ref=f2e418]:
+                    - button [ref=f2e419] [cursor=pointer]
+                - row [ref=f2e420]:
+                  - cell [ref=f2e260]:
+                    - checkbox [ref=f2e262] [cursor=pointer]
+                  - cell [ref=f2e421]:
+                    - generic [ref=f2e266]:
+                      - generic [ref=f2e267]: RS
+                      - generic [ref=f2e268]:
+                        - paragraph [ref=f2e269]: Rahul Sharma
+                        - generic [ref=f2e270]: rahul.sharma@example.com
+                  - cell [ref=f2e422]:
+                    - paragraph [ref=f2e272]: "+919876543210"
+                  - cell [ref=f2e423]:
+                    - paragraph [ref=f2e274]: Canada
+                  - cell [ref=f2e424]:
+                    - generic [ref=f2e276]: New
+                  - cell [ref=f2e425]: "85"
+                  - cell [ref=f2e426]:
+                    - generic [ref=f2e280]:
+                      - generic [ref=f2e281]: MK
+                      - paragraph [ref=f2e282]: Murali Krishna
+                  - cell [ref=f2e427]:
+                    - paragraph [ref=f2e284]: 26 Apr, 02:04 am
+                  - cell [ref=f2e428]:
+                    - button [ref=f2e429] [cursor=pointer]
+                - row [ref=f2e430]:
+                  - cell [ref=f2e290]:
+                    - checkbox [ref=f2e292] [cursor=pointer]
+                  - cell [ref=f2e431]:
+                    - generic [ref=f2e296]:
+                      - generic [ref=f2e297]: RS
+                      - generic [ref=f2e298]:
+                        - paragraph [ref=f2e299]: Rahul Sharma
+                        - generic [ref=f2e300]: rahul@example.com
+                  - cell [ref=f2e432]:
+                    - paragraph [ref=f2e302]: "919876543210"
+                  - cell [ref=f2e433]:
+                    - paragraph [ref=f2e304]: Canada
+                  - cell [ref=f2e434]:
+                    - generic [ref=f2e306]: New
+                  - cell [ref=f2e435]: —
+                  - cell [ref=f2e436]:
+                    - generic [ref=f2e310]:
+                      - generic [ref=f2e311]: MK
+                      - paragraph [ref=f2e312]: Murali Krishna
+                  - cell [ref=f2e437]:
+                    - paragraph [ref=f2e314]: 09 May, 03:58 pm
+                  - cell [ref=f2e438]:
+                    - button [ref=f2e439] [cursor=pointer]
+                - row [ref=f2e440]:
+                  - cell [ref=f2e320]:
+                    - checkbox [ref=f2e322] [cursor=pointer]
+                  - cell [ref=f2e441]:
+                    - generic [ref=f2e326]:
+                      - generic [ref=f2e327]: GG
+                      - generic [ref=f2e328]:
+                        - paragraph [ref=f2e329]: Gnkreddy Gnkreddy
+                        - generic [ref=f2e330]: test121@gmail.com
+                  - cell [ref=f2e442]:
+                    - paragraph [ref=f2e332]: "+919823769180"
+                  - cell [ref=f2e443]:
+                    - paragraph [ref=f2e334]: United Kingdom
+                  - cell [ref=f2e444]:
+                    - generic [ref=f2e336]: New
+                  - cell [ref=f2e445]: —
+                  - cell [ref=f2e446]:
+                    - generic [ref=f2e340]:
+                      - generic [ref=f2e341]: MK
+                      - paragraph [ref=f2e342]: Murali Krishna
+                  - cell [ref=f2e447]:
+                    - paragraph [ref=f2e344]: 24 May, 06:59 pm
+                  - cell [ref=f2e448]:
+                    - button [ref=f2e449] [cursor=pointer]
+            - separator [ref=f2e349]
+            - generic [ref=f2e350]:
+              - paragraph [ref=f2e351]: Showing 1–6 of 6 leads
+              - navigation [ref=f2e450]:
+                - list [ref=f2e354]:
+                  - listitem [ref=f2e355]:
+                    - button [disabled]
+                  - listitem [ref=f2e356]:
+                    - button [ref=f2e451] [cursor=pointer]: "1"
+                  - listitem [ref=f2e358]:
+                    - button [disabled]
+  - menu [ref=f2e454]:
+    - generic [ref=f2e455]:
+      - heading "test manager" [level=6] [ref=f2e456]
+      - paragraph [ref=f2e457]: MANAGER
+    - separator [ref=f2e458]
+    - menuitem "Profile settings coming soon" [disabled]
+    - menuitem "Logout" [ref=f2e459] [cursor=pointer]

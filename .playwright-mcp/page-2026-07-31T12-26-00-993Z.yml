@@ -1,0 +1,50 @@
+- generic [ref=f3e3]:
+  - complementary [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - generic [ref=f3e7]: T
+        - generic [ref=f3e8]:
+          - paragraph [ref=f3e9]: Trakv
+          - paragraph [ref=f3e10]: Education CRM
+        - button [ref=f3e11] [cursor=pointer]
+      - generic [ref=f3e14]:
+        - generic [ref=f3e15]:
+          - paragraph [ref=f3e16]: Main
+          - link "Dashboard" [ref=f3e17] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f3e23] [cursor=pointer]:
+            - /url: /leads
+          - link "Applications" [ref=f3e28] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f3e33] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f3e38]:
+          - paragraph [ref=f3e39]: Engage
+          - link "Activities" [ref=f3e40] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f3e45] [cursor=pointer]:
+            - /url: /activities/tasks
+      - generic [ref=f3e51] [cursor=pointer]:
+        - generic [ref=f3e52]: MK
+        - generic [ref=f3e53]:
+          - paragraph [ref=f3e54]: Murali Krishna
+          - paragraph [ref=f3e55]: COUNSELLOR
+  - generic [ref=f3e56]:
+    - banner [ref=f3e57]:
+      - generic [ref=f3e58]:
+        - paragraph [ref=f3e59]: Lead Management
+        - paragraph [ref=f3e60]: Fri, 31 Jul 2026 · Murali Krishna
+      - generic [ref=f3e62]:
+        - textbox "Search leads, students, apps…" [ref=f3e66]
+        - group
+      - generic [ref=f3e67]:
+        - button [ref=f3e68] [cursor=pointer]
+        - button [ref=f3e72] [cursor=pointer]
+        - separator [ref=f3e76]
+        - button "notifications" [ref=f3e77] [cursor=pointer]
+        - link "tasks" [ref=f3e81] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f3e84]
+        - button "MK" [ref=f3e87] [cursor=pointer]
+    - main [ref=f3e89]:
+      - progressbar [ref=f3e93]

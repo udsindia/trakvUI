@@ -2,6 +2,7 @@ import { lazy, type ComponentType } from "react";
 import type { TenantContextState } from "@/app/auth/auth.types";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { moduleCatalog } from "@/config/modules/module-catalog";
+import type { ModuleNavigationItemDefinition } from "@/config/modules/module.types";
 import { MODULE_KEYS, type ModuleKey } from "@/config/modules/modules";
 import type { PermissionKey } from "@/config/permissions/permissions";
 import { isSuperAdmin } from "@/config/roles/superAdmin";
@@ -27,15 +28,37 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
 };
 
-function isModuleAccessible(
+function isItemAccessible(
   permissions: PermissionKey[],
-  moduleDefinition: (typeof moduleCatalog)[number],
+  item: Pick<ModuleNavigationItemDefinition, "anyOfPermissions" | "requiredPermissions">,
 ) {
-  if (moduleDefinition.anyOfPermissions?.length) {
-    return hasAnyPermission(permissions, moduleDefinition.anyOfPermissions);
+  if (item.anyOfPermissions?.length) {
+    return hasAnyPermission(permissions, item.anyOfPermissions);
   }
 
-  return hasAllPermissions(permissions, moduleDefinition.requiredPermissions ?? []);
+  return hasAllPermissions(permissions, item.requiredPermissions ?? []);
+}
+
+/**
+ * Recursively drops child nav items the user has no permission for, so a section
+ * the user can partly access (e.g. Settings via USER_VIEW) doesn't expose
+ * sub-items it can't (e.g. Role Management, which needs ROLE_VIEW).
+ */
+function filterChildren(
+  permissions: PermissionKey[],
+  superAdmin: boolean,
+  children?: ModuleNavigationItemDefinition[],
+): ModuleNavigationItemDefinition[] | undefined {
+  if (!children?.length) {
+    return children;
+  }
+
+  return children
+    .filter((child) => superAdmin || isItemAccessible(permissions, child))
+    .map((child) => ({
+      ...child,
+      children: filterChildren(permissions, superAdmin, child.children),
+    }));
 }
 
 export function resolveModules({
@@ -55,10 +78,11 @@ export function resolveModules({
 
   return moduleCatalog.map((moduleDefinition) => {
     const enabled = superAdmin ? true : (tenant.enabledModules[moduleDefinition.key] ?? false);
-    const accessible = superAdmin ? true : isModuleAccessible(permissions, moduleDefinition);
+    const accessible = superAdmin ? true : isItemAccessible(permissions, moduleDefinition);
 
     return {
       ...moduleDefinition,
+      children: filterChildren(permissions, superAdmin, moduleDefinition.children),
       enabled,
       accessible,
       Component: lazyModuleMap[moduleDefinition.key],

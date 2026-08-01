@@ -1,0 +1,141 @@
+- generic [ref=f1e1269]:
+  - complementary [ref=f1e1270]:
+    - generic [ref=f1e1271]:
+      - generic [ref=f1e1272]:
+        - generic [ref=f1e1273]: T
+        - generic [ref=f1e1274]:
+          - paragraph [ref=f1e1275]: Trakv
+          - paragraph [ref=f1e1276]: Education CRM
+        - button [ref=f1e1277] [cursor=pointer]
+      - generic [ref=f1e1280]:
+        - generic [ref=f1e1281]:
+          - paragraph [ref=f1e1282]: Main
+          - link "Dashboard" [ref=f1e1283] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f1e1289] [cursor=pointer]:
+            - /url: /leads
+          - link "Applications" [ref=f1e1294] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f1e1299] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f1e1304]:
+          - paragraph [ref=f1e1305]: Engage
+          - link "Activities" [ref=f1e1306] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f1e1311] [cursor=pointer]:
+            - /url: /activities/tasks
+        - generic [ref=f1e1316]:
+          - paragraph [ref=f1e1317]: Admin
+          - link "User Management" [ref=f1e1318] [cursor=pointer]:
+            - /url: /settings/team
+          - link "Role Management" [ref=f1e1323] [cursor=pointer]:
+            - /url: /settings/roles
+      - generic [ref=f1e1330] [cursor=pointer]:
+        - generic [ref=f1e1331]: TM
+        - generic [ref=f1e1332]:
+          - paragraph [ref=f1e1333]: test manager
+          - paragraph [ref=f1e1334]: MANAGER
+  - generic [ref=f1e1335]:
+    - banner [ref=f1e1336]:
+      - generic [ref=f1e1337]:
+        - paragraph [ref=f1e1338]: Dashboard
+        - paragraph [ref=f1e1339]: Fri, 31 Jul 2026 · test manager
+      - generic [ref=f1e1341]:
+        - textbox "Search leads, students, apps…" [ref=f1e1345]
+        - group
+      - generic [ref=f1e1346]:
+        - button [ref=f1e1347] [cursor=pointer]
+        - button [ref=f1e1351] [cursor=pointer]
+        - separator [ref=f1e1355]
+        - button "notifications" [ref=f1e1356] [cursor=pointer]
+        - link "tasks" [ref=f1e1360] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f1e1363]
+        - button "TM" [ref=f1e1366] [cursor=pointer]
+    - main [ref=f1e1368]:
+      - generic [ref=f1e1370]:
+        - generic [ref=f1e1371]:
+          - generic [ref=f1e1372]:
+            - paragraph [ref=f1e1373]: Good evening, test manager 👋
+            - paragraph [ref=f1e1374]: Team overview and pipeline health.
+          - generic [ref=f1e1375]:
+            - paragraph [ref=f1e1376]: "Period:"
+            - button "Today" [ref=f1e1377] [cursor=pointer]
+            - button "Week" [ref=f1e1378] [cursor=pointer]
+            - button "Month" [ref=f1e1379] [cursor=pointer]
+            - button "Quarter" [ref=f1e1380] [cursor=pointer]
+        - generic [ref=f1e1381]:
+          - generic [ref=f1e1382]:
+            - paragraph [ref=f1e1385]: New Leads
+            - generic [ref=f1e1386]: "2"
+            - paragraph [ref=f1e1390]: This week
+          - generic [ref=f1e1391]:
+            - paragraph [ref=f1e1394]: Active Students
+            - generic [ref=f1e1395]: "1"
+            - paragraph [ref=f1e1399]: Current portfolio
+          - generic [ref=f1e1400]:
+            - paragraph [ref=f1e1403]: Overdue Tasks
+            - generic [ref=f1e1404]: "1"
+            - paragraph [ref=f1e1408]: Needs attention
+          - generic [ref=f1e1409]:
+            - paragraph [ref=f1e1412]: Conversion Rate
+            - generic [ref=f1e1413]: 0.0%
+            - paragraph [ref=f1e1417]: Lead to enrolment
+        - generic [ref=f1e1418]:
+          - generic [ref=f1e1419]:
+            - button "Leads" [ref=f1e1420] [cursor=pointer]
+            - button "Applications" [ref=f1e1421] [cursor=pointer]
+            - button "Team" [ref=f1e1422] [cursor=pointer]
+            - button "Activity" [ref=f1e1423] [cursor=pointer]
+          - paragraph [ref=f1e1424]:
+            - text: Showing
+            - strong [ref=f1e1425]: team-wide
+            - text: data
+        - generic [ref=f1e1427]:
+          - generic [ref=f1e1428]:
+            - generic [ref=f1e1429]:
+              - generic [ref=f1e1430]:
+                - paragraph [ref=f1e1431]: Lead Pipeline
+                - button [ref=f1e1432] [cursor=pointer]:
+                  - link "Full view →" [ref=f1e1433]:
+                    - /url: /leads
+              - generic [ref=f1e1435]:
+                - generic [ref=f1e1436]:
+                  - paragraph [ref=f1e1437]: Contacted
+                  - generic [ref=f1e1438]: "1"
+                  - paragraph [ref=f1e1440]: —
+                - generic [ref=f1e1441]:
+                  - paragraph [ref=f1e1442]: Qualified
+                  - generic [ref=f1e1443]: "1"
+                  - paragraph [ref=f1e1445]: 100%
+            - generic [ref=f1e1446]:
+              - generic [ref=f1e1447]:
+                - paragraph [ref=f1e1448]: All team leads
+                - button [ref=f1e1449] [cursor=pointer]:
+                  - link "All leads →" [ref=f1e1450]:
+                    - /url: /leads
+              - generic [ref=f1e1452]:
+                - generic [ref=f1e1453]:
+                  - paragraph [ref=f1e1454]: Stage
+                  - paragraph [ref=f1e1455]: Leads
+                - generic [ref=f1e1456]:
+                  - paragraph [ref=f1e1457]: Contacted
+                  - generic [ref=f1e1458]: "1"
+                - generic [ref=f1e1459]:
+                  - paragraph [ref=f1e1460]: Qualified
+                  - generic [ref=f1e1461]: "1"
+                - generic [ref=f1e1462]:
+                  - paragraph [ref=f1e1463]: Total
+                  - paragraph [ref=f1e1464]: "2"
+          - generic [ref=f1e1466]:
+            - paragraph [ref=f1e1468]: Performance
+            - generic [ref=f1e1470]:
+              - generic [ref=f1e1471]:
+                - paragraph [ref=f1e1472]: 0%
+                - paragraph [ref=f1e1473]: Conversion Rate
+              - generic [ref=f1e1474]:
+                - paragraph [ref=f1e1475]: 100%
+                - paragraph [ref=f1e1476]: Task Completion Rate
+              - generic [ref=f1e1477]:
+                - paragraph [ref=f1e1478]: "2"
+                - paragraph [ref=f1e1479]: Total Active Leads

@@ -15,6 +15,7 @@ const defaultValues: AddUserFormValues = {
   email: "",
   phone: "",
   roleId: "",
+  supervisorId: "",
 };
 
 export function useAddUserFormController() {
@@ -26,6 +27,13 @@ export function useAddUserFormController() {
     enabled: Boolean(tenantId),
     queryKey: ["settings", "roles", tenantId],
     queryFn: () => rolesService.getRoles(tenantId),
+  });
+
+  // Supervisor candidates — a Manager or the Agency Admin picks up the new user's team.
+  const usersQuery = useQuery({
+    enabled: Boolean(tenantId),
+    queryKey: ["settings", "users", tenantId],
+    queryFn: () => usersService.getUsers(tenantId),
   });
 
   const form = useForm<AddUserFormValues>({
@@ -61,6 +69,7 @@ export function useAddUserFormController() {
         email: values.email.trim(),
         phone: values.phone.trim() || undefined,
         role: selectedRole.roleName,
+        supervisorId: values.supervisorId || undefined,
       });
       navigate(settingsRoutePaths.team);
     } catch (error) {
@@ -75,5 +84,6 @@ export function useAddUserFormController() {
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
     roles: rolesQuery.data ?? [],
+    supervisors: usersQuery.data ?? [],
   };
 }

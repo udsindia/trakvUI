@@ -1,6 +1,8 @@
 import {
+  Button,
   Chip,
   Paper,
+  Stack,
   Switch,
   Table,
   TableBody,
@@ -16,9 +18,10 @@ type UserTableProps = {
   canManageUsers: boolean;
   users: TenantUser[];
   onToggleActive: (user: TenantUser) => void;
+  onEdit: (user: TenantUser) => void;
 };
 
-export function UserTable({ canManageUsers, onToggleActive, users }: UserTableProps) {
+export function UserTable({ canManageUsers, onToggleActive, onEdit, users }: UserTableProps) {
   return (
     <TableContainer
       component={Paper}
@@ -32,7 +35,7 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
             <TableCell>Email</TableCell>
             <TableCell>Role</TableCell>
             <TableCell>Status</TableCell>
-            {canManageUsers ? <TableCell align="right">Active</TableCell> : null}
+            {canManageUsers ? <TableCell align="right">Actions</TableCell> : null}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -58,7 +61,12 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
               </TableCell>
               {canManageUsers ? (
                 <TableCell align="right">
-                  <Switch checked={user.active} onChange={() => onToggleActive(user)} />
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
+                    <Button size="small" sx={{ textTransform: "none" }} onClick={() => onEdit(user)}>
+                      Edit
+                    </Button>
+                    <Switch checked={user.active} onChange={() => onToggleActive(user)} />
+                  </Stack>
                 </TableCell>
               ) : null}
             </TableRow>

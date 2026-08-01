@@ -18,18 +18,18 @@ export const applicationsRoutes: ApplicationRouteDefinition[] = [
     Component: ApplicationDashboardPage,
     index: true,
     key: "dashboard",
-    requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
+    requiredPermissions: [PERMISSIONS.APPLICATION_VIEW],
   },
   {
     Component: AddApplicationPage,
     key: "create",
     path: "create",
-    requiredPermissions: [PERMISSIONS.APPLICATIONS_MANAGE],
+    requiredPermissions: [PERMISSIONS.APPLICATION_CREATE],
   },
   {
     Component: ApplicationDetailsPage,
     key: "details",
     path: ":id",
-    requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
+    requiredPermissions: [PERMISSIONS.APPLICATION_VIEW],
   },
 ];

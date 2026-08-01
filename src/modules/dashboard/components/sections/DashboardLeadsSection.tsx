@@ -1,15 +1,24 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Box, Stack, Typography } from "@mui/material";
-import type { DashboardLeadPipelineDto } from "@/modules/dashboard/dashboard.types";
+import type {
+  DashboardLeadPipelineDto,
+  DashboardPerformanceMetricDto,
+} from "@/modules/dashboard/dashboard.types";
 import { PanelCard, PanelLink } from "@/modules/dashboard/components/PanelCard";
 import { PipelineBars } from "@/modules/dashboard/components/PipelineBars";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 
 type DashboardLeadsSectionProps = {
   leadsScope: string;
+  performance?: DashboardPerformanceMetricDto[];
   pipeline?: DashboardLeadPipelineDto;
   showUnassigned: boolean;
 };
+
+/** Render "42%", "3.2", etc. — the unit is optional (blank for plain counts). */
+function formatMetricValue(metric: DashboardPerformanceMetricDto): string {
+  return `${metric.value}${metric.unit ?? ""}`;
+}
 
 const STAGE_PILL_COLORS = [
   { bg: "#EFF6FF", text: "#1D4ED8" },
@@ -27,7 +36,11 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSectionProps) {
+export function DashboardLeadsSection({
+  leadsScope,
+  performance,
+  pipeline,
+}: DashboardLeadsSectionProps) {
   const stages = pipeline?.stages ?? [];
   const total = pipeline?.total ?? 0;
 
@@ -202,19 +215,21 @@ export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSe
           </Stack>
         </PanelCard> */}
 
-        <PanelCard title="Conversion Snapshot (Mock)">
-          <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>
-            {[
-              { value: "22%", label: "Lead→Enrol", color: "primary.main" },
-              { value: "58%", label: "Qual rate", color: "success.main" },
-              { value: "3.2d", label: "Avg resp.", color: "secondary.main" },
-            ].map((stat) => (
-              <Box key={stat.label}>
-                <Typography sx={{ color: stat.color, fontSize: 16, fontWeight: 800 }}>{stat.value}</Typography>
-                <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{stat.label}</Typography>
-              </Box>
-            ))}
-          </Stack>
+        <PanelCard title="Performance">
+          {performance && performance.length > 0 ? (
+            <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>
+              {performance.map((metric) => (
+                <Box key={metric.label} sx={{ minWidth: 0, px: 0.5 }}>
+                  <Typography sx={{ color: metric.color, fontSize: 16, fontWeight: 800 }}>
+                    {formatMetricValue(metric)}
+                  </Typography>
+                  <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{metric.label}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          ) : (
+            <EmptyState message="No metrics available" />
+          )}
         </PanelCard>
       </Stack>
     </Stack>

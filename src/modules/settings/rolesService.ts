@@ -6,8 +6,18 @@ import { rolesApi, type BackendRole } from "@/modules/settings/rolesApi";
 import type {
   CreateCustomRolePayload,
   RoleDefinition,
+  RoleScope,
   UpdateCustomRolePayload,
 } from "@/modules/settings/settings.types";
+
+/** Fixed scope of the built-in system roles (mirrors the backend seed). */
+const SYSTEM_ROLE_SCOPE: Record<RoleKey, RoleScope> = {
+  [ROLES.SUPER_ADMIN]: "TENANT",
+  [ROLES.AGENCY_ADMIN]: "TENANT",
+  [ROLES.MANAGER]: "TEAM",
+  [ROLES.COUNSELLOR]: "SELF",
+  [ROLES.LEAD_MANAGER]: "SELF",
+};
 import { formatScreamingSnakeLabel } from "@/shared/utils/formatLabel";
 
 const MOCK_LATENCY_MS = 300;
@@ -24,6 +34,7 @@ function buildSystemRoles(): RoleDefinition[] {
     roleName: roleKey.toUpperCase(),
     name: ROLE_LABELS[roleKey],
     description: "Built-in workspace role",
+    scopeLevel: SYSTEM_ROLE_SCOPE[roleKey],
     permissions: ROLE_PERMISSION_MAP[roleKey],
     type: "system" as const,
     systemRoleKey: roleKey,
@@ -36,6 +47,7 @@ function mapBackendRole(role: BackendRole): RoleDefinition {
     roleName: role.roleName,
     name: formatScreamingSnakeLabel(role.roleName),
     description: role.description,
+    scopeLevel: (role.scopeLevel as RoleScope) ?? "SELF",
     permissions: role.permissions.map((permission) => permission.permissionName),
     type: role.system ? "system" : "custom",
   };
@@ -45,6 +57,7 @@ function toUpsertPayload(payload: CreateCustomRolePayload | UpdateCustomRolePayl
   return {
     roleName: payload.name.trim().replace(/\s+/g, "_").toUpperCase(),
     description: payload.description,
+    scopeLevel: payload.scopeLevel,
     permissions: payload.permissions,
   };
 }

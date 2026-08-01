@@ -105,4 +105,5 @@ export interface RegisterAdminRequest {
   phone?: string;
   role: string;
   tenantId: string;
+  supervisorId?: string;
 }

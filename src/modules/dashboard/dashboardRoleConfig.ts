@@ -10,15 +10,18 @@ import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 const DASHBOARD_ROLE_PRIORITY: RoleKey[] = [
   ROLES.SUPER_ADMIN,
   ROLES.AGENCY_ADMIN,
-  ROLES.APPLICATION_MANAGER,
-  ROLES.ACTIVITY_MANAGER,
-  ROLES.ANALYST,
+  ROLES.MANAGER,
+  ROLES.LEAD_MANAGER,
   ROLES.COUNSELLOR,
 ];
 
 export function resolveDashboardRole(roles: string[]): RoleKey {
+  // Role strings arrive from the backend upper-cased (e.g. "AGENCY_ADMIN") while
+  // the ROLES constants are lower-cased ("agency_admin"), so compare case-insensitively —
+  // otherwise every non-counsellor role silently falls through to the COUNSELLOR default.
+  const normalized = roles.map((role) => role.toLowerCase());
   for (const role of DASHBOARD_ROLE_PRIORITY) {
-    if (roles.includes(role)) {
+    if (normalized.includes(role)) {
       return role;
     }
   }
@@ -123,32 +126,7 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
       weeklyActivity: true,
     },
   },
-  [ROLES.APPLICATION_MANAGER]: {
-    subtitle: "Track application progress from document check to enrolment.",
-    leadsScope: "My applications",
-    scopeNote: 'Showing <strong style="color:#007A87">application</strong> pipeline data',
-    showUnassigned: false,
-    attentionItems: [],
-    sectionTabs: [
-      { id: "applications", label: "Applications" },
-      { id: "activity", label: "Activity" },
-    ],
-    kpis: [],
-    quickActions: [
-      { icon: "➕", label: "New Application", href: applicationsRoutePaths.create },
-      { icon: "📄", label: "Doc Check Queue", href: applicationsRoutePaths.dashboard },
-      { icon: "🛂", label: "Visa Tracker", href: applicationsRoutePaths.dashboard },
-      { icon: "📊", label: "View Reports", href: "#" },
-    ],
-    widgets: {
-      applicationPipeline: true,
-      leadPipeline: false,
-      performance: true,
-      recentActivities: true,
-      weeklyActivity: false,
-    },
-  },
-  [ROLES.ACTIVITY_MANAGER]: {
+  [ROLES.LEAD_MANAGER]: {
     subtitle: "Lead pipeline and qualification overview.",
     leadsScope: "All leads",
     scopeNote: 'Showing <strong style="color:#007A87">all</strong> leads',
@@ -173,7 +151,7 @@ const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
       weeklyActivity: true,
     },
   },
-  [ROLES.ANALYST]: {
+  [ROLES.MANAGER]: {
     subtitle: "Team overview and pipeline health.",
     leadsScope: "All team leads",
     scopeNote: 'Showing <strong style="color:#007A87">team-wide</strong> data',

@@ -31,7 +31,7 @@ import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 export function RolesPage() {
   const { hasPermissions, tenant } = useAuth();
   const queryClient = useQueryClient();
-  const canManageRoles = hasPermissions([PERMISSIONS.ROLES_MANAGE]);
+  const canManageRoles = hasPermissions([PERMISSIONS.ROLE_MANAGE]);
   const tenantId = tenant?.tenantId ?? "";
 
   const rolesQuery = useQuery({

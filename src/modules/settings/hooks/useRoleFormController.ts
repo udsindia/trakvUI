@@ -14,6 +14,7 @@ import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 const defaultRoleFormValues: RoleFormValues = {
   name: "",
   description: "",
+  scopeLevel: "SELF",
   permissions: [],
 };
 
@@ -21,6 +22,7 @@ function sanitizeRoleFormValues(values: RoleFormValues): RoleFormValues {
   return {
     name: values.name.trim().replace(/\s+/g, " "),
     description: values.description.trim(),
+    scopeLevel: values.scopeLevel,
     permissions: Array.from(new Set(values.permissions)),
   };
 }
@@ -52,6 +54,7 @@ export function useRoleFormController({
     form.reset({
       name: role.name,
       description: role.description ?? "",
+      scopeLevel: role.scopeLevel,
       permissions: role.permissions,
     });
   }, [form, role]);

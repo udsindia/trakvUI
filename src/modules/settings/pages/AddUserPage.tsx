@@ -4,7 +4,8 @@ import { SettingsPageHeader } from "@/modules/settings/components/SettingsPageHe
 import { useAddUserFormController } from "@/modules/settings/hooks/useAddUserFormController";
 
 export function AddUserPage() {
-  const { form, handleCancel, handleFormSubmit, roles } = useAddUserFormController();
+  const { form, handleCancel, handleFormSubmit, roles, supervisors } =
+    useAddUserFormController();
 
   return (
     <Stack spacing={3}>
@@ -12,6 +13,7 @@ export function AddUserPage() {
       <AddUserForm
         form={form}
         roles={roles}
+        supervisors={supervisors}
         onCancel={handleCancel}
         onSubmit={handleFormSubmit}
       />

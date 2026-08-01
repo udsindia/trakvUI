@@ -1,5 +1,5 @@
 import { authService, isMockAuthEnabled } from "@/app/auth/authService";
-import { usersApi } from "@/modules/settings/usersApi";
+import { usersApi, type BackendUser, type UpdateUserPayload } from "@/modules/settings/usersApi";
 import type {
   CreateTenantUserPayload,
   TenantUser,
@@ -45,30 +45,21 @@ function writeMockUsers(tenantId: string, users: TenantUser[]) {
   );
 }
 
-function mapBackendUser(user: {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-  email: string;
-  phone?: string;
-  roleId?: string;
-  role?: string;
-  active?: boolean;
-  isActive?: boolean;
-}): TenantUser {
+function mapBackendUser(user: BackendUser): TenantUser {
   const name =
+    user.fullName ??
     user.name ??
     [user.firstName, user.lastName].filter(Boolean).join(" ") ??
     user.email;
 
   return {
     id: user.id,
-    name,
+    name: name || user.email,
     email: user.email,
     phone: user.phone,
-    roleId: user.roleId ?? user.role ?? "",
-    roleLabel: user.role ?? user.roleId ?? "Member",
+    roleId: user.roleId ?? "",
+    roleLabel: user.roleName ?? user.role ?? "Member",
+    supervisorId: user.supervisorId,
     active: user.active ?? user.isActive ?? true,
   };
 }
@@ -95,6 +86,7 @@ export const usersService = {
         phone: payload.phone,
         roleId: payload.role,
         roleLabel: payload.role,
+        supervisorId: payload.supervisorId,
         active: true,
       };
       writeMockUsers(payload.tenantId, [...users, user]);
@@ -107,8 +99,13 @@ export const usersService = {
       email: payload.email,
       phone: payload.phone,
       role: payload.role,
+      supervisorId: payload.supervisorId,
       tenantId: payload.tenantId,
     });
+  },
+
+  async updateUser(userId: string, payload: UpdateUserPayload) {
+    return usersApi.updateUser(userId, payload);
   },
 
   async setUserActive(tenantId: string, userId: string, active: 'deactivate' | 'reactivate') {

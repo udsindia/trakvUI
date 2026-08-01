@@ -6,27 +6,39 @@ import { formatScreamingSnakeLabel } from "@/shared/utils/formatLabel";
 
 export const PERMISSION_LABELS: Record<string, string> = {
   [PERMISSIONS.DASHBOARD_VIEW]: "View dashboard",
-  [PERMISSIONS.LEAD_CREATE]: "Create leads",
+
   [PERMISSIONS.LEAD_VIEW]: "View leads",
+  [PERMISSIONS.LEAD_CREATE]: "Create leads",
+  [PERMISSIONS.LEAD_EDIT]: "Edit leads",
   [PERMISSIONS.LEAD_DELETE]: "Delete leads",
-  [PERMISSIONS.LEAD_MANAGE]: "Manage leads",
   [PERMISSIONS.LEAD_ASSIGN]: "Assign leads",
-  [PERMISSIONS.APPLICATIONS_VIEW]: "View applications",
-  [PERMISSIONS.APPLICATIONS_MANAGE]: "Manage applications",
-  [PERMISSIONS.TASK_CREATE]: "Create tasks",
-  [PERMISSIONS.TASK_VIEW]: "View tasks",
-  [PERMISSIONS.TASK_VIEW_TEAM]: "View team tasks",
-  [PERMISSIONS.TASK_UPDATE]: "Update tasks",
-  [PERMISSIONS.TASK_DELETE]: "Delete tasks",
+  [PERMISSIONS.LEAD_IMPORT]: "Import leads",
+  [PERMISSIONS.LEAD_CONVERT]: "Convert leads to students",
+
+  [PERMISSIONS.APPLICATION_VIEW]: "View applications",
+  [PERMISSIONS.APPLICATION_CREATE]: "Create applications",
+  [PERMISSIONS.APPLICATION_EDIT]: "Edit applications",
+  [PERMISSIONS.APPLICATION_CLOSE]: "Close applications",
+
+  [PERMISSIONS.STUDENT_VIEW]: "View students",
+  [PERMISSIONS.STUDENT_EDIT]: "Edit students",
+  [PERMISSIONS.STUDENT_DOCS]: "Manage student documents",
+
+  [PERMISSIONS.UNIVERSITY_VIEW]: "View universities and courses",
+  [PERMISSIONS.UNIVERSITY_MANAGE]: "Manage course database",
+
+  [PERMISSIONS.ACTIVITY_VIEW]: "View activity feed",
   [PERMISSIONS.ACTIVITY_LOG]: "Log activities",
-  [PERMISSIONS.UNIVERSITIES_VIEW]: "View universities and courses",
-  [PERMISSIONS.UNIVERSITIES_MANAGE]: "Manage course database",
-  [PERMISSIONS.SETTINGS_TENANT]: "Manage tenant settings",
-  [PERMISSIONS.TEAM_INVITE]: "Invite team members",
-  [PERMISSIONS.USERS_VIEW]: "View team members",
-  [PERMISSIONS.USERS_MANAGE]: "Manage team members",
-  [PERMISSIONS.ROLES_VIEW]: "View roles",
-  [PERMISSIONS.ROLES_MANAGE]: "Manage roles",
+
+  [PERMISSIONS.TASK_VIEW]: "View tasks",
+  [PERMISSIONS.TASK_CREATE]: "Create tasks",
+  [PERMISSIONS.TASK_COMPLETE]: "Complete tasks",
+
+  [PERMISSIONS.USER_VIEW]: "View team members",
+  [PERMISSIONS.USER_MANAGE]: "Manage team members",
+  [PERMISSIONS.ROLE_VIEW]: "View roles",
+  [PERMISSIONS.ROLE_MANAGE]: "Manage roles",
+  [PERMISSIONS.SETTINGS_MANAGE]: "Manage tenant settings",
 };
 
 export function getPermissionLabel(permission: string): string {
@@ -46,45 +58,55 @@ export const PERMISSION_GROUPS: Array<{
     permissions: [
       PERMISSIONS.LEAD_VIEW,
       PERMISSIONS.LEAD_CREATE,
+      PERMISSIONS.LEAD_EDIT,
       PERMISSIONS.LEAD_DELETE,
-      PERMISSIONS.LEAD_MANAGE,
       PERMISSIONS.LEAD_ASSIGN,
+      PERMISSIONS.LEAD_IMPORT,
+      PERMISSIONS.LEAD_CONVERT,
     ],
   },
   {
     label: "Applications",
     permissions: [
-      PERMISSIONS.APPLICATIONS_VIEW,
-      PERMISSIONS.APPLICATIONS_MANAGE,
+      PERMISSIONS.APPLICATION_VIEW,
+      PERMISSIONS.APPLICATION_CREATE,
+      PERMISSIONS.APPLICATION_EDIT,
+      PERMISSIONS.APPLICATION_CLOSE,
     ],
   },
   {
-    label: "Activities",
+    label: "Students",
     permissions: [
-      PERMISSIONS.TASK_VIEW,
-      PERMISSIONS.TASK_VIEW_TEAM,
-      PERMISSIONS.TASK_CREATE,
-      PERMISSIONS.TASK_UPDATE,
-      PERMISSIONS.TASK_DELETE,
-      PERMISSIONS.ACTIVITY_LOG,
+      PERMISSIONS.STUDENT_VIEW,
+      PERMISSIONS.STUDENT_EDIT,
+      PERMISSIONS.STUDENT_DOCS,
     ],
   },
   {
     label: "Universities",
     permissions: [
-      PERMISSIONS.UNIVERSITIES_VIEW,
-      PERMISSIONS.UNIVERSITIES_MANAGE,
+      PERMISSIONS.UNIVERSITY_VIEW,
+      PERMISSIONS.UNIVERSITY_MANAGE,
+    ],
+  },
+  {
+    label: "Activities & Tasks",
+    permissions: [
+      PERMISSIONS.ACTIVITY_VIEW,
+      PERMISSIONS.ACTIVITY_LOG,
+      PERMISSIONS.TASK_VIEW,
+      PERMISSIONS.TASK_CREATE,
+      PERMISSIONS.TASK_COMPLETE,
     ],
   },
   {
     label: "Administration",
     permissions: [
-      PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
-      PERMISSIONS.USERS_VIEW,
-      PERMISSIONS.USERS_MANAGE,
-      PERMISSIONS.ROLES_VIEW,
-      PERMISSIONS.ROLES_MANAGE,
+      PERMISSIONS.USER_VIEW,
+      PERMISSIONS.USER_MANAGE,
+      PERMISSIONS.ROLE_VIEW,
+      PERMISSIONS.ROLE_MANAGE,
+      PERMISSIONS.SETTINGS_MANAGE,
     ],
   },
 ];
