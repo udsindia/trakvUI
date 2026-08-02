@@ -1,11 +1,33 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Box, CircularProgress, Paper, Typography } from "@mui/material";
+import { TuneRounded } from "@mui/icons-material";
+import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modules/applications/components/ApplicationQuickFilters";
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
 import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
+import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
+
+function countActiveFilters(values: FilterPanelValues, config: FilterConfig[]): number {
+  return config.reduce((count, filterConfig) => {
+    const value = values[filterConfig.key];
+    switch (filterConfig.type) {
+      case "dropdown":
+        return count + (typeof value === "string" && value ? 1 : 0);
+      case "checkbox-group":
+        return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "date-range": {
+        const range = value as { startDate?: string; endDate?: string } | undefined;
+        return count + (range && (range.startDate || range.endDate) ? 1 : 0);
+      }
+      case "slider":
+        return count;
+      default:
+        return count;
+    }
+  }, 0);
+}
 
 function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
   return {
@@ -24,25 +46,36 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
 export function ApplicationDashboardPage() {
   const [filterValues, setFilterValues] = useState<FilterPanelValues>({ country: "", stage: "" });
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchQuery] = useState("");
 
   const { data: backendApps = [], isLoading, isError } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.getApplications,
   });
 
+  const { data: countries = [] } = useCountries();
+
   const appRows: ApplicationRow[] = useMemo(
     () => backendApps.map(mapBackendApplicationToRow),
     [backendApps],
   );
 
-  // Filter options are derived from the actual data so they always match real values.
-  const distinctCountries = useMemo(
-    () => Array.from(new Set(appRows.map((r) => r.targetCountry).filter(Boolean))).sort(),
-    [appRows],
-  );
+  const distinctCountries = useMemo(() => {
+    const apiCountries = countries
+      .map((country) => country.name)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    const rowCountries = appRows
+      .map((row) => row.targetCountry)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+
+    return Array.from(new Set([...apiCountries, ...rowCountries])).sort((a, b) => a.localeCompare(b));
+  }, [appRows, countries]);
+
   const distinctStages = useMemo(
-    () => Array.from(new Set(appRows.map((r) => r.stage).filter(Boolean))).sort(),
+    () => Array.from(new Set(appRows.map((row) => row.stage).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
     [appRows],
   );
 
@@ -54,11 +87,13 @@ export function ApplicationDashboardPage() {
     [distinctCountries, distinctStages],
   );
 
+  const activeFilterCount = countActiveFilters(filterValues, filterConfig);
+
   const quickFilterTabs: ApplicationQuickFilterTab[] = useMemo(() => {
     const perStage = distinctStages.map((stage) => ({
       key: stage,
       label: stage,
-      count: appRows.filter((r) => r.stage === stage).length,
+      count: appRows.filter((row) => row.stage === stage).length,
     }));
     return [{ key: "all", label: "All", count: appRows.length }, ...perStage];
   }, [appRows, distinctStages]);
@@ -69,12 +104,12 @@ export function ApplicationDashboardPage() {
 
   const filteredRows = useMemo(
     () =>
-      appRows.filter((r) => {
-        if (activeQuickFilter !== "all" && r.stage !== activeQuickFilter) return false;
-        if (countryFilter && r.targetCountry !== countryFilter) return false;
-        if (stageFilter && r.stage !== stageFilter) return false;
+      appRows.filter((row) => {
+        if (activeQuickFilter !== "all" && row.stage !== activeQuickFilter) return false;
+        if (countryFilter && row.targetCountry !== countryFilter) return false;
+        if (stageFilter && row.stage !== stageFilter) return false;
         if (query) {
-          const haystack = `${r.studentName} ${r.email} ${r.targetUniversity} ${r.course}`.toLowerCase();
+          const haystack = `${row.studentName} ${row.email} ${row.targetUniversity} ${row.course}`.toLowerCase();
           if (!haystack.includes(query)) return false;
         }
         return true;
@@ -87,32 +122,69 @@ export function ApplicationDashboardPage() {
     ? "Showing 0 of 0 applications"
     : `Showing 1-${visibleCount} of ${visibleCount} applications`;
 
-  // Reserved for when the search bar is re-enabled.
-  void setSearchQuery;
+  const handleFilterChange = (values: FilterPanelValues) => {
+    setFilterValues(values);
+  };
+
+  const handleApplyFilters = (values: FilterPanelValues) => {
+    setFilterValues(values);
+    setDrawerOpen(false);
+  };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        bgcolor: "background.paper",
-        border: "1px solid",
-        borderColor: "#e9eff5",
-        borderRadius: "12px",
-        display: "flex",
-        flexDirection: "column",
-        height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
-        minHeight: 0,
-        overflow: "hidden",
-      }}
-    >
-      <Box sx={{ display: "grid", flex: 1, gridTemplateColumns: { xs: "1fr", lg: "250px minmax(0, 1fr)" }, minHeight: 0 }}>
-        <Box sx={{ borderColor: "#edf2f7", borderBottom: { xs: "1px solid", lg: 0 }, minHeight: 0, overflow: "hidden", px: { xs: 2.5, md: 3, lg: 0 }, py: { xs: 2.5, md: 3, lg: 3 }, width: "100%" }}>
-          <FilterPanel filtersConfig={filterConfig} stickyTopOffset={0} width={250} values={filterValues} onFiltersChange={setFilterValues} />
+    <>
+      <Paper
+        elevation={0}
+        sx={{
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "#e9eff5",
+          borderRadius: "12px",
+          display: "flex",
+          flexDirection: "column",
+          height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            display: "flex",
+            flexShrink: 0,
+            px: { xs: 1.5, md: 2 },
+            py: { xs: 1, md: 1 },
+          }}
+        >
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", width: "100%" }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={setActiveQuickFilter} />
+            </Box>
+
+            <Badge
+              badgeContent={activeFilterCount}
+              color="primary"
+              overlap="rectangular"
+              sx={{ flexShrink: 0, "& .MuiBadge-badge": { fontWeight: 700 } }}
+            >
+              <Button
+                startIcon={<TuneRounded sx={{ fontSize: 18 }} />}
+                variant="outlined"
+                sx={{
+                  borderRadius: "9px",
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                }}
+                onClick={() => setDrawerOpen(true)}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </Stack>
         </Box>
 
         <Box sx={{ bgcolor: "#fcfdff", display: "flex", flex: 1, flexDirection: "column", gap: 2.25, minHeight: 0, pb: { xs: 1, md: 2 }, px: { xs: 2, md: 2 }, pt: { xs: 2, md: 2 } }}>
-          <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={setActiveQuickFilter} />
-
           {isLoading ? (
             <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
               <CircularProgress size={32} />
@@ -125,7 +197,23 @@ export function ApplicationDashboardPage() {
             <ApplicationTableContainer applications={filteredRows} page={1} pageCount={1} paginationLabel={paginationLabel} />
           )}
         </Box>
-      </Box>
-    </Paper>
+      </Paper>
+
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        slotProps={{ paper: { sx: { display: "flex", flexDirection: "column", width: { xs: "100%", sm: 360 } } } }}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <FilterPanel
+          filtersConfig={filterConfig}
+          sx={{ height: "100%" }}
+          values={filterValues}
+          width="100%"
+          onFiltersChange={handleFilterChange}
+          onApplyFilters={handleApplyFilters}
+        />
+      </Drawer>
+    </>
   );
 }

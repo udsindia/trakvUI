@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
+import { TuneRounded } from "@mui/icons-material";
 import {
+  Badge,
   Box,
+  Button,
   Chip,
+  Drawer,
   FormControl,
   MenuItem,
   Paper,
@@ -26,7 +30,7 @@ import {
   getCountryCounts,
   sortCourseSearchResults,
 } from "@/modules/universities/courseSearchUtils";
-import { useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import { useCountries, useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
 import {
   courseDetailsPath,
   universityDetailsPath,
@@ -46,6 +50,32 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
+
+function countActiveFilters(
+  values: FilterPanelValues,
+  filterConfig: ReturnType<typeof buildCourseSearchFilterConfig>,
+  defaults: FilterPanelValues,
+): number {
+  return filterConfig.reduce((count, filter) => {
+    const value = values[filter.key];
+    switch (filter.type) {
+      case "checkbox-group":
+        return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "slider": {
+        if (Array.isArray(value) && value.length === 2) {
+          const [min, max] = value as [number, number];
+          const defaultValue = defaults[filter.key] as [number, number] | undefined;
+          if (defaultValue && (min !== defaultValue[0] || max !== defaultValue[1])) {
+            return count + 1;
+          }
+        }
+        return count;
+      }
+      default:
+        return count;
+    }
+  }, 0);
+}
 
 function asStringArray(value: FilterPanelValue | undefined): string[] {
   if (!Array.isArray(value)) {
@@ -92,6 +122,7 @@ function toSearchFilters(
 export function CourseSearchPage() {
   const navigate = useNavigate();
   const { data: catalog, isLoading, isError } = useUniversitiesCatalog();
+  const { data: countries = [] } = useCountries();
   const universities = catalog?.universities ?? [];
   const courses = catalog?.courses ?? [];
 
@@ -104,6 +135,7 @@ export function CourseSearchPage() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [shortlistIds, setShortlistIds] = useState<string[]>([]);
 
   const baseResults = useMemo(
@@ -113,10 +145,45 @@ export function CourseSearchPage() {
 
   const countryCounts = useMemo(() => getCountryCounts(baseResults), [baseResults]);
 
-  const filterConfig = useMemo(
-    () => buildCourseSearchFilterConfig({ countryCounts }),
-    [countryCounts],
+  const countryFilterOptions = useMemo(() => {
+    const apiOptions = countries
+      .map((country) => ({ label: country.name, value: country.code }))
+      .filter((option) => option.label && option.value);
+
+    if (apiOptions.length > 0) {
+      return apiOptions;
+    }
+
+    return courseSearchSettings.filters.country.options.map((option) => ({
+      label: option.label,
+      value: option.value,
+    }));
+  }, [countries]);
+
+  const filterConfig = useMemo(() => {
+    const config = buildCourseSearchFilterConfig({ countryCounts });
+    return config.map((filter) => {
+      if (filter.type !== "checkbox-group" || filter.key !== filterKeys.country.key) {
+        return filter;
+      }
+
+      return {
+        ...filter,
+        options: countryFilterOptions.map((option) => ({
+          label: filterKeys.country.showCounts
+            ? `${option.label} (${countryCounts[option.value] ?? 0})`
+            : option.label,
+          value: option.value,
+        })),
+      };
+    });
+  }, [countryCounts, countryFilterOptions]);
+
+  const defaultFilterValues = useMemo(
+    () => getCourseSearchDefaultFilterValues(filterConfig),
+    [filterConfig],
   );
+  const activeFilterCount = countActiveFilters(filterValues, filterConfig, defaultFilterValues);
 
   const filteredResults = useMemo(() => {
     const filters = toSearchFilters(filterValues, searchQuery, sort);
@@ -138,9 +205,14 @@ export function CourseSearchPage() {
   };
 
   const handleClearFilters = () => {
-    setFilterValues(getCourseSearchDefaultFilterValues(filterConfig));
+    setFilterValues(defaultFilterValues);
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
+  };
+
+  const handleApplyFilters = (values: FilterPanelValues) => {
+    setFilterValues(values);
+    setDrawerOpen(false);
   };
 
   return (
@@ -165,6 +237,25 @@ export function CourseSearchPage() {
                 value={searchQuery}
                 onSearch={setSearchQuery}
               />
+              <Badge
+                badgeContent={activeFilterCount}
+                color="primary"
+                overlap="rectangular"
+                sx={{ flexShrink: 0, "& .MuiBadge-badge": { fontWeight: 700 } }}
+              >
+                <Button
+                  startIcon={<TuneRounded sx={{ fontSize: 18 }} />}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: "9px",
+                    textTransform: "none",
+                    whiteSpace: "nowrap",
+                  }}
+                  onClick={() => setDrawerOpen(true)}
+                >
+                  Filters
+                </Button>
+              </Badge>
               <FormControl size="small" sx={{ minWidth: 170 }}>
                 <Select
                   sx={{ fontSize: 13 }}
@@ -185,45 +276,7 @@ export function CourseSearchPage() {
         />
       </Box>
 
-      <Box
-        sx={{
-          display: "grid",
-          flex: 1,
-          gridTemplateColumns: { xs: "1fr", lg: "250px minmax(0, 1fr)" },
-          minHeight: 0,
-        }}
-      >
-        <Box
-          sx={{
-            borderColor: "#edf2f7",
-            borderBottom: { xs: "1px solid", lg: 0 },
-            maxHeight: { lg: "100%" },
-            minHeight: 0,
-            overflow: "hidden",
-            px: { xs: 2.5, md: 3, lg: 0 },
-            py: { xs: 2.5, md: 3, lg: 3 },
-          }}
-        >
-          <FilterPanel
-            applyButtonLabel={courseSearchSettings.filterPanel.applyButtonLabel}
-            filtersConfig={filterConfig}
-            title={courseSearchSettings.filterPanel.title}
-            values={filterValues}
-            width={250}
-            onApplyFilters={setFilterValues}
-            onFiltersChange={setFilterValues}
-          />
-          <Box sx={{ display: { xs: "block", lg: "none" }, mt: 1, px: 2 }}>
-            <Chip
-              clickable
-              label="Reset filters"
-              size="small"
-              variant="outlined"
-              onClick={handleClearFilters}
-            />
-          </Box>
-        </Box>
-
+      <Box sx={{ display: "flex", flex: 1, flexDirection: "column", minHeight: 0 }}>
         <Box sx={[universitiesContentSx, { display: "flex", flexDirection: "column" }]}>
           <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2.75 }}>
             {isLoading ? (
@@ -257,7 +310,13 @@ export function CourseSearchPage() {
                     clickable
                     label="Reset filters"
                     size="small"
-                    sx={{ display: { xs: "none", lg: "inline-flex" } }}
+                    sx={{
+                      borderColor: "divider",
+                      borderRadius: "8px",
+                      color: "text.secondary",
+                      display: { xs: "none", lg: "inline-flex" },
+                      fontWeight: 600,
+                    }}
                     variant="outlined"
                     onClick={handleClearFilters}
                   />
@@ -301,6 +360,24 @@ export function CourseSearchPage() {
           />
         </Box>
       </Box>
+
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        slotProps={{ paper: { sx: { display: "flex", flexDirection: "column", width: { xs: "100%", sm: 360 } } } }}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <FilterPanel
+          applyButtonLabel={courseSearchSettings.filterPanel.applyButtonLabel}
+          filtersConfig={filterConfig}
+          sx={{ height: "100%" }}
+          title={courseSearchSettings.filterPanel.title}
+          values={filterValues}
+          width="100%"
+          onApplyFilters={handleApplyFilters}
+          onFiltersChange={setFilterValues}
+        />
+      </Drawer>
     </Paper>
   );
 }

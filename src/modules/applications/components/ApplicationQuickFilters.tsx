@@ -30,10 +30,10 @@ export function ApplicationQuickFilters({
       elevation={0}
       sx={{
         border: "1px solid",
-        borderColor: "#edf2f7",
-        borderRadius: "12px",
+        borderColor: "divider",
+        borderRadius: "10px",
         overflowX: "auto",
-        p: 2.25,
+        p: 0.625,
       }}
     >
       <Tabs
@@ -71,7 +71,7 @@ export function ApplicationQuickFilters({
                     gap: 1,
                   }}
                 >
-                  <Typography fontWeight={700} variant="body2">
+                  <Typography sx={{ fontSize: 12, fontWeight: 700 }} variant="body2">
                     {tab.label}
                   </Typography>
                   <Box
@@ -79,16 +79,16 @@ export function ApplicationQuickFilters({
                     sx={{
                       alignItems: "center",
                       backgroundColor: tone.badgeBg,
-                      borderRadius: 999,
+                      borderRadius: "7px",
                       color: tone.badgeColor,
                       display: "inline-flex",
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: 700,
                       justifyContent: "center",
                       lineHeight: 1,
-                      minWidth: 28,
-                      px: 1,
-                      py: 0.45,
+                      minWidth: 20,
+                      px: 0.75,
+                      py: 0.375,
                       textAlign: "center",
                     }}
                   >
@@ -97,15 +97,19 @@ export function ApplicationQuickFilters({
                 </Box>
               }
               sx={{
-                bgcolor: "#f7fafc",
-                borderRadius: "9px",
-                minHeight: 42,
+                bgcolor: "#F7FAFC",
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "8px",
+                color: "text.secondary",
+                minHeight: 28,
                 minWidth: "fit-content",
-                px: 2,
-                py: 1,
+                px: 1.25,
+                py: 0.375,
                 textTransform: "none",
                 "&.Mui-selected": {
-                  backgroundColor: "#2f87b7",
+                  backgroundColor: (theme) => theme.palette.sidebar.bg,
+                  borderColor: (theme) => theme.palette.sidebar.bg,
                   color: "common.white",
                 },
                 "&.Mui-selected .AppQuickFilters-count": {
