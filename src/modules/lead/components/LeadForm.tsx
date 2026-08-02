@@ -29,6 +29,8 @@ type LeadFormProps = {
   options: LeadFormOptions;
   /** Show the "Assigned Agent" field. Hidden for roles without LEAD_ASSIGN. */
   canAssign?: boolean;
+  /** "create" (default) or "edit". In edit mode, phone and email are read-only. */
+  mode?: "create" | "edit";
 };
 
 export function LeadForm({
@@ -37,7 +39,9 @@ export function LeadForm({
   onSubmit,
   options,
   canAssign = true,
+  mode = "create",
 }: LeadFormProps) {
+  const isEdit = mode === "edit";
   const {
     control,
     formState: { errors, isSubmitting },
@@ -135,9 +139,10 @@ export function LeadForm({
                   render={({ field }) => (
                     <TextField
                       autoComplete="tel"
+                      disabled={isEdit}
                       error={Boolean(errors.phone)}
                       fullWidth
-                      helperText={errors.phone?.message}
+                      helperText={errors.phone?.message ?? (isEdit ? "Phone number can't be changed." : undefined)}
                       id={field.name}
                       label="Phone Number"
                       placeholder="+91 98765 43210"
@@ -162,9 +167,10 @@ export function LeadForm({
                   render={({ field }) => (
                     <TextField
                       autoComplete="email"
+                      disabled={isEdit}
                       error={Boolean(errors.email)}
                       fullWidth
-                      helperText={errors.email?.message}
+                      helperText={errors.email?.message ?? (isEdit ? "Email can't be changed." : undefined)}
                       id={field.name}
                       label="Email Address"
                       placeholder="name@example.com"
@@ -395,7 +401,7 @@ export function LeadForm({
               type="submit"
               variant="contained"
             >
-              {isSubmitting ? "Saving..." : "Save Lead"}
+              {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Save Lead"}
             </Button>
           </Stack>
         </Stack>

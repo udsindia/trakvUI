@@ -2,8 +2,10 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
 import { AccountInactivePage } from "@/app/auth/AccountInactivePage";
+import { ForgotPasswordPage } from "@/app/auth/ForgotPasswordPage";
 import { LoginPage } from "@/app/auth/LoginPage";
 import { RegisterPage } from "@/app/auth/RegisterPage";
+import { ResetPasswordPage } from "@/app/auth/ResetPasswordPage";
 import { MainLayout } from "@/app/layout/MainLayout";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { AuthGuard, ModuleGuard } from "@/app/router/guards";
@@ -41,6 +43,8 @@ export function AppRouter({
     <Routes>
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
+      <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+      <Route element={<ResetPasswordPage />} path="/reset-password" />
       <Route element={<AccountInactivePage />} path="/account-inactive" />
 
       <Route element={<AuthGuard />}>

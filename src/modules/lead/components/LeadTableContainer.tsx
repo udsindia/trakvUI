@@ -52,9 +52,12 @@ export type LeadStage = (typeof LEAD_STAGES)[number];
 type LeadTableContainerProps = {
   /** Gates the Delete affordances (row menu + bulk bar) on LEAD_DELETE. */
   canDelete: boolean;
+  /** Gates the Edit row action on LEAD_EDIT. */
+  canEdit: boolean;
   leads: LeadRow[];
   onBulkDelete: (ids: string[]) => Promise<void>;
   onDeleteLead: (id: string) => Promise<void>;
+  onEditLead: (id: string) => void;
   onUpdateStage: (id: string, stage: string) => Promise<void>;
   onPageChange: (page: number) => void;
   page: number;
@@ -137,9 +140,11 @@ function getScoreColor(score: number) {
 
 export function LeadTableContainer({
   canDelete,
+  canEdit,
   leads,
   onBulkDelete,
   onDeleteLead,
+  onEditLead,
   onUpdateStage,
   onPageChange,
   page,
@@ -183,6 +188,13 @@ export function LeadTableContainer({
   const handleCloseRowMenu = () => {
     setActiveLeadId(null);
     setMenuAnchorEl(null);
+  };
+
+  const handleRowEdit = () => {
+    if (!activeLeadId) return;
+    const leadId = activeLeadId;
+    handleCloseRowMenu();
+    onEditLead(leadId);
   };
 
   const handleRowDelete = async () => {
@@ -565,6 +577,7 @@ export function LeadTableContainer({
         open={Boolean(menuAnchorEl)}
         onClose={handleCloseRowMenu}
       >
+        {canEdit ? <MenuItem onClick={handleRowEdit}>Edit</MenuItem> : null}
         <MenuItem onClick={handleRowUpdateStage}>Update Stage</MenuItem>
         {canDelete ? (
           <MenuItem sx={{ color: "error.main" }} onClick={handleRowDelete}>

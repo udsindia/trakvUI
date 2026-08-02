@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddRounded, TuneRounded } from "@mui/icons-material";
+import { AddRounded, TuneRounded, UploadFileRounded } from "@mui/icons-material";
 import {
   Badge,
   Box,
@@ -12,8 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
+import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import {
@@ -193,6 +194,7 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
 export function LeadDashboardPage() {
   const { hasPermissions, tenant } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenantId = tenant?.tenantId ?? "";
 
@@ -204,10 +206,13 @@ export function LeadDashboardPage() {
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [snack, setSnack] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const canDeleteLeads = hasPermissions([PERMISSIONS.LEAD_DELETE]);
+  const canEditLeads = hasPermissions([PERMISSIONS.LEAD_EDIT]);
+  const canImportLeads = hasPermissions([PERMISSIONS.LEAD_IMPORT]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   const { data: backendLeads = [], isLoading, isError } = useQuery({
@@ -403,6 +408,17 @@ export function LeadDashboardPage() {
               }}
             />
 
+            {canImportLeads && (
+              <Button
+                startIcon={<UploadFileRounded sx={{ fontSize: 18 }} />}
+                variant="outlined"
+                sx={{ borderRadius: "9px", flexShrink: 0, textTransform: "none", whiteSpace: "nowrap" }}
+                onClick={() => setImportOpen(true)}
+              >
+                Import
+              </Button>
+            )}
+
             <Badge
               badgeContent={activeFilterCount}
               color="primary"
@@ -450,11 +466,13 @@ export function LeadDashboardPage() {
           ) : (
             <LeadTableContainer
               canDelete={canDeleteLeads}
+              canEdit={canEditLeads}
               leads={pagedRows}
               page={clampedPage}
               pageCount={pageCount}
               paginationLabel={paginationLabel}
               onDeleteLead={handleDeleteLead}
+              onEditLead={(id) => navigate(leadRoutePaths.edit(id))}
               onBulkDelete={handleBulkDelete}
               onUpdateStage={handleUpdateStage}
               onPageChange={setPage}
@@ -467,6 +485,15 @@ export function LeadDashboardPage() {
           message={snack}
           open={Boolean(snack)}
           onClose={() => setSnack(null)}
+        />
+
+        <ImportLeadsDialog
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          onImported={async () => {
+            await queryClient.invalidateQueries({ queryKey: ["leads"] });
+            setSnack("Leads imported");
+          }}
         />
       </Paper>
 

@@ -423,7 +423,9 @@ export function FilterPanel({
                     <TextField
                       disabled={filterConfig.disabled}
                       fullWidth
-                      placeholder="mm/dd/yyyy"
+                      type="date"
+                      label="From"
+                      InputLabelProps={{ shrink: true }}
                       size="small"
                       sx={controlSx}
                       value={isDateRangeValue(currentValue) ? currentValue.startDate : ""}
@@ -446,7 +448,9 @@ export function FilterPanel({
                     <TextField
                       disabled={filterConfig.disabled}
                       fullWidth
-                      placeholder="mm/dd/yyyy"
+                      type="date"
+                      label="To"
+                      InputLabelProps={{ shrink: true }}
                       size="small"
                       sx={controlSx}
                       value={isDateRangeValue(currentValue) ? currentValue.endDate : ""}

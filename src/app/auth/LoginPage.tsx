@@ -191,6 +191,12 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
 
+            <Typography align="right" variant="body2" sx={{ mt: -0.75 }}>
+              <RouterLink to="/forgot-password" style={{ color: "inherit", fontWeight: 600 }}>
+                Forgot password?
+              </RouterLink>
+            </Typography>
+
             <Button
               disabled={!identifier || !password || isLoggingIn}
               fullWidth

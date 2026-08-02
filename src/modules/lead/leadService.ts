@@ -21,4 +21,8 @@ export const leadService = {
   deleteLead: async (id: string) => {
     return await leadApi.deleteLead(id);
   },
+
+  importLeads: async (file: File) => {
+    return await leadApi.importLeads(file);
+  },
 };

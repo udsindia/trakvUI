@@ -8,6 +8,24 @@ export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
   assignedToName?: string;
 };
 
+// Matches backend LeadDetailsResponseDTO (GET /leads/{id})
+export interface LeadDetails {
+  targetIntakeMonth: string | null;
+  targetIntakeYear: number | null;
+  courseInterests: string[] | null;
+  studyLevels: string[] | null;
+  notes: string | null;
+}
+
+// Matches backend ImportResponseDTO
+export interface ImportLeadsResult {
+  importBatchId: string;
+  totalSubmitted: number;
+  imported: number;
+  skipped: number;
+  skippedReasons: { row: number; reason: string }[];
+}
+
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
@@ -64,6 +82,13 @@ export const leadApi = {
     return response.data;
   },
 
+  // GET /leads/{id} returns the extended detail DTO (intake / courses / notes),
+  // used to prefill the edit form alongside the list row's identity fields.
+  getLeadDetails: async (id: string): Promise<LeadDetails> => {
+    const response = await httpClient.get<LeadDetails>(`${API_CONFIG.leads}/${id}`);
+    return response.data;
+  },
+
   updateLead: async (id: string, payload: UpdateLeadPayload): Promise<BackendLead> => {
     const response = await httpClient.patch<BackendLead>(`${API_CONFIG.leads}/${id}`, payload);
     return response.data;
@@ -71,6 +96,17 @@ export const leadApi = {
 
   deleteLead: async (id: string): Promise<void> => {
     await httpClient.delete(`${API_CONFIG.leads}/${id}`);
+  },
+
+  importLeads: async (file: File): Promise<ImportLeadsResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpClient.post<ImportLeadsResult>(
+      `${API_CONFIG.leads}/import`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
   },
 
   bulkUpdateLeads: async (

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -66,18 +67,37 @@ export function buildCreateLeadPayload(
   };
 }
 
-export function useLeadFormController(agentOptions: AgentOption[] = []) {
+type UseLeadFormControllerOptions = {
+  /** When set, the form edits this lead (PATCH) instead of creating a new one. */
+  leadId?: string;
+  /** Prefill values (loaded from the existing lead) for edit mode. */
+  initialValues?: LeadFormValues;
+};
+
+export function useLeadFormController(
+  agentOptions: AgentOption[] = [],
+  { leadId, initialValues }: UseLeadFormControllerOptions = {},
+) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenant = useAppSelector(selectAuthTenant);
+  const isEdit = Boolean(leadId);
   const form = useForm<LeadFormValues>({
-    defaultValues: defaultLeadFormValues,
+    defaultValues: initialValues ?? defaultLeadFormValues,
     mode: "onBlur",
     reValidateMode: "onChange",
   });
 
+  // Prefill (or re-prefill) once the existing lead's values arrive asynchronously.
+  useEffect(() => {
+    if (initialValues) {
+      form.reset(initialValues);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
+
   const handleCancel = () => {
-    form.reset(defaultLeadFormValues);
+    form.reset(initialValues ?? defaultLeadFormValues);
     navigate(leadRoutePaths.dashboard);
   };
 
@@ -86,12 +106,16 @@ export function useLeadFormController(agentOptions: AgentOption[] = []) {
     payload.tenantId = tenant?.tenantId;
 
     try {
-      await leadService.createLead(payload);
+      if (isEdit && leadId) {
+        await leadService.updateLead(leadId, payload);
+      } else {
+        await leadService.createLead(payload);
+      }
       await queryClient.invalidateQueries({ queryKey: ["leads"] });
-      form.reset(defaultLeadFormValues);
+      form.reset(isEdit ? values : defaultLeadFormValues);
       navigate(leadRoutePaths.dashboard);
     } catch (error) {
-      console.error("Failed to create lead:", error);
+      console.error(isEdit ? "Failed to update lead:" : "Failed to create lead:", error);
 
       const isTimeout =
         axios.isAxiosError(error) &&
