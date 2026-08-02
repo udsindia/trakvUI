@@ -1,4 +1,4 @@
-const UNIVERSITIES_BASE_PATH = "/universities";
+const UNIVERSITIES_BASE_PATH = "/courses";
 
 export const universitiesRoutePaths = {
   search: UNIVERSITIES_BASE_PATH,

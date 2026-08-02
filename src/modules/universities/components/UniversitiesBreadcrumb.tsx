@@ -1,6 +1,9 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
-import { universitiesRoutePaths } from "@/modules/universities/universitiesRoutePaths";
+import {
+  universitiesRoutePaths,
+  universityDetailsPath,
+} from "@/modules/universities/universitiesRoutePaths";
 
 type UniversitiesBreadcrumbProps = {
   universityName?: string;
@@ -34,7 +37,7 @@ export function UniversitiesBreadcrumb({
           <Link
             component={RouterLink}
             sx={{ color: "text.secondary", fontSize: 12, textDecoration: "none", "&:hover": { color: "text.primary" } }}
-            to={`/universities/${universityId}`}
+            to={universityDetailsPath(universityId)}
             underline="hover"
           >
             {universityName}

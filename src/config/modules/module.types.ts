@@ -8,6 +8,7 @@ export const MODULE_ICON_KEYS = {
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
   UNIVERSITIES: "universities",
+  UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
 } as const;
 

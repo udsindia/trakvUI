@@ -117,7 +117,7 @@ function SidebarContent({
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
   const mainItems = items.filter((item) =>
-    ["dashboard", "lead", "applications", "universities"].includes(item.id),
+    ["dashboard", "lead", "applications", "universities", "universities-browse"].includes(item.id),
   );
   const activitiesItem = items.find((item) => item.id === "activities");
   const tasksItem = activitiesItem?.children?.find((child) => child.id.endsWith(".tasks"));
