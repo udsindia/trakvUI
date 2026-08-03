@@ -1,5 +1,6 @@
-import { useEffect, useState, type MouseEvent } from "react";
-import MoreVertRounded from "@mui/icons-material/MoreVertRounded";
+import { useEffect, useState } from "react";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
 import {
   Avatar,
   Box,
@@ -14,7 +15,6 @@ import {
   FormControl,
   IconButton,
   InputLabel,
-  Menu,
   MenuItem,
   Pagination,
   Paper,
@@ -143,7 +143,6 @@ export function LeadTableContainer({
   paginationLabel,
 }: LeadTableContainerProps) {
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [stageDialogLeadId, setStageDialogLeadId] = useState<string | null>(null);
@@ -172,34 +171,23 @@ export function LeadTableContainer({
         : [...current, leadId],
     );
 
-  const handleOpenRowMenu = (event: MouseEvent<HTMLElement>, leadId: string) => {
+  const handleRowDelete = async (leadId: string) => {
+    const lead = leads.find((l) => l.id === leadId);
+    if (!window.confirm(`Delete lead "${lead?.name ?? leadId}"? This cannot be undone.`)) return;
     setActiveLeadId(leadId);
-    setMenuAnchorEl(event.currentTarget);
-  };
-  const handleCloseRowMenu = () => {
-    setActiveLeadId(null);
-    setMenuAnchorEl(null);
-  };
-
-  const handleRowDelete = async () => {
-    if (!activeLeadId) return;
-    const lead = leads.find((l) => l.id === activeLeadId);
-    if (!window.confirm(`Delete lead "${lead?.name ?? activeLeadId}"? This cannot be undone.`)) return;
-    handleCloseRowMenu();
     setActionLoading(true);
     try {
-      await onDeleteLead(activeLeadId);
+      await onDeleteLead(leadId);
     } finally {
       setActionLoading(false);
+      setActiveLeadId(null);
     }
   };
 
-  const handleRowUpdateStage = () => {
-    if (!activeLeadId) return;
-    const lead = leads.find((l) => l.id === activeLeadId);
-    setStageDialogLeadId(activeLeadId);
+  const handleRowUpdateStage = (leadId: string) => {
+    const lead = leads.find((l) => l.id === leadId);
+    setStageDialogLeadId(leadId);
     setStageDialogValue(lead?.stage ?? "New");
-    handleCloseRowMenu();
     setStageDialogOpen(true);
   };
 
@@ -393,7 +381,7 @@ export function LeadTableContainer({
 
                     <TableCell sx={{ minWidth: 200 }}>
                       <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-                        <Avatar
+                        {/* <Avatar
                           sx={{
                             ...leadAvatarTone,
                             fontSize: 11,
@@ -403,7 +391,7 @@ export function LeadTableContainer({
                           }}
                         >
                           {getOwnerInitials(lead.name)}
-                        </Avatar>
+                        </Avatar> */}
                         <Stack spacing={0.125}>
                           <Typography sx={{ fontSize: 12.5, fontWeight: 600 }} variant="body2">
                             {lead.name}
@@ -457,7 +445,7 @@ export function LeadTableContainer({
 
                     <TableCell sx={{ minWidth: 140 }}>
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                        <Avatar
+                        {/* <Avatar
                           sx={{
                             ...agentAvatarTone,
                             fontSize: 9.5,
@@ -467,7 +455,7 @@ export function LeadTableContainer({
                           }}
                         >
                           {getOwnerInitials(lead.agent)}
-                        </Avatar>
+                        </Avatar> */}
                         <Typography color="text.secondary" sx={{ fontSize: 12, fontWeight: 500 }} variant="body2">
                           {lead.agent}
                         </Typography>
@@ -481,25 +469,42 @@ export function LeadTableContainer({
                     </TableCell>
 
                     <TableCell align="right">
-                      <IconButton
-                        aria-controls={activeLeadId === lead.id ? "lead-row-actions-menu" : undefined}
-                        aria-expanded={activeLeadId === lead.id ? "true" : undefined}
-                        aria-haspopup="true"
-                        aria-label={`Open actions for ${lead.name}`}
-                        size="small"
-                        sx={{
-                          border: "1px solid",
-                          borderColor: "divider",
-                          borderRadius: "7px",
-                          color: "text.disabled",
-                          height: 28,
-                          width: 28,
-                          "&:hover": { borderColor: "secondary.main", color: "secondary.main" },
-                        }}
-                        onClick={(event) => handleOpenRowMenu(event, lead.id)}
-                      >
-                        <MoreVertRounded fontSize="small" />
-                      </IconButton>
+                      <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
+                        <IconButton
+                          aria-label={`Update stage for ${lead.name}`}
+                          disabled={actionLoading}
+                          size="small"
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: "7px",
+                            color: "secondary.main",
+                            height: 28,
+                            width: 28,
+                            "&:hover": { borderColor: "secondary.main", bgcolor: "secondary.50" },
+                          }}
+                          onClick={() => handleRowUpdateStage(lead.id)}
+                        >
+                          <EditRounded fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          aria-label={`Delete ${lead.name}`}
+                          disabled={actionLoading}
+                          size="small"
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: "7px",
+                            color: "error.main",
+                            height: 28,
+                            width: 28,
+                            "&:hover": { borderColor: "error.main", bgcolor: "error.50" },
+                          }}
+                          onClick={() => handleRowDelete(lead.id)}
+                        >
+                          <DeleteOutlineRounded fontSize="small" />
+                        </IconButton>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 );
@@ -551,19 +556,6 @@ export function LeadTableContainer({
           </Box>
         </Stack>
       </Paper>
-
-      {/* Row action menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        id="lead-row-actions-menu"
-        open={Boolean(menuAnchorEl)}
-        onClose={handleCloseRowMenu}
-      >
-        <MenuItem onClick={handleRowUpdateStage}>Update Stage</MenuItem>
-        <MenuItem sx={{ color: "error.main" }} onClick={handleRowDelete}>
-          Delete
-        </MenuItem>
-      </Menu>
 
       {/* Per-row stage update dialog */}
       <Dialog open={stageDialogOpen} onClose={() => setStageDialogOpen(false)} maxWidth="xs" fullWidth>
