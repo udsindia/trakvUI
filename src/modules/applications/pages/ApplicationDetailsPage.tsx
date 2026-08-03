@@ -203,7 +203,7 @@ export function ApplicationDetailsPage() {
                       <Typography variant="body2"><strong>Country:</strong> {application.destinationCountry || "—"}</Typography>
                       <Typography variant="body2"><strong>Intake:</strong> {application.intakeMonth} {application.intakeYear}</Typography>
                       <Typography variant="body2"><strong>Tuition (INR):</strong> {application.tuitionFeeInr ?? "—"}</Typography>
-                      <Typography variant="body2"><strong>Application Fee (INR):</strong> {application.applicationFeeInr ?? "—"}</Typography>
+                      <Typography variant="body2"><strong>Application Fee (INR):</strong> {application.applicationFeeInr ?? 0}</Typography>
                       {application.notes && (
                         <Typography variant="body2"><strong>Notes:</strong> {application.notes}</Typography>
                       )}

@@ -9,6 +9,7 @@ import { LeadForm } from "@/modules/lead/components/LeadForm";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
 import type { AgentOption } from "@/modules/lead/leadForm.types";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
+import { useLeadDuplicateCheck } from "@/modules/lead/useLeadDuplicateCheck";
 import { useLeadFormController } from "@/modules/lead/useLeadFormController";
 import { usersService } from "@/modules/settings/usersService";
 
@@ -36,6 +37,7 @@ export function AddLeadPage() {
   );
 
   const { form, handleCancel, handleFormSubmit } = useLeadFormController(agentOptions);
+  const { matches, isDuplicate } = useLeadDuplicateCheck(form);
 
   const options = useMemo(
     () => ({ ...leadFormOptions, agentOptions }),
@@ -80,9 +82,17 @@ export function AddLeadPage() {
             width: "100%",
           }}
         >
-          <Box sx={{ mb: 2.5 }}>
-            <AlertBanner />
-          </Box>
+          {isDuplicate && (
+            <Box sx={{ mb: 2.5 }}>
+              <AlertBanner
+                severity="warning"
+                title={`Possible duplicate lead${matches.length > 1 ? "s" : ""} found`}
+                description={`A lead with this email or phone already exists: ${matches
+                  .map((m) => `${m.firstName}${m.lastName ? ` ${m.lastName}` : ""} — ${m.leadStage}`)
+                  .join("; ")}. You can still save if this is intentional.`}
+              />
+            </Box>
+          )}
           <LeadForm
             canAssign={canAssign}
             form={form}

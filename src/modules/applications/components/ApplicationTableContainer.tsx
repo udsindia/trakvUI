@@ -51,6 +51,13 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
   "Visa Approved": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
   "Visa Rejected": { backgroundColor: "#FBE5E5", color: "#C0392F" },
   Completed: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
+  // Terminal outcomes (closed applications)
+  "In Progress": { backgroundColor: "#E4EDFC", color: "#0F5AD4" },
+  "Offer Accepted": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  Enrolled: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
+  Withdrawn: { backgroundColor: "#EEF2F6", color: "#55707C" },
+  "Offer Declined": { backgroundColor: "#FDEEDD", color: "#B35A00" },
+  Rejected: { backgroundColor: "#FBE5E5", color: "#C0392F" },
 };
 
 function getInitials(name: string) {

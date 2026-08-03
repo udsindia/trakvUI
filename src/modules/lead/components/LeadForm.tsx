@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
 import type {
   LeadFormOptions,
@@ -65,11 +66,25 @@ export function LeadForm({
     },
   } as const;
 
+  // Country-aware validation via libphonenumber-js. When the value carries an explicit
+  // "+<code>" it is validated against that country; otherwise it is assumed to be a
+  // DEFAULT_PHONE_COUNTRY number. This enforces the correct digit count per country
+  // (e.g. India = 10 digits) instead of just a loose minimum.
+  const DEFAULT_PHONE_COUNTRY = "IN" as const;
   const phoneValidation = {
     basicFormat: (value: string) =>
       /^\+?[0-9\s-]+$/.test(value) || "Phone number can only include digits, spaces, +, and -.",
-    digitsLength: (value: string) =>
-      value.replace(/\D/g, "").length >= 7 || "Enter a valid phone number.",
+    validNumber: (value: string) => {
+      // Phone is read-only in edit mode, so don't block saving other fields on a
+      // legacy/stored value the user can't change here.
+      if (isEdit) return true;
+      const trimmed = (value ?? "").trim();
+      if (!trimmed) return true; // the `required` rule handles empty values
+      const ok = trimmed.startsWith("+")
+        ? isValidPhoneNumber(trimmed)
+        : isValidPhoneNumber(trimmed, DEFAULT_PHONE_COUNTRY);
+      return ok || "Enter a valid phone number (digit count doesn't match the country code).";
+    },
   };
 
   return (

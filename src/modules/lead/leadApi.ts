@@ -8,6 +8,12 @@ export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
   assignedToName?: string;
 };
 
+// Matches backend LeadService.checkDuplicate result
+export interface DuplicateCheckResult {
+  isDuplicate: boolean;
+  matches: BackendLead[];
+}
+
 // Matches backend LeadDetailsResponseDTO (GET /leads/{id})
 export interface LeadDetails {
   targetIntakeMonth: string | null;
@@ -96,6 +102,14 @@ export const leadApi = {
 
   deleteLead: async (id: string): Promise<void> => {
     await httpClient.delete(`${API_CONFIG.leads}/${id}`);
+  },
+
+  checkDuplicate: async (params: { email?: string; phone?: string }): Promise<DuplicateCheckResult> => {
+    const response = await httpClient.get<DuplicateCheckResult>(
+      `${API_CONFIG.leads}/duplicate-check`,
+      { params },
+    );
+    return response.data;
   },
 
   importLeads: async (file: File): Promise<ImportLeadsResult> => {

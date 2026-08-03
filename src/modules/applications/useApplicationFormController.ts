@@ -59,7 +59,8 @@ export function buildCreateApplicationPayload(
     intakeMonth: values.intakeMonth,
     intakeYear: Number(values.intakeYear),
     tuitionFeeInr: toOptionalNumber(values.tuitionFeeInr),
-    applicationFeeInr: toOptionalNumber(values.applicationFeeInr),
+    // Application fee defaults to 0 (not null/empty) when left blank.
+    applicationFeeInr: toOptionalNumber(values.applicationFeeInr) ?? 0,
     notes: values.notes.trim() || undefined,
   };
 }

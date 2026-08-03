@@ -16,6 +16,7 @@ import type {
   RoleDefinition,
   TenantUser,
 } from "@/modules/settings/settings.types";
+import { usersService } from "@/modules/settings/usersService";
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -23,6 +24,24 @@ const fieldSx = {
     borderRadius: "9px",
   },
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Cache availability per normalised email so re-validation (onChange) doesn't
+// re-hit the backend for the same value.
+const emailAvailabilityCache = new Map<string, boolean>();
+
+async function isEmailTaken(email: string): Promise<boolean> {
+  const key = email.trim().toLowerCase();
+  if (emailAvailabilityCache.has(key)) return !emailAvailabilityCache.get(key)!;
+  try {
+    const available = await usersService.checkEmailAvailable(key);
+    emailAvailabilityCache.set(key, available);
+    return !available;
+  } catch {
+    return false; // network/error: don't block — the backend still enforces on submit
+  }
+}
 
 type AddUserFormProps = {
   form: UseFormReturn<AddUserFormValues>;
@@ -98,8 +117,16 @@ export function AddUserForm({ form, onCancel, onSubmit, roles, supervisors }: Ad
                   rules={{
                     required: "Email is required.",
                     pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      value: EMAIL_RE,
                       message: "Enter a valid email address.",
+                    },
+                    // Global, case-insensitive uniqueness (emails are unique across all
+                    // tenants). Skips the call until the format is valid; the backend
+                    // re-checks on submit as the authority.
+                    validate: async (value) => {
+                      const v = (value ?? "").trim();
+                      if (!EMAIL_RE.test(v)) return true;
+                      return !(await isEmailTaken(v)) || "A user with this email already exists.";
                     },
                   }}
                   render={({ field }) => (

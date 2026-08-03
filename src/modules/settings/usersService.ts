@@ -120,4 +120,12 @@ export const usersService = {
 
     await usersApi.setUserActive(tenantId, userId, active);
   },
+
+  async checkEmailAvailable(email: string): Promise<boolean> {
+    if (isMockAuthEnabled) {
+      await wait(MOCK_LATENCY_MS);
+      return true;
+    }
+    return usersApi.checkEmailAvailable(email);
+  },
 };

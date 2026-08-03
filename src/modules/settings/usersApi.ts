@@ -36,6 +36,15 @@ export const usersApi = {
     return response.data;
   },
 
+  // Global, case-insensitive availability check (emails are globally unique).
+  checkEmailAvailable: async (email: string): Promise<boolean> => {
+    const response = await httpClient.get<{ available: boolean }>(
+      `${API_CONFIG.users}/email-available`,
+      { params: { email } },
+    );
+    return response.data.available;
+  },
+
   updateUser: async (userId: string, payload: UpdateUserPayload): Promise<BackendUser> => {
     const response = await httpClient.patch<BackendUser>(
       `${API_CONFIG.users}/${userId}`,

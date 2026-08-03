@@ -7,6 +7,25 @@ import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applic
 import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 
+/** "OFFER_ACCEPTED" -> "Offer Accepted" */
+function humanizeOutcome(value?: string | null): string {
+  return value
+    ? value.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
+}
+
+/**
+ * A CLOSED application (any terminal outcome — Withdrawn, Offer Accepted, Rejected…)
+ * shows its outcome, NOT the stage it happened to be in when closed. Only an open
+ * (IN_PROGRESS) application shows its current stage.
+ */
+function deriveStatus(app: BackendApplication): string {
+  if (app.outcome && app.outcome !== "IN_PROGRESS") {
+    return humanizeOutcome(app.outcome);
+  }
+  return app.stage ?? app.currentStageName ?? humanizeOutcome(app.outcome) ?? "In Progress";
+}
+
 function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
   return {
     id: app.id,
@@ -15,8 +34,7 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     targetCountry: app.targetCountry ?? app.destinationCountry ?? "",
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
-    // Backend sends the current stage name (or outcome for un-staged apps); fall back safely.
-    stage: app.stage ?? app.currentStageName ?? app.outcome ?? "Unknown",
+    stage: deriveStatus(app),
     createdAt: app.createdAt,
   };
 }

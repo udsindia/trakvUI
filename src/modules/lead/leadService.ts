@@ -25,4 +25,8 @@ export const leadService = {
   importLeads: async (file: File) => {
     return await leadApi.importLeads(file);
   },
+
+  checkDuplicate: async (params: { email?: string; phone?: string }) => {
+    return await leadApi.checkDuplicate(params);
+  },
 };
