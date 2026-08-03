@@ -32,7 +32,7 @@ export function TaskBoardColumn({
       <Stack spacing={2}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "space-between" }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-            <Typography sx={{ fontWeight: 700 }} variant="h6">
+            <Typography sx={{ fontWeight: 700 }} variant="body1">
               {title}
             </Typography>
             <Typography color="text.secondary" variant="body2">

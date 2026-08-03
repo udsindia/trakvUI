@@ -1,13 +1,12 @@
-import { useState, type MouseEvent } from "react";
-import MoreVertRounded from "@mui/icons-material/MoreVertRounded";
+import { useState } from "react";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import VisibilityRounded from "@mui/icons-material/VisibilityRounded";
 import {
   Avatar,
   Box,
   Chip,
   Divider,
   IconButton,
-  Menu,
-  MenuItem,
   Pagination,
   Paper,
   Stack,
@@ -71,17 +70,14 @@ export function ApplicationTableContainer({
   pageCount,
   paginationLabel,
 }: ApplicationTableContainerProps) {
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
 
-  const handleOpenRowMenu = (event: MouseEvent<HTMLElement>, id: string) => {
+  const handleViewDetails = (id: string) => {
     setActiveAppId(id);
-    setMenuAnchorEl(event.currentTarget);
   };
 
-  const handleCloseRowMenu = () => {
-    setActiveAppId(null);
-    setMenuAnchorEl(null);
+  const handleDeleteApplication = (id: string) => {
+    setActiveAppId(id);
   };
 
   return (
@@ -126,9 +122,9 @@ export function ApplicationTableContainer({
                 <TableRow hover key={app.id}>
                   <TableCell sx={{ minWidth: 270 }}>
                     <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-                      <Avatar sx={{ bgcolor: "#DBEAF6", color: "#2F6F94", fontSize: 11, fontWeight: 700, width: 31, height: 31 }}>
+                      {/* <Avatar sx={{ bgcolor: "#DBEAF6", color: "#2F6F94", fontSize: 11, fontWeight: 700, width: 31, height: 31 }}>
                         {getInitials(app.studentName)}
-                      </Avatar>
+                      </Avatar> */}
                       <Stack spacing={0.125}>
                         <Typography sx={{ fontSize: 12.5, fontWeight: 600 }} variant="body2">
                           <RouterLink to={`/applications/${app.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -141,9 +137,9 @@ export function ApplicationTableContainer({
                       </Stack>
                     </Stack>
                   </TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>{app.targetCountry}</TableCell>
-                  <TableCell sx={{ minWidth: 150 }}>{app.targetUniversity}</TableCell>
-                  <TableCell sx={{ minWidth: 150 }}>{app.course}</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>{app.targetCountry}</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>{app.targetUniversity}</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>{app.course}</TableCell>
                   <TableCell sx={{ minWidth: 120 }}>
                     <Chip
                       label={app.stage}
@@ -153,21 +149,42 @@ export function ApplicationTableContainer({
                   </TableCell>
                   <TableCell sx={{ minWidth: 120 }}>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: "7px",
-                        color: "text.disabled",
-                        height: 28,
-                        width: 28,
-                        "&:hover": { borderColor: "secondary.main", color: "secondary.main" },
-                      }}
-                      onClick={(event) => handleOpenRowMenu(event, app.id)}
-                    >
-                      <MoreVertRounded fontSize="small" />
-                    </IconButton>
+                    <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
+                      <IconButton
+                        aria-label={`View details for ${app.studentName}`}
+                        component={RouterLink}
+                        size="small"
+                        sx={{
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: "7px",
+                          color: "secondary.main",
+                          height: 28,
+                          width: 28,
+                          "&:hover": { borderColor: "secondary.main", bgcolor: "secondary.50" },
+                        }}
+                        to={`/applications/${app.id}`}
+                        onClick={() => handleViewDetails(app.id)}
+                      >
+                        <VisibilityRounded fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        aria-label={`Delete ${app.studentName}`}
+                        size="small"
+                        sx={{
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: "7px",
+                          color: "error.main",
+                          height: 28,
+                          width: 28,
+                          "&:hover": { borderColor: "error.main", bgcolor: "error.50" },
+                        }}
+                        onClick={() => handleDeleteApplication(app.id)}
+                      >
+                        <DeleteOutlineRounded fontSize="small" />
+                      </IconButton>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}
@@ -182,13 +199,6 @@ export function ApplicationTableContainer({
           <Pagination count={pageCount} page={page} shape="rounded" />
         </Stack>
       </Paper>
-
-      <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleCloseRowMenu}>
-        <MenuItem component={RouterLink} to={`/applications/${activeAppId}`} onClick={handleCloseRowMenu}>
-          View Details
-        </MenuItem>
-        <MenuItem onClick={handleCloseRowMenu}>Delete</MenuItem>
-      </Menu>
     </Box>
   );
 }

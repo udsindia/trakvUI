@@ -46,6 +46,7 @@ export function TeamPage() {
               sx={{ textTransform: "none" }}
               to={settingsRoutePaths.addUser}
               variant="contained"
+              size="small"
             >
               Add User
             </Button>

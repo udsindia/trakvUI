@@ -19,6 +19,7 @@ import { TaskBoardColumn } from "@/modules/activities/components/TaskBoardColumn
 import { TaskDetailsSidebar } from "@/modules/activities/components/TaskDetailsSidebar";
 import { useTaskBoard } from "@/modules/activities/hooks/useTaskBoard";
 import { taskColumnDefinitions } from "@/modules/activities/mock/mockData";
+import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import type { TaskPriority } from "@/modules/activities/types/types";
@@ -90,86 +91,78 @@ export function MyTasks() {
           overflow: "hidden",
         }}
       >
-        <Stack
-          direction={{ xs: "column", lg: "row" }}
-          spacing={2}
+        <Box
           sx={{
             borderBottom: "1px solid",
             borderColor: "divider",
-            justifyContent: "space-between",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 2.5, sm: 3 },
           }}
         >
-          <Stack spacing={0.5}>
-            <Typography sx={{ fontWeight: 700 }} variant="h4">
-              My Tasks
-            </Typography>
-            <Typography color="text.secondary" variant="body1">
-              Manage and track your task progress
-            </Typography>
-          </Stack>
-
-          <Stack
-            direction={{ xs: "column", sm: "row", lg: "row" }}
-            spacing={1.25}
-            sx={{
-              alignItems: { xs: "stretch", sm: "center" },
-              width: { xs: "100%", lg: "auto" },
-            }}
-          >
-            <TextField
-              select
-              size="small"
-              sx={{ minWidth: { sm: 180 } }}
-              value={selectedAgentId}
-              onChange={(event) => setSelectedAgentId(event.target.value)}
-            >
-              {availableAgents.map((agent) => (
-                <MenuItem key={agent.id} value={agent.id}>
-                  {agent.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              size="small"
-              sx={{ minWidth: { sm: 160 } }}
-              value={selectedPriorityValue}
-              onChange={(event) => setSelectedPriorityValue(event.target.value)}
-            >
-              {[
-                { label: "All Priority", value: allPriorityValue },
-                { label: "Urgent", value: "URGENT" },
-                { label: "High", value: "HIGH" },
-                { label: "Medium", value: "MEDIUM" },
-                { label: "Low", value: "LOW" },
-              ].map((priority) => (
-                <MenuItem key={priority.value} value={priority.value}>
-                  {priority.label}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            {canCreateTask ? (
-              <Button
+          <PageHeader
+            actions={
+              <Stack
+                direction={{ xs: "column", sm: "row", lg: "row" }}
+                spacing={1.25}
                 sx={{
-                  alignSelf: { xs: "stretch", sm: "center" },
-                  height: 40,
-                  minWidth: 128,
-                  px: 2.25,
-                  textTransform: "none",
-                  whiteSpace: "nowrap",
+                  alignItems: { xs: "stretch", sm: "center" },
+                  width: { xs: "100%", lg: "auto" },
                 }}
-                variant="contained"
-                onClick={() => setCreateTaskOpen(true)}
               >
-                Create Task
-              </Button>
-            ) : null}
-          </Stack>
-        </Stack>
+                <TextField
+                  select
+                  size="small"
+                  sx={{ minWidth: { sm: 180 } }}
+                  value={selectedAgentId}
+                  onChange={(event) => setSelectedAgentId(event.target.value)}
+                >
+                  {availableAgents.map((agent) => (
+                    <MenuItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  size="small"
+                  sx={{ minWidth: { sm: 160 } }}
+                  value={selectedPriorityValue}
+                  onChange={(event) => setSelectedPriorityValue(event.target.value)}
+                >
+                  {[
+                    { label: "All Priority", value: allPriorityValue },
+                    { label: "Urgent", value: "URGENT" },
+                    { label: "High", value: "HIGH" },
+                    { label: "Medium", value: "MEDIUM" },
+                    { label: "Low", value: "LOW" },
+                  ].map((priority) => (
+                    <MenuItem key={priority.value} value={priority.value}>
+                      {priority.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                {canCreateTask ? (
+                  <Button
+                    sx={{
+                      alignSelf: { xs: "stretch", sm: "center" },
+                      height: 40,
+                      minWidth: 128,
+                      px: 2.25,
+                      textTransform: "none",
+                      whiteSpace: "nowrap",
+                    }}
+                    variant="contained"
+                    onClick={() => setCreateTaskOpen(true)}
+                  >
+                    Create Task
+                  </Button>
+                ) : null}
+              </Stack>
+            }
+            subtitle=""
+            title="My Tasks"
+          />
+        </Box>
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
           {isBoardLoading ? (

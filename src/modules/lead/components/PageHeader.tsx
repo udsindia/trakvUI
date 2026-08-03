@@ -19,15 +19,15 @@ export function PageHeader({
       sx={{
         alignItems: { md: "center" },
         justifyContent: "space-between",
-        px: { xs: 2.5, md: 3.5 },
-        py: { xs: 2.25, md: 2.75 },
+        px: { xs: 2.5, md: 2.5 },
+        py: { xs: 2.25, md: 1 },
       }}
     >
       <Stack spacing={0.5}>
         <Typography color="text.secondary" sx={{ fontSize: 12 }} variant="body2">
           {subtitle}
         </Typography>
-        <Typography sx={{ fontSize: { xs: 28, md: 32 }, lineHeight: 1.1 }} variant="h5">
+        <Typography sx={{ fontSize: { xs: 20, md: 24 }, lineHeight: 1.1 }} variant="h5">
           {title}
         </Typography>
       </Stack>

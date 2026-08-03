@@ -32,6 +32,7 @@ import {
   getCourseSearchDefaultFilterValues,
   getCourseSearchSliderFallbacks,
 } from "@/modules/universities/courseSearchFilterConfig";
+import { toAlpha2CountryCode } from "@/modules/universities/universitiesMappers";
 import {
   buildCourseSearchResults,
   filterCourseSearchResults,
@@ -170,7 +171,10 @@ export function CourseSearchPage() {
 
   const countryFilterOptions = useMemo(() => {
     const apiOptions = countries
-      .map((country) => ({ label: country.name, value: country.code }))
+      .map((country) => ({
+        label: country.name,
+        value: toAlpha2CountryCode(country.code),
+      }))
       .filter((option) => option.label && option.value);
 
     if (apiOptions.length > 0) {
@@ -311,17 +315,9 @@ export function CourseSearchPage() {
           actions={
             <Stack
               direction={{ xs: "column", md: "row" }}
-              spacing={1.5}
+              spacing={0.5}
               sx={{ alignItems: "center" }}
             >
-              <Button
-                startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
-                sx={{ borderRadius: "9px", textTransform: "none", whiteSpace: "nowrap" }}
-                variant="contained"
-                onClick={() => setImportDialogOpen(true)}
-              >
-                Import courses
-              </Button>
               <GlobalSearchBar
                 placeholder={courseSearchSettings.search.placeholder}
                 sx={{ width: { xs: "100%", md: 300 } }}
@@ -343,6 +339,7 @@ export function CourseSearchPage() {
                     whiteSpace: "nowrap",
                   }}
                   onClick={() => setDrawerOpen(true)}
+                  size="small"
                 >
                   Filters
                 </Button>
@@ -360,10 +357,19 @@ export function CourseSearchPage() {
                   ))}
                 </Select>
               </FormControl>
+              <Button
+                startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
+                sx={{ borderRadius: "9px", textTransform: "none", whiteSpace: "nowrap" }}
+                variant="contained"
+                onClick={() => setImportDialogOpen(true)}
+                size="small"
+              >
+                Import courses
+              </Button>
             </Stack>
           }
-          subtitle="Browse courses across partner universities"
-          title="Course Search"
+          subtitle=""
+          title=""
         />
       </Box>
 

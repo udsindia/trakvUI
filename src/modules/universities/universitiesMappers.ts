@@ -32,6 +32,9 @@ const COUNTRY_ALPHA3_TO_UI: Record<string, { alpha2: string; name: string; flag:
 const ALPHA2_TO_ALPHA3: Record<string, string> = Object.fromEntries(
   Object.entries(COUNTRY_ALPHA3_TO_UI).map(([alpha3, value]) => [value.alpha2, alpha3]),
 );
+const ALPHA3_TO_ALPHA2: Record<string, string> = Object.fromEntries(
+  Object.entries(COUNTRY_ALPHA3_TO_UI).map(([alpha3, value]) => [alpha3, value.alpha2]),
+);
 
 const STUDY_LEVEL_TO_UI: Record<StudyLevel, { level: CourseLevel; label: string }> = {
   UNDERGRADUATE: { level: "undergraduate", label: "Undergraduate" },
@@ -86,6 +89,15 @@ export function toAlpha3CountryCode(countryCode: string): string {
   return ALPHA2_TO_ALPHA3[normalized] ?? normalized;
 }
 
+export function toAlpha2CountryCode(countryCode: string): string {
+  const normalized = countryCode.toUpperCase();
+  if (normalized.length === 2) {
+    return normalized;
+  }
+
+  return ALPHA3_TO_ALPHA2[normalized] ?? normalized;
+}
+
 export function toUiStudyLevel(studyLevel: StudyLevel) {
   return STUDY_LEVEL_TO_UI[studyLevel] ?? { level: "masters" as CourseLevel, label: studyLevel };
 }
@@ -134,6 +146,19 @@ function formatDate(dateStr?: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+function deriveIntakeLabel(courseStartDate?: string) {
+  if (!courseStartDate) {
+    return "";
+  }
+
+  const parsedDate = new Date(courseStartDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return `${parsedDate.toLocaleString("en-US", { month: "short" })} ${parsedDate.getFullYear()}`;
 }
 
 function formatAvgCommission(amount?: number | null, currency?: string | null) {
@@ -252,6 +277,7 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
 
   const applicationFee = formatMoney(course.applicationFeeAmount, course.applicationFeeCurrency);
   const deadline = course.applicationDeadline ? formatDate(course.applicationDeadline) : "";
+  const intakeLabel = deriveIntakeLabel(course.courseStartDate);
 
   return {
     id: course.id,
@@ -259,7 +285,7 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     name: course.name,
     level,
     levelLabel: label,
-    intakes: [],
+    intakes: intakeLabel ? [intakeLabel] : [],
     duration: formatDuration(course.durationMonths),
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),
     ieltsMin,

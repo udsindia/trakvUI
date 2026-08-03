@@ -13,13 +13,13 @@ export function SettingsPageHeader({ actions, eyebrow, title }: SettingsPageHead
       alignItems={{ xs: "stretch", sm: "center" }}
       direction={{ xs: "column", sm: "row" }}
       justifyContent="space-between"
-      spacing={2}
+      spacing={1}
     >
-      <Stack spacing={0.5}>
+      <Stack>
         <Typography color="text.secondary" variant="overline">
           {eyebrow}
         </Typography>
-        <Typography variant="h4">{title}</Typography>
+        <Typography variant="h5">{title}</Typography>
       </Stack>
       {actions}
     </Stack>

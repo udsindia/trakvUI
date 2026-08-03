@@ -6,6 +6,7 @@ import type {
   University,
 } from "@/modules/universities/universities.types";
 import { computeCourseEligibility } from "@/modules/universities/studentEligibility";
+import { toAlpha2CountryCode } from "@/modules/universities/universitiesMappers";
 
 export function formatTuitionLakhs(value: number) {
   return `₹${value.toFixed(1)}L`;
@@ -67,7 +68,12 @@ export function filterCourseSearchResults(
       }
     }
 
-    if (filters.countries.length > 0 && !filters.countries.includes(result.university.countryCode)) {
+    if (
+      filters.countries.length > 0 &&
+      !filters.countries.some(
+        (countryCode) => toAlpha2CountryCode(countryCode) === toAlpha2CountryCode(result.university.countryCode),
+      )
+    ) {
       return false;
     }
 
@@ -156,7 +162,8 @@ export function countEligibleCourses(results: CourseSearchResult[]) {
 
 export function getCountryCounts(results: CourseSearchResult[]) {
   return results.reduce<Record<string, number>>((counts, result) => {
-    counts[result.university.countryCode] = (counts[result.university.countryCode] ?? 0) + 1;
+    const normalizedCode = toAlpha2CountryCode(result.university.countryCode);
+    counts[normalizedCode] = (counts[normalizedCode] ?? 0) + 1;
     return counts;
   }, {});
 }

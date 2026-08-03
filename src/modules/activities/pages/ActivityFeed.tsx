@@ -18,6 +18,7 @@ import {
   type LogActivityFormValues,
 } from "@/modules/activities/components/LogActivityModal";
 import { applicationReferenceOptions } from "@/modules/activities/mock/mockData";
+import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
@@ -112,7 +113,7 @@ export function ActivityFeed() {
       >
         <Box
           sx={{
-            bgcolor: "background.default",
+            // bgcolor: "background.default",
             borderBottom: "1px solid",
             borderColor: "divider",
             position: "sticky",
@@ -120,36 +121,31 @@ export function ActivityFeed() {
             zIndex: 2,
           }}
         >
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            sx={{
-              alignItems: { md: "center" },
-              justifyContent: "space-between",
-              px: { xs: 2, sm: 3 },
-              py: { xs: 2, sm: 3 },
-            }}
-          >
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontWeight: 700 }} variant="h4">
-                Activity Feed
-              </Typography>
-              <Typography color="text.secondary" variant="body2">
-                Latest activities from the backend feed
-              </Typography>
-            </Stack>
-
-            <Button
-              sx={{ px: 2.5, textTransform: "none" }}
-              variant="contained"
-              onClick={() => {
-                setSelectedEntityType("GENERAL");
-                setLogActivityOpen(true);
+          <PageHeader
+            actions={<Stack
+              direction={{ xs: "column", sm: "row", lg: "row" }}
+              spacing={1.25}
+              sx={{
+                alignItems: { xs: "stretch", sm: "center" },
+                width: { xs: "100%", lg: "auto" },
               }}
             >
-              Log Activity
-            </Button>
-          </Stack>
+              <Button
+                sx={{ px: 2.5, textTransform: "none" }}
+                variant="contained"
+                onClick={() => {
+                  setSelectedEntityType("GENERAL");
+                  setLogActivityOpen(true);
+                }}
+                size="small"
+              >
+                Log Activity
+              </Button>
+            </Stack>}
+            title="Activity Feed"
+            subtitle={""}
+            // subtitle="Latest activities from the backend feed"
+          />
         </Box>
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
@@ -220,7 +216,7 @@ export function ActivityFeed() {
             </Paper>
           )}
         </Box>
-      </Paper>
+      </Paper >
 
       <LogActivityModal
         isLoadingLeads={leadsQuery.isLoading}
