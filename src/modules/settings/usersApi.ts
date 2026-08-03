@@ -10,6 +10,7 @@ export interface BackendUser {
   phone?: string;
   roleId?: string;
   role?: string;
+  roleName?: string;
   active?: boolean;
   isActive?: boolean;
 }

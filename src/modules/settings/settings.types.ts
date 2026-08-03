@@ -19,6 +19,7 @@ export interface TenantUser {
   email: string;
   phone?: string;
   roleId: string;
+  roleName: string;
   roleLabel: string;
   active: boolean;
 }

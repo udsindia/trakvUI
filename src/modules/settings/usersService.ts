@@ -54,6 +54,7 @@ function mapBackendUser(user: {
   phone?: string;
   roleId?: string;
   role?: string;
+  roleName?: string;
   active?: boolean;
   isActive?: boolean;
 }): TenantUser {
@@ -62,44 +63,48 @@ function mapBackendUser(user: {
     [user.firstName, user.lastName].filter(Boolean).join(" ") ??
     user.email;
 
+  const roleName = user.roleName ?? user.role ?? user.roleId ?? "Member";
+
   return {
     id: user.id,
     name,
     email: user.email,
     phone: user.phone,
     roleId: user.roleId ?? user.role ?? "",
-    roleLabel: user.role ?? user.roleId ?? "Member",
+    roleName,
+    roleLabel: roleName,
     active: user.active ?? user.isActive ?? true,
   };
 }
 
 export const usersService = {
   async getUsers(tenantId: string): Promise<TenantUser[]> {
-    if (isMockAuthEnabled) {
-      await wait(MOCK_LATENCY_MS);
-      return readMockUsers(tenantId);
-    }
+    // if (isMockAuthEnabled) {
+    //   await wait(MOCK_LATENCY_MS);
+    //   return readMockUsers(tenantId);
+    // }
 
     const users = await usersApi.getUsers(tenantId);
+    console.log("usersService.getUsers", { tenantId, users });
     return users.map(mapBackendUser);
   },
 
   async createUser(payload: CreateTenantUserPayload) {
-    if (isMockAuthEnabled) {
-      await wait(MOCK_LATENCY_MS);
-      const users = readMockUsers(payload.tenantId);
-      const user: TenantUser = {
-        id: crypto.randomUUID(),
-        name: [payload.firstName, payload.lastName].filter(Boolean).join(" "),
-        email: payload.email,
-        phone: payload.phone,
-        roleId: payload.role,
-        roleLabel: payload.role,
-        active: true,
-      };
-      writeMockUsers(payload.tenantId, [...users, user]);
-      return user;
-    }
+    // if (isMockAuthEnabled) {
+    //   await wait(MOCK_LATENCY_MS);
+    //   const users = readMockUsers(payload.tenantId);
+    //   const user: TenantUser = {
+    //     id: crypto.randomUUID(),
+    //     name: [payload.firstName, payload.lastName].filter(Boolean).join(" "),
+    //     email: payload.email,
+    //     phone: payload.phone,
+    //     roleId: payload.role,
+    //     roleLabel: payload.role,
+    //     active: true,
+    //   };
+    //   writeMockUsers(payload.tenantId, [...users, user]);
+    //   return user;
+    // }
 
     return authService.registerAdminUser({
       firstName: payload.firstName,

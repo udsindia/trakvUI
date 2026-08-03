@@ -43,7 +43,7 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
               </TableCell>
               <TableCell sx={{ color: "text.secondary" }}>{user.email}</TableCell>
               <TableCell>
-                <Chip label={user.roleLabel} size="small" sx={{ bgcolor: "#EEF2F6", color: "text.secondary" }} />
+                <Chip label={user.roleName} size="small" sx={{ bgcolor: "#EEF2F6", color: "text.secondary" }} />
               </TableCell>
               <TableCell>
                 <Chip
