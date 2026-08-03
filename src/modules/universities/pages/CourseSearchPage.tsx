@@ -1,12 +1,18 @@
-import { useMemo, useState } from "react";
-import { TuneRounded } from "@mui/icons-material";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { DownloadRounded, TuneRounded, UploadRounded } from "@mui/icons-material";
 import {
+  Alert,
   Badge,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Drawer,
   FormControl,
+  LinearProgress,
   MenuItem,
   Paper,
   Select,
@@ -19,6 +25,8 @@ import { courseSearchSettings } from "@/config/universities/courseSearchSettings
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { CourseSearchCard } from "@/modules/universities/components/CourseSearchCard";
 import { ShortlistTray } from "@/modules/universities/components/ShortlistTray";
+import sampleCsvUrl from "@/assets/course-import-sample.csv?url";
+import { universitiesApi } from "@/modules/universities/universitiesApi";
 import {
   buildCourseSearchFilterConfig,
   getCourseSearchDefaultFilterValues,
@@ -50,6 +58,15 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
+
+type CourseImportPreviewResponse = {
+  message?: string;
+  totalRows?: number;
+  validRows?: number;
+  invalidRows?: number;
+  errors?: unknown[];
+  [key: string]: unknown;
+};
 
 function countActiveFilters(
   values: FilterPanelValues,
@@ -137,6 +154,12 @@ export function CourseSearchPage() {
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shortlistIds, setShortlistIds] = useState<string[]>([]);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [previewResult, setPreviewResult] = useState<CourseImportPreviewResponse | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const baseResults = useMemo(
     () => buildCourseSearchResults(courses, universities),
@@ -215,6 +238,66 @@ export function CourseSearchPage() {
     setDrawerOpen(false);
   };
 
+  const handleDownloadSample = () => {
+    const link = document.createElement("a");
+    link.href = sampleCsvUrl;
+    link.download = "course-import-sample.csv";
+    link.click();
+  };
+
+  const handleSelectImportFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewResult(null);
+      setImportError(null);
+      return;
+    }
+
+    const lower = file.name.toLowerCase();
+    if (!lower.endsWith(".csv")) {
+      setSelectedFile(null);
+      setPreviewResult(null);
+      setImportError("Please choose a CSV file (.csv).");
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewResult(null);
+    setImportError(null);
+  };
+
+  const handlePreviewImport = async () => {
+    if (!selectedFile) {
+      setImportError("Please choose a CSV file to preview.");
+      return;
+    }
+
+    setImporting(true);
+    setImportError(null);
+
+    try {
+      const result = await universitiesApi.previewCourseImport(selectedFile);
+      setPreviewResult(result as CourseImportPreviewResponse);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "Unable to preview the import.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleCloseImportDialog = () => {
+    setImportDialogOpen(false);
+    setSelectedFile(null);
+    setImportError(null);
+    setPreviewResult(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <Paper
       elevation={0}
@@ -231,6 +314,14 @@ export function CourseSearchPage() {
               spacing={1.5}
               sx={{ alignItems: "center" }}
             >
+              <Button
+                startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
+                sx={{ borderRadius: "9px", textTransform: "none", whiteSpace: "nowrap" }}
+                variant="contained"
+                onClick={() => setImportDialogOpen(true)}
+              >
+                Import courses
+              </Button>
               <GlobalSearchBar
                 placeholder={courseSearchSettings.search.placeholder}
                 sx={{ width: { xs: "100%", md: 300 } }}
@@ -378,6 +469,66 @@ export function CourseSearchPage() {
           onFiltersChange={setFilterValues}
         />
       </Drawer>
+
+      <Dialog fullWidth maxWidth="md" open={importDialogOpen} onClose={handleCloseImportDialog}>
+        <DialogTitle>Import courses</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Alert severity="info">
+              Upload a CSV file using the exact headers below. The required columns are
+              university_name, country_code, and course_name.
+            </Alert>
+            <Typography color="text.secondary" variant="body2">
+              Download the sample template to keep the same header order and naming for the bulk
+              import preview endpoint.
+            </Typography>
+            <Stack
+              alignItems={{ xs: "stretch", sm: "center" }}
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+            >
+              <Button startIcon={<DownloadRounded />} onClick={handleDownloadSample} variant="outlined">
+                Download sample CSV
+              </Button>
+              <Button component="label" startIcon={<UploadRounded />} variant="contained">
+                Choose file CSV
+                <input
+                  accept=".csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  hidden
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleSelectImportFile}
+                />
+              </Button>
+            </Stack>
+            {selectedFile ? (
+              <Typography color="text.secondary" variant="body2">
+                Selected file: {selectedFile.name}
+              </Typography>
+            ) : null}
+            {importError ? <Alert severity="error">{importError}</Alert> : null}
+            {importing ? <LinearProgress /> : null}
+            {previewResult ? (
+              <Box
+                sx={{ bgcolor: "grey.50", border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1.5 }}
+              >
+                <Typography sx={{ mb: 1 }} variant="subtitle2">
+                  Preview response
+                </Typography>
+                <Box component="pre" sx={{ fontSize: 12, m: 0, whiteSpace: "pre-wrap" }}>
+                  {JSON.stringify(previewResult, null, 2)}
+                </Box>
+              </Box>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseImportDialog}>Cancel</Button>
+          <Button disabled={importing || !selectedFile} onClick={handlePreviewImport} variant="contained">
+            Preview import
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

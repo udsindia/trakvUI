@@ -1,0 +1,2 @@
+university_name,country_code,course_name,course_code,study_level,subject_area,duration_months,tuition_currency,tuition_amount,application_fee_currency,application_fee_amount,course_start_date,course_end_date,scholarship_note
+Example University,GB,Computer Science BSc,CS101,B.Tech,Computer Science,48,GBP,18000,GBP,500,2025-09-01,2029-08-31,Merit scholarship available

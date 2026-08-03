@@ -138,6 +138,33 @@ export const universitiesApi = {
     return response.data;
   },
 
+  previewCourseImport: async (file: File): Promise<unknown> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const config = createAuthRequestConfig();
+
+    try {
+      if (config.headers && typeof (config.headers as any).delete === "function") {
+        (config.headers as any).delete("Content-Type");
+      }
+    } catch (e) {
+      // ignore header adjustment failures and proceed — axios will attempt to set headers
+    }
+    config.headers = {
+      ...config.headers,
+      "Content-Type": "multipart/form-data",
+    };
+
+    const response = await httpClient.post(
+      `${API_CONFIG.adminCourses}/import/preview`,
+      formData,
+      config,
+    );
+
+    return response.data;
+  },
+
   createCourse: async (
     universityId: string,
     payload: CreateCoursePayload,
