@@ -1,29 +1,35 @@
 import { ROLES, type RoleKey } from "@/config/roles/roles";
 
-/** Permission strings returned by the backend auth service. */
+/**
+ * Permission strings returned by the backend auth service.
+ * KEYS are the app-internal names (referenced everywhere as PERMISSIONS.X); VALUES must
+ * match the strings the backend actually grants — the consolidated *singular* taxonomy
+ * (USER_VIEW, UNIVERSITY_VIEW, APPLICATION_VIEW, …). A few keys have no exact backend
+ * equivalent and are mapped to the closest granted permission.
+ */
 export const PERMISSIONS = {
   DASHBOARD_VIEW: "DASHBOARD_VIEW",
   LEAD_CREATE: "LEAD_CREATE",
   LEAD_VIEW: "LEAD_VIEW",
   LEAD_DELETE: "LEAD_DELETE",
-  LEAD_MANAGE: "LEAD_MANAGE",
+  LEAD_MANAGE: "LEAD_EDIT",                 // no LEAD_MANAGE server-side; closest is LEAD_EDIT
   LEAD_ASSIGN: "LEAD_ASSIGN",
-  APPLICATIONS_VIEW: "APPLICATIONS_VIEW",
-  APPLICATIONS_MANAGE: "APPLICATIONS_MANAGE",
+  APPLICATIONS_VIEW: "APPLICATION_VIEW",
+  APPLICATIONS_MANAGE: "APPLICATION_EDIT",  // no APPLICATION_MANAGE; closest is APPLICATION_EDIT
   TASK_CREATE: "TASK_CREATE",
   TASK_VIEW: "TASK_VIEW",
-  TASK_VIEW_TEAM: "TASK_VIEW_TEAM",
-  TASK_UPDATE: "TASK_UPDATE",
-  TASK_DELETE: "TASK_DELETE",
+  TASK_VIEW_TEAM: "TASK_VIEW_TEAM",         // no backend equivalent (kept distinct)
+  TASK_UPDATE: "TASK_COMPLETE",             // closest granted task-write perm
+  TASK_DELETE: "TASK_DELETE",               // no backend equivalent (kept distinct)
   ACTIVITY_LOG: "ACTIVITY_LOG",
-  UNIVERSITIES_VIEW: "UNIVERSITIES_VIEW",
-  UNIVERSITIES_MANAGE: "UNIVERSITIES_MANAGE",
-  SETTINGS_TENANT: "SETTINGS_TENANT",
-  TEAM_INVITE: "TEAM_INVITE",
-  USERS_VIEW: "USERS_VIEW",
-  USERS_MANAGE: "USERS_MANAGE",
-  ROLES_VIEW: "ROLES_VIEW",
-  ROLES_MANAGE: "ROLES_MANAGE",
+  UNIVERSITIES_VIEW: "UNIVERSITY_VIEW",
+  UNIVERSITIES_MANAGE: "UNIVERSITY_MANAGE",
+  SETTINGS_TENANT: "SETTINGS_MANAGE",
+  TEAM_INVITE: "TEAM_INVITE",               // no backend equivalent (kept distinct)
+  USERS_VIEW: "USER_VIEW",
+  USERS_MANAGE: "USER_MANAGE",
+  ROLES_VIEW: "ROLE_VIEW",
+  ROLES_MANAGE: "ROLE_MANAGE",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | string;
