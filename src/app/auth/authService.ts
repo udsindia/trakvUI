@@ -15,6 +15,7 @@ import {
 import { getPermissionsForRoles } from "@/config/permissions/permissions";
 import { ROLES, type RoleKey } from "@/config/roles/roles";
 import { httpClient } from "@/shared/services/http/client";
+import { normalizePermission } from "@/shared/utils/permissions";
 
 // Actual response from the Spring Boot auth service
 interface BackendAuthResponse {
@@ -139,9 +140,9 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
   const backendRoles =
     response.roles?.filter(Boolean) ??
     (response.role ? [response.role] : [roleKey]);
-  const permissions =
-    response.permissions?.filter(Boolean) ??
-    getPermissionsForRoles([roleKey]);
+  const permissions = (
+    response.permissions?.filter(Boolean) ?? getPermissionsForRoles([roleKey])
+  ).map((permission) => normalizePermission(permission));
   const fullName = [response.firstName, response.lastName].filter(Boolean).join(" ");
   const displayName = fullName || email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 

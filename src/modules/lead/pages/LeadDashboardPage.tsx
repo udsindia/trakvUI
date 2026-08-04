@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AddRounded, TuneRounded } from "@mui/icons-material";
 import {
@@ -200,6 +200,7 @@ export function LeadDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const pageRef = useRef(1);
   const [snack, setSnack] = useState<string | null>(null);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
@@ -285,7 +286,9 @@ export function LeadDashboardPage() {
   }, [leadRows, filterValues, leadSearchQuery, activeQuickFilter]);
 
   const pageCount = Math.max(1, Math.ceil(fullyFilteredRows.length / PAGE_SIZE));
-  const clampedPage = Math.min(page, pageCount);
+  const safePage = Math.max(1, Math.min(page, pageCount));
+  const clampedPage = safePage;
+
   const pagedRows = fullyFilteredRows.slice(
     (clampedPage - 1) * PAGE_SIZE,
     clampedPage * PAGE_SIZE,
@@ -299,19 +302,25 @@ export function LeadDashboardPage() {
       ? "Showing 0 of 0 leads"
       : `Showing ${pageStart}–${pageEnd} of ${totalVisible} leads`;
 
+  const handlePageChange = (nextPage: number) => {
+    const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
+    pageRef.current = normalizedPage;
+    setPage(normalizedPage);
+  };
+
   const handleFilterChange = (values: FilterPanelValues) => {
     setFilterValues(values);
-    setPage(1);
+    handlePageChange(1);
   };
 
   const handleSearchChange = (query: string) => {
     setLeadSearchQuery(query);
-    setPage(1);
+    handlePageChange(1);
   };
 
   const handleQuickFilterChange = (key: string) => {
     setActiveQuickFilter(key);
-    setPage(1);
+    handlePageChange(1);
   };
 
   const handleDeleteLead = async (id: string) => {
@@ -433,7 +442,7 @@ export function LeadDashboardPage() {
             py: { xs: 1.5, md: 1.5 },
           }}
         >
-          {isLoading ? (
+          {isLoading && backendLeads.length === 0 ? (
             <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
               <CircularProgress size={32} />
             </Box>
@@ -452,7 +461,7 @@ export function LeadDashboardPage() {
               onDeleteLead={handleDeleteLead}
               onBulkDelete={handleBulkDelete}
               onUpdateStage={handleUpdateStage}
-              onPageChange={setPage}
+              onPageChange={handlePageChange}
             />
           )}
         </Box>

@@ -24,3 +24,7 @@ body {
   /* steel-teal-50 canvas — kept in step with palette.background.default */
   background: #f0f6f8;
 }
+.MuiTableContainer-root {
+  overflow-x: hidden !important;
+  overflow-y: auto;
+}

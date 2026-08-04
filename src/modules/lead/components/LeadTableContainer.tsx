@@ -143,6 +143,7 @@ export function LeadTableContainer({
   paginationLabel,
 }: LeadTableContainerProps) {
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [localPage, setLocalPage] = useState(page);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [stageDialogLeadId, setStageDialogLeadId] = useState<string | null>(null);
@@ -156,6 +157,10 @@ export function LeadTableContainer({
       current.filter((id) => leads.some((lead) => lead.id === id)),
     );
   }, [leads]);
+
+  useEffect(() => {
+    setLocalPage(page);
+  }, [page]);
 
   const allVisibleRowsSelected = leads.length > 0 && selectedLeadIds.length === leads.length;
   const hasPartialSelection = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
@@ -228,6 +233,12 @@ export function LeadTableContainer({
   const handleBulkChangeStage = () => {
     setBulkStageValue("Contacted");
     setBulkStageDialogOpen(true);
+  };
+
+  const handlePaginationChange = (_: React.ChangeEvent<unknown>, value: number) => {
+    const normalizedPage = Math.max(1, Math.min(value, pageCount));
+    setLocalPage(normalizedPage);
+    onPageChange(normalizedPage);
   };
 
   return (
@@ -367,7 +378,7 @@ export function LeadTableContainer({
                     selected={selectedLeadIds.includes(lead.id)}
                     sx={{ "&.Mui-selected": { bgcolor: "#F0F9FB" } }}
                   >
-                    <TableCell padding="checkbox">
+                    <TableCell sx={{ padding: "checkbox", minWidth: 30, maxWidth: 40 }}>
                       <Checkbox
                         checked={selectedLeadIds.includes(lead.id)}
                         size="small"
@@ -443,7 +454,7 @@ export function LeadTableContainer({
                       )}
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 140 }}>
+                    <TableCell sx={{ minWidth: 120 }}>
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         {/* <Avatar
                           sx={{
@@ -462,14 +473,14 @@ export function LeadTableContainer({
                       </Stack>
                     </TableCell>
 
-                    <TableCell sx={{ minWidth: 108 }}>
+                    <TableCell sx={{ minWidth: 80 }}>
                       <Typography color="text.disabled" noWrap sx={{ fontSize: 11.5 }} variant="body2">
                         {lead.lastActivity}
                       </Typography>
                     </TableCell>
 
                     <TableCell align="right">
-                      <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
+                      <Stack direction="row" spacing={0.25} sx={{ justifyContent: "flex-end" }}>
                         <IconButton
                           aria-label={`Update stage for ${lead.name}`}
                           disabled={actionLoading}
@@ -537,7 +548,7 @@ export function LeadTableContainer({
           <Box sx={{ alignSelf: { xs: "flex-start", md: "center" } }}>
             <Pagination
               count={pageCount}
-              page={page}
+              page={localPage}
               shape="rounded"
               sx={{
                 "& .MuiPaginationItem-root": {
@@ -551,7 +562,7 @@ export function LeadTableContainer({
                   color: "common.white",
                 },
               }}
-              onChange={(_, value) => onPageChange(value)}
+              onChange={handlePaginationChange}
             />
           </Box>
         </Stack>
