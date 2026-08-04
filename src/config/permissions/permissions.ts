@@ -40,6 +40,11 @@ export const PERMISSIONS = {
   ROLE_VIEW: "ROLE_VIEW",
   ROLE_MANAGE: "ROLE_MANAGE",
   SETTINGS_MANAGE: "SETTINGS_MANAGE",
+
+  // Application commission — sensitive, field-level. Admin-only by default,
+  // assignable to other roles via Role Management.
+  COMMISSION_VIEW: "COMMISSION_VIEW",
+  COMMISSION_MANAGE: "COMMISSION_MANAGE",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS] | string;

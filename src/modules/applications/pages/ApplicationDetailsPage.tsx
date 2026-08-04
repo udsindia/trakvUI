@@ -21,6 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
@@ -56,10 +58,14 @@ export function ApplicationDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { hasPermissions } = useAuth();
+  const canViewCommission = hasPermissions([PERMISSIONS.COMMISSION_VIEW]);
+  const canManageCommission = hasPermissions([PERMISSIONS.COMMISSION_MANAGE]);
 
   const [moveNote, setMoveNote] = useState("");
   const [closeOutcome, setCloseOutcome] = useState("");
   const [closeReason, setCloseReason] = useState("");
+  const [commissionInput, setCommissionInput] = useState("");
 
   const { data: application, isLoading, isError } = useQuery({
     queryKey: ["application", id],
@@ -94,6 +100,12 @@ export function ApplicationDetailsPage() {
       setCloseOutcome("");
       setCloseReason("");
     },
+  });
+
+  const commissionMutation = useMutation({
+    mutationFn: (amount: number | null) =>
+      applicationsApi.updateCommission(id!, amount, "INR"),
+    onSuccess: () => invalidate(),
   });
 
   if (isLoading) {
@@ -204,6 +216,41 @@ export function ApplicationDetailsPage() {
                       <Typography variant="body2"><strong>Intake:</strong> {application.intakeMonth} {application.intakeYear}</Typography>
                       <Typography variant="body2"><strong>Tuition (INR):</strong> {application.tuitionFeeInr ?? "—"}</Typography>
                       <Typography variant="body2"><strong>Application Fee (INR):</strong> {application.applicationFeeInr ?? 0}</Typography>
+
+                      {/* Commission — only rendered for COMMISSION_VIEW; only editable with COMMISSION_MANAGE. */}
+                      {canViewCommission && (
+                        <>
+                          <Typography variant="body2">
+                            <strong>Commission ({application.commissionCurrency ?? "INR"}):</strong>{" "}
+                            {application.commissionAmount ?? 0}
+                          </Typography>
+                          {canManageCommission && (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <TextField
+                                size="small"
+                                type="number"
+                                label="Set commission"
+                                value={commissionInput}
+                                onChange={(e) => setCommissionInput(e.target.value)}
+                                slotProps={{ inputLabel: { shrink: true } }}
+                                sx={{ maxWidth: 180 }}
+                              />
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                disabled={commissionInput.trim() === "" || commissionMutation.isPending}
+                                onClick={() => commissionMutation.mutate(Number(commissionInput))}
+                              >
+                                {commissionMutation.isPending ? "Saving..." : "Save"}
+                              </Button>
+                            </Stack>
+                          )}
+                          {commissionMutation.isError && (
+                            <Alert severity="error">{errorMessage(commissionMutation.error)}</Alert>
+                          )}
+                        </>
+                      )}
+
                       {application.notes && (
                         <Typography variant="body2"><strong>Notes:</strong> {application.notes}</Typography>
                       )}

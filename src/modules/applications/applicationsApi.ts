@@ -55,6 +55,9 @@ export interface ApplicationDetail {
   intakeYear?: number;
   tuitionFeeInr?: number | null;
   applicationFeeInr?: number | null;
+  // Only present when the caller has COMMISSION_VIEW; otherwise null/absent.
+  commissionAmount?: number | null;
+  commissionCurrency?: string | null;
   currentStageId?: string | null;
   outcome: string;
   outcomeReason?: string | null;
@@ -162,6 +165,19 @@ export const applicationsApi = {
     const response = await httpClient.patch<ApplicationDetail>(
       `${API_CONFIG.applications}/${id}/close`,
       { outcome, reason },
+    );
+    return response.data;
+  },
+
+  /** Set/update commission. Backend requires COMMISSION_MANAGE. */
+  updateCommission: async (
+    id: string,
+    amount: number | null,
+    currency: string,
+  ): Promise<ApplicationDetail> => {
+    const response = await httpClient.patch<ApplicationDetail>(
+      `${API_CONFIG.applications}/${id}/commission`,
+      { amount, currency },
     );
     return response.data;
   },
