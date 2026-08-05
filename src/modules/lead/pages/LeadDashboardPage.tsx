@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddRounded, TuneRounded } from "@mui/icons-material";
+import { TuneRounded } from "@mui/icons-material";
 import {
   Badge,
   Box,
@@ -12,7 +12,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
@@ -24,8 +23,6 @@ import {
   LeadTableContainer,
   type LeadRow,
 } from "@/modules/lead/components/LeadTableContainer";
-import { PageHeader } from "@/modules/lead/components/PageHeader";
-import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
 import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
@@ -200,18 +197,27 @@ export function LeadDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const pageRef = useRef(1);
   const [snack, setSnack] = useState<string | null>(null);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
-  const { data: backendLeads = [], isLoading, isError } = useQuery({
-    queryKey: ["leads"],
-    queryFn: leadApi.getLeads,
+  const {
+    data: leadsPage,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["leads", "paginated", page, PAGE_SIZE, "createdAt", "DESC"],
+    queryFn: () =>
+      leadApi.getLeadsPaginated({
+        page: page - 1,
+        size: PAGE_SIZE,
+        sortBy: "createdAt",
+        sortDirection: "DESC",
+      }),
+    placeholderData: (previousData) => previousData,
   });
-
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
   const usersQuery = useQuery({
@@ -259,6 +265,8 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
+  const backendLeads = leadsPage?.content ?? [];
+
   const leadRows: LeadRow[] = useMemo(
     () => backendLeads.map(mapBackendLeadToRow),
     [backendLeads],
@@ -285,48 +293,56 @@ export function LeadDashboardPage() {
     return rows;
   }, [leadRows, filterValues, leadSearchQuery, activeQuickFilter]);
 
-  const pageCount = Math.max(1, Math.ceil(fullyFilteredRows.length / PAGE_SIZE));
-  const safePage = Math.max(1, Math.min(page, pageCount));
-  const clampedPage = safePage;
+  const pageCount = Math.max(1, leadsPage?.totalPages ?? 1);
+  const clampedPage = Math.max(1, Math.min(page, pageCount));
 
-  const pagedRows = fullyFilteredRows.slice(
-    (clampedPage - 1) * PAGE_SIZE,
-    clampedPage * PAGE_SIZE,
-  );
+  // The backend paginates first; local filters/search are then applied within the
+  // current page payload only.
+  const pagedRows = fullyFilteredRows;
 
-  const totalVisible = fullyFilteredRows.length;
+  const totalVisible = leadsPage?.totalElements ?? 0;
   const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * PAGE_SIZE + 1;
-  const pageEnd = Math.min(clampedPage * PAGE_SIZE, totalVisible);
+  const pageEnd = totalVisible === 0 ? 0 : Math.min(pageStart + (leadsPage?.numberOfElements ?? 0) - 1, totalVisible);
   const paginationLabel =
     totalVisible === 0
       ? "Showing 0 of 0 leads"
       : `Showing ${pageStart}–${pageEnd} of ${totalVisible} leads`;
 
-  const handlePageChange = (nextPage: number) => {
+  const handlePageChange = useCallback((nextPage: number) => {
     const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
-    pageRef.current = normalizedPage;
-    setPage(normalizedPage);
-  };
+    setPage((currentPage) => (currentPage === normalizedPage ? currentPage : normalizedPage));
+  }, [pageCount]);
 
-  const handleFilterChange = (values: FilterPanelValues) => {
-    setFilterValues(values);
-    handlePageChange(1);
-  };
+  const handleFilterChange = useCallback((values: FilterPanelValues) => {
+    setFilterValues((currentValues) => {
+      if (JSON.stringify(currentValues) === JSON.stringify(values)) {
+        return currentValues;
+      }
+      setPage(1);
+      return values;
+    });
+  }, []);
 
-  const handleSearchChange = (query: string) => {
-    setLeadSearchQuery(query);
-    handlePageChange(1);
-  };
+  const handleSearchChange = useCallback((query: string) => {
+    setLeadSearchQuery((currentQuery) => {
+      if (currentQuery === query) return currentQuery;
+      setPage(1);
+      return query;
+    });
+  }, []);
 
-  const handleQuickFilterChange = (key: string) => {
-    setActiveQuickFilter(key);
-    handlePageChange(1);
-  };
+  const handleQuickFilterChange = useCallback((key: string) => {
+    setActiveQuickFilter((currentKey) => {
+      if (currentKey === key) return currentKey;
+      setPage(1);
+      return key;
+    });
+  }, []);
 
   const handleDeleteLead = async (id: string) => {
     try {
       await leadApi.deleteLead(id);
-      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack("Lead deleted");
     } catch {
       setSnack("Failed to delete lead");
@@ -336,7 +352,7 @@ export function LeadDashboardPage() {
   const handleBulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => leadApi.deleteLead(id)));
-      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`${ids.length} lead(s) deleted`);
     } catch {
       setSnack("Failed to delete some leads");
@@ -345,13 +361,10 @@ export function LeadDashboardPage() {
 
   const handleUpdateStage = async (id: string, stage: string) => {
     try {
-      const updated = await leadApi.updateLead(id, {
+      await leadApi.updateLead(id, {
         leadStage: toBackendLeadStage(stage),
       });
-      queryClient.setQueryData<BackendLead[]>(["leads"], (current) =>
-        current?.map((lead) => (lead.id === id ? updated : lead)),
-      );
-      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`Stage updated to ${stage}`);
     } catch {
       setSnack("Failed to update stage");
@@ -442,27 +455,30 @@ export function LeadDashboardPage() {
             py: { xs: 1.5, md: 1.5 },
           }}
         >
-          {isLoading && backendLeads.length === 0 ? (
-            <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
-              <CircularProgress size={32} />
-            </Box>
-          ) : isError ? (
+          {isError ? (
             <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
               <Typography color="error" variant="body2">
                 Failed to load leads. Check the console for details.
               </Typography>
             </Box>
           ) : (
-            <LeadTableContainer
-              leads={pagedRows}
-              page={clampedPage}
-              pageCount={pageCount}
-              paginationLabel={paginationLabel}
-              onDeleteLead={handleDeleteLead}
-              onBulkDelete={handleBulkDelete}
-              onUpdateStage={handleUpdateStage}
-              onPageChange={handlePageChange}
-            />
+            <>
+              {isLoading && backendLeads.length === 0 ? (
+                <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
+                  <CircularProgress size={32} />
+                </Box>
+              ) : null}
+              <LeadTableContainer
+                leads={pagedRows}
+                page={clampedPage}
+                pageCount={pageCount}
+                paginationLabel={paginationLabel}
+                onDeleteLead={handleDeleteLead}
+                onBulkDelete={handleBulkDelete}
+                onUpdateStage={handleUpdateStage}
+                onPageChange={handlePageChange}
+              />
+            </>
           )}
         </Box>
 

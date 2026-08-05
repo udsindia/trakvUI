@@ -87,7 +87,7 @@ export function useLeadFormController(agentOptions: AgentOption[] = []) {
 
     try {
       await leadService.createLead(payload);
-      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       form.reset(defaultLeadFormValues);
       navigate(leadRoutePaths.dashboard);
     } catch (error) {

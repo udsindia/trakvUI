@@ -28,6 +28,26 @@ export interface BackendLead {
   updatedAt: string;
 }
 
+export type SortDirection = "ASC" | "DESC";
+
+export interface PaginatedLeadsResponse {
+  content: BackendLead[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+}
+
+export type GetLeadsPaginatedParams = {
+  page: number;
+  size: number;
+  sortBy?: string;
+  sortDirection?: SortDirection;
+};
+
 export const leadApi = {
   getLeadCount: async (): Promise<number> => {
     const response = await httpClient.get<{ count: number }>(`${API_CONFIG.leads}/count`);
@@ -38,6 +58,23 @@ export const leadApi = {
     console.debug("[leadApi] getLeads called");
     const response = await httpClient.get<BackendLead[]>(API_CONFIG.leads);
     console.debug("[leadApi] getLeads response:", response.data);
+    return response.data;
+  },
+
+  getLeadsPaginated: async ({
+    page,
+    size,
+    sortBy = "createdAt",
+    sortDirection = "DESC",
+  }: GetLeadsPaginatedParams): Promise<PaginatedLeadsResponse> => {
+    const response = await httpClient.get<PaginatedLeadsResponse>(`${API_CONFIG.leads}/paginated`, {
+      params: {
+        page,
+        size,
+        sortBy,
+        sortDirection,
+      },
+    });
     return response.data;
   },
 

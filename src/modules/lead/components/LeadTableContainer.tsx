@@ -143,7 +143,6 @@ export function LeadTableContainer({
   paginationLabel,
 }: LeadTableContainerProps) {
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
-  const [localPage, setLocalPage] = useState(page);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [stageDialogLeadId, setStageDialogLeadId] = useState<string | null>(null);
@@ -157,10 +156,6 @@ export function LeadTableContainer({
       current.filter((id) => leads.some((lead) => lead.id === id)),
     );
   }, [leads]);
-
-  useEffect(() => {
-    setLocalPage(page);
-  }, [page]);
 
   const allVisibleRowsSelected = leads.length > 0 && selectedLeadIds.length === leads.length;
   const hasPartialSelection = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
@@ -237,7 +232,6 @@ export function LeadTableContainer({
 
   const handlePaginationChange = (_: React.ChangeEvent<unknown>, value: number) => {
     const normalizedPage = Math.max(1, Math.min(value, pageCount));
-    setLocalPage(normalizedPage);
     onPageChange(normalizedPage);
   };
 
@@ -548,7 +542,7 @@ export function LeadTableContainer({
           <Box sx={{ alignSelf: { xs: "flex-start", md: "center" } }}>
             <Pagination
               count={pageCount}
-              page={localPage}
+              page={Math.max(1, Math.min(page, pageCount))}
               shape="rounded"
               sx={{
                 "& .MuiPaginationItem-root": {

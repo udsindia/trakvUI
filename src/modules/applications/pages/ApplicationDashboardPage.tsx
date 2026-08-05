@@ -38,7 +38,7 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
     // Backend sends the current stage name (or outcome for un-staged apps); fall back safely.
-    stage: app.stage ?? app.currentStageName ?? app.outcome ?? "Unknown",
+    stage: app.currentStageName ?? app.stage ?? app.outcome ?? "Unknown",
     createdAt: app.createdAt,
   };
 }

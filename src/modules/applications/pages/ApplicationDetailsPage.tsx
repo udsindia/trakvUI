@@ -37,6 +37,7 @@ const TERMINAL_OUTCOMES = [
 const outcomeColor: Record<string, "default" | "success" | "info" | "warning" | "error"> = {
   IN_PROGRESS: "info",
   OFFER_ACCEPTED: "success",
+  DOCUMENTS_VERIFIED: "success",
   ENROLLED: "success",
   OFFER_DECLINED: "warning",
   WITHDRAWN: "default",

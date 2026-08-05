@@ -31,6 +31,11 @@ export function GlobalSearchBar({
   const [inputValue, setInputValue] = useState(value ?? "");
   const hasMountedRef = useRef(false);
   const isSyncingFromValueRef = useRef(false);
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   useEffect(() => {
     if (value === undefined) {
@@ -59,13 +64,13 @@ export function GlobalSearchBar({
     }
 
     const timeoutId = window.setTimeout(() => {
-      onSearch(inputValue);
+      onSearchRef.current(inputValue);
     }, debounceTime);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [debounceTime, inputValue, onSearch]);
+  }, [debounceTime, inputValue]);
 
   return (
     <TextField

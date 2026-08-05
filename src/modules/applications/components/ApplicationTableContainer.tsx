@@ -48,6 +48,7 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
   Processing: { backgroundColor: "#FDEEDD", color: "#B35A00" },
   "Visa Applied": { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
   "Visa Approved": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  "Documents Verified": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
   "Visa Rejected": { backgroundColor: "#FBE5E5", color: "#C0392F" },
   Completed: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
 };
