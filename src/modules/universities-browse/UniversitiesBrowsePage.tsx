@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import {
+  Alert,
   Box,
   Button,
   Chip,
   Paper,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -21,7 +23,13 @@ import StarOutlineRounded from "@mui/icons-material/StarOutlineRounded";
 import AddRounded from "@mui/icons-material/AddRounded";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
-import { useCountries, useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
+import {
+  useCountries,
+  useUniversitiesCatalog,
+  useUniversityMutations,
+} from "@/modules/universities/useUniversitiesCatalog";
+import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
 import { universityDetailsPath, courseDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 
@@ -99,7 +107,22 @@ export function UniversitiesBrowsePage() {
 
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [shortlistedCourseIds, setShortlistedCourseIds] = useState<string[]>([]);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(null);
+
+  const { saveUniversityMutation } = useUniversityMutations();
+
+  const handleAddUniversity = async (input: UniversityInput) => {
+    try {
+      await saveUniversityMutation.mutateAsync(input);
+      setAddDrawerOpen(false);
+      setSnack({ message: "University added", severity: "success" });
+    } catch {
+      setSnack({ message: "Failed to add university", severity: "error" });
+    }
+  };
 
   const {
     data: countries = [],
@@ -114,12 +137,21 @@ export function UniversitiesBrowsePage() {
   const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
   const filteredUniversities = useMemo(() => {
-    if (!searchQuery.trim()) return universities;
-    const q = searchQuery.toLowerCase();
-    return universities.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.country.toLowerCase().includes(q),
-    );
-  }, [universities, searchQuery]);
+    let result = universities;
+
+    if (selectedCountry) {
+      result = result.filter((u) => u.country === selectedCountry);
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (u) => u.name.toLowerCase().includes(q) || u.country.toLowerCase().includes(q),
+      );
+    }
+
+    return result;
+  }, [universities, searchQuery, selectedCountry]);
 
   const coursesForSelected = useMemo(
     () => allCourses.filter((c) => c.universityId === displayedUniversityId),
@@ -180,16 +212,21 @@ export function UniversitiesBrowsePage() {
 
         {/* Country filter chips */}
         <Stack direction="row" spacing={0.75}>
-          {countries.map((country) => (
-            <Chip
-              key={country.name}
-              clickable
-              label={country.name}
-              size="small"
-              sx={{ fontSize: 11.5, fontWeight: 600 }}
-              variant="outlined"
-            />
-          ))}
+          {countries.map((country) => {
+            const isActive = selectedCountry === country.name;
+            return (
+              <Chip
+                key={country.name}
+                clickable
+                color={isActive ? "primary" : undefined}
+                label={country.name}
+                size="small"
+                sx={{ fontSize: 11.5, fontWeight: 600 }}
+                variant={isActive ? "filled" : "outlined"}
+                onClick={() => setSelectedCountry((prev) => (prev === country.name ? null : country.name))}
+              />
+            );
+          })}
         </Stack>
 
         <Box sx={{ flex: 1 }} />
@@ -207,6 +244,7 @@ export function UniversitiesBrowsePage() {
           startIcon={<AddRounded />}
           sx={{ textTransform: "none" }}
           variant="contained"
+          onClick={() => setAddDrawerOpen(true)}
         >
           Add university
         </Button>
@@ -618,6 +656,25 @@ export function UniversitiesBrowsePage() {
           )}
         </Box>
       </Box>
+
+      <UniversityFormDrawer
+        open={addDrawerOpen}
+        university={null}
+        onClose={() => setAddDrawerOpen(false)}
+        onSave={handleAddUniversity}
+      />
+
+      <Snackbar
+        autoHideDuration={3000}
+        open={Boolean(snack)}
+        onClose={() => setSnack(null)}
+      >
+        {snack ? (
+          <Alert severity={snack.severity} sx={{ width: "100%" }} onClose={() => setSnack(null)}>
+            {snack.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
     </Paper>
   );
 }

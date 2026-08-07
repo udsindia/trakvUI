@@ -98,6 +98,19 @@ export function toAlpha2CountryCode(countryCode: string): string {
   return ALPHA3_TO_ALPHA2[normalized] ?? normalized;
 }
 
+/**
+ * Prepends "https://" when a website URL is missing a scheme, so users can type
+ * "www.example.com" instead of needing to know the backend's @URL validator
+ * requires one. Returns undefined for blank input.
+ */
+export function normalizeWebsiteUrl(website: string | undefined): string | undefined {
+  const trimmed = website?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 export function toUiStudyLevel(studyLevel: StudyLevel) {
   return STUDY_LEVEL_TO_UI[studyLevel] ?? { level: "masters" as CourseLevel, label: studyLevel };
 }

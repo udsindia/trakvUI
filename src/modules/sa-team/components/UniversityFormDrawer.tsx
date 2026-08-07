@@ -1,18 +1,14 @@
-import AddRounded from "@mui/icons-material/AddRounded";
-import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import {
-  Box,
   Button,
   Divider,
   Drawer,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
-import type { University, UniversityLink } from "@/modules/universities/universities.types";
+import type { University } from "@/modules/universities/universities.types";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
 
 const emptyUniversity = (): UniversityInput => ({
@@ -60,29 +56,6 @@ export function UniversityFormDrawer({
       setForm(emptyUniversity());
     }
   }, [university, open]);
-
-  const updateLink = (index: number, patch: Partial<UniversityLink>) => {
-    setForm((current) => ({
-      ...current,
-      links: current.links.map((link, linkIndex) =>
-        linkIndex === index ? { ...link, ...patch } : link,
-      ),
-    }));
-  };
-
-  const addLink = () => {
-    setForm((current) => ({
-      ...current,
-      links: [...current.links, { label: "", url: "" }],
-    }));
-  };
-
-  const removeLink = (index: number) => {
-    setForm((current) => ({
-      ...current,
-      links: current.links.filter((_, linkIndex) => linkIndex !== index),
-    }));
-  };
 
   const handleCountryChange = (countryCode: string) => {
     const option = courseSearchSettings.filters.country.options.find(
@@ -168,164 +141,12 @@ export function UniversityFormDrawer({
             onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
           />
         </Stack>
-        <Stack direction="row" spacing={1.5}>
-          <TextField
-            label="Flag"
-            placeholder="🇮🇪"
-            size="small"
-            value={form.flag}
-            onChange={(event) => setForm((current) => ({ ...current, flag: event.target.value }))}
-          />
-          <TextField
-            fullWidth
-            label="Founded year"
-            size="small"
-            type="number"
-            value={form.founded}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, founded: Number(event.target.value) || 0 }))
-            }
-          />
-        </Stack>
         <TextField
           fullWidth
           label="Website"
           size="small"
           value={form.website}
           onChange={(event) => setForm((current) => ({ ...current, website: event.target.value }))}
-        />
-        <TextField
-          fullWidth
-          multiline
-          label="About"
-          minRows={4}
-          size="small"
-          value={form.about}
-          onChange={(event) => setForm((current) => ({ ...current, about: event.target.value }))}
-        />
-
-        <Typography color="text.secondary" variant="subtitle2">
-          Track record
-        </Typography>
-        <Stack direction="row" spacing={1.5}>
-          <TextField
-            fullWidth
-            label="Students enrolled"
-            size="small"
-            type="number"
-            value={form.trackRecord.studentsEnrolled}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                trackRecord: {
-                  ...current.trackRecord,
-                  studentsEnrolled: Number(event.target.value) || 0,
-                },
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            label="Visas approved"
-            size="small"
-            type="number"
-            value={form.trackRecord.visasApproved}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                trackRecord: {
-                  ...current.trackRecord,
-                  visasApproved: Number(event.target.value) || 0,
-                },
-              }))
-            }
-          />
-        </Stack>
-        <Stack direction="row" spacing={1.5}>
-          <TextField
-            fullWidth
-            label="Visa success rate (%)"
-            size="small"
-            type="number"
-            value={form.trackRecord.visaSuccessRate}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                trackRecord: {
-                  ...current.trackRecord,
-                  visaSuccessRate: Number(event.target.value) || 0,
-                },
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            label="Avg application days"
-            size="small"
-            type="number"
-            value={form.trackRecord.avgApplicationDays}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                trackRecord: {
-                  ...current.trackRecord,
-                  avgApplicationDays: Number(event.target.value) || 0,
-                },
-              }))
-            }
-          />
-        </Stack>
-        <TextField
-          fullWidth
-          label="Average commission"
-          size="small"
-          value={form.trackRecord.avgCommission}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              trackRecord: { ...current.trackRecord, avgCommission: event.target.value },
-            }))
-          }
-        />
-
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography color="text.secondary" variant="subtitle2">
-            Useful links
-          </Typography>
-          <Button size="small" startIcon={<AddRounded />} onClick={addLink}>
-            Add link
-          </Button>
-        </Stack>
-        {form.links.map((link, index) => (
-          <Stack key={`link-${index}`} direction="row" spacing={1}>
-            <TextField
-              fullWidth
-              label="Label"
-              size="small"
-              value={link.label}
-              onChange={(event) => updateLink(index, { label: event.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="URL"
-              size="small"
-              value={link.url}
-              onChange={(event) => updateLink(index, { url: event.target.value })}
-            />
-            <IconButton onClick={() => removeLink(index)}>
-              <DeleteOutlineRounded fontSize="small" />
-            </IconButton>
-          </Stack>
-        ))}
-
-        <TextField
-          fullWidth
-          multiline
-          label="Internal notes"
-          minRows={3}
-          size="small"
-          value={form.internalNotes}
-          onChange={(event) => setForm((current) => ({ ...current, internalNotes: event.target.value }))}
         />
 
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>

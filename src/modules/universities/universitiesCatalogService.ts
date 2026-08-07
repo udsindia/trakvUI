@@ -5,6 +5,7 @@ import {
   mapCourseToUi,
   mapUniversityDetailToUi,
   mapUniversitySummaryToUi,
+  normalizeWebsiteUrl,
   parseDurationMonths,
   toAlpha3CountryCode,
   toApiStudyLevel,
@@ -88,7 +89,7 @@ export const universitiesCatalogService = {
         name: input.name,
         countryCode: toAlpha3CountryCode(input.countryCode),
         city: input.city,
-        website: input.website || undefined,
+        website: normalizeWebsiteUrl(input.website),
         universityType: input.universityType ?? defaultUniversityType(),
         qsRanking: input.qsRank,
       });
@@ -99,7 +100,7 @@ export const universitiesCatalogService = {
       name: input.name,
       countryCode: toAlpha3CountryCode(input.countryCode),
       city: input.city,
-      website: input.website || undefined,
+      website: normalizeWebsiteUrl(input.website),
       universityType: input.universityType ?? defaultUniversityType(),
       qsRanking: input.qsRank,
     });
