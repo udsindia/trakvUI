@@ -175,10 +175,18 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
     const dateFilter = values.dateRange as DateRangeFilterValue | undefined;
     if (dateFilter?.startDate || dateFilter?.endDate) {
-      const created = row.createdAt ? new Date(row.createdAt).getTime() : null;
-      if (created !== null) {
-        if (dateFilter.startDate && created < new Date(dateFilter.startDate).getTime()) return false;
-        if (dateFilter.endDate && created > new Date(dateFilter.endDate + "T23:59:59").getTime()) return false;
+      const created = row.createdAt ? new Date(row.createdAt).getTime() : NaN;
+      if (!Number.isNaN(created)) {
+        // Parse both bounds as local day-edges. Guarding on NaN keeps a bad
+        // value from silently disabling that bound (the old end-date bug).
+        const startTs = dateFilter.startDate
+          ? new Date(`${dateFilter.startDate}T00:00:00`).getTime()
+          : NaN;
+        const endTs = dateFilter.endDate
+          ? new Date(`${dateFilter.endDate}T23:59:59.999`).getTime()
+          : NaN;
+        if (!Number.isNaN(startTs) && created < startTs) return false;
+        if (!Number.isNaN(endTs) && created > endTs) return false;
       }
     }
 
