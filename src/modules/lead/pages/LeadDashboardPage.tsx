@@ -213,20 +213,16 @@ export function LeadDashboardPage() {
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
+  // Fetch all (non-archived, scope-narrowed) leads once, then filter + paginate
+  // client-side — so the filter/search and the pagination label/pages all reflect
+  // the same filtered set (matching the Applications table).
   const {
-    data: leadsPage,
+    data: backendLeads = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["leads", "paginated", page, PAGE_SIZE, "createdAt", "DESC"],
-    queryFn: () =>
-      leadApi.getLeadsPaginated({
-        page: page - 1,
-        size: PAGE_SIZE,
-        sortBy: "createdAt",
-        sortDirection: "DESC",
-      }),
-    placeholderData: (previousData) => previousData,
+    queryKey: ["leads", "all"],
+    queryFn: leadApi.getLeads,
   });
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
@@ -275,8 +271,6 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
-  const backendLeads = leadsPage?.content ?? [];
-
   const leadRows: LeadRow[] = useMemo(
     () => backendLeads.map(mapBackendLeadToRow),
     [backendLeads],
@@ -303,16 +297,14 @@ export function LeadDashboardPage() {
     return rows;
   }, [leadRows, filterValues, leadSearchQuery, activeQuickFilter]);
 
-  const pageCount = Math.max(1, leadsPage?.totalPages ?? 1);
+  // Paginate the fully-filtered set client-side, so page count + label track the filter.
+  const totalVisible = fullyFilteredRows.length;
+  const pageCount = Math.max(1, Math.ceil(totalVisible / PAGE_SIZE));
   const clampedPage = Math.max(1, Math.min(page, pageCount));
+  const pagedRows = fullyFilteredRows.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  // The backend paginates first; local filters/search are then applied within the
-  // current page payload only.
-  const pagedRows = fullyFilteredRows;
-
-  const totalVisible = leadsPage?.totalElements ?? 0;
   const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * PAGE_SIZE + 1;
-  const pageEnd = totalVisible === 0 ? 0 : Math.min(pageStart + (leadsPage?.numberOfElements ?? 0) - 1, totalVisible);
+  const pageEnd = totalVisible === 0 ? 0 : Math.min(clampedPage * PAGE_SIZE, totalVisible);
   const paginationLabel =
     totalVisible === 0
       ? "Showing 0 of 0 leads"
@@ -352,7 +344,7 @@ export function LeadDashboardPage() {
   const handleDeleteLead = async (id: string) => {
     try {
       await leadApi.deleteLead(id);
-      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
       setSnack("Lead deleted");
     } catch {
       setSnack("Failed to delete lead");
@@ -362,7 +354,7 @@ export function LeadDashboardPage() {
   const handleBulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => leadApi.deleteLead(id)));
-      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
       setSnack(`${ids.length} lead(s) deleted`);
     } catch {
       setSnack("Failed to delete some leads");
@@ -374,7 +366,7 @@ export function LeadDashboardPage() {
       await leadApi.updateLead(id, {
         leadStage: toBackendLeadStage(stage),
       });
-      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
       setSnack(`Stage updated to ${stage}`);
     } catch {
       setSnack("Failed to update stage");
@@ -542,7 +534,7 @@ export function LeadDashboardPage() {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImported={() => {
-          void queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+          void queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
           void queryClient.invalidateQueries({ queryKey: ["leads", "count"] });
           setSnack("Leads imported");
         }}

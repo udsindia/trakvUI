@@ -166,6 +166,11 @@ export const applicationsApi = {
     return response.data;
   },
 
+  /** Soft-delete (archive) an application. It is then hidden from lists. */
+  deleteApplication: async (id: string): Promise<void> => {
+    await httpClient.delete(`${API_CONFIG.applications}/${id}`);
+  },
+
   getHistory: async (id: string): Promise<StageHistoryEntry[]> => {
     const response = await httpClient.get<StageHistoryEntry[]>(
       `${API_CONFIG.applications}/${id}/history`,
