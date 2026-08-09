@@ -27,6 +27,7 @@ import { SettingsPageHeader } from "@/modules/settings/components/SettingsPageHe
 import { rolesService } from "@/modules/settings/rolesService";
 import { settingsRoutePaths } from "@/modules/settings/settingsRoutePaths";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 export function RolesPage() {
   const { hasPermissions, tenant } = useAuth();
@@ -92,7 +93,7 @@ export function RolesPage() {
             elevation={0}
             sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
           >
-            <Table>
+            <Table sx={dataTableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Role</TableCell>

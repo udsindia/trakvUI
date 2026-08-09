@@ -3,6 +3,7 @@ import type { TenantContextState } from "@/app/auth/auth.types";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { moduleCatalog } from "@/config/modules/module-catalog";
 import { MODULE_KEYS, type ModuleKey } from "@/config/modules/modules";
+import type { ModuleNavigationItemDefinition } from "@/config/modules/module.types";
 import type { PermissionKey } from "@/config/permissions/permissions";
 import { isSuperAdmin } from "@/config/roles/superAdmin";
 import { hasAllPermissions, hasAnyPermission } from "@/shared/utils/permissions";
@@ -29,15 +30,15 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
 };
 
-function isModuleAccessible(
+function isNavItemAccessible(
   permissions: PermissionKey[],
-  moduleDefinition: (typeof moduleCatalog)[number],
+  item: ModuleNavigationItemDefinition,
 ) {
-  if (moduleDefinition.anyOfPermissions?.length) {
-    return hasAnyPermission(permissions, moduleDefinition.anyOfPermissions);
+  if (item.anyOfPermissions?.length) {
+    return hasAnyPermission(permissions, item.anyOfPermissions);
   }
 
-  return hasAllPermissions(permissions, moduleDefinition.requiredPermissions ?? []);
+  return hasAllPermissions(permissions, item.requiredPermissions ?? []);
 }
 
 export function resolveModules({
@@ -57,10 +58,17 @@ export function resolveModules({
 
   return moduleCatalog.map((moduleDefinition) => {
     const enabled = superAdmin ? true : (tenant.enabledModules[moduleDefinition.key] ?? false);
-    const accessible = superAdmin ? true : isModuleAccessible(permissions, moduleDefinition);
+    const accessible = superAdmin ? true : isNavItemAccessible(permissions, moduleDefinition);
+
+    // Gate sub-items individually so e.g. Role Management is hidden from a user who lacks
+    // ROLE_VIEW even when the parent Settings section is visible via another permission.
+    const children = moduleDefinition.children?.filter(
+      (child) => superAdmin || isNavItemAccessible(permissions, child),
+    );
 
     return {
       ...moduleDefinition,
+      children,
       enabled,
       accessible,
       Component: lazyModuleMap[moduleDefinition.key],

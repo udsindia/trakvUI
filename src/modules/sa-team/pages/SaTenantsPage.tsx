@@ -29,6 +29,7 @@ import type { TenantSummary } from "@/modules/sa-team/sa.types";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
 import { saTeamApi } from "@/modules/sa-team/saTeamApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 const SA_TEAL = "#0d7a7a";
 const PLANS = ["STARTER", "TRIAL", "PRO", "ENTERPRISE"];
@@ -251,7 +252,7 @@ export function SaTenantsPage() {
       </Box>
 
       <Box sx={{ overflowX: "auto" }}>
-        <Table size="small">
+        <Table sx={dataTableSx}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>

@@ -32,6 +32,7 @@ import {
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
 import { universityDetailsPath, courseDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 /* -----------------------------------------------------------------------
    Colour palette for university crests — cycles through brand tones
@@ -415,7 +416,7 @@ export function UniversitiesBrowsePage() {
 
                 {/* Courses table */}
                 <TableContainer>
-                  <Table size="small">
+                  <Table sx={dataTableSx}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: "#f8fbfe" }}>
                         {["Course", "Level", "Duration", "Intake", "Entry", "Tuition", "Shortlist"].map(
@@ -577,7 +578,7 @@ export function UniversitiesBrowsePage() {
                     </Button>
                   </Stack>
                   <TableContainer>
-                    <Table size="small">
+                    <Table sx={dataTableSx}>
                       <TableHead>
                         <TableRow sx={{ bgcolor: "#f8fbfe" }}>
                           {["Course", "University", "Added", ""].map((header) => (

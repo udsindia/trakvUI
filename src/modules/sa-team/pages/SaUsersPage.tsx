@@ -23,6 +23,7 @@ import { InviteUserDialog } from "@/modules/sa-team/components/InviteUserDialog"
 import { saAuthService } from "@/modules/sa-team/saAuthService";
 import { saTeamApi } from "@/modules/sa-team/saTeamApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 const SA_TEAL = "#0d7a7a";
 
@@ -102,7 +103,7 @@ export function SaUsersPage() {
           elevation={0}
           sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
         >
-          <Table>
+          <Table sx={dataTableSx}>
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>

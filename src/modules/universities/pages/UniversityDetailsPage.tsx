@@ -32,6 +32,7 @@ import {
 import { FeedbackState } from "@/shared/components/FeedbackState";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import type { EligibilityStatus } from "@/modules/universities/universities.types";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 function getEligibilityBadge(status: EligibilityStatus, warning?: string) {
   const label =
@@ -133,7 +134,7 @@ export function UniversityDetailsPage() {
                   </Button>
                 </Stack>
                 <TableContainer>
-                  <Table size="small">
+                  <Table sx={dataTableSx}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: "#f8fbfe" }}>
                         {["Course", "Intake", "Duration", "Tuition", "IELTS", "Eligible?"].map((header) => (

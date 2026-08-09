@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded } from "@mui/icons-material";
+import UploadFileRounded from "@mui/icons-material/UploadFileRounded";
 import {
   Badge,
   Box,
@@ -23,6 +24,7 @@ import {
   LeadTableContainer,
   type LeadRow,
 } from "@/modules/lead/components/LeadTableContainer";
+import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
 import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
 import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
@@ -198,6 +200,7 @@ export function LeadDashboardPage() {
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [snack, setSnack] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
@@ -421,6 +424,22 @@ export function LeadDashboardPage() {
               }}
             />
 
+            {canCreateLeads ? (
+              <Button
+                startIcon={<UploadFileRounded sx={{ fontSize: 18 }} />}
+                variant="outlined"
+                sx={{
+                  borderRadius: "9px",
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+                onClick={() => setImportOpen(true)}
+              >
+                Import
+              </Button>
+            ) : null}
+
             <Badge
               badgeContent={activeFilterCount}
               color="primary"
@@ -510,6 +529,16 @@ export function LeadDashboardPage() {
           }}
         />
       </Drawer>
+
+      <ImportLeadsDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => {
+          void queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+          void queryClient.invalidateQueries({ queryKey: ["leads", "count"] });
+          setSnack("Leads imported");
+        }}
+      />
     </>
   );
 }

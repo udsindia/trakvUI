@@ -31,6 +31,7 @@ import {
   useUniversityMutations,
 } from "@/modules/universities/useUniversitiesCatalog";
 import type { Course, University } from "@/modules/universities/universities.types";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 const SA_TEAL = "#0d7a7a";
 
@@ -85,7 +86,7 @@ export function SaUniversitiesPage() {
         ) : null}
       </Stack>
 
-      <Table size="small">
+      <Table sx={dataTableSx}>
         <TableHead>
           <TableRow>
             {["University", "Country", "City", "QS Rank", "Courses", "Actions"].map((header) => (
@@ -241,7 +242,7 @@ export function SaUniversityDetailPage({
         ) : null}
       </Stack>
 
-      <Table size="small">
+      <Table sx={dataTableSx}>
         <TableHead>
           <TableRow>
             {["Course", "Level", "Intake", "Tuition", "IELTS", "Deadline", "Actions"].map((header) => (

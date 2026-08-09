@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { TenantUser } from "@/modules/settings/settings.types";
+import { dataTableSx } from "@/shared/ui/tableStyles";
 
 type UserTableProps = {
   canManageUsers: boolean;
@@ -25,7 +26,7 @@ export function UserTable({ canManageUsers, onToggleActive, users }: UserTablePr
       elevation={0}
       sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px" }}
     >
-      <Table sx={{ "& .MuiTableBody-root .MuiTableCell-root": { fontSize: 12.5, py: 1.15 } }}>
+      <Table sx={dataTableSx}>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>

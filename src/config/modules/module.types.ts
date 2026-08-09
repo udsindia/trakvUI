@@ -22,6 +22,10 @@ export interface ModuleNavigationItemDefinition {
   description?: string;
   icon?: ModuleIconKey;
   children?: ModuleNavigationItemDefinition[];
+  /** Child-level gating: user must have every permission in this list to see this item. */
+  requiredPermissions?: PermissionKey[];
+  /** Child-level gating: user must have at least one permission in this list to see this item. */
+  anyOfPermissions?: PermissionKey[];
 }
 
 export interface ModuleDefinition extends ModuleNavigationItemDefinition {

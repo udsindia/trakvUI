@@ -3,6 +3,7 @@ import type { PermissionKey } from "@/config/permissions/permissions";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { AddLeadPage } from "@/modules/lead/pages/AddLeadPage";
 import { LeadDashboardPage } from "@/modules/lead/pages/LeadDashboardPage";
+import { LeadDetailsPage } from "@/modules/lead/pages/LeadDetailsPage";
 
 type LeadRouteDefinition = {
   Component: ComponentType;
@@ -23,5 +24,11 @@ export const leadRoutes: LeadRouteDefinition[] = [
     key: "create",
     path: "create",
     requiredPermissions: [PERMISSIONS.LEAD_CREATE],
+  },
+  {
+    Component: LeadDetailsPage,
+    key: "details",
+    path: ":id",
+    requiredPermissions: [PERMISSIONS.LEAD_VIEW],
   },
 ];
