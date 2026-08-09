@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { TuneRounded } from "@mui/icons-material";
-import UploadFileRounded from "@mui/icons-material/UploadFileRounded";
+import { TuneRounded, UploadRounded } from "@mui/icons-material";
 import {
   Badge,
   Box,
@@ -426,8 +425,9 @@ export function LeadDashboardPage() {
 
             {canCreateLeads ? (
               <Button
-                startIcon={<UploadFileRounded sx={{ fontSize: 18 }} />}
-                variant="outlined"
+                startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
+                variant="contained"
+                size="small"
                 sx={{
                   borderRadius: "9px",
                   textTransform: "none",
@@ -436,7 +436,7 @@ export function LeadDashboardPage() {
                 }}
                 onClick={() => setImportOpen(true)}
               >
-                Import
+                Import Leads
               </Button>
             ) : null}
 

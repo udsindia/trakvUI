@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import DownloadRounded from "@mui/icons-material/DownloadRounded";
 import UploadFileRounded from "@mui/icons-material/UploadFileRounded";
 import {
   Alert,
@@ -62,6 +63,17 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
     onClose();
   };
 
+  const handleDownloadSample = () => {
+    const csv = EXPECTED_HEADERS.join(",") + "\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "lead-import-sample.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleImport = async () => {
     if (!file) return;
     setBusy(true);
@@ -86,10 +98,10 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
       <DialogTitle sx={{ fontWeight: 700 }}>Import Leads from CSV</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
-          <Typography color="text.secondary" variant="body2">
-            Upload a <b>.csv</b> file. The first row must be a header with these columns
+          <Alert severity="info">
+            Upload a <b>.csv</b> or <b>.xlsx</b> file with a header row using these columns
             (extra columns are ignored):
-          </Typography>
+          </Alert>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
             {EXPECTED_HEADERS.map((h) => (
               <Chip key={h} label={h} size="small" variant="outlined" sx={{ fontSize: 11 }} />
@@ -105,7 +117,7 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
           <input
             ref={inputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             hidden
             onChange={(e) => {
               setResult(null);
@@ -113,9 +125,22 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
               setFile(e.target.files?.[0] ?? null);
             }}
           />
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <Stack
+            alignItems={{ xs: "stretch", sm: "center" }}
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+          >
             <Button
               variant="outlined"
+              startIcon={<DownloadRounded />}
+              onClick={handleDownloadSample}
+              disabled={busy}
+              sx={{ textTransform: "none", borderRadius: "9px" }}
+            >
+              Download sample CSV
+            </Button>
+            <Button
+              variant="contained"
               startIcon={<UploadFileRounded />}
               onClick={() => inputRef.current?.click()}
               disabled={busy}
@@ -142,10 +167,10 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
               {result.skippedReasons.length ? (
                 <List dense sx={{ mt: 0.5, maxHeight: 180, overflow: "auto" }}>
                   {result.skippedReasons.map((s, i) => (
-                    <ListItem key={`${s.rowNumber}-${i}`} disableGutters sx={{ py: 0 }}>
+                    <ListItem key={`${s.row}-${i}`} disableGutters sx={{ py: 0 }}>
                       <ListItemText
                         primaryTypographyProps={{ fontSize: 12.5 }}
-                        primary={`Row ${s.rowNumber}: ${s.reason}`}
+                        primary={`Row ${s.row}: ${s.reason}`}
                       />
                     </ListItem>
                   ))}
