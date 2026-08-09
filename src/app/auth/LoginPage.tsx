@@ -202,6 +202,12 @@ export function LoginPage() {
               {isLoggingIn ? "Signing In..." : "Sign In"}
             </Button>
 
+            <Typography align="center" variant="body2">
+              <RouterLink to="/forgot-password" style={{ color: "inherit", fontWeight: 700 }}>
+                Forgot password?
+              </RouterLink>
+            </Typography>
+
             <Typography align="center" color="text.secondary" variant="body2">
               New consultancy?{" "}
               <RouterLink to="/register" style={{ color: "inherit", fontWeight: 700 }}>

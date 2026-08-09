@@ -1,15 +1,25 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Box, Stack, Typography } from "@mui/material";
-import type { DashboardLeadPipelineDto } from "@/modules/dashboard/dashboard.types";
+import type {
+  DashboardLeadPipelineDto,
+  DashboardPerformanceMetricDto,
+} from "@/modules/dashboard/dashboard.types";
 import { PanelCard, PanelLink } from "@/modules/dashboard/components/PanelCard";
 import { PipelineBars } from "@/modules/dashboard/components/PipelineBars";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 
 type DashboardLeadsSectionProps = {
   leadsScope: string;
+  performance?: DashboardPerformanceMetricDto[];
   pipeline?: DashboardLeadPipelineDto;
   showUnassigned: boolean;
 };
+
+function formatMetric(value: number, unit?: string) {
+  if (unit === "%") return `${value}%`;
+  if (unit) return `${value}${unit}`;
+  return String(value);
+}
 
 const STAGE_PILL_COLORS = [
   { bg: "#EFF6FF", text: "#1D4ED8" },
@@ -27,7 +37,7 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSectionProps) {
+export function DashboardLeadsSection({ leadsScope, performance, pipeline }: DashboardLeadsSectionProps) {
   const stages = pipeline?.stages ?? [];
   const total = pipeline?.total ?? 0;
 
@@ -202,19 +212,21 @@ export function DashboardLeadsSection({ leadsScope, pipeline }: DashboardLeadsSe
           </Stack>
         </PanelCard> */}
 
-        <PanelCard title="Conversion Snapshot (Mock)">
-          <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>
-            {[
-              { value: "22%", label: "Lead→Enrol", color: "primary.main" },
-              { value: "58%", label: "Qual rate", color: "success.main" },
-              { value: "3.2d", label: "Avg resp.", color: "secondary.main" },
-            ].map((stat) => (
-              <Box key={stat.label}>
-                <Typography sx={{ color: stat.color, fontSize: 16, fontWeight: 800 }}>{stat.value}</Typography>
-                <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{stat.label}</Typography>
-              </Box>
-            ))}
-          </Stack>
+        <PanelCard title="Conversion Snapshot">
+          {performance && performance.length > 0 ? (
+            <Stack direction="row" sx={{ justifyContent: "space-around", textAlign: "center" }}>
+              {performance.slice(0, 3).map((metric) => (
+                <Box key={metric.label}>
+                  <Typography sx={{ color: metric.color, fontSize: 16, fontWeight: 800 }}>
+                    {formatMetric(metric.value, metric.unit)}
+                  </Typography>
+                  <Typography sx={{ color: "text.disabled", fontSize: 9 }}>{metric.label}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          ) : (
+            <EmptyState message="No data available" />
+          )}
         </PanelCard>
       </Stack>
     </Stack>

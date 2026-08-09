@@ -7,6 +7,7 @@ import {
   Chip,
   LinearProgress,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import type { CourseSearchResult } from "@/modules/universities/universities.types";
@@ -53,6 +54,8 @@ type CourseSearchCardProps = {
   onViewUniversity?: () => void;
   onAddToShortlist: () => void;
   isShortlisted: boolean;
+  shortlistDisabled?: boolean;
+  shortlistDisabledReason?: string;
 };
 
 export function CourseSearchCard({
@@ -62,6 +65,8 @@ export function CourseSearchCard({
   onViewUniversity,
   onAddToShortlist,
   isShortlisted,
+  shortlistDisabled = false,
+  shortlistDisabledReason,
 }: CourseSearchCardProps) {
   const showEligibility = Boolean(studentName);
   const isNotEligible = showEligibility && result.eligibilityStatus === "not-eligible";
@@ -210,14 +215,19 @@ export function CourseSearchCard({
           <Button size="small" sx={{ textTransform: "none" }} variant="outlined" onClick={onViewCourse}>
             View Course
           </Button>
-          <Button
-            size="small"
-            sx={{ textTransform: "none" }}
-            variant={isShortlisted ? "outlined" : "contained"}
-            onClick={onAddToShortlist}
-          >
-            {isShortlisted ? "Shortlisted" : "Add to Shortlist"}
-          </Button>
+          <Tooltip title={shortlistDisabled ? shortlistDisabledReason ?? "" : ""}>
+            <span>
+              <Button
+                disabled={shortlistDisabled}
+                size="small"
+                sx={{ textTransform: "none" }}
+                variant={isShortlisted ? "outlined" : "contained"}
+                onClick={onAddToShortlist}
+              >
+                {isShortlisted ? "Shortlisted" : "Add to Shortlist"}
+              </Button>
+            </span>
+          </Tooltip>
         </Stack>
       </Stack>
     </Box>

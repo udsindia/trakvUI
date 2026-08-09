@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { DownloadRounded, TuneRounded, UploadRounded } from "@mui/icons-material";
 import {
   Alert,
+  Autocomplete,
   Badge,
   Box,
   Button,
@@ -17,9 +18,13 @@ import {
   Paper,
   Select,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { studentsApi, type StudentOption } from "@/modules/applications/studentsApi";
+import { shortlistApi } from "@/modules/universities/shortlistApi";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
@@ -154,7 +159,42 @@ export function CourseSearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [shortlistIds, setShortlistIds] = useState<string[]>([]);
+
+  // ── Student context for shortlisting (a shortlist belongs to a student) ──────
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
+
+  const { data: students = [] } = useQuery({
+    queryKey: ["students", "options"],
+    queryFn: studentsApi.getStudents,
+  });
+
+  const preselectId = searchParams.get("studentId");
+  useEffect(() => {
+    if (preselectId && !selectedStudent) {
+      const match = students.find((s) => s.id === preselectId);
+      if (match) setSelectedStudent(match);
+    }
+  }, [preselectId, students, selectedStudent]);
+
+  const studentId = selectedStudent?.id ?? null;
+
+  const { data: shortlistIds = [] } = useQuery({
+    queryKey: ["shortlist", studentId],
+    queryFn: () => shortlistApi.getShortlistedCourseIds(studentId as string),
+    enabled: !!studentId,
+  });
+
+  const shortlistMutation = useMutation({
+    mutationFn: ({ courseId, add }: { courseId: string; add: boolean }) =>
+      add
+        ? shortlistApi.addToShortlist(studentId as string, courseId)
+        : shortlistApi.removeFromShortlist(studentId as string, courseId),
+    onSettled: () => {
+      if (studentId) queryClient.invalidateQueries({ queryKey: ["shortlist", studentId] });
+    },
+  });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -224,11 +264,13 @@ export function CourseSearchPage() {
   );
 
   const handleToggleShortlist = (courseId: string) => {
-    setShortlistIds((current) =>
-      current.includes(courseId)
-        ? current.filter((id) => id !== courseId)
-        : [...current, courseId],
+    if (!studentId) return;
+    const add = !shortlistIds.includes(courseId);
+    // Optimistic cache update so the button flips instantly; onSettled resyncs.
+    queryClient.setQueryData<string[]>(["shortlist", studentId], (prev = []) =>
+      add ? [...prev, courseId] : prev.filter((id) => id !== courseId),
     );
+    shortlistMutation.mutate({ courseId, add });
   };
 
   const handleClearFilters = () => {
@@ -318,6 +360,22 @@ export function CourseSearchPage() {
               spacing={0.5}
               sx={{ alignItems: "center" }}
             >
+              <Autocomplete
+                getOptionLabel={(option) => option.name || option.email || option.id}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                options={students}
+                size="small"
+                sx={{ width: { xs: "100%", md: 230 } }}
+                value={selectedStudent}
+                onChange={(_, value) => setSelectedStudent(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Shortlist for"
+                    placeholder="Select student"
+                  />
+                )}
+              />
               <GlobalSearchBar
                 placeholder={courseSearchSettings.search.placeholder}
                 sx={{ width: { xs: "100%", md: 300 } }}
@@ -425,6 +483,9 @@ export function CourseSearchPage() {
                       key={result.id}
                       isShortlisted={shortlistIds.includes(result.id)}
                       result={result}
+                      shortlistDisabled={!studentId}
+                      shortlistDisabledReason="Select a student to shortlist for"
+                      studentName={selectedStudent?.name}
                       onAddToShortlist={() => handleToggleShortlist(result.id)}
                       onViewCourse={() =>
                         navigate(courseDetailsPath(result.universityId, result.id))
