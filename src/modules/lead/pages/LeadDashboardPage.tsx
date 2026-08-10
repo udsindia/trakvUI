@@ -37,7 +37,8 @@ import {
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "all", label: "All" },
@@ -199,6 +200,7 @@ export function LeadDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -211,11 +213,11 @@ export function LeadDashboardPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["leads", "paginated", page, PAGE_SIZE, "createdAt", "DESC"],
+    queryKey: ["leads", "paginated", page, pageSize, "createdAt", "DESC"],
     queryFn: () =>
       leadApi.getLeadsPaginated({
         page: page - 1,
-        size: PAGE_SIZE,
+        size: pageSize,
         sortBy: "createdAt",
         sortDirection: "DESC",
       }),
@@ -304,7 +306,7 @@ export function LeadDashboardPage() {
   const pagedRows = fullyFilteredRows;
 
   const totalVisible = leadsPage?.totalElements ?? 0;
-  const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * PAGE_SIZE + 1;
+  const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
   const pageEnd = totalVisible === 0 ? 0 : Math.min(pageStart + (leadsPage?.numberOfElements ?? 0) - 1, totalVisible);
   const paginationLabel =
     totalVisible === 0
@@ -315,6 +317,12 @@ export function LeadDashboardPage() {
     const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
     setPage((currentPage) => (currentPage === normalizedPage ? currentPage : normalizedPage));
   }, [pageCount]);
+
+  const handlePageSizeChange = useCallback((nextPageSize: number) => {
+    if (nextPageSize === pageSize) return;
+    setPageSize(nextPageSize);
+    setPage(1);
+  }, [pageSize]);
 
   const handleFilterChange = useCallback((values: FilterPanelValues) => {
     setFilterValues((currentValues) => {
@@ -490,12 +498,15 @@ export function LeadDashboardPage() {
               <LeadTableContainer
                 leads={pagedRows}
                 page={clampedPage}
+                pageSize={pageSize}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
                 pageCount={pageCount}
                 paginationLabel={paginationLabel}
                 onDeleteLead={handleDeleteLead}
                 onBulkDelete={handleBulkDelete}
                 onUpdateStage={handleUpdateStage}
                 onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
               />
             </>
           )}

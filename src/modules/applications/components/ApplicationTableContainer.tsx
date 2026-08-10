@@ -16,7 +16,11 @@ export type ApplicationRow = {
 
 type ApplicationTableContainerProps = {
   applications: ApplicationRow[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   page: number;
+  pageSize: number;
+  pageSizeOptions: number[];
   pageCount: number;
   paginationLabel: string;
 };
@@ -95,7 +99,11 @@ const columns: DataTableColumn<ApplicationRow>[] = [
 
 export function ApplicationTableContainer({
   applications,
+  onPageChange,
+  onPageSizeChange,
   page,
+  pageSize,
+  pageSizeOptions,
   pageCount,
   paginationLabel,
 }: ApplicationTableContainerProps) {
@@ -108,6 +116,10 @@ export function ApplicationTableContainer({
       page={page}
       pageCount={pageCount}
       paginationLabel={paginationLabel}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       emptyMessage="No applications found."
       onRowClick={(app) => navigate(`/applications/${app.id}`)}
     />

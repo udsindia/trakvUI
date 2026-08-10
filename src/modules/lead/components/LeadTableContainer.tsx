@@ -46,7 +46,10 @@ type LeadTableContainerProps = {
   onDeleteLead: (id: string) => Promise<void>;
   onUpdateStage: (id: string, stage: string) => Promise<void>;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   page: number;
+  pageSize: number;
+  pageSizeOptions: number[];
   pageCount: number;
   paginationLabel: string;
 };
@@ -82,7 +85,10 @@ export function LeadTableContainer({
   onDeleteLead,
   onUpdateStage,
   onPageChange,
+  onPageSizeChange,
   page,
+  pageSize,
+  pageSizeOptions,
   pageCount,
   paginationLabel,
 }: LeadTableContainerProps) {
@@ -366,6 +372,9 @@ export function LeadTableContainer({
         page={page}
         pageCount={pageCount}
         paginationLabel={paginationLabel}
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
+        onPageSizeChange={onPageSizeChange}
         onPageChange={onPageChange}
         emptyMessage="No leads found."
         minWidth={820}

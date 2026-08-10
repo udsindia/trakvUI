@@ -9,6 +9,9 @@ import { applicationsApi, type BackendApplication } from "@/modules/applications
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
 
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
 function countActiveFilters(values: FilterPanelValues, config: FilterConfig[]): number {
   return config.reduce((count, filterConfig) => {
     const value = values[filterConfig.key];
@@ -48,6 +51,8 @@ export function ApplicationDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const { data: backendApps = [], isLoading, isError } = useQuery({
     queryKey: ["applications"],
@@ -117,18 +122,42 @@ export function ApplicationDashboardPage() {
     [appRows, activeQuickFilter, countryFilter, stageFilter, query],
   );
 
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const clampedPage = Math.max(1, Math.min(page, pageCount));
+  const pagedRows = filteredRows.slice((clampedPage - 1) * pageSize, clampedPage * pageSize);
+
   const visibleCount = filteredRows.length;
+  const pageStart = visibleCount === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
+  const pageEnd = visibleCount === 0 ? 0 : Math.min(clampedPage * pageSize, visibleCount);
   const paginationLabel = visibleCount === 0
     ? "Showing 0 of 0 applications"
-    : `Showing 1-${visibleCount} of ${visibleCount} applications`;
+    : `Showing ${pageStart}-${pageEnd} of ${visibleCount} applications`;
 
   const handleFilterChange = (values: FilterPanelValues) => {
     setFilterValues(values);
+    setPage(1);
   };
 
   const handleApplyFilters = (values: FilterPanelValues) => {
     setFilterValues(values);
+    setPage(1);
     setDrawerOpen(false);
+  };
+
+  const handleQuickFilterChange = (key: string) => {
+    setActiveQuickFilter(key);
+    setPage(1);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
+    setPage(normalizedPage);
+  };
+
+  const handlePageSizeChange = (nextPageSize: number) => {
+    if (nextPageSize === pageSize) return;
+    setPageSize(nextPageSize);
+    setPage(1);
   };
 
   return (
@@ -159,7 +188,7 @@ export function ApplicationDashboardPage() {
         >
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", width: "100%" }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={setActiveQuickFilter} />
+              <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={handleQuickFilterChange} />
             </Box>
 
             <Badge
@@ -194,7 +223,16 @@ export function ApplicationDashboardPage() {
               <Typography color="error" variant="body2">Failed to load applications.</Typography>
             </Box>
           ) : (
-            <ApplicationTableContainer applications={filteredRows} page={1} pageCount={1} paginationLabel={paginationLabel} />
+            <ApplicationTableContainer
+              applications={pagedRows}
+              page={clampedPage}
+              pageSize={pageSize}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              pageCount={pageCount}
+              paginationLabel={paginationLabel}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
           )}
         </Box>
       </Paper>
