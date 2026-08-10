@@ -17,13 +17,13 @@
     "@reduxjs/toolkit": "2.11.2",
     "@tanstack/react-query": "5.91.2",
     "@tanstack/react-table": "8.21.3",
-    "axios": "1.13.6",
+    "axios": "^1.19.0",
     "qrcode-generator": "^2.0.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "7.71.2",
     "react-redux": "9.2.0",
-    "react-router-dom": "7.13.1"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@types/node": "25.5.0",
@@ -31,7 +31,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
     "typescript": "5.9.3",
-    "vite": "8.0.1"
+    "vite": "^8.2.1"
   },
   "engines": {
     "node": ">=20.0.0"
