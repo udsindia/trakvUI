@@ -121,7 +121,7 @@ export function DataTable<T>({
             <TableHead>
               <TableRow>
                 {selection ? (
-                  <TableCell padding="checkbox">
+                  <TableCell style={{ padding: "5px" }}>
                     <Checkbox
                       checked={selection.allSelected}
                       disabled={selection.disabled || rows.length === 0}
@@ -137,7 +137,7 @@ export function DataTable<T>({
                   </TableCell>
                 ) : null}
                 {columns.map((column) => (
-                  <TableCell key={column.id} align={column.align}>
+                  <TableCell key={column.id} align={column.align} style={{ padding: "5px" }}>
                     {column.header}
                   </TableCell>
                 ))}
@@ -154,17 +154,17 @@ export function DataTable<T>({
                   onClick={
                     onRowClick
                       ? (event) => {
-                          // Let per-row controls (buttons, links, checkboxes) act on their own.
-                          if ((event.target as HTMLElement).closest('button, a, input, [role="button"]')) {
-                            return;
-                          }
-                          onRowClick(row);
+                        // Let per-row controls (buttons, links, checkboxes) act on their own.
+                        if ((event.target as HTMLElement).closest('button, a, input, [role="button"]')) {
+                          return;
                         }
+                        onRowClick(row);
+                      }
                       : undefined
                   }
                 >
                   {selection ? (
-                    <TableCell padding="checkbox" sx={{ minWidth: 30, maxWidth: 40 }}>
+                    <TableCell padding="none" sx={{ minWidth: 30, maxWidth: 40 }} style={{ padding: "5px" }}>
                       <Checkbox
                         checked={selection.isSelected(row)}
                         size="small"
@@ -181,6 +181,7 @@ export function DataTable<T>({
                       key={column.id}
                       align={column.align}
                       sx={{ minWidth: column.minWidth, ...(column.cellSx as object) }}
+                      style={{ padding: "5px" }}
                     >
                       {column.render(row)}
                     </TableCell>
