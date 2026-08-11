@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import EditRounded from "@mui/icons-material/EditRounded";
 import {
@@ -42,9 +42,9 @@ export type LeadStage = (typeof LEAD_STAGES)[number];
 
 type LeadTableContainerProps = {
   leads: LeadRow[];
-  onBulkDelete: (ids: string[]) => Promise<void>;
-  onDeleteLead: (id: string) => Promise<void>;
-  onUpdateStage: (id: string, stage: string) => Promise<void>;
+  onBulkDelete: (ids: string[], signal?: AbortSignal) => Promise<void>;
+  onDeleteLead: (id: string, signal?: AbortSignal) => Promise<void>;
+  onUpdateStage: (id: string, stage: string, signal?: AbortSignal) => Promise<void>;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   page: number;
@@ -93,6 +93,7 @@ export function LeadTableContainer({
   paginationLabel,
 }: LeadTableContainerProps) {
   const navigate = useNavigate();
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [stageDialogLeadId, setStageDialogLeadId] = useState<string | null>(null);
@@ -106,6 +107,12 @@ export function LeadTableContainer({
       current.filter((id) => leads.some((lead) => lead.id === id)),
     );
   }, [leads]);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const allVisibleRowsSelected = leads.length > 0 && selectedLeadIds.length === leads.length;
   const hasPartialSelection = selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length;
@@ -124,11 +131,14 @@ export function LeadTableContainer({
   const handleRowDelete = async (leadId: string) => {
     const lead = leads.find((l) => l.id === leadId);
     if (!window.confirm(`Delete lead "${lead?.name ?? leadId}"? This cannot be undone.`)) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
     setActionLoading(true);
     try {
-      await onDeleteLead(leadId);
+      await onDeleteLead(leadId, signal);
     } finally {
-      setActionLoading(false);
+      if (!signal.aborted) setActionLoading(false);
     }
   };
 
@@ -141,35 +151,48 @@ export function LeadTableContainer({
 
   const handleStageDialogConfirm = async () => {
     if (!stageDialogLeadId) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
     setActionLoading(true);
     try {
-      await onUpdateStage(stageDialogLeadId, stageDialogValue);
+      await onUpdateStage(stageDialogLeadId, stageDialogValue, signal);
     } finally {
-      setActionLoading(false);
-      setStageDialogOpen(false);
-      setStageDialogLeadId(null);
+      if (!signal.aborted) {
+        setActionLoading(false);
+        setStageDialogOpen(false);
+        setStageDialogLeadId(null);
+      }
     }
   };
 
   const handleBulkDelete = async () => {
     if (!window.confirm(`Delete ${selectedLeadIds.length} selected lead(s)? This cannot be undone.`)) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
     setActionLoading(true);
     try {
-      await onBulkDelete(selectedLeadIds);
-      setSelectedLeadIds([]);
+      await onBulkDelete(selectedLeadIds, signal);
+      if (!signal.aborted) setSelectedLeadIds([]);
     } finally {
-      setActionLoading(false);
+      if (!signal.aborted) setActionLoading(false);
     }
   };
 
   const handleBulkStageDialogConfirm = async () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
     setActionLoading(true);
     try {
-      await Promise.all(selectedLeadIds.map((id) => onUpdateStage(id, bulkStageValue)));
-      setSelectedLeadIds([]);
+      await Promise.all(selectedLeadIds.map((id) => onUpdateStage(id, bulkStageValue, signal)));
+      if (!signal.aborted) setSelectedLeadIds([]);
     } finally {
-      setActionLoading(false);
-      setBulkStageDialogOpen(false);
+      if (!signal.aborted) {
+        setActionLoading(false);
+        setBulkStageDialogOpen(false);
+      }
     }
   };
 

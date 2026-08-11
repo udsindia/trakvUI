@@ -146,7 +146,7 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
   const fullName = [response.firstName, response.lastName].filter(Boolean).join(" ");
   const displayName = fullName || email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  console.debug("[authService] login roles:", backendRoles, "| permissions:", permissions);
+  // console.debug("[authService] login roles:", backendRoles, "| permissions:", permissions);
 
   return {
     user: {
