@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded } from "@mui/icons-material";
 import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
@@ -51,13 +51,21 @@ export function ApplicationDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery] = useState("");
-  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
 
   const { data: backendApps = [], isLoading, isError } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.getApplications,
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => applicationsApi.deleteApplication(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+  const handleDeleteApplication = (id: string) => deleteMutation.mutateAsync(id);
 
   const { data: countries = [] } = useCountries();
 
@@ -127,11 +135,15 @@ export function ApplicationDashboardPage() {
   const pagedRows = filteredRows.slice((clampedPage - 1) * pageSize, clampedPage * pageSize);
 
   const visibleCount = filteredRows.length;
-  const pageStart = visibleCount === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
-  const pageEnd = visibleCount === 0 ? 0 : Math.min(clampedPage * pageSize, visibleCount);
+  const PAGE_SIZE = 10;
+  const pageCount = Math.max(1, Math.ceil(visibleCount / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const rangeStart = visibleCount === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, visibleCount);
   const paginationLabel = visibleCount === 0
     ? "Showing 0 of 0 applications"
-    : `Showing ${pageStart}-${pageEnd} of ${visibleCount} applications`;
+    : `Showing ${rangeStart}-${rangeEnd} of ${visibleCount} applications`;
 
   const handleFilterChange = (values: FilterPanelValues) => {
     setFilterValues(values);
@@ -225,13 +237,13 @@ export function ApplicationDashboardPage() {
           ) : (
             <ApplicationTableContainer
               applications={pagedRows}
-              page={clampedPage}
-              pageSize={pageSize}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              page={safePage}
               pageCount={pageCount}
               paginationLabel={paginationLabel}
+              onPageChange={setPage}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
+              onDeleteApplication={handleDeleteApplication}
             />
           )}
         </Box>

@@ -76,7 +76,7 @@ export interface LeadDetails {
 
 /** Result of a CSV bulk import (matches backend ImportResponseDTO). */
 export interface LeadImportSkip {
-  rowNumber: number;
+  row: number;
   reason: string;
 }
 export interface LeadImportResult {

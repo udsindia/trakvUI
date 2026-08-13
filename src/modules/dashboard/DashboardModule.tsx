@@ -76,6 +76,7 @@ export default function DashboardModule() {
         {currentSection === "leads" ? (
           <DashboardLeadsSection
             leadsScope={roleConfig.leadsScope}
+            performance={dashboard?.performance}
             pipeline={dashboard?.leadPipeline}
             showUnassigned={roleConfig.showUnassigned}
           />
