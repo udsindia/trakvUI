@@ -308,12 +308,12 @@ export function LeadDashboardPage() {
 
   // Paginate the fully-filtered set client-side, so page count + label track the filter.
   const totalVisible = fullyFilteredRows.length;
-  const pageCount = Math.max(1, Math.ceil(totalVisible / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(totalVisible / pageSize));
   const clampedPage = Math.max(1, Math.min(page, pageCount));
-  const pagedRows = fullyFilteredRows.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
+  const pagedRows = fullyFilteredRows.slice((clampedPage - 1) * pageSize, clampedPage * pageSize);
 
   const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
-  const pageEnd = totalVisible === 0 ? 0 : Math.min(clampedPage * PAGE_SIZE, totalVisible);
+  const pageEnd = totalVisible === 0 ? 0 : Math.min(clampedPage * pageSize, totalVisible);
   const paginationLabel =
     totalVisible === 0
       ? "Showing 0 of 0 leads"

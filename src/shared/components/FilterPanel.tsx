@@ -22,6 +22,7 @@ type BaseFilterConfig = {
   helperText?: string;
   key: string;
   label: string;
+  sectionTitle?: string;
 };
 
 export type DropdownFilterConfig = BaseFilterConfig & {
@@ -254,6 +255,12 @@ export function FilterPanel({
 
             return (
               <Stack key={filterConfig.key} spacing={1.25} sx={{ minWidth: 0 }}>
+                {filterConfig.sectionTitle ? (
+                  <Typography sx={{ fontSize: 20, fontWeight: 700, pb: 0.25 }} variant="h6">
+                    {filterConfig.sectionTitle}
+                  </Typography>
+                ) : null}
+
                 <Stack spacing={0.5}>
                   <Typography sx={{ fontSize: 13, fontWeight: 700 }} variant="subtitle2">
                     {filterConfig.label}

@@ -33,6 +33,7 @@ import { ShortlistTray } from "@/modules/universities/components/ShortlistTray";
 import sampleCsvUrl from "@/assets/course-import-sample.csv?url";
 import { universitiesApi } from "@/modules/universities/universitiesApi";
 import {
+  buildCourseSearchFilterSections,
   buildCourseSearchFilterConfig,
   getCourseSearchDefaultFilterValues,
   getCourseSearchSliderFallbacks,
@@ -65,6 +66,12 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
 
+const sectionTitleByKey = new Map(
+  buildCourseSearchFilterSections().flatMap((section) =>
+    section.filterKeys.map((key, index) => [key, index === 0 ? section.title : undefined] as const),
+  ),
+);
+
 type CourseImportPreviewResponse = {
   message?: string;
   totalRows?: number;
@@ -84,6 +91,13 @@ function countActiveFilters(
     switch (filter.type) {
       case "checkbox-group":
         return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "dropdown": {
+        if (typeof value === "string") {
+          const defaultValue = defaults[filter.key];
+          return count + (value.length > 0 && value !== defaultValue ? 1 : 0);
+        }
+        return count;
+      }
       case "slider": {
         if (Array.isArray(value) && value.length === 2) {
           const [min, max] = value as [number, number];
@@ -124,6 +138,10 @@ function asNumberRange(
   return [min, max];
 }
 
+function asString(value: FilterPanelValue | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
 function toSearchFilters(
   filterValues: FilterPanelValues,
   query: string,
@@ -132,8 +150,37 @@ function toSearchFilters(
   return {
     query,
     countries: asStringArray(filterValues[filterKeys.country.key]),
+    nearestCity: asString(filterValues[filterKeys.nearestCity.key]),
     levels: asStringArray(filterValues[filterKeys.level.key]) as CourseLevel[],
+    disciplines: asString(filterValues[filterKeys.discipline.key])
+      ? [asString(filterValues[filterKeys.discipline.key])]
+      : [],
+    institutions: asString(filterValues[filterKeys.institution.key])
+      ? [asString(filterValues[filterKeys.institution.key])]
+      : [],
     intakes: asStringArray(filterValues[filterKeys.intake.key]),
+    intakeStatuses: asString(filterValues[filterKeys.intakeStatus.key])
+      ? [asString(filterValues[filterKeys.intakeStatus.key])]
+      : [],
+    nationality: asString(filterValues[filterKeys.nationality.key]),
+    regionState: asString(filterValues[filterKeys.regionState.key]),
+    isOnshore: asStringArray(filterValues[filterKeys.onshore.key]).includes("onshore"),
+    highestEducationLevel: asString(filterValues[filterKeys.highestEducationLevel.key]),
+    countryOfEducation: asString(filterValues[filterKeys.countryOfEducation.key]),
+    gradingSystem: asString(filterValues[filterKeys.gradingSystem.key]),
+    backlogs: asString(filterValues[filterKeys.backlogs.key]),
+    educationGap: asString(filterValues[filterKeys.educationGap.key]),
+    turnaroundRange: asNumberRange(
+      filterValues[filterKeys.turnaround.key],
+      sliderFallbacks.turnaround,
+    ),
+    durations: asString(filterValues[filterKeys.duration.key])
+      ? [asString(filterValues[filterKeys.duration.key])]
+      : [],
+    deliveryModes: asString(filterValues[filterKeys.delivery.key])
+      ? [asString(filterValues[filterKeys.delivery.key])]
+      : [],
+    postStudyWorkPermit: asString(filterValues[filterKeys.postStudyWorkPermit.key]),
     tuitionRange: asNumberRange(filterValues[filterKeys.tuition.key], sliderFallbacks.tuition),
     ieltsRange: asNumberRange(filterValues[filterKeys.ielts.key], sliderFallbacks.ielts),
     eligibleOnly: false,
@@ -209,6 +256,34 @@ export function CourseSearchPage() {
 
   const countryCounts = useMemo(() => getCountryCounts(baseResults), [baseResults]);
 
+  const dynamicOptions = useMemo(() => {
+    const cities = Array.from(new Set(baseResults.map((result) => result.university.city)))
+      .sort((left, right) => left.localeCompare(right))
+      .map((city) => ({ label: city, value: city }));
+
+    const institutions = Array.from(new Set(baseResults.map((result) => result.university.name)))
+      .sort((left, right) => left.localeCompare(right))
+      .map((name) => ({ label: name, value: name }));
+
+    const durations = Array.from(new Set(baseResults.map((result) => result.duration)))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+      .map((duration) => ({ label: duration, value: duration }));
+
+    const disciplines = [
+      { label: "Computer Science", value: "computer-science" },
+      { label: "Data Science", value: "data-science" },
+      { label: "Business", value: "business" },
+      { label: "General", value: "general" },
+    ];
+
+    return {
+      city: cities,
+      institution: institutions,
+      duration: durations,
+      discipline: disciplines,
+    };
+  }, [baseResults]);
+
   const countryFilterOptions = useMemo(() => {
     const apiOptions = countries
       .map((country) => ({
@@ -228,14 +303,20 @@ export function CourseSearchPage() {
   }, [countries]);
 
   const filterConfig = useMemo(() => {
-    const config = buildCourseSearchFilterConfig({ countryCounts });
+    const config = buildCourseSearchFilterConfig({ countryCounts, dynamicOptions });
     return config.map((filter) => {
       if (filter.type !== "checkbox-group" || filter.key !== filterKeys.country.key) {
-        return filter;
+        return {
+          ...filter,
+          helperText: filter.helperText,
+          // Section heading is attached to the first filter in each section.
+          sectionTitle: sectionTitleByKey.get(filter.key),
+        };
       }
 
       return {
         ...filter,
+        sectionTitle: sectionTitleByKey.get(filter.key),
         options: countryFilterOptions.map((option) => ({
           label: filterKeys.country.showCounts
             ? `${option.label} (${countryCounts[option.value] ?? 0})`

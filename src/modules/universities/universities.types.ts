@@ -124,8 +124,24 @@ export type CourseSortOption = "best-match" | "tuition-low" | "qs-rank" | "intak
 export interface CourseSearchFilters {
   query: string;
   countries: string[];
+  nearestCity: string;
   levels: CourseLevel[];
+  disciplines: string[];
+  institutions: string[];
   intakes: string[];
+  intakeStatuses: string[];
+  nationality: string;
+  regionState: string;
+  isOnshore: boolean;
+  highestEducationLevel: string;
+  countryOfEducation: string;
+  gradingSystem: string;
+  backlogs: string;
+  educationGap: string;
+  turnaroundRange: [number, number];
+  durations: string[];
+  deliveryModes: string[];
+  postStudyWorkPermit: string;
   tuitionRange: [number, number];
   ieltsRange: [number, number];
   eligibleOnly: boolean;

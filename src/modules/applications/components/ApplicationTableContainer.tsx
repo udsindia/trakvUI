@@ -144,33 +144,33 @@ export function ApplicationTableContainer({
     },
   ];
 
-export function ApplicationTableContainer({
-  applications,
-  onPageChange,
-  onPageSizeChange,
-  page,
-  pageSize,
-  pageSizeOptions,
-  pageCount,
-  paginationLabel,
-}: ApplicationTableContainerProps) {
-  const navigate = useNavigate();
-  return (
-    <DataTable
-      columns={columns}
-      rows={applications}
-      getRowKey={(a) => a.id}
-      page={page}
-      pageCount={pageCount}
-      paginationLabel={paginationLabel}
-      pageSize={pageSize}
-      pageSizeOptions={pageSizeOptions}
-      onPageChange={onPageChange}
-      onPageSizeChange={onPageSizeChange}
-      onPageChange={onPageChange}
-      emptyMessage="No applications found."
-      minWidth={820}
-      onRowClick={(app) => navigate(`/applications/${app.id}`)}
-    />
-  );
-}
+  export function ApplicationTableContainer({
+    applications,
+    onPageChange,
+    onPageSizeChange,
+    page,
+    pageSize,
+    pageSizeOptions,
+    pageCount,
+    paginationLabel,
+  }: ApplicationTableContainerProps) {
+    const navigate = useNavigate();
+    return (
+      <DataTable
+        columns={columns}
+        rows={applications}
+        getRowKey={(a) => a.id}
+        page={page}
+        pageCount={pageCount}
+        paginationLabel={paginationLabel}
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        emptyMessage="No applications found."
+        minWidth={820}
+        onRowClick={(app) => navigate(`/applications/${app.id}`)}
+      />
+    );
+  }
+};

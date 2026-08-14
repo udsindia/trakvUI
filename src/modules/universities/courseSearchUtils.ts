@@ -8,6 +8,59 @@ import type {
 import { computeCourseEligibility } from "@/modules/universities/studentEligibility";
 import { toAlpha2CountryCode } from "@/modules/universities/universitiesMappers";
 
+function parseNumericAmount(input: string): number | null {
+  const digits = input.replace(/[^\d.]/g, "");
+  if (!digits) {
+    return null;
+  }
+  const parsed = Number.parseFloat(digits);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getDisciplines(result: CourseSearchResult): string[] {
+  const name = result.name.toLowerCase();
+
+  if (name.includes("data")) {
+    return ["data-science"];
+  }
+  if (name.includes("computer") || name.includes("ai") || name.includes("software")) {
+    return ["computer-science"];
+  }
+  if (name.includes("business")) {
+    return ["business"];
+  }
+  return ["general"];
+}
+
+function getDeliveryModes(_: CourseSearchResult): string[] {
+  return ["in-person"];
+}
+
+function getIntakeStatus(result: CourseSearchResult): "open" | "closed" | "waitlist" {
+  if (result.deadline.toLowerCase() === "rolling") {
+    return "open";
+  }
+
+  const visaRatio = result.ourData.studentsSent > 0
+    ? result.ourData.accepted / result.ourData.studentsSent
+    : 1;
+
+  if (visaRatio < 0.45) {
+    return "closed";
+  }
+
+  if (visaRatio < 0.75) {
+    return "waitlist";
+  }
+
+  return "open";
+}
+
+function hasPostStudyWorkPermit(result: CourseSearchResult): boolean {
+  const text = result.keyDates.pgwpEligible.toLowerCase();
+  return text.includes("yes");
+}
+
 export function formatTuitionLakhs(value: number) {
   return `₹${value.toFixed(1)}L`;
 }
@@ -88,10 +141,80 @@ export function filterCourseSearchResults(
       return false;
     }
 
+    if (filters.intakeStatuses.length > 0) {
+      const status = getIntakeStatus(result);
+      if (!filters.intakeStatuses.includes(status)) {
+        return false;
+      }
+    }
+
+    if (
+      filters.nearestCity &&
+      result.university.city.toLowerCase() !== filters.nearestCity.toLowerCase()
+    ) {
+      return false;
+    }
+
+    if (
+      filters.institutions.length > 0 &&
+      !filters.institutions.some(
+        (institution) => institution.toLowerCase() === result.university.name.toLowerCase(),
+      )
+    ) {
+      return false;
+    }
+
+    if (filters.disciplines.length > 0) {
+      const disciplines = getDisciplines(result);
+      if (!filters.disciplines.some((discipline) => disciplines.includes(discipline))) {
+        return false;
+      }
+    }
+
+    if (filters.durations.length > 0 && !filters.durations.includes(result.duration)) {
+      return false;
+    }
+
+    if (filters.deliveryModes.length > 0) {
+      const modes = getDeliveryModes(result);
+      if (!filters.deliveryModes.some((mode) => modes.includes(mode))) {
+        return false;
+      }
+    }
+
+    if (filters.postStudyWorkPermit) {
+      const hasPermit = hasPostStudyWorkPermit(result);
+      if (filters.postStudyWorkPermit === "yes" && !hasPermit) {
+        return false;
+      }
+      if (filters.postStudyWorkPermit === "no" && hasPermit) {
+        return false;
+      }
+    }
+
+    if (
+      result.university.trackRecord.avgApplicationDays < filters.turnaroundRange[0] ||
+      result.university.trackRecord.avgApplicationDays > filters.turnaroundRange[1]
+    ) {
+      return false;
+    }
+
     if (
       result.tuitionLakhs < filters.tuitionRange[0] ||
       result.tuitionLakhs > filters.tuitionRange[1]
     ) {
+      return false;
+    }
+
+    const applicationFeeAmount = parseNumericAmount(result.applicationFee);
+    if (filters.backlogs) {
+      const threshold = filters.backlogs === "0" ? 9000 : filters.backlogs === "1-3" ? 12000 : 20000;
+      if (applicationFeeAmount !== null && applicationFeeAmount > threshold) {
+        return false;
+      }
+    }
+
+    if (filters.educationGap && filters.educationGap === "0" && result.level === "phd") {
       return false;
     }
 
@@ -100,6 +223,25 @@ export function filterCourseSearchResults(
       result.ieltsMin > filters.ieltsRange[1]
     ) {
       return false;
+    }
+
+    if (filters.highestEducationLevel) {
+      const levelMatch =
+        (filters.highestEducationLevel === "diploma" && result.level === "diploma") ||
+        (filters.highestEducationLevel === "bachelor" && result.level === "undergraduate") ||
+        (filters.highestEducationLevel === "master" && result.level === "masters") ||
+        (filters.highestEducationLevel === "phd" && result.level === "phd");
+
+      if (!levelMatch) {
+        return false;
+      }
+    }
+
+    if (filters.isOnshore && filters.countryOfEducation) {
+      const normalizedCountry = filters.countryOfEducation.slice(0, 2).toUpperCase();
+      if (toAlpha2CountryCode(result.university.countryCode) !== toAlpha2CountryCode(normalizedCountry)) {
+        return false;
+      }
     }
 
     if (filters.eligibleOnly && result.eligibilityStatus === "not-eligible") {
