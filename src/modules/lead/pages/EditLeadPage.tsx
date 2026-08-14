@@ -1,26 +1,33 @@
-import { useMemo } from "react";
-import { Box, Paper } from "@mui/material";
+import { useEffect, useMemo } from "react";
+import { useParams } from "react-router-dom";
+import { Alert, Box, CircularProgress, Paper, Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
-import { AlertBanner } from "@/modules/lead/components/AlertBanner";
 import { LeadForm } from "@/modules/lead/components/LeadForm";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
 import type { AgentOption } from "@/modules/lead/leadForm.types";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
-import { useLeadFormController } from "@/modules/lead/useLeadFormController";
+import { leadApi } from "@/modules/lead/leadApi";
+import {
+  mapLeadDetailsToFormValues,
+  useLeadFormController,
+} from "@/modules/lead/useLeadFormController";
 import { usersService } from "@/modules/settings/usersService";
 
-export function AddLeadPage() {
+export function EditLeadPage() {
+  const { id } = useParams<{ id: string }>();
   const { tenant, hasPermissions } = useAuth();
   const tenantId = tenant?.tenantId ?? "";
-  // Only users who can assign leads see (and need) the agent list; others
-  // (e.g. counsellors) can't read the team endpoint, so don't fetch it.
   const canAssign = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
 
-  // Real team members (counsellors) added via User Management, so the
-  // "Assigned Agent" field reflects who actually exists in the tenant.
+  const leadQuery = useQuery({
+    queryKey: ["lead", id],
+    queryFn: () => leadApi.getLeadDetails(id!),
+    enabled: !!id,
+  });
+
   const usersQuery = useQuery({
     enabled: Boolean(tenantId) && canAssign,
     queryKey: ["settings", "users", tenantId],
@@ -35,7 +42,18 @@ export function AddLeadPage() {
     [usersQuery.data],
   );
 
-  const { form, handleCancel, handleFormSubmit } = useLeadFormController({ agentOptions });
+  const { form, handleCancel, handleFormSubmit } = useLeadFormController({
+    agentOptions,
+    editingLeadId: id,
+  });
+
+  // Pre-fill once the lead loads (the form starts with blank defaults synchronously).
+  useEffect(() => {
+    if (leadQuery.data) {
+      form.reset(mapLeadDetailsToFormValues(leadQuery.data));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadQuery.data]);
 
   const options = useMemo(
     () => ({ ...leadFormOptions, agentOptions }),
@@ -53,14 +71,13 @@ export function AddLeadPage() {
         display: "flex",
         flexDirection: "column",
         minHeight: {
-          // Topbar height + the <main> wrapper's vertical padding (py:1.25 → 20px).
           lg: `calc(100vh - ${NAVBAR_HEIGHT + 20}px)`,
         },
         overflow: "hidden",
       }}
     >
       <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
-        <PageHeader subtitle="CRM > Leads" title="Add New Lead" />
+        <PageHeader subtitle="CRM > Leads > Edit" title="Edit Lead" />
       </Box>
 
       <Box
@@ -73,23 +90,24 @@ export function AddLeadPage() {
           py: { xs: 2.5, md: 3.5 },
         }}
       >
-        <Box
-          sx={{
-            marginInline: "auto",
-            maxWidth: 920,
-            width: "100%",
-          }}
-        >
-          <Box sx={{ mb: 2.5 }}>
-            <AlertBanner />
-          </Box>
-          <LeadForm
-            canAssign={canAssign}
-            form={form}
-            options={options}
-            onCancel={handleCancel}
-            onSubmit={handleFormSubmit}
-          />
+        <Box sx={{ marginInline: "auto", maxWidth: 920, width: "100%" }}>
+          {leadQuery.isLoading ? (
+            <Stack alignItems="center" sx={{ py: 8 }}>
+              <CircularProgress />
+            </Stack>
+          ) : leadQuery.isError || !leadQuery.data ? (
+            <Alert severity="error">
+              This lead could not be loaded, or you don&apos;t have access to it.
+            </Alert>
+          ) : (
+            <LeadForm
+              canAssign={canAssign}
+              form={form}
+              options={options}
+              onCancel={handleCancel}
+              onSubmit={handleFormSubmit}
+            />
+          )}
         </Box>
       </Box>
     </Paper>

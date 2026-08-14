@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
 import {
   Alert,
   Box,
@@ -15,7 +16,10 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
+import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
@@ -41,6 +45,28 @@ function formatDateTime(value?: string | null) {
   return value ? new Date(value).toLocaleString() : "—";
 }
 
+// Matches the "New Lead" quick-action button in the top bar (Topbar.tsx's
+// primaryButtonSx), so the two "start a lead action" buttons read as one style.
+const editLeadButtonSx = {
+  background: (theme: Theme) =>
+    `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 52%, ${theme.palette.primary.dark} 100%)`,
+  border: "1px solid",
+  borderColor: "primary.dark",
+  borderRadius: "9px",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 4px 13px rgba(243,129,24,.28)",
+  color: "#fff",
+  fontSize: 13,
+  fontWeight: 700,
+  px: 1.75,
+  py: 0.85,
+  textTransform: "none",
+  whiteSpace: "nowrap",
+  "&:hover": {
+    background: "linear-gradient(135deg, #FFAE59 0%, #FF952B 100%)",
+    borderColor: "primary.main",
+  },
+} as const;
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Stack spacing={0.5}>
@@ -55,6 +81,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 export function LeadDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasPermissions } = useAuth();
+  const canEdit = hasPermissions([PERMISSIONS.LEAD_MANAGE]);
 
   const { data: lead, isLoading, isError } = useQuery({
     queryKey: ["lead", id],
@@ -75,7 +103,7 @@ export function LeadDetailsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0, height: `calc(100vh - ${NAVBAR_HEIGHT}px)`, overflow: "auto", px: { xs: 2, md: 3 }, py: 2 }}>
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "space-between" }}>
         <Button
           startIcon={<ArrowBackRounded />}
           onClick={() => navigate(leadRoutePaths.dashboard)}
@@ -83,6 +111,15 @@ export function LeadDetailsPage() {
         >
           Back to Leads
         </Button>
+        {canEdit && id ? (
+          <Button
+            startIcon={<EditRounded sx={{ fontSize: 16 }} />}
+            onClick={() => navigate(leadRoutePaths.edit(id))}
+            sx={editLeadButtonSx}
+          >
+            Edit Lead
+          </Button>
+        ) : null}
       </Stack>
 
       <PageHeader subtitle="CRM > Leads > Details" title={fullName || "Lead"} />
@@ -115,7 +152,18 @@ export function LeadDetailsPage() {
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Field of Study">{lead.fieldOfStudy}</Field></Grid>
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Study Level">{lead.currentStudyLevel}</Field></Grid>
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Lead Source">{lead.sourceName}</Field></Grid>
+                {lead.college ? (
+                  <Grid size={{ xs: 6, md: 3 }}><Field label="College">{lead.college}</Field></Grid>
+                ) : null}
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Assigned Agent">{lead.assignedToName}</Field></Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Field label="English Proficiency">
+                    {lead.englishProficiencyTest
+                      ? [lead.englishProficiencyTest, lead.englishProficiencyTestScore].filter(Boolean).join(" — ")
+                      : "—"}
+                  </Field>
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}><Field label="WhatsApp Available">{lead.isWhatsAppAvailable ? "Yes" : "No"}</Field></Grid>
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Created">{formatDateTime(lead.createdAt)}</Field></Grid>
                 <Grid size={{ xs: 6, md: 3 }}><Field label="Last Activity">{formatDateTime(lead.lastActivityAt)}</Field></Grid>
               </Grid>

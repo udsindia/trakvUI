@@ -58,11 +58,17 @@ export interface LeadDetails {
   countryCode: string;
   leadStage: string;
   score: number | null;
+  sourceId: string | null;
   sourceName: string | null;
+  assignedToId: string | null;
   assignedToName: string | null;
   destinationCountries: string[] | null;
   fieldOfStudy: string | null;
   currentStudyLevel: string | null;
+  isWhatsAppAvailable: boolean | null;
+  englishProficiencyTest: string | null;
+  englishProficiencyTestScore: string | null;
+  college: string | null;
   createdAt: string | null;
   lastActivityAt: string | null;
   targetIntakeMonth: string | null;
@@ -76,7 +82,7 @@ export interface LeadDetails {
 
 /** Result of a CSV bulk import (matches backend ImportResponseDTO). */
 export interface LeadImportSkip {
-  rowNumber: number;
+  row: number;
   reason: string;
 }
 export interface LeadImportResult {
@@ -166,9 +172,36 @@ export const leadApi = {
   },
 
   /** Bulk-import leads from a CSV file (POST /api/leads/import, multipart). */
-  importLeads: async (file: File): Promise<LeadImportResult> => {
+  /** Detects the column headers in a file the user is about to import, for a mapping step. */
+  detectImportColumns: async (file: File): Promise<string[]> => {
     const formData = new FormData();
     formData.append("file", file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.leads}/import/columns`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data.headers;
+  },
+
+  /**
+   * @param mapping our field name -> the file's column header to read it from.
+   * @param collegeName when set, every row in the batch is imported with Lead Source
+   *                    "College" and this as its college name, regardless of mapping.
+   */
+  importLeads: async (
+    file: File,
+    mapping?: Record<string, string>,
+    collegeName?: string,
+  ): Promise<LeadImportResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (mapping) {
+      for (const [field, header] of Object.entries(mapping)) {
+        if (header) formData.append(`mapping_${field}`, header);
+      }
+    }
+    if (collegeName) formData.append("collegeName", collegeName);
     const response = await httpClient.post<LeadImportResult>(
       `${API_CONFIG.leads}/import`,
       formData,

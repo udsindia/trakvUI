@@ -4,20 +4,32 @@ import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { leadService } from "@/modules/lead/leadService";
+import type { LeadDetails } from "@/modules/lead/leadApi";
 import { selectAuthTenant } from "@/app/auth/authSlice";
 import { useAppSelector } from "@/app/store/hooks";
-import type {
-  AgentOption,
-  CreateLeadPayload,
-  LeadFormValues,
+import {
+  COLLEGE_SOURCE,
+  type AgentOption,
+  type CreateLeadPayload,
+  type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 const defaultLeadFormValues: LeadFormValues = {
   agent: "",
+  collegeName: "",
   countries: [],
   courses: [],
+  currentStudyLevel: "Not Specified",
   email: "",
+  englishProficiencyTest: "",
+  englishProficiencyTestScore: "",
   intakeDate: "",
+  isWhatsAppAvailable: false,
   name: "",
   notes: "",
   phone: "",
@@ -57,16 +69,60 @@ export function buildCreateLeadPayload(
     phoneNo,
     emailAddress: values.email.trim(),
     leadSource: values.source,
+    // Always sent (even blank) so switching away from College clears any
+    // previously-saved college name on edit rather than leaving it stale.
+    college: values.source === COLLEGE_SOURCE ? values.collegeName.trim() : "",
     countriesOfInterest: values.countries,
     intakeMonth,
     year,
     fieldOfStudy: values.courses[0] ?? "Not Specified",
-    currentStudyLevel: "Not Specified",
-    isWhatsAppAvailable: false,
+    currentStudyLevel: values.currentStudyLevel || "Not Specified",
+    isWhatsAppAvailable: values.isWhatsAppAvailable,
+    englishProficiencyTest: values.englishProficiencyTest || undefined,
+    englishProficiencyTestScore: values.englishProficiencyTestScore || undefined,
+    notes: values.notes,
   };
 }
 
-export function useLeadFormController(agentOptions: AgentOption[] = []) {
+/** Reverses buildCreateLeadPayload — pre-fills the form when editing an existing lead. */
+export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
+  const monthIndex = lead.targetIntakeMonth
+    ? MONTH_NAMES.findIndex((m) => m.toLowerCase() === lead.targetIntakeMonth?.toLowerCase())
+    : -1;
+  const intakeDate =
+    lead.targetIntakeYear && monthIndex >= 0
+      ? `${lead.targetIntakeYear}-${String(monthIndex + 1).padStart(2, "0")}-01`
+      : "";
+
+  return {
+    agent: lead.assignedToId ?? "",
+    collegeName: lead.college ?? "",
+    countries: lead.destinationCountries ?? [],
+    courses: lead.fieldOfStudy ? [lead.fieldOfStudy] : [],
+    currentStudyLevel: lead.currentStudyLevel || "Not Specified",
+    email: lead.email ?? "",
+    englishProficiencyTest: lead.englishProficiencyTest ?? "",
+    englishProficiencyTestScore: lead.englishProficiencyTestScore ?? "",
+    intakeDate,
+    isWhatsAppAvailable: lead.isWhatsAppAvailable ?? false,
+    name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
+    notes: lead.notes ?? "",
+    phone: [lead.countryCode, lead.phone].filter(Boolean).join(" ").trim(),
+    source: lead.sourceName ?? "",
+    tags: [],
+  };
+}
+
+type UseLeadFormControllerOptions = {
+  agentOptions?: AgentOption[];
+  /** When set, the form edits this lead instead of creating a new one. */
+  editingLeadId?: string;
+};
+
+export function useLeadFormController({
+  agentOptions = [],
+  editingLeadId,
+}: UseLeadFormControllerOptions = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenant = useAppSelector(selectAuthTenant);
@@ -76,22 +132,30 @@ export function useLeadFormController(agentOptions: AgentOption[] = []) {
     reValidateMode: "onChange",
   });
 
+  const isEditing = Boolean(editingLeadId);
+  const returnPath = isEditing ? leadRoutePaths.details(editingLeadId!) : leadRoutePaths.dashboard;
+
   const handleCancel = () => {
     form.reset(defaultLeadFormValues);
-    navigate(leadRoutePaths.dashboard);
+    navigate(returnPath);
   };
 
   const handleValidSubmit = async (values: LeadFormValues) => {
     const payload = buildCreateLeadPayload(values, agentOptions);
-    payload.tenantId = tenant?.tenantId;
 
     try {
-      await leadService.createLead(payload);
+      if (editingLeadId) {
+        await leadService.updateLead(editingLeadId, payload);
+        await queryClient.invalidateQueries({ queryKey: ["lead", editingLeadId] });
+      } else {
+        payload.tenantId = tenant?.tenantId;
+        await leadService.createLead(payload);
+      }
       await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       form.reset(defaultLeadFormValues);
-      navigate(leadRoutePaths.dashboard);
+      navigate(returnPath);
     } catch (error) {
-      console.error("Failed to create lead:", error);
+      console.error(`Failed to ${editingLeadId ? "update" : "create"} lead:`, error);
 
       const isTimeout =
         axios.isAxiosError(error) &&
@@ -100,7 +164,7 @@ export function useLeadFormController(agentOptions: AgentOption[] = []) {
       form.setError("root", {
         message: isTimeout
           ? "The server is warming up — your data is safe. Click Save Lead to try again."
-          : "Failed to save the lead. Please try again.",
+          : `Failed to ${editingLeadId ? "update" : "save"} the lead. Please try again.`,
       });
     }
   };
@@ -109,5 +173,6 @@ export function useLeadFormController(agentOptions: AgentOption[] = []) {
     form,
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
+    isEditing,
   };
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
-import EditRounded from "@mui/icons-material/EditRounded";
+import SwapHorizRounded from "@mui/icons-material/SwapHorizRounded";
 import {
   Box,
   Button,
@@ -15,6 +15,7 @@ import {
   MenuItem,
   Select,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -288,23 +289,25 @@ export function LeadTableContainer({
       align: "right",
       render: (lead) => (
         <Stack direction="row" spacing={0.25} sx={{ justifyContent: "flex-end" }}>
-          <IconButton
-            aria-label={`Update stage for ${lead.name}`}
-            disabled={actionLoading}
-            size="small"
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: "7px",
-              color: "secondary.main",
-              height: 28,
-              width: 28,
-              "&:hover": { borderColor: "secondary.main", bgcolor: "secondary.50" },
-            }}
-            onClick={() => handleRowUpdateStage(lead.id)}
-          >
-            <EditRounded fontSize="small" />
-          </IconButton>
+          <Tooltip title="Change Stage">
+            <IconButton
+              aria-label={`Change stage for ${lead.name}`}
+              disabled={actionLoading}
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "7px",
+                color: "secondary.main",
+                height: 28,
+                width: 28,
+                "&:hover": { borderColor: "secondary.main", bgcolor: "secondary.50" },
+              }}
+              onClick={() => handleRowUpdateStage(lead.id)}
+            >
+              <SwapHorizRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <IconButton
             aria-label={`Delete ${lead.name}`}
             disabled={actionLoading}

@@ -2,16 +2,24 @@ import type { MultiSelectOption } from "@/shared/components/MultiSelectAutocompl
 
 export type LeadFormValues = {
   agent: string;
+  collegeName: string;
   countries: string[];
   courses: string[];
+  currentStudyLevel: string;
   email: string;
+  englishProficiencyTest: string;
+  englishProficiencyTestScore: string;
   intakeDate: string;
+  isWhatsAppAvailable: boolean;
   name: string;
   notes: string;
   phone: string;
   source: string;
   tags: string[];
 };
+
+/** The "Lead Source" option that reveals the College Name field. */
+export const COLLEGE_SOURCE = "College";
 
 // Matches backend AddLeadRequestDTO
 export type CreateLeadPayload = {
@@ -30,6 +38,10 @@ export type CreateLeadPayload = {
   fieldOfStudy: string;
   currentStudyLevel: string;
   isWhatsAppAvailable: boolean;
+  englishProficiencyTest?: string;
+  englishProficiencyTestScore?: string;
+  college?: string;
+  notes?: string;
 };
 
 export type AgentOption = {
@@ -41,6 +53,8 @@ export type LeadFormOptions = {
   agentOptions: AgentOption[];
   countryOptions: MultiSelectOption[];
   courseOptions: MultiSelectOption[];
+  englishTestOptions: string[];
   sourceOptions: string[];
+  studyLevelOptions: string[];
   tagOptions: MultiSelectOption[];
 };

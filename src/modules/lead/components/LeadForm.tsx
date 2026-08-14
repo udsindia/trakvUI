@@ -5,8 +5,10 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   CircularProgress,
   Divider,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -14,9 +16,10 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
-import type {
-  LeadFormOptions,
-  LeadFormValues,
+import {
+  COLLEGE_SOURCE,
+  type LeadFormOptions,
+  type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
 import { MultiSelectAutocomplete } from "@/shared/components/MultiSelectAutocomplete";
 
@@ -47,6 +50,12 @@ export function LeadForm({
     control,
     name: "notes",
   });
+
+  const sourceValue = useWatch({
+    control,
+    name: "source",
+  });
+  const isCollegeSource = sourceValue === COLLEGE_SOURCE;
 
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
@@ -254,6 +263,28 @@ export function LeadForm({
                     />
                   )}
                 />
+
+                <Controller
+                  control={control}
+                  name="currentStudyLevel"
+                  render={({ field }) => (
+                    <TextField
+                      fullWidth
+                      id={field.name}
+                      label="Current Study Level"
+                      select
+                      slotProps={alwaysVisibleLabelSlotProps}
+                      sx={fieldSx}
+                      {...field}
+                    >
+                      {options.studyLevelOptions.map((level) => (
+                        <MenuItem key={level} value={level}>
+                          {level}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
               </Stack>
             </Grid>
 
@@ -289,6 +320,30 @@ export function LeadForm({
                     </TextField>
                   )}
                 />
+
+                {isCollegeSource ? (
+                  <Controller
+                    control={control}
+                    name="collegeName"
+                    rules={{
+                      required: isCollegeSource ? "College name is required." : false,
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.collegeName)}
+                        fullWidth
+                        helperText={errors.collegeName?.message}
+                        id={field.name}
+                        label="College Name"
+                        placeholder="Enter the college's name"
+                        required
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                ) : null}
 
                 {canAssign ? (
                   <Controller
@@ -328,6 +383,66 @@ export function LeadForm({
                     )}
                   />
                 ) : null}
+
+                <Stack direction="row" spacing={1.5}>
+                  <Controller
+                    control={control}
+                    name="englishProficiencyTest"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        id={field.name}
+                        label="English Proficiency Test"
+                        select
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      >
+                        <MenuItem value="">
+                          <em>Not specified</em>
+                        </MenuItem>
+                        {options.englishTestOptions.map((test) => (
+                          <MenuItem key={test} value={test}>
+                            {test}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="englishProficiencyTestScore"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        id={field.name}
+                        label="Score"
+                        placeholder="e.g. 7.5"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                </Stack>
+
+                <Controller
+                  control={control}
+                  name="isWhatsAppAvailable"
+                  render={({ field: { value, onChange, ...field } }) => (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={value}
+                          onChange={(event) => onChange(event.target.checked)}
+                          {...field}
+                        />
+                      }
+                      label="WhatsApp available on this number"
+                    />
+                  )}
+                />
 
                 <Controller
                   control={control}
@@ -395,7 +510,7 @@ export function LeadForm({
               type="submit"
               variant="contained"
             >
-              {isSubmitting ? "Saving..." : "Save Lead"}
+              {isSubmitting ? "Saving..." : "Update Lead"}
             </Button>
           </Stack>
         </Stack>

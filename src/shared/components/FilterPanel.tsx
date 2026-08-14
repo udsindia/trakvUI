@@ -423,9 +423,10 @@ export function FilterPanel({
                     <TextField
                       disabled={filterConfig.disabled}
                       fullWidth
-                      placeholder="mm/dd/yyyy"
                       size="small"
+                      slotProps={{ inputLabel: { shrink: true } }}
                       sx={controlSx}
+                      type="date"
                       value={isDateRangeValue(currentValue) ? currentValue.startDate : ""}
                       onChange={(event) => {
                         const nextValue = isDateRangeValue(currentValue)
@@ -446,9 +447,10 @@ export function FilterPanel({
                     <TextField
                       disabled={filterConfig.disabled}
                       fullWidth
-                      placeholder="mm/dd/yyyy"
                       size="small"
+                      slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: isDateRangeValue(currentValue) ? currentValue.startDate : undefined } }}
                       sx={controlSx}
+                      type="date"
                       value={isDateRangeValue(currentValue) ? currentValue.endDate : ""}
                       onChange={(event) => {
                         const nextValue = isDateRangeValue(currentValue)
