@@ -17,9 +17,9 @@ export type ApplicationRow = {
 
 type ApplicationTableContainerProps = {
   applications: ApplicationRow[];
+  onDeleteApplication?: (id: string) => Promise<void>;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onDeleteApplication?: (id: string) => Promise<void>;
   page: number;
   pageSize: number;
   pageSizeOptions: number[];
@@ -61,7 +61,10 @@ export function ApplicationTableContainer({
   applications,
   onDeleteApplication,
   onPageChange,
+  onPageSizeChange,
   page,
+  pageSize,
+  pageSizeOptions,
   pageCount,
   paginationLabel,
 }: ApplicationTableContainerProps) {
@@ -144,33 +147,21 @@ export function ApplicationTableContainer({
     },
   ];
 
-  export function ApplicationTableContainer({
-    applications,
-    onPageChange,
-    onPageSizeChange,
-    page,
-    pageSize,
-    pageSizeOptions,
-    pageCount,
-    paginationLabel,
-  }: ApplicationTableContainerProps) {
-    const navigate = useNavigate();
-    return (
-      <DataTable
-        columns={columns}
-        rows={applications}
-        getRowKey={(a) => a.id}
-        page={page}
-        pageCount={pageCount}
-        paginationLabel={paginationLabel}
-        pageSize={pageSize}
-        pageSizeOptions={pageSizeOptions}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        emptyMessage="No applications found."
-        minWidth={820}
-        onRowClick={(app) => navigate(`/applications/${app.id}`)}
-      />
-    );
-  }
-};
+  return (
+    <DataTable
+      columns={columns}
+      rows={applications}
+      getRowKey={(a) => a.id}
+      page={page}
+      pageCount={pageCount}
+      paginationLabel={paginationLabel}
+      onPageChange={onPageChange}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
+      emptyMessage="No applications found."
+      minWidth={820}
+      onRowClick={(app) => navigate(`/applications/${app.id}`)}
+    />
+  );
+}

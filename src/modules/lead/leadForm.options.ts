@@ -23,6 +23,8 @@ export const leadFormOptions: LeadFormOptions = {
     "Hospitality Management",
     "Cyber Security",
   ],
-  sourceOptions: ["Website", "Referral", "Social Media", "Walk-in", "Email Campaign"],
+  englishTestOptions: ["IELTS", "TOEFL", "PTE", "Duolingo", "Other", "None"],
+  sourceOptions: ["Website", "Referral", "Social Media", "Walk-in", "Email Campaign", "College"],
+  studyLevelOptions: ["High School", "Diploma", "Bachelor's", "Master's", "PhD", "Not Specified"],
   tagOptions: ["High Intent", "Scholarship", "Priority", "Parent Involved", "Repeat Enquiry"],
 };

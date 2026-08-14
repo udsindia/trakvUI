@@ -3,6 +3,9 @@ import { createAuthRequestConfig } from "@/shared/services/http/authHeaders";
 import { httpClient } from "@/shared/services/http/client";
 import type {
   CountryDto,
+  CourseImportCommitPayload,
+  CourseImportPreviewResponse,
+  CourseImportResultResponse,
   CreateCoursePayload,
   CreateRequirementPayload,
   CreateUniversityPayload,
@@ -138,7 +141,8 @@ export const universitiesApi = {
     return response.data;
   },
 
-  previewCourseImport: async (file: File): Promise<unknown> => {
+  /** Parses + validates the CSV and reports what would happen — writes nothing. */
+  previewCourseImport: async (file: File): Promise<CourseImportPreviewResponse> => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -156,12 +160,22 @@ export const universitiesApi = {
       "Content-Type": "multipart/form-data",
     };
 
-    const response = await httpClient.post(
+    const response = await httpClient.post<CourseImportPreviewResponse>(
       `${API_CONFIG.adminCourses}/import/preview`,
       formData,
       config,
     );
 
+    return response.data;
+  },
+
+  /** Actually performs the import for the reviewed rows returned by previewCourseImport. */
+  commitCourseImport: async (payload: CourseImportCommitPayload): Promise<CourseImportResultResponse> => {
+    const response = await httpClient.post<CourseImportResultResponse>(
+      `${API_CONFIG.adminCourses}/import/commit`,
+      payload,
+      createAuthRequestConfig(),
+    );
     return response.data;
   },
 

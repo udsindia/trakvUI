@@ -12,9 +12,14 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
+import {
+  buildCourseSearchFilterConfig,
+  getCourseSearchDefaultFilterValues,
+} from "@/modules/universities/courseSearchFilterConfig";
 import {
   LeadQuickFilters,
   type LeadQuickFilterTab,
@@ -24,7 +29,13 @@ import {
   type LeadRow,
 } from "@/modules/lead/components/LeadTableContainer";
 import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
-import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
+import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import {
+  leadApi,
+  type BackendLead,
+  type CourseSearchRequest,
+  type CourseSearchResponse,
+} from "@/modules/lead/leadApi";
 import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
@@ -46,6 +57,9 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "qualified", label: "Qualified" },
   { key: "proposal", label: "Proposal" },
 ];
+
+const courseSearchAdvanceFilterConfig = buildCourseSearchFilterConfig({ countryCounts: {} });
+const courseSearchDefaultValues = getCourseSearchDefaultFilterValues(courseSearchAdvanceFilterConfig);
 
 const filterConfig: FilterConfig[] = [
   {
@@ -142,6 +156,84 @@ function getStageKey(stage: string) {
   return stage.toLowerCase().replace(/\s+/g, "-");
 }
 
+function mapCourseSearchResponseToLeadRows(response: CourseSearchResponse | undefined): LeadRow[] {
+  const results = response?.content ?? response?.items ?? [];
+
+  return results.map((item, index) => ({
+    id: item.id ?? item.courseId ?? `course-search-${index}`,
+    name: item.name ?? item.courseName ?? item.title ?? item.universityName ?? "Course match",
+    email: item.studentEmail ?? item.email ?? "",
+    phone: item.studentPhone ?? item.phone ?? "",
+    stage: "New",
+    agent: "—",
+    source: "Course Search",
+    score: typeof item.score === "number" ? item.score : 0,
+    lastActivity: item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }) : "—",
+    nextAction: "",
+    country: item.destination ?? item.country ?? item.nearestCity ?? item.city ?? "",
+    createdAt: item.createdAt ?? new Date().toISOString(),
+  }));
+}
+
+function getCourseLevelValue(value: string): string | undefined {
+  const normalized = value.toLowerCase();
+
+  const mapping: Record<string, string> = {
+    undergraduate: "UNDERGRADUATE",
+    masters: "POSTGRADUATE_TAUGHT",
+    phd: "PHD",
+    diploma: "DIPLOMA",
+  };
+
+  return mapping[normalized];
+}
+
+function parseIntakeOption(value: string): { month: string; year: number } | null {
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const match = /^([A-Za-z]{3,9})\s+(\d{4})$/i.exec(value.trim());
+  if (!match) return null;
+
+  const [, rawMonth, rawYear] = match;
+  const monthIndex = monthNames.findIndex(
+    (month) => month.toLowerCase() === rawMonth.toLowerCase() || month.slice(0, 3).toLowerCase() === rawMonth.toLowerCase(),
+  );
+
+  if (monthIndex === -1) return null;
+
+  return {
+    month: monthNames[monthIndex],
+    year: Number(rawYear),
+  };
+}
+
+function parseDurationValue(value: string): { min: number; max: number } | null {
+  const match = /?(\d+)\s*(?:to|-)?\s*(\d+)?\s*(?:months?|month)/i.exec(value.trim());
+  if (!match) return null;
+
+  const first = Number(match[1]);
+  const second = match[2] ? Number(match[2]) : first;
+  return { min: Math.min(first, second), max: Math.max(first, second) };
+}
+
 function applySearchFilter(rows: LeadRow[], query: string): LeadRow[] {
   const q = query.trim().toLowerCase();
   if (!q) return rows;
@@ -197,11 +289,21 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
 export function LeadDashboardPage() {
   const { hasPermissions, tenant } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenantId = tenant?.tenantId ?? "";
+  const courseSearchState = (location.state as {
+    courseSearchResponse?: CourseSearchResponse;
+    courseSearchPayload?: CourseSearchRequest;
+  } | null) ?? null;
+  const hasCourseSearchResults = Boolean(courseSearchState?.courseSearchResponse);
 
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
     getDefaultFilterPanelValues(filterConfig),
+  );
+  const [advancedFilterValues, setAdvancedFilterValues] = useState<FilterPanelValues>(() =>
+    courseSearchDefaultValues,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
@@ -210,16 +312,16 @@ export function LeadDashboardPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [isSubmittingSearch, setIsSubmittingSearch] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
-  // Fetch all (non-archived, scope-narrowed) leads once, then filter + paginate
-  // client-side — so the filter/search and the pagination label/pages all reflect
-  // the same filtered set (matching the Applications table).
+  // Backend paginates one page at a time; local filters/search are then applied
+  // within the current page's payload only.
   const {
-    data: backendLeads = [],
+    data: leadsPage,
     isLoading,
     isError,
   } = useQuery({
@@ -232,7 +334,9 @@ export function LeadDashboardPage() {
         sortDirection: "DESC",
       }),
     placeholderData: (previousData) => previousData,
+    enabled: !hasCourseSearchResults,
   });
+  const backendLeads: BackendLead[] = leadsPage?.content ?? [];
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
   const usersQuery = useQuery({
@@ -280,10 +384,13 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
-  const leadRows: LeadRow[] = useMemo(
-    () => backendLeads.map(mapBackendLeadToRow),
-    [backendLeads],
-  );
+  const leadRows: LeadRow[] = useMemo(() => {
+    if (hasCourseSearchResults) {
+      return mapCourseSearchResponseToLeadRows(courseSearchState?.courseSearchResponse);
+    }
+
+    return backendLeads.map(mapBackendLeadToRow);
+  }, [backendLeads, courseSearchState, hasCourseSearchResults]);
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(
     () =>
@@ -306,7 +413,6 @@ export function LeadDashboardPage() {
     return rows;
   }, [leadRows, filterValues, leadSearchQuery, activeQuickFilter]);
 
-  // Paginate the fully-filtered set client-side, so page count + label track the filter.
   const totalVisible = fullyFilteredRows.length;
   const pageCount = Math.max(1, Math.ceil(totalVisible / pageSize));
   const clampedPage = Math.max(1, Math.min(page, pageCount));
@@ -359,7 +465,7 @@ export function LeadDashboardPage() {
   const handleDeleteLead = async (id: string) => {
     try {
       await leadApi.deleteLead(id);
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack("Lead deleted");
     } catch {
       setSnack("Failed to delete lead");
@@ -369,7 +475,7 @@ export function LeadDashboardPage() {
   const handleBulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => leadApi.deleteLead(id)));
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`${ids.length} lead(s) deleted`);
     } catch {
       setSnack("Failed to delete some leads");
@@ -381,12 +487,113 @@ export function LeadDashboardPage() {
       await leadApi.updateLead(id, {
         leadStage: toBackendLeadStage(stage),
       });
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`Stage updated to ${stage}`);
     } catch {
       setSnack("Failed to update stage");
     }
   };
+
+  const handleAdvancedSearchSubmit = useCallback(async (values: FilterPanelValues) => {
+    setIsSubmittingSearch(true);
+
+    try {
+      const destinations = Array.isArray(values.country) ? values.country : [];
+      const institutionValue = typeof values.institution === "string" ? values.institution : "";
+      const cityValue = typeof values.nearestCity === "string" ? values.nearestCity : "";
+      const intakeValues = Array.isArray(values.intake) ? values.intake : [];
+      const courseLevelValues = Array.isArray(values.level) ? values.level : [];
+      const disciplineValue = typeof values.discipline === "string" ? values.discipline : "";
+      const durationValue = typeof values.duration === "string" ? values.duration : "";
+      const postStudyWorkPermitValue =
+        typeof values.postStudyWorkPermit === "string" ? values.postStudyWorkPermit : "";
+      const selectedStudentId = new URLSearchParams(location.search).get("studentId") ?? undefined;
+
+      const payload: CourseSearchRequest = {
+        destinations,
+        institutions: institutionValue ? [{ id: "", name: institutionValue }] : [],
+        nearestCity: cityValue,
+        intakeMonths: intakeValues
+          .map((value) => parseIntakeOption(value)?.month)
+          .filter((month): month is string => Boolean(month)),
+        intakeYears: intakeValues
+          .map((value) => parseIntakeOption(value)?.year)
+          .filter((year): year is number => typeof year === "number"),
+        intakeAvailableOnly: true,
+        courseLevels: courseLevelValues
+          .map((value) => getCourseLevelValue(String(value)))
+          .filter((value): value is string => Boolean(value)),
+        disciplines: disciplineValue ? [disciplineValue] : [],
+        minDurationMonths: durationValue ? parseDurationValue(durationValue)?.min ?? undefined : undefined,
+        maxDurationMonths: durationValue ? parseDurationValue(durationValue)?.max ?? undefined : undefined,
+        postStudyWorkPermit: postStudyWorkPermitValue === "yes",
+        studentId: selectedStudentId,
+        page: 0,
+        size: 20,
+      };
+
+      const response = await leadApi.searchCourses(payload);
+      navigate(leadRoutePaths.dashboard, {
+        replace: true,
+        state: {
+          courseSearchResponse: response,
+          courseSearchPayload: payload,
+        },
+      });
+    } catch {
+      setSnack("Failed to load advance search results");
+    } finally {
+      setIsSubmittingSearch(false);
+    }
+  }, [location.search, navigate]);
+
+  if (!hasCourseSearchResults) {
+    return (
+      <Box
+        sx={{
+          alignItems: "stretch",
+          bgcolor: "#f3f7fb",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          minHeight: "calc(100vh - 80px)",
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#122033" }}>
+          Advance Filter
+        </Typography>
+
+        <Paper
+          elevation={0}
+          sx={{
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "#e9eff5",
+            borderRadius: "16px",
+            display: "flex",
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          <FilterPanel
+            applyButtonLabel={isSubmittingSearch ? "Loading…" : "Apply"}
+            filtersConfig={courseSearchAdvanceFilterConfig}
+            sx={{ height: "100%", width: "100%" }}
+            title="Advance Filter"
+            values={advancedFilterValues}
+            width="100%"
+            onFiltersChange={setAdvancedFilterValues}
+            onApplyFilters={(nextValues) => {
+              setAdvancedFilterValues(nextValues);
+              void handleAdvancedSearchSubmit(nextValues);
+            }}
+          />
+        </Paper>
+      </Box>
+    );
+  }
 
   return (
     <>
