@@ -18,7 +18,6 @@ export type ApplicationRow = {
 type ApplicationTableContainerProps = {
   applications: ApplicationRow[];
   onDeleteApplication?: (id: string) => Promise<void>;
-  onPageChange?: (page: number) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   page: number;
@@ -61,7 +60,6 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
 export function ApplicationTableContainer({
   applications,
   onDeleteApplication,
-  onPageChange,
   onPageChange,
   onPageSizeChange,
   page,
@@ -160,7 +158,6 @@ export function ApplicationTableContainer({
       onPageChange={onPageChange}
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
-      onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
       emptyMessage="No applications found."
       minWidth={820}

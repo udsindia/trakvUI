@@ -215,16 +215,13 @@ export function LeadDashboardPage() {
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
-  // Fetch all (non-archived, scope-narrowed) leads once, then filter + paginate
-  // client-side — so the filter/search and the pagination label/pages all reflect
-  // the same filtered set (matching the Applications table).
+  // Backend paginates one page at a time; local filters/search are then applied
+  // within the current page's payload only.
   const {
-    data: backendLeads = [],
+    data: leadsPage,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["leads", "all"],
-    queryFn: leadApi.getLeads,
     queryKey: ["leads", "paginated", page, pageSize, "createdAt", "DESC"],
     queryFn: () =>
       leadApi.getLeadsPaginated({
@@ -235,6 +232,7 @@ export function LeadDashboardPage() {
       }),
     placeholderData: (previousData) => previousData,
   });
+  const backendLeads: BackendLead[] = leadsPage?.content ?? [];
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
   const usersQuery = useQuery({
@@ -308,18 +306,9 @@ export function LeadDashboardPage() {
     return rows;
   }, [leadRows, filterValues, leadSearchQuery, activeQuickFilter]);
 
-  // Paginate the fully-filtered set client-side, so page count + label track the filter.
-  const totalVisible = fullyFilteredRows.length;
-  const pageCount = Math.max(1, Math.ceil(totalVisible / PAGE_SIZE));
-  const clampedPage = Math.max(1, Math.min(page, pageCount));
-  const pagedRows = fullyFilteredRows.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
-
-  const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * PAGE_SIZE + 1;
-  const pageEnd = totalVisible === 0 ? 0 : Math.min(clampedPage * PAGE_SIZE, totalVisible);
-  // The backend paginates first; local filters/search are then applied within the
-  // current page payload only.
   const pagedRows = fullyFilteredRows;
-
+  const pageCount = Math.max(1, leadsPage?.totalPages ?? 1);
+  const clampedPage = Math.max(1, Math.min(page, pageCount));
   const totalVisible = leadsPage?.totalElements ?? 0;
   const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
   const pageEnd = totalVisible === 0 ? 0 : Math.min(pageStart + (leadsPage?.numberOfElements ?? 0) - 1, totalVisible);
@@ -368,7 +357,7 @@ export function LeadDashboardPage() {
   const handleDeleteLead = async (id: string) => {
     try {
       await leadApi.deleteLead(id);
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack("Lead deleted");
     } catch {
       setSnack("Failed to delete lead");
@@ -378,7 +367,7 @@ export function LeadDashboardPage() {
   const handleBulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => leadApi.deleteLead(id)));
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`${ids.length} lead(s) deleted`);
     } catch {
       setSnack("Failed to delete some leads");
@@ -390,7 +379,7 @@ export function LeadDashboardPage() {
       await leadApi.updateLead(id, {
         leadStage: toBackendLeadStage(stage),
       });
-      await queryClient.invalidateQueries({ queryKey: ["leads", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(`Stage updated to ${stage}`);
     } catch {
       setSnack("Failed to update stage");
