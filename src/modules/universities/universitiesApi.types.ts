@@ -194,3 +194,75 @@ export interface CreatedRequirementDto {
   isMandatory: boolean;
   createdAt: string;
 }
+
+// ── Course bulk import (preview → commit) ─────────────────────────────────────
+
+export interface CourseImportFields {
+  universityName: string;
+  countryCode: string;
+  courseName: string;
+  code: string | null;
+  studyLevel: StudyLevel | null;
+  subjectArea: string | null;
+  durationMonths: number | null;
+  tuitionCurrency: string | null;
+  tuitionAmount: number | null;
+  courseUrl: string | null;
+  applicationFeeCurrency: string | null;
+  applicationFeeAmount: number | null;
+  livingCostCurrency: string | null;
+  livingCostAmount: number | null;
+  courseStartDate: string | null; // yyyy-MM-dd
+  courseEndDate: string | null;   // yyyy-MM-dd
+  pgwpEligible: boolean | null;
+  scholarshipNote: string | null;
+}
+
+export interface CourseImportPreviewRow extends CourseImportFields {
+  line: number;
+  universityId: string;
+  status: "NEW" | "DUPLICATE";
+  existingCourseId: string | null;
+}
+
+export interface CourseImportInvalidRow {
+  line: number;
+  values: Record<string, string | null>;
+  errors: string[];
+}
+
+export interface CourseImportPreviewResponse {
+  totalRows: number;
+  summary: {
+    newCourses: number;
+    duplicateCourses: number;
+    invalidRows: number;
+  };
+  courses: CourseImportPreviewRow[];
+  invalidRows: CourseImportInvalidRow[];
+}
+
+export interface CourseImportCommitItem extends CourseImportFields {
+  universityId: string;
+  onDuplicate: "SKIP" | "CREATE";
+}
+
+export interface CourseImportCommitPayload {
+  courses: CourseImportCommitItem[];
+}
+
+export interface CourseImportItemResult {
+  universityName: string;
+  countryCode: string;
+  name: string;
+  action: "CREATED" | "SKIPPED" | "FAILED";
+  courseId: string | null;
+  errors: string[];
+}
+
+export interface CourseImportResultResponse {
+  created: number;
+  skipped: number;
+  failed: number;
+  results: CourseImportItemResult[];
+}
