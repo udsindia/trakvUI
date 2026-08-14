@@ -5,8 +5,11 @@ import {
   Box,
   Checkbox,
   Divider,
+  FormControl,
+  MenuItem,
   Pagination,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -45,6 +48,9 @@ type DataTableProps<T> = {
   page: number;
   pageCount: number;
   paginationLabel: string;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
   onPageChange?: (page: number) => void;
   emptyMessage?: string;
   /**
@@ -80,6 +86,9 @@ export function DataTable<T>({
   page,
   pageCount,
   paginationLabel,
+  pageSize,
+  pageSizeOptions = [10, 20, 50],
+  onPageSizeChange,
   onPageChange,
   emptyMessage = "No records found.",
   minWidth = DEFAULT_MIN_WIDTH,
@@ -112,7 +121,7 @@ export function DataTable<T>({
             <TableHead>
               <TableRow>
                 {selection ? (
-                  <TableCell padding="checkbox">
+                  <TableCell style={{ padding: "5px" }}>
                     <Checkbox
                       checked={selection.allSelected}
                       disabled={selection.disabled || rows.length === 0}
@@ -128,7 +137,7 @@ export function DataTable<T>({
                   </TableCell>
                 ) : null}
                 {columns.map((column) => (
-                  <TableCell key={column.id} align={column.align}>
+                  <TableCell key={column.id} align={column.align} style={{ padding: "5px" }}>
                     {column.header}
                   </TableCell>
                 ))}
@@ -145,17 +154,17 @@ export function DataTable<T>({
                   onClick={
                     onRowClick
                       ? (event) => {
-                          // Let per-row controls (buttons, links, checkboxes) act on their own.
-                          if ((event.target as HTMLElement).closest('button, a, input, [role="button"]')) {
-                            return;
-                          }
-                          onRowClick(row);
+                        // Let per-row controls (buttons, links, checkboxes) act on their own.
+                        if ((event.target as HTMLElement).closest('button, a, input, [role="button"]')) {
+                          return;
                         }
+                        onRowClick(row);
+                      }
                       : undefined
                   }
                 >
                   {selection ? (
-                    <TableCell padding="checkbox" sx={{ minWidth: 30, maxWidth: 40 }}>
+                    <TableCell padding="none" sx={{ minWidth: 30, maxWidth: 40 }} style={{ padding: "5px" }}>
                       <Checkbox
                         checked={selection.isSelected(row)}
                         size="small"
@@ -172,6 +181,7 @@ export function DataTable<T>({
                       key={column.id}
                       align={column.align}
                       sx={{ minWidth: column.minWidth, ...(column.cellSx as object) }}
+                      style={{ padding: "5px" }}
                     >
                       {column.render(row)}
                     </TableCell>
@@ -203,7 +213,31 @@ export function DataTable<T>({
             {paginationLabel}
           </Typography>
 
-          <Box sx={{ alignSelf: { xs: "flex-start", md: "center" } }}>
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{ alignItems: "center", alignSelf: { xs: "flex-start", md: "center" } }}
+          >
+            {typeof pageSize === "number" && onPageSizeChange ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <Typography color="text.secondary" sx={{ fontSize: 12, whiteSpace: "nowrap" }} variant="body2">
+                  Items per page
+                </Typography>
+                <FormControl size="small" sx={{ minWidth: 76 }}>
+                  <Select
+                    value={pageSize}
+                    onChange={(event) => onPageSizeChange(Number(event.target.value))}
+                  >
+                    {pageSizeOptions.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            ) : null}
+
             <Pagination
               count={pageCount}
               page={Math.max(1, Math.min(page, pageCount || 1))}
@@ -211,7 +245,7 @@ export function DataTable<T>({
               sx={dataTablePaginationSx}
               onChange={onPageChange ? (_, value) => onPageChange(value) : undefined}
             />
-          </Box>
+          </Stack>
         </Stack>
       </Paper>
     </Box>

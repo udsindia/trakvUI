@@ -16,21 +16,21 @@ export const httpClient = axios.create({
 // ─── Debug interceptors ──────────────────────────────────────────────────────
 
 httpClient.interceptors.request.use((config) => {
-  console.debug(
-    `[API →] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
-    ...(config.params ? ["| params:", config.params] : []),
-    ...(config.data ? ["| body:", config.data] : []),
-  );
+  // console.debug(
+  //   `[API →] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
+  //   ...(config.params ? ["| params:", config.params] : []),
+  //   ...(config.data ? ["| body:", config.data] : []),
+  // );
   return config;
 });
 
 httpClient.interceptors.response.use(
   (response) => {
-    console.debug(
-      `[API ←] ${response.status} ${response.config.url}`,
-      "| data:",
-      response.data,
-    );
+    // console.debug(
+    //   `[API ←] ${response.status} ${response.config.url}`,
+    //   "| data:",
+    //   response.data,
+    // );
     return response;
   },
   (error) => {

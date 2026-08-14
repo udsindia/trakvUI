@@ -86,10 +86,10 @@ export function DashboardSectionTabs({
         })}
       </Stack>
 
-      <Typography
+      {/* <Typography
         dangerouslySetInnerHTML={{ __html: scopeNote }}
         sx={{ color: "text.disabled", fontSize: 10, fontWeight: 600 }}
-      />
+      /> */}
     </Stack>
   );
 }
