@@ -2,16 +2,19 @@ const UI_TO_BACKEND_STAGE: Record<string, string> = {
   New: "NEW",
   Contacted: "CONTACTED",
   Qualified: "QUALIFIED",
-  Proposal: "PROPOSAL_SENT",
+  Prospective: "PROSPECTIVE",
+  // "Enrolled" is the UI name for the existing CONVERTED stage rather than a
+  // separate one, so converted leads keep their stored value.
+  Enrolled: "CONVERTED",
 };
 
 const BACKEND_TO_UI_STAGE: Record<string, string> = {
   NEW: "New",
   CONTACTED: "Contacted",
   QUALIFIED: "Qualified",
-  PROPOSAL_SENT: "Proposal",
+  PROSPECTIVE: "Prospective",
   NEGOTIATION: "Negotiation",
-  CONVERTED: "Converted",
+  CONVERTED: "Enrolled",
   LOST: "Lost",
   ARCHIVED: "Archived",
 };

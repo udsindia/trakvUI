@@ -116,9 +116,10 @@ function SidebarContent({
   userName,
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
-  const mainItems = items.filter((item) =>
-    ["dashboard", "lead", "applications", "universities", "universities-browse"].includes(item.id),
-  );
+  // Activities and Settings are rendered in their own groups below, so the main
+  // group is "everything else" rather than a fixed list — otherwise a newly added
+  // module resolves and routes correctly but never appears in the sidebar.
+  const mainItems = items.filter((item) => !["activities", "settings"].includes(item.id));
   const activitiesItem = items.find((item) => item.id === "activities");
   const tasksItem = activitiesItem?.children?.find((child) => child.id.endsWith(".tasks"));
   const engageItems = [

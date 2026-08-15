@@ -206,7 +206,27 @@ function readStoredSession() {
   try {
     const parsedSession = JSON.parse(serializedSession) as unknown;
 
-    return isValidSession(parsedSession) ? parsedSession : null;
+    if (!isValidSession(parsedSession)) {
+      return null;
+    }
+
+    const session = parsedSession as AuthSession;
+
+    // A session persisted before a module existed carries no flag for it, and a
+    // missing flag reads as disabled in resolveModules. Without this merge a newly
+    // shipped module stays invisible to everyone already logged in, until each of
+    // them happens to log out. Stored values still win, so a deliberate opt-out
+    // for a tenant is preserved.
+    return {
+      ...session,
+      tenant: {
+        ...session.tenant,
+        enabledModules: {
+          ...defaultTenantModules,
+          ...session.tenant.enabledModules,
+        },
+      },
+    };
   } catch {
     return null;
   }

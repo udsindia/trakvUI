@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { ApplicationFormValues } from "@/modules/applications/applicationForm.types";
-import type { StudentOption } from "@/modules/applications/studentsApi";
+import type { StudentOption } from "@/modules/students/studentsApi";
 import type {
   CountryDto,
   CourseDto,

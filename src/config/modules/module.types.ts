@@ -5,6 +5,7 @@ import type { ModuleKey } from "@/config/modules/modules";
 export const MODULE_ICON_KEYS = {
   DASHBOARD: "dashboard",
   LEADS: "leads",
+  STUDENTS: "students",
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
   UNIVERSITIES: "universities",

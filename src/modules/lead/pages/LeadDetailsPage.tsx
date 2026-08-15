@@ -28,9 +28,9 @@ const stageColor: Record<string, { backgroundColor: string; color: string }> = {
   New: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
   Contacted: { backgroundColor: "#E4EDFC", color: "#0F5AD4" },
   Qualified: { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
-  Proposal: { backgroundColor: "#FDEEDD", color: "#B35A00" },
+  Prospective: { backgroundColor: "#FDEEDD", color: "#B35A00" },
   Negotiation: { backgroundColor: "#FBF0DA", color: "#8A5B08" },
-  Converted: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  Enrolled: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
   Lost: { backgroundColor: "#FBE5E5", color: "#C0392F" },
   Archived: { backgroundColor: "#EEF2F6", color: "#55707C" },
 };

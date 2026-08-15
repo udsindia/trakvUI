@@ -57,7 +57,8 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "new", label: "New" },
   { key: "contacted", label: "Contacted" },
   { key: "qualified", label: "Qualified" },
-  { key: "proposal", label: "Proposal" },
+  { key: "prospective", label: "Prospective" },
+  { key: "enrolled", label: "Enrolled" },
 ];
 
 const courseSearchAdvanceFilterConfig = buildCourseSearchFilterConfig({ countryCounts: {} });

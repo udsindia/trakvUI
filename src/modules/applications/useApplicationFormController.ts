@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
-import { studentsApi } from "@/modules/applications/studentsApi";
+import { studentsApi } from "@/modules/students/studentsApi";
 import type {
   CreateApplicationPayload,
   ApplicationFormValues,

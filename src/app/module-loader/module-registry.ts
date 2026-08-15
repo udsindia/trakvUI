@@ -13,6 +13,7 @@ type ModuleImport = () => Promise<{ default: ComponentType }>;
 const moduleImporters: Record<ModuleKey, ModuleImport> = {
   [MODULE_KEYS.DASHBOARD]: () => import("@/modules/dashboard"),
   [MODULE_KEYS.LEAD]: () => import("@/modules/lead"),
+  [MODULE_KEYS.STUDENTS]: () => import("@/modules/students"),
   [MODULE_KEYS.APPLICATIONS]: () => import("@/modules/applications"),
   [MODULE_KEYS.ACTIVITIES]: () => import("@/modules/activities"),
   [MODULE_KEYS.UNIVERSITIES]: () => import("@/modules/universities"),
@@ -23,6 +24,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
 const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.DASHBOARD]: lazy(moduleImporters[MODULE_KEYS.DASHBOARD]),
   [MODULE_KEYS.LEAD]: lazy(moduleImporters[MODULE_KEYS.LEAD]),
+  [MODULE_KEYS.STUDENTS]: lazy(moduleImporters[MODULE_KEYS.STUDENTS]),
   [MODULE_KEYS.APPLICATIONS]: lazy(moduleImporters[MODULE_KEYS.APPLICATIONS]),
   [MODULE_KEYS.ACTIVITIES]: lazy(moduleImporters[MODULE_KEYS.ACTIVITIES]),
   [MODULE_KEYS.UNIVERSITIES]: lazy(moduleImporters[MODULE_KEYS.UNIVERSITIES]),

@@ -32,7 +32,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { studentsApi, type StudentOption } from "@/modules/applications/studentsApi";
+import { studentsApi, type StudentOption } from "@/modules/students/studentsApi";
 import { shortlistApi } from "@/modules/universities/shortlistApi";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
