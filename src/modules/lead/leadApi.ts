@@ -30,6 +30,59 @@ export interface BackendLead {
 
 export type SortDirection = "ASC" | "DESC";
 
+export type CourseSearchInstitution = {
+  id?: string;
+  name: string;
+};
+
+export type CourseSearchRequest = {
+  destinations?: string[];
+  institutions?: CourseSearchInstitution[];
+  nearestCity?: string;
+  intakeMonths?: string[];
+  intakeYears?: number[];
+  intakeAvailableOnly?: boolean;
+  courseLevels?: string[];
+  disciplines?: string[];
+  minDurationMonths?: number;
+  maxDurationMonths?: number;
+  postStudyWorkPermit?: boolean;
+  studentId?: string;
+  page?: number;
+  size?: number;
+};
+
+export type CourseSearchResultItem = {
+  id?: string;
+  courseId?: string;
+  name?: string;
+  courseName?: string;
+  title?: string;
+  universityName?: string;
+  institutionName?: string;
+  destination?: string;
+  country?: string;
+  city?: string;
+  nearestCity?: string;
+  studentEmail?: string;
+  email?: string;
+  phone?: string;
+  studentPhone?: string;
+  createdAt?: string;
+  score?: number;
+  [key: string]: unknown;
+};
+
+export type CourseSearchResponse = {
+  content?: CourseSearchResultItem[];
+  items?: CourseSearchResultItem[];
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  [key: string]: unknown;
+};
+
 export interface PaginatedLeadsResponse {
   content: BackendLead[];
   totalElements: number;
@@ -119,6 +172,11 @@ export const leadApi = {
         sortDirection,
       },
     });
+    return response.data;
+  },
+
+  searchCourses: async (payload: CourseSearchRequest): Promise<CourseSearchResponse> => {
+    const response = await httpClient.get<CourseSearchResponse>(`${API_CONFIG.courses}/search`, { params: payload });
     return response.data;
   },
 
