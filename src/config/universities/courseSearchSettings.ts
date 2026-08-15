@@ -107,6 +107,7 @@ export const courseSearchSettings = {
       key: "intakeStatus",
       label: "Intake Status",
       section: "destinations-intakes",
+      placeholder: "Select Intake Status",
       options: [
         { label: "Open", value: "open" },
         { label: "Closed", value: "closed" },
