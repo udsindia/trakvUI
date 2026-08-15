@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Box, LinearProgress, Stack } from "@mui/material";
 import { useAuth } from "@/app/auth/useAuth";
@@ -35,6 +35,16 @@ export default function DashboardModule() {
     refetchInterval: LIVE_REFRESH_MS,
     retry: 1,
   });
+
+  // Logs how long the Dashboard took to load its data, once per mount.
+  const pageLoadStartRef = useRef(performance.now());
+  const pageLoadLoggedRef = useRef(false);
+  useEffect(() => {
+    if (!dashboardQuery.isLoading && !pageLoadLoggedRef.current) {
+      pageLoadLoggedRef.current = true;
+      console.log(`[PageLoad] Dashboard loaded in ${(performance.now() - pageLoadStartRef.current).toFixed(0)}ms`);
+    }
+  }, [dashboardQuery.isLoading]);
 
   const dashboard = dashboardQuery.data?.data;
   const kpis = dashboard?.kpis ?? roleConfig.kpis;

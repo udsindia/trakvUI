@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded, UploadRounded } from "@mui/icons-material";
 import {
@@ -202,38 +202,6 @@ function getCourseLevelValue(value: string): string | undefined {
   return mapping[normalized];
 }
 
-function parseIntakeOption(value: string): { month: string; year: number } | null {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const match = /^([A-Za-z]{3,9})\s+(\d{4})$/i.exec(value.trim());
-  if (!match) return null;
-
-  const [, rawMonth, rawYear] = match;
-  const monthIndex = monthNames.findIndex(
-    (month) => month.toLowerCase() === rawMonth.toLowerCase() || month.slice(0, 3).toLowerCase() === rawMonth.toLowerCase(),
-  );
-
-  if (monthIndex === -1) return null;
-
-  return {
-    month: monthNames[monthIndex],
-    year: Number(rawYear),
-  };
-}
-
 function parseDurationValue(value: string): { min: number; max: number } | null {
   const match = /^(\d+)\s*(?:to|-)?\s*(\d+)?\s*(?:months?|month)$/i.exec(value.trim());
   if (!match) return null;
@@ -284,7 +252,7 @@ function buildCourseSearchFilterMetadata(response?: CourseSearchResponse): Cours
   const durationValues: string[] = [];
 
   for (const item of results) {
-    const country = readStringValue(item, ["destination", "country"]);
+    const country = readStringValue(item, ["destination", "country", "countryCode"]);
     if (country) {
       countryCounts[country] = (countryCounts[country] ?? 0) + 1;
     }
@@ -435,6 +403,15 @@ export function LeadDashboardPage() {
     placeholderData: (previousData) => previousData,
     enabled: !hasCourseSearchResults,
   });
+  // Logs how long the Leads page took to load its data, once per mount.
+  const pageLoadStartRef = useRef(performance.now());
+  const pageLoadLoggedRef = useRef(false);
+  useEffect(() => {
+    if (!isLoading && !pageLoadLoggedRef.current) {
+      pageLoadLoggedRef.current = true;
+      console.log(`[PageLoad] Leads loaded in ${(performance.now() - pageLoadStartRef.current).toFixed(0)}ms`);
+    }
+  }, [isLoading]);
   const backendLeads: BackendLead[] = leadsPage?.content ?? [];
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
@@ -460,7 +437,6 @@ export function LeadDashboardPage() {
     queryKey: ["courses", "search", "filter-options", selectedStudentId ?? "all"],
     queryFn: () =>
       leadApi.searchCourses({
-        intakeAvailableOnly: true,
         page: 0,
         size: 200,
         ...(selectedStudentId ? { studentId: selectedStudentId } : {}),
@@ -635,15 +611,11 @@ export function LeadDashboardPage() {
 
       const payload: CourseSearchRequest = {
         destinations,
-        institutions: institutionValue ? [{ id: "", name: institutionValue }] : [],
+        institutions: institutionValue ? [{ name: institutionValue }] : [],
         nearestCity: cityValue,
-        intakeMonths: intakeValues
-          .map((value) => parseIntakeOption(value)?.month)
-          .filter((month): month is string => Boolean(month)),
-        intakeYears: intakeValues
-          .map((value) => parseIntakeOption(value)?.year)
-          .filter((year): year is number => typeof year === "number"),
-        intakeAvailableOnly: true,
+        // Sent as combined "Mon YYYY" strings (matching the filter options) — the
+        // backend parses month + year out of each entry itself.
+        intakeMonths: intakeValues,
         courseLevels: courseLevelValues
           .map((value) => getCourseLevelValue(String(value)))
           .filter((value): value is string => Boolean(value)),
