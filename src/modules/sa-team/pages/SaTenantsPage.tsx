@@ -112,6 +112,7 @@ function TenantDrawer({
           <Divider />
 
           <Stack spacing={1.5}>
+            <Row label="Admin Email" value={tenant.adminEmail ?? "—"} />
             <Row label="Slug" value={tenant.slug} />
             <Row label="Plan" value={<PlanChip plan={tenant.plan} />} />
             <Row
@@ -256,6 +257,7 @@ export function SaTenantsPage() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Admin Email</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Slug</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Plan</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
@@ -275,6 +277,11 @@ export function SaTenantsPage() {
                 <TableCell>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: SA_TEAL }}>
                     {t.name}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {t.adminEmail ?? "—"}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -299,7 +306,7 @@ export function SaTenantsPage() {
             ))}
             {tenants.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
                   No tenants found.
                 </TableCell>
               </TableRow>
