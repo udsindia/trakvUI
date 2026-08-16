@@ -33,6 +33,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { studentsApi, type StudentOption } from "@/modules/applications/studentsApi";
+import { leadApi, type CourseSearchRequest, type CourseSearchResponse } from "@/modules/lead/leadApi";
 import { shortlistApi } from "@/modules/universities/shortlistApi";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
@@ -54,13 +55,7 @@ import {
 } from "@/modules/universities/courseSearchFilterConfig";
 import { universitiesCatalogQueryKey } from "@/modules/universities/universitiesCatalogService";
 import { toAlpha2CountryCode } from "@/modules/universities/universitiesMappers";
-import {
-  buildCourseSearchResults,
-  filterCourseSearchResults,
-  getCountryCounts,
-  sortCourseSearchResults,
-} from "@/modules/universities/courseSearchUtils";
-import { useCountries, useUniversitiesCatalog } from "@/modules/universities/useUniversitiesCatalog";
+import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
 import {
   courseDetailsPath,
   universityDetailsPath,
@@ -71,7 +66,7 @@ import {
 } from "@/modules/universities/universitiesStyles";
 import type {
   CourseLevel,
-  CourseSearchFilters,
+  CourseSearchResult,
   CourseSortOption,
 } from "@/modules/universities/universities.types";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
@@ -148,70 +143,198 @@ function asString(value: FilterPanelValue | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-function toSearchFilters(
+function buildCourseSearchApiPayload(
   filterValues: FilterPanelValues,
   query: string,
   sort: CourseSortOption,
-): CourseSearchFilters {
-  return {
-    query,
-    countries: asStringArray(filterValues[filterKeys.country.key]),
-    nearestCity: asString(filterValues[filterKeys.nearestCity.key]),
-    levels: asStringArray(filterValues[filterKeys.level.key]) as CourseLevel[],
-    disciplines: asString(filterValues[filterKeys.discipline.key])
-      ? [asString(filterValues[filterKeys.discipline.key])]
-      : [],
-    institutions: asString(filterValues[filterKeys.institution.key])
-      ? [asString(filterValues[filterKeys.institution.key])]
-      : [],
-    intakes: asStringArray(filterValues[filterKeys.intake.key]),
+  studentId: string | null,
+): CourseSearchRequest {
+  const payload: CourseSearchRequest = {
+    destinations: asString(filterValues[filterKeys.country.key])
+      ? [asString(filterValues[filterKeys.country.key])]
+      : undefined,
+    courseLevels: asString(filterValues[filterKeys.level.key])
+      ? [asString(filterValues[filterKeys.level.key])]
+      : undefined,
+    intakeMonths: asString(filterValues[filterKeys.intake.key])
+      ? [asString(filterValues[filterKeys.intake.key])]
+      : undefined,
     intakeStatuses: asString(filterValues[filterKeys.intakeStatus.key])
       ? [asString(filterValues[filterKeys.intakeStatus.key])]
-      : [],
-    nationality: asString(filterValues[filterKeys.nationality.key]),
-    regionState: asString(filterValues[filterKeys.regionState.key]),
-    isOnshore: asStringArray(filterValues[filterKeys.onshore.key]).includes("onshore"),
-    highestEducationLevel: asString(filterValues[filterKeys.highestEducationLevel.key]),
-    countryOfEducation: asString(filterValues[filterKeys.countryOfEducation.key]),
-    gradingSystem: asString(filterValues[filterKeys.gradingSystem.key]),
-    backlogs: asString(filterValues[filterKeys.backlogs.key]),
-    educationGap: asString(filterValues[filterKeys.educationGap.key]),
-    turnaroundRange: asNumberRange(
-      filterValues[filterKeys.turnaround.key],
-      sliderFallbacks.turnaround,
-    ),
+      : undefined,
+    nearestCity: asString(filterValues[filterKeys.nearestCity.key]) || undefined,
+    institutions: asString(filterValues[filterKeys.institution.key])
+      ? [{ name: asString(filterValues[filterKeys.institution.key]) }]
+      : undefined,
+    nationality: asString(filterValues[filterKeys.nationality.key]) || undefined,
+    regionState: asString(filterValues[filterKeys.regionState.key]) || undefined,
+    isOnshore: asStringArray(filterValues[filterKeys.onshore.key]).includes("onshore") || undefined,
+    highestEducationLevel: asString(filterValues[filterKeys.highestEducationLevel.key]) || undefined,
+    countryOfEducation: asString(filterValues[filterKeys.countryOfEducation.key]) || undefined,
+    gradingSystem: asString(filterValues[filterKeys.gradingSystem.key]) || undefined,
+    backlogs: asString(filterValues[filterKeys.backlogs.key]) || undefined,
+    educationGap: asString(filterValues[filterKeys.educationGap.key]) || undefined,
+    disciplines: asString(filterValues[filterKeys.discipline.key])
+      ? [asString(filterValues[filterKeys.discipline.key])]
+      : undefined,
     durations: asString(filterValues[filterKeys.duration.key])
       ? [asString(filterValues[filterKeys.duration.key])]
-      : [],
+      : undefined,
     deliveryModes: asString(filterValues[filterKeys.delivery.key])
       ? [asString(filterValues[filterKeys.delivery.key])]
-      : [],
-    postStudyWorkPermit: asString(filterValues[filterKeys.postStudyWorkPermit.key]),
-    tuitionRange: asNumberRange(filterValues[filterKeys.tuition.key], sliderFallbacks.tuition),
-    ieltsRange: asNumberRange(filterValues[filterKeys.ielts.key], sliderFallbacks.ielts),
-    eligibleOnly: false,
-    matchStudent: false,
-    sort,
+      : undefined,
+    postStudyWorkPermit: asString(filterValues[filterKeys.postStudyWorkPermit.key])
+      ? asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes"
+      : undefined,
+    studentId: studentId ?? undefined,
+    query: query.trim() || undefined,
+    sort: sort || undefined,
+    page: 0,
+    size: 50,
   };
+
+  const durationValue = asString(filterValues[filterKeys.duration.key]);
+  if (durationValue) {
+    const numeric = Number.parseInt(durationValue.replace(/[^0-9]/g, ""), 10);
+    if (!Number.isNaN(numeric)) {
+      payload.minDurationMonths = Math.max(1, numeric - 6);
+      payload.maxDurationMonths = numeric + 6;
+    }
+  }
+
+  const turnaroundRange = asNumberRange(
+    filterValues[filterKeys.turnaround.key],
+    sliderFallbacks.turnaround,
+  );
+  if (
+    turnaroundRange[0] !== sliderFallbacks.turnaround[0] ||
+    turnaroundRange[1] !== sliderFallbacks.turnaround[1]
+  ) {
+    payload.minTurnaroundDays = turnaroundRange[0];
+    payload.maxTurnaroundDays = turnaroundRange[1];
+  }
+
+  const tuitionRange = asNumberRange(filterValues[filterKeys.tuition.key], sliderFallbacks.tuition);
+  if (tuitionRange[0] !== sliderFallbacks.tuition[0] || tuitionRange[1] !== sliderFallbacks.tuition[1]) {
+    payload.minTuitionLakhs = tuitionRange[0];
+    payload.maxTuitionLakhs = tuitionRange[1];
+  }
+
+  const ieltsRange = asNumberRange(filterValues[filterKeys.ielts.key], sliderFallbacks.ielts);
+  if (ieltsRange[0] !== sliderFallbacks.ielts[0] || ieltsRange[1] !== sliderFallbacks.ielts[1]) {
+    payload.minIelts = ieltsRange[0];
+    payload.maxIelts = ieltsRange[1];
+  }
+
+  return payload;
+}
+
+function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefined): CourseSearchResult[] {
+  const items = response?.content ?? response?.items ?? [];
+
+  return items.map((item, index) => {
+    const raw = item as Record<string, unknown>;
+    const courseName = typeof raw.name === "string" ? raw.name : typeof raw.courseName === "string" ? raw.courseName : "Course";
+    const universityName = typeof raw.universityName === "string"
+      ? raw.universityName
+      : typeof raw.institutionName === "string"
+        ? raw.institutionName
+        : "University";
+    const city = typeof raw.nearestCity === "string"
+      ? raw.nearestCity
+      : typeof raw.city === "string"
+        ? raw.city
+        : "City";
+    const country = typeof raw.destination === "string"
+      ? raw.destination
+      : typeof raw.country === "string"
+        ? raw.country
+        : "Country";
+    const levelValue = String(raw.level ?? raw.studyLevel ?? "masters").toLowerCase();
+    const normalizedLevel = ["undergraduate", "masters", "phd", "diploma"].includes(levelValue)
+      ? (levelValue as CourseLevel)
+      : "masters";
+
+    return {
+      id: String(raw.id ?? raw.courseId ?? `${index}`),
+      universityId: String(raw.universityId ?? raw.universityId ?? `${index}`),
+      name: String(courseName),
+      level: normalizedLevel,
+      levelLabel: String(raw.levelLabel ?? raw.studyLevelLabel ?? "Masters (PG)"),
+      intakes: Array.isArray(raw.intakes)
+        ? raw.intakes.filter((value): value is string => typeof value === "string")
+        : [],
+      duration: String(raw.duration ?? raw.durationLabel ?? "1 year"),
+      tuitionLakhs: Number(raw.tuitionLakhs ?? raw.tuitionAmount ?? 0),
+      ieltsMin: Number(raw.ieltsMin ?? raw.ielts ?? 0),
+      ieltsLabel: String(raw.ieltsLabel ?? `IELTS ${raw.ielts ?? 0}`),
+      applicationFee: String(raw.applicationFee ?? "₹0"),
+      deadline: String(raw.deadline ?? "Rolling"),
+      eligibilityStatus: "eligible",
+      eligibilityPercent: 100,
+      curriculum: { semester1: [], semester2: [] },
+      requirements: [],
+      keyDates: {
+        applicationDeadline: String(raw.applicationDeadline ?? "Rolling"),
+        rollingAdmissions: true,
+        courseStart: String(raw.courseStart ?? "-"),
+        courseEnd: String(raw.courseEnd ?? "-"),
+        pgwpEligible: String(raw.pgwpEligible ?? "No"),
+      },
+      fees: {
+        tuitionPerYear: String(raw.tuitionPerYear ?? "₹0"),
+        applicationFee: String(raw.applicationFee ?? "₹0"),
+        livingCosts: String(raw.livingCosts ?? "₹0"),
+        scholarshipNote: String(raw.scholarshipNote ?? ""),
+      },
+      ourData: {
+        studentsSent: Number(raw.studentsSent ?? 0),
+        accepted: Number(raw.accepted ?? 0),
+        visaApproved: Number(raw.visaApproved ?? 0),
+        avgCommission: String(raw.avgCommission ?? "-"),
+      },
+      university: {
+        id: String(raw.universityId ?? `${index}`),
+        name: universityName,
+        shortName: universityName,
+        country,
+        countryCode: toAlpha2CountryCode(country) || "IN",
+        city,
+        flag: "🏛️",
+        founded: 2000,
+        website: "",
+        about: "",
+        trackRecord: {
+          studentsEnrolled: 0,
+          visasApproved: 0,
+          visaSuccessRate: 0,
+          avgApplicationDays: 0,
+          avgCommission: "-",
+        },
+        links: [],
+        internalNotes: "",
+        generalRequirements: [],
+      },
+      alreadyShortlisted: false,
+      pendingApplications: 0,
+    } as unknown as CourseSearchResult;
+  });
 }
 
 export function CourseSearchPage() {
   const navigate = useNavigate();
-  const { data: catalog, isLoading, isError } = useUniversitiesCatalog();
   const { data: countries = [] } = useCountries();
-  const universities = catalog?.universities ?? [];
-  const courses = catalog?.courses ?? [];
 
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
-    getCourseSearchDefaultFilterValues(
-      buildCourseSearchFilterConfig({
-        countryCounts: {},
-      }),
-    ),
+    getCourseSearchDefaultFilterValues(buildCourseSearchFilterConfig({})),
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
+  const [courseResults, setCourseResults] = useState<CourseSearchResult[]>([]);
+  const [courseSearchError, setCourseSearchError] = useState<string | null>(null);
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
   // ── Student context for shortlisting (a shortlist belongs to a student) ──────
   const [searchParams] = useSearchParams();
@@ -255,45 +378,21 @@ export function CourseSearchPage() {
   const [importError, setImportError] = useState<string | null>(null);
   const [previewResult, setPreviewResult] = useState<CourseImportPreviewResponse | null>(null);
   const [commitResult, setCommitResult] = useState<CourseImportResultResponse | null>(null);
-  // Per-row decision for DUPLICATE rows, keyed by the row's source CSV line — defaults to
-  // SKIP (leave the existing course alone) unless the user explicitly opts to create anyway.
   const [duplicateDecisions, setDuplicateDecisions] = useState<Record<number, "SKIP" | "CREATE">>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const baseResults = useMemo(
-    () => buildCourseSearchResults(courses, universities),
-    [courses, universities],
-  );
-
-  const countryCounts = useMemo(() => getCountryCounts(baseResults), [baseResults]);
-
-  const dynamicOptions = useMemo(() => {
-    const cities = Array.from(new Set(baseResults.map((result) => result.university.city)))
-      .sort((left, right) => left.localeCompare(right))
-      .map((city) => ({ label: city, value: city }));
-
-    const institutions = Array.from(new Set(baseResults.map((result) => result.university.name)))
-      .sort((left, right) => left.localeCompare(right))
-      .map((name) => ({ label: name, value: name }));
-
-    const durations = Array.from(new Set(baseResults.map((result) => result.duration)))
-      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
-      .map((duration) => ({ label: duration, value: duration }));
-
-    const disciplines = [
-      { label: "Computer Science", value: "computer-science" },
-      { label: "Data Science", value: "data-science" },
-      { label: "Business", value: "business" },
-      { label: "General", value: "general" },
-    ];
-
-    return {
-      city: cities,
-      institution: institutions,
-      duration: durations,
-      discipline: disciplines,
-    };
-  }, [baseResults]);
+  // ── Advanced filter option metadata, sourced from the course search API so the
+  // dropdowns (destination, level, intake, city, institution, discipline, duration)
+  // reflect real data. This is metadata only — it does not render any course results.
+  const { data: filterOptionsResponse, isLoading: isLoadingFilterOptions } = useQuery({
+    queryKey: ["courses", "search", "filter-options"],
+    queryFn: () =>
+      leadApi.searchCourses({
+        intakeAvailableOnly: true,
+        page: 0,
+        size: 200,
+      }),
+  });
 
   const countryFilterOptions = useMemo(() => {
     const apiOptions = countries
@@ -313,14 +412,116 @@ export function CourseSearchPage() {
     }));
   }, [countries]);
 
+  const dynamicOptions = useMemo(() => {
+    const results = filterOptionsResponse?.content ?? filterOptionsResponse?.items ?? [];
+
+    const collect = (extract: (item: (typeof results)[number]) => string | undefined) =>
+      Array.from(
+        new Set(
+          results
+            .map(extract)
+            .filter((value): value is string => Boolean(value && value.trim())),
+        ),
+      )
+        .sort((left, right) => left.localeCompare(right))
+        .map((value) => ({ label: value, value }));
+
+    const country = collect((item) =>
+      typeof item.destination === "string"
+        ? item.destination
+        : typeof item.country === "string"
+          ? item.country
+          : undefined,
+    ).map((option) => ({
+      label: option.label,
+      value: toAlpha2CountryCode(option.value) || option.value,
+    }));
+
+    const level = collect((item) =>
+      typeof item.level === "string"
+        ? item.level
+        : typeof item.studyLevel === "string"
+          ? item.studyLevel
+          : undefined,
+    );
+
+    const intake = collect((item) => {
+      if (Array.isArray(item.intakes)) {
+        return item.intakes.find((value): value is string => typeof value === "string");
+      }
+      return typeof item.intakeMonth === "string" ? item.intakeMonth : undefined;
+    });
+
+    const city = collect((item) =>
+      typeof item.nearestCity === "string"
+        ? item.nearestCity
+        : typeof item.city === "string"
+          ? item.city
+          : undefined,
+    );
+
+    const institution = collect((item) =>
+      typeof item.institutionName === "string"
+        ? item.institutionName
+        : typeof item.universityName === "string"
+          ? item.universityName
+          : undefined,
+    );
+
+    const duration = collect((item) =>
+      typeof item.duration === "string"
+        ? item.duration
+        : typeof item.durationLabel === "string"
+          ? item.durationLabel
+          : typeof item.durationMonths === "number"
+            ? `${item.durationMonths} months`
+            : undefined,
+    );
+
+    const discipline = Array.from(
+      new Set(
+        results.flatMap((item) => {
+          const list: string[] = [];
+          if (Array.isArray(item.disciplines)) {
+            list.push(
+              ...item.disciplines.filter(
+                (value): value is string => typeof value === "string" && Boolean(value.trim()),
+              ),
+            );
+          }
+          if (typeof item.discipline === "string" && item.discipline.trim()) {
+            list.push(item.discipline.trim());
+          }
+          return list;
+        }),
+      ),
+    )
+      .sort((left, right) => left.localeCompare(right))
+      .map((value) => ({ label: value, value }));
+
+    return {
+      country,
+      level,
+      intake,
+      city,
+      institution,
+      duration,
+      discipline: discipline.length > 0 ? discipline : [
+        { label: "Computer Science", value: "computer-science" },
+        { label: "Data Science", value: "data-science" },
+        { label: "Business", value: "business" },
+        { label: "General", value: "general" },
+      ],
+    };
+  }, [filterOptionsResponse]);
+
   const filterConfig = useMemo(() => {
-    const config = buildCourseSearchFilterConfig({ countryCounts, dynamicOptions });
+    const config = buildCourseSearchFilterConfig({ dynamicOptions });
     return config.map((filter) => {
-      if (filter.type !== "checkbox-group" || filter.key !== filterKeys.country.key) {
+      if (filter.type !== "dropdown" || filter.key !== filterKeys.country.key) {
         return {
           ...filter,
           helperText: filter.helperText,
-          // Section heading is attached to the first filter in each section.
           sectionTitle: sectionTitleByKey.get(filter.key),
         };
       }
@@ -328,15 +529,10 @@ export function CourseSearchPage() {
       return {
         ...filter,
         sectionTitle: sectionTitleByKey.get(filter.key),
-        options: countryFilterOptions.map((option) => ({
-          label: filterKeys.country.showCounts
-            ? `${option.label} (${countryCounts[option.value] ?? 0})`
-            : option.label,
-          value: option.value,
-        })),
+        options: dynamicOptions.country.length > 0 ? dynamicOptions.country : countryFilterOptions,
       };
     });
-  }, [countryCounts, countryFilterOptions]);
+  }, [countryFilterOptions, dynamicOptions]);
 
   const defaultFilterValues = useMemo(
     () => getCourseSearchDefaultFilterValues(filterConfig),
@@ -344,15 +540,11 @@ export function CourseSearchPage() {
   );
   const activeFilterCount = countActiveFilters(filterValues, filterConfig, defaultFilterValues);
 
-  const filteredResults = useMemo(() => {
-    const filters = toSearchFilters(filterValues, searchQuery, sort);
-    const filtered = filterCourseSearchResults(baseResults, filters);
-    return sortCourseSearchResults(filtered, sort);
-  }, [baseResults, filterValues, searchQuery, sort]);
+  const filteredResults = useMemo(() => courseResults, [courseResults]);
 
   const shortlistItems = useMemo(
-    () => baseResults.filter((result) => shortlistIds.includes(result.id)),
-    [baseResults, shortlistIds],
+    () => courseResults.filter((result) => shortlistIds.includes(result.id)),
+    [courseResults, shortlistIds],
   );
 
   const handleToggleShortlist = (courseId: string) => {
@@ -369,11 +561,32 @@ export function CourseSearchPage() {
     setFilterValues(defaultFilterValues);
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
+    setCourseResults([]);
+    setCourseSearchError(null);
+    setHasAppliedFilters(false);
   };
 
-  const handleApplyFilters = (values: FilterPanelValues) => {
+  const handleApplyFilters = async (values: FilterPanelValues) => {
     setFilterValues(values);
-    setDrawerOpen(false);
+    setCourseSearchError(null);
+    setIsApplyingFilters(true);
+
+    try {
+      const payload = buildCourseSearchApiPayload(values, searchQuery, sort, studentId);
+      const response = await leadApi.searchCourses(payload);
+      const results = normalizeCourseSearchApiResults(response);
+      setCourseResults(results);
+      setHasAppliedFilters(true);
+      setDrawerOpen(false);
+    } catch (error) {
+      setCourseResults([]);
+      setHasAppliedFilters(false);
+      setCourseSearchError(
+        error instanceof Error ? error.message : "Unable to load courses. Please try again.",
+      );
+    } finally {
+      setIsApplyingFilters(false);
+    }
   };
 
   const handleDownloadSample = () => {
@@ -490,6 +703,77 @@ export function CourseSearchPage() {
     }
   };
 
+  if (!hasAppliedFilters) {
+    return (
+      <Box
+        sx={{
+          alignItems: "stretch",
+          bgcolor: "#f3f7fb",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "calc(100vh - 80px)",
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flex: 1,
+            justifyContent: "center",
+            minHeight: 0,
+            width: "100%",
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "#e9eff5",
+              borderRadius: "20px",
+              boxShadow: "0 16px 40px rgba(15, 23, 42, 0.06)",
+              display: "flex",
+              flex: 1,
+              minHeight: 0,
+              maxWidth: 1500,
+              overflow: "hidden",
+              width: "100%",
+            }}
+          >
+            {isLoadingFilterOptions ? (
+              <Box sx={{ alignItems: "center", display: "flex", flex: 1, justifyContent: "center" }}>
+                <Typography color="text.secondary">Loading filters...</Typography>
+              </Box>
+            ) : (
+              <FilterPanel
+                applyButtonLabel={
+                  isApplyingFilters ? "Applying..." : courseSearchSettings.filterPanel.applyButtonLabel
+                }
+                contentColumns={2}
+                filtersConfig={filterConfig}
+                sx={{
+                  height: "100%",
+                  width: "100%",
+                  "& .MuiPaper-root": { boxShadow: "none" },
+                }}
+                title="Advance Filters"
+                values={filterValues}
+                width="100%"
+                onApplyFilters={handleApplyFilters}
+                onFiltersChange={setFilterValues}
+              />
+            )}
+          </Paper>
+        </Box>
+        {courseSearchError ? (
+          <Alert severity="error" sx={{ maxWidth: 1500, mt: 2, mx: "auto", width: "100%" }}>
+            {courseSearchError}
+          </Alert>
+        ) : null}
+      </Box>
+    );
+  }
+
   return (
     <Paper
       elevation={0}
@@ -580,13 +864,13 @@ export function CourseSearchPage() {
       <Box sx={{ display: "flex", flex: 1, flexDirection: "column", minHeight: 0 }}>
         <Box sx={[universitiesContentSx, { display: "flex", flexDirection: "column" }]}>
           <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2.75 }}>
-            {isLoading ? (
+            {isApplyingFilters ? (
               <Typography color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
                 Loading courses...
               </Typography>
-            ) : isError ? (
+            ) : courseSearchError ? (
               <Typography color="error" sx={{ py: 4, textAlign: "center" }}>
-                Failed to load courses. Please try again.
+                {courseSearchError}
               </Typography>
             ) : (
               <>

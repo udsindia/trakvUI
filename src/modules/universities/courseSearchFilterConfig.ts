@@ -11,8 +11,9 @@ import {
 } from "@/shared/components/FilterPanel";
 
 type BuildFilterConfigContext = {
-  countryCounts: Record<string, number>;
-  dynamicOptions?: Partial<Record<"city" | "institution" | "discipline" | "duration", CourseSearchOptionSetting[]>>;
+  dynamicOptions?: Partial<
+    Record<"country" | "level" | "intake" | "city" | "institution" | "discipline" | "duration", CourseSearchOptionSetting[]>
+  >;
   settings?: CourseSearchSettings;
 };
 
@@ -57,7 +58,6 @@ function pushDropdownFilter(
 }
 
 export function buildCourseSearchFilterConfig({
-  countryCounts,
   dynamicOptions,
   settings = courseSearchSettings,
 }: BuildFilterConfigContext): FilterConfig[] {
@@ -65,34 +65,29 @@ export function buildCourseSearchFilterConfig({
   const { filters: filterSettings } = settings;
 
   if (filterSettings.country.enabled) {
-    filters.push({
-      type: "checkbox-group",
-      label: filterSettings.country.label,
+    pushDropdownFilter(filters, {
       key: filterSettings.country.key,
-      options: filterSettings.country.options.map((option) => ({
-        label: filterSettings.country.showCounts
-          ? `${option.label} (${countryCounts[option.value] ?? 0})`
-          : option.label,
-        value: option.value,
-      })),
+      label: filterSettings.country.label,
+      options: getDropdownOptions(filterSettings.country.options, dynamicOptions?.country),
+      placeholder: filterSettings.country.placeholder,
     });
   }
 
   if (filterSettings.level.enabled) {
-    filters.push({
-      type: "checkbox-group",
-      label: filterSettings.level.label,
+    pushDropdownFilter(filters, {
       key: filterSettings.level.key,
-      options: filterSettings.level.options,
+      label: filterSettings.level.label,
+      options: getDropdownOptions(filterSettings.level.options, dynamicOptions?.level),
+      placeholder: filterSettings.level.placeholder,
     });
   }
 
   if (filterSettings.intake.enabled) {
-    filters.push({
-      type: "checkbox-group",
-      label: filterSettings.intake.label,
+    pushDropdownFilter(filters, {
       key: filterSettings.intake.key,
-      options: filterSettings.intake.options,
+      label: filterSettings.intake.label,
+      options: getDropdownOptions(filterSettings.intake.options, dynamicOptions?.intake),
+      placeholder: filterSettings.intake.placeholder,
     });
   }
 

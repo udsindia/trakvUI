@@ -69,7 +69,7 @@ export const courseSearchSettings = {
       key: "country",
       label: "Destination",
       section: "destinations-intakes",
-      showCounts: true,
+      placeholder: "Select destination",
       options: [
         { label: "UK", value: "GB" },
         { label: "Ireland", value: "IE" },
@@ -77,31 +77,33 @@ export const courseSearchSettings = {
         { label: "Canada", value: "CA" },
         { label: "New Zealand", value: "NZ" },
       ],
-    } satisfies CourseSearchCheckboxFilterSetting,
+    } satisfies CourseSearchDropdownFilterSetting,
     level: {
       enabled: true,
       key: "level",
       label: "Course Levels",
       section: "course-details",
+      placeholder: "Select course level",
       options: [
         { label: "Undergraduate", value: "undergraduate" },
         { label: "Masters (PG)", value: "masters" },
         { label: "PhD", value: "phd" },
         { label: "Diploma / Foundation", value: "diploma" },
       ],
-    } satisfies CourseSearchCheckboxFilterSetting,
+    } satisfies CourseSearchDropdownFilterSetting,
     intake: {
       enabled: true,
       key: "intake",
       section: "destinations-intakes",
       label: "Intake",
+      placeholder: "Select intake",
       options: [
         { label: "Sep 2025", value: "Sep 2025" },
         { label: "Jan 2026", value: "Jan 2026" },
         { label: "Feb 2026", value: "Feb 2026" },
         { label: "May 2026", value: "May 2026" },
       ],
-    } satisfies CourseSearchCheckboxFilterSetting,
+    } satisfies CourseSearchDropdownFilterSetting,
     intakeStatus: {
       enabled: true,
       key: "intakeStatus",
@@ -307,9 +309,9 @@ export const courseSearchSettings = {
    * Empty arrays mean “no filter applied” for checkbox groups.
    */
   defaults: {
-    countries: [] as string[],
-    levels: [] as string[],
-    intakes: [] as string[],
+    countries: "" as string,
+    levels: "" as string,
+    intakes: "" as string,
     intakeStatus: "" as string,
     nearestCity: "" as string,
     institution: "" as string,

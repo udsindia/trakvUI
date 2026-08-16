@@ -12,15 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
-import type { CourseSearchOptionSetting } from "@/config/universities/courseSearchSettings";
-import {
-  buildCourseSearchFilterConfig,
-  getCourseSearchDefaultFilterValues,
-} from "@/modules/universities/courseSearchFilterConfig";
 import {
   LeadQuickFilters,
   type LeadQuickFilterTab,
@@ -30,14 +24,7 @@ import {
   type LeadRow,
 } from "@/modules/lead/components/LeadTableContainer";
 import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
-import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
-import {
-  leadApi,
-  type BackendLead,
-  type CourseSearchRequest,
-  type CourseSearchResponse,
-  type CourseSearchResultItem,
-} from "@/modules/lead/leadApi";
+import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
 import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
@@ -59,16 +46,6 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "qualified", label: "Qualified" },
   { key: "proposal", label: "Proposal" },
 ];
-
-const courseSearchAdvanceFilterConfig = buildCourseSearchFilterConfig({ countryCounts: {} });
-const courseSearchDefaultValues = getCourseSearchDefaultFilterValues(courseSearchAdvanceFilterConfig);
-
-type CourseSearchDynamicOptionKey = "city" | "institution" | "discipline" | "duration";
-
-type CourseSearchFilterMetadata = {
-  countryCounts: Record<string, number>;
-  dynamicOptions: Partial<Record<CourseSearchDynamicOptionKey, CourseSearchOptionSetting[]>>;
-};
 
 const filterConfig: FilterConfig[] = [
   {
@@ -165,173 +142,6 @@ function getStageKey(stage: string) {
   return stage.toLowerCase().replace(/\s+/g, "-");
 }
 
-function mapCourseSearchResponseToLeadRows(response: CourseSearchResponse | undefined): LeadRow[] {
-  const results = response?.content ?? response?.items ?? [];
-
-  return results.map((item, index) => ({
-    id: item.id ?? item.courseId ?? `course-search-${index}`,
-    name: item.name ?? item.courseName ?? item.title ?? item.universityName ?? "Course match",
-    email: item.studentEmail ?? item.email ?? "",
-    phone: item.studentPhone ?? item.phone ?? "",
-    stage: "New",
-    agent: "—",
-    source: "Course Search",
-    score: typeof item.score === "number" ? item.score : 0,
-    lastActivity: item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }) : "—",
-    nextAction: "",
-    country: item.destination ?? item.country ?? item.nearestCity ?? item.city ?? "",
-    createdAt: item.createdAt ?? new Date().toISOString(),
-  }));
-}
-
-function getCourseLevelValue(value: string): string | undefined {
-  const normalized = value.toLowerCase();
-
-  const mapping: Record<string, string> = {
-    undergraduate: "UNDERGRADUATE",
-    masters: "POSTGRADUATE_TAUGHT",
-    phd: "PHD",
-    diploma: "DIPLOMA",
-  };
-
-  return mapping[normalized];
-}
-
-function parseIntakeOption(value: string): { month: string; year: number } | null {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const match = /^([A-Za-z]{3,9})\s+(\d{4})$/i.exec(value.trim());
-  if (!match) return null;
-
-  const [, rawMonth, rawYear] = match;
-  const monthIndex = monthNames.findIndex(
-    (month) => month.toLowerCase() === rawMonth.toLowerCase() || month.slice(0, 3).toLowerCase() === rawMonth.toLowerCase(),
-  );
-
-  if (monthIndex === -1) return null;
-
-  return {
-    month: monthNames[monthIndex],
-    year: Number(rawYear),
-  };
-}
-
-function parseDurationValue(value: string): { min: number; max: number } | null {
-  const match = /^(\d+)\s*(?:to|-)?\s*(\d+)?\s*(?:months?|month)$/i.exec(value.trim());
-  if (!match) return null;
-
-  const first = Number(match[1]);
-  const second = match[2] ? Number(match[2]) : first;
-  return { min: Math.min(first, second), max: Math.max(first, second) };
-}
-
-function asStringArrayValue(value: unknown): string[] {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string") ? value : [];
-}
-
-function normalizeOptionValues(values: Array<string | null | undefined>): CourseSearchOptionSetting[] {
-  return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))))
-    .sort((a, b) => a.localeCompare(b))
-    .map((value) => ({ label: value, value }));
-}
-
-function readStringValue(item: CourseSearchResultItem, keys: string[]): string | undefined {
-  for (const key of keys) {
-    const value = item[key as keyof CourseSearchResultItem];
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-  }
-
-  return undefined;
-}
-
-function readStringArrayValue(item: CourseSearchResultItem, keys: string[]): string[] {
-  for (const key of keys) {
-    const value = item[key as keyof CourseSearchResultItem];
-    if (Array.isArray(value)) {
-      return value.filter((entry): entry is string => typeof entry === "string" && Boolean(entry.trim())).map((entry) => entry.trim());
-    }
-  }
-
-  return [];
-}
-
-function buildCourseSearchFilterMetadata(response?: CourseSearchResponse): CourseSearchFilterMetadata {
-  const results = response?.content ?? response?.items ?? [];
-  const countryCounts: Record<string, number> = {};
-  const cityValues: string[] = [];
-  const institutionValues: string[] = [];
-  const disciplineValues: string[] = [];
-  const durationValues: string[] = [];
-
-  for (const item of results) {
-    const country = readStringValue(item, ["destination", "country"]);
-    if (country) {
-      countryCounts[country] = (countryCounts[country] ?? 0) + 1;
-    }
-
-    const city = readStringValue(item, ["nearestCity", "city"]);
-    if (city) {
-      cityValues.push(city);
-    }
-
-    const institution = readStringValue(item, ["institutionName", "universityName"]);
-    if (institution) {
-      institutionValues.push(institution);
-    }
-
-    const disciplines = readStringArrayValue(item, ["disciplines"]);
-    if (disciplines.length > 0) {
-      disciplineValues.push(...disciplines);
-    }
-
-    const discipline = readStringValue(item, ["discipline", "fieldOfStudy"]);
-    if (discipline) {
-      disciplineValues.push(discipline);
-    }
-
-    const duration = readStringValue(item, ["duration", "durationLabel"]);
-    if (duration) {
-      durationValues.push(duration);
-      continue;
-    }
-
-    const durationMonths = item["durationMonths" as keyof CourseSearchResultItem];
-    if (typeof durationMonths === "number" && Number.isFinite(durationMonths)) {
-      durationValues.push(`${durationMonths} months`);
-    }
-  }
-
-  return {
-    countryCounts,
-    dynamicOptions: {
-      city: normalizeOptionValues(cityValues),
-      institution: normalizeOptionValues(institutionValues),
-      discipline: normalizeOptionValues(disciplineValues),
-      duration: normalizeOptionValues(durationValues),
-    },
-  };
-}
-
 function applySearchFilter(rows: LeadRow[], query: string): LeadRow[] {
   const q = query.trim().toLowerCase();
   if (!q) return rows;
@@ -387,22 +197,11 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
 export function LeadDashboardPage() {
   const { hasPermissions, tenant } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const tenantId = tenant?.tenantId ?? "";
-  const selectedStudentId = new URLSearchParams(location.search).get("studentId") ?? undefined;
-  const courseSearchState = (location.state as {
-    courseSearchResponse?: CourseSearchResponse;
-    courseSearchPayload?: CourseSearchRequest;
-  } | null) ?? null;
-  const hasCourseSearchResults = Boolean(courseSearchState?.courseSearchResponse);
 
   const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
     getDefaultFilterPanelValues(filterConfig),
-  );
-  const [advancedFilterValues, setAdvancedFilterValues] = useState<FilterPanelValues>(() =>
-    courseSearchDefaultValues,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
@@ -411,14 +210,11 @@ export function LeadDashboardPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const [isSubmittingSearch, setIsSubmittingSearch] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
-  // Backend paginates one page at a time; local filters/search are then applied
-  // within the current page's payload only.
   const {
     data: leadsPage,
     isLoading,
@@ -433,19 +229,16 @@ export function LeadDashboardPage() {
         sortDirection: "DESC",
       }),
     placeholderData: (previousData) => previousData,
-    enabled: !hasCourseSearchResults,
   });
+
   const backendLeads: BackendLead[] = leadsPage?.content ?? [];
-  // Real counsellors added via User Management feed the Agent filter, so it
-  // stays in sync with who actually exists in the tenant.
+
   const usersQuery = useQuery({
     enabled: Boolean(tenantId) && canAssignLeads,
     queryKey: ["settings", "users", tenantId],
     queryFn: () => usersService.getUsers(tenantId),
   });
 
-  // Distinct Source and Country values come from the backend so the drawer's
-  // options reflect the tenant's actual leads instead of a hardcoded list.
   const sourcesQuery = useQuery({
     queryKey: ["leads", "sources"],
     queryFn: leadApi.getSources,
@@ -455,36 +248,7 @@ export function LeadDashboardPage() {
     queryFn: leadApi.getCountries,
   });
 
-  const courseSearchOptionsQuery = useQuery({
-    enabled: !hasCourseSearchResults,
-    queryKey: ["courses", "search", "filter-options", selectedStudentId ?? "all"],
-    queryFn: () =>
-      leadApi.searchCourses({
-        intakeAvailableOnly: true,
-        page: 0,
-        size: 200,
-        ...(selectedStudentId ? { studentId: selectedStudentId } : {}),
-      }),
-  });
-
-  const courseSearchFilterMetadata = useMemo(
-    () => buildCourseSearchFilterMetadata(courseSearchOptionsQuery.data),
-    [courseSearchOptionsQuery.data],
-  );
-
-  const courseSearchFilterConfig = useMemo<FilterConfig[]>(
-    () =>
-      buildCourseSearchFilterConfig({
-        countryCounts: courseSearchFilterMetadata.countryCounts,
-        dynamicOptions: courseSearchFilterMetadata.dynamicOptions,
-      }),
-    [courseSearchFilterMetadata],
-  );
-
   const dynamicFilterConfig = useMemo<FilterConfig[]>(() => {
-    // The filter matches leads by agent *name*, so collapse duplicate names to a
-    // single option — otherwise React sees repeated keys and the repeats are
-    // indistinguishable anyway.
     const counsellorNames = Array.from(
       new Set(
         (usersQuery.data ?? [])
@@ -493,13 +257,10 @@ export function LeadDashboardPage() {
           .filter(Boolean),
       ),
     ).sort((a, b) => a.localeCompare(b));
-    // Backend-provided distinct values; fall back to the static defaults until
-    // the queries resolve (or if they return nothing) so the control never empties.
     const sourceOptions = sourcesQuery.data?.length ? sourcesQuery.data : undefined;
     const countryOptions = countriesQuery.data?.length ? countriesQuery.data : undefined;
+
     return filterConfig
-      // Roles that can't assign leads (e.g. counsellors) can't read the team
-      // list, so drop the Agent filter for them entirely.
       .filter((config) => config.key !== "agent" || canAssignLeads)
       .map((config) => {
         if (config.key === "agent") return { ...config, options: counsellorNames };
@@ -509,13 +270,7 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
-  const leadRows: LeadRow[] = useMemo(() => {
-    if (hasCourseSearchResults) {
-      return mapCourseSearchResponseToLeadRows(courseSearchState?.courseSearchResponse);
-    }
-
-    return backendLeads.map(mapBackendLeadToRow);
-  }, [backendLeads, courseSearchState, hasCourseSearchResults]);
+  const leadRows: LeadRow[] = useMemo(() => backendLeads.map(mapBackendLeadToRow), [backendLeads]);
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(
     () =>
@@ -546,9 +301,7 @@ export function LeadDashboardPage() {
   const pageStart = totalVisible === 0 ? 0 : (clampedPage - 1) * pageSize + 1;
   const pageEnd = totalVisible === 0 ? 0 : Math.min(clampedPage * pageSize, totalVisible);
   const paginationLabel =
-    totalVisible === 0
-      ? "Showing 0 of 0 leads"
-      : `Showing ${pageStart}–${pageEnd} of ${totalVisible} leads`;
+    totalVisible === 0 ? "Showing 0 of 0 leads" : `Showing ${pageStart}–${pageEnd} of ${totalVisible} leads`;
 
   const handlePageChange = useCallback((nextPage: number) => {
     const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
@@ -619,122 +372,6 @@ export function LeadDashboardPage() {
     }
   };
 
-  const handleAdvancedSearchSubmit = useCallback(async (values: FilterPanelValues) => {
-    setIsSubmittingSearch(true);
-
-    try {
-      const destinations = asStringArrayValue(values.country);
-      const institutionValue = typeof values.institution === "string" ? values.institution : "";
-      const cityValue = typeof values.nearestCity === "string" ? values.nearestCity : "";
-      const intakeValues = asStringArrayValue(values.intake);
-      const courseLevelValues = asStringArrayValue(values.level);
-      const disciplineValue = typeof values.discipline === "string" ? values.discipline : "";
-      const durationValue = typeof values.duration === "string" ? values.duration : "";
-      const postStudyWorkPermitValue =
-        typeof values.postStudyWorkPermit === "string" ? values.postStudyWorkPermit : "";
-
-      const payload: CourseSearchRequest = {
-        destinations,
-        institutions: institutionValue ? [{ id: "", name: institutionValue }] : [],
-        nearestCity: cityValue,
-        intakeMonths: intakeValues
-          .map((value) => parseIntakeOption(value)?.month)
-          .filter((month): month is string => Boolean(month)),
-        intakeYears: intakeValues
-          .map((value) => parseIntakeOption(value)?.year)
-          .filter((year): year is number => typeof year === "number"),
-        intakeAvailableOnly: true,
-        courseLevels: courseLevelValues
-          .map((value) => getCourseLevelValue(String(value)))
-          .filter((value): value is string => Boolean(value)),
-        disciplines: disciplineValue ? [disciplineValue] : [],
-        minDurationMonths: durationValue ? parseDurationValue(durationValue)?.min ?? undefined : undefined,
-        maxDurationMonths: durationValue ? parseDurationValue(durationValue)?.max ?? undefined : undefined,
-        postStudyWorkPermit: postStudyWorkPermitValue === "yes",
-        studentId: selectedStudentId,
-        page: 0,
-        size: 20,
-      };
-
-      const response = await leadApi.searchCourses(payload);
-      navigate(leadRoutePaths.dashboard, {
-        replace: true,
-        state: {
-          courseSearchResponse: response,
-          courseSearchPayload: payload,
-        },
-      });
-    } catch {
-      setSnack("Failed to load advance search results");
-    } finally {
-      setIsSubmittingSearch(false);
-    }
-  }, [navigate, selectedStudentId]);
-
-  if (!hasCourseSearchResults) {
-    if (courseSearchOptionsQuery.isLoading && !courseSearchOptionsQuery.data) {
-      return (
-        <Box
-          sx={{
-            alignItems: "center",
-            display: "flex",
-            justifyContent: "center",
-            minHeight: "calc(100vh - 80px)",
-          }}
-        >
-          <CircularProgress size={34} />
-        </Box>
-      );
-    }
-
-    return (
-      <Box
-        sx={{
-          alignItems: "stretch",
-          bgcolor: "#f3f7fb",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          minHeight: "calc(100vh - 80px)",
-          p: { xs: 2, md: 3 },
-        }}
-      >
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#122033" }}>
-          Advance Filter
-        </Typography>
-
-        <Paper
-          elevation={0}
-          sx={{
-            bgcolor: "background.paper",
-            border: "1px solid",
-            borderColor: "#e9eff5",
-            borderRadius: "16px",
-            display: "flex",
-            flex: 1,
-            minHeight: 0,
-            overflow: "hidden",
-          }}
-        >
-          <FilterPanel
-            applyButtonLabel={isSubmittingSearch ? "Loading…" : "Apply"}
-            contentColumns={2}
-            filtersConfig={courseSearchFilterConfig}
-            sx={{ height: "100%", width: "100%" }}
-            title="Advance Filter"
-            values={advancedFilterValues}
-            width="100%"
-            onFiltersChange={setAdvancedFilterValues}
-            onApplyFilters={(nextValues) => {
-              setAdvancedFilterValues(nextValues);
-              void handleAdvancedSearchSubmit(nextValues);
-            }}
-          />
-        </Paper>
-      </Box>
-    );
-  }
-
   return (
     <>
       <Paper
@@ -746,15 +383,11 @@ export function LeadDashboardPage() {
           borderRadius: "12px",
           display: "flex",
           flexDirection: "column",
-          // Fill the viewport below the topbar: subtract the topbar height plus
-          // the <main> wrapper's vertical padding (py:1.25 → 20px total).
           height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 20}px)` },
           minHeight: 0,
           overflow: "hidden",
         }}
       >
-        {/* Toolbar: quick-filter pills fill the row; advanced filters fold
-            behind the Filters button (opens the drawer below). */}
         <Box
           sx={{
             borderBottom: "1px solid",
@@ -874,8 +507,6 @@ export function LeadDashboardPage() {
         />
       </Paper>
 
-      {/* Advanced filters, folded behind the toolbar button. Same FilterPanel,
-          same handlers — only its home changed from a sidebar to a drawer. */}
       <Drawer
         anchor="right"
         open={drawerOpen}
