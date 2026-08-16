@@ -47,6 +47,8 @@ export interface TenantSummary {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Primary AGENCY_ADMIN login email (the tenant's contact). */
+  adminEmail: string | null;
 }
 
 export interface SaDashboardStats {

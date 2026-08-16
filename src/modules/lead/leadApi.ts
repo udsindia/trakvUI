@@ -31,7 +31,6 @@ export interface BackendLead {
 export type SortDirection = "ASC" | "DESC";
 
 export type CourseSearchInstitution = {
-  id?: string;
   name: string;
 };
 
@@ -195,7 +194,7 @@ export const leadApi = {
   },
 
   searchCourses: async (payload: CourseSearchRequest): Promise<CourseSearchResponse> => {
-    const response = await httpClient.get<CourseSearchResponse>(`${API_CONFIG.courses}/search`, { params: payload });
+    const response = await httpClient.post<CourseSearchResponse>(`${API_CONFIG.courses}/search`, payload);
     return response.data;
   },
 
