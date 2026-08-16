@@ -49,6 +49,10 @@ import {
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
 
+/** Team list, lead sources, countries and course filter options: slow-moving
+ *  reference data, cached well past the 60s global default. */
+const REFERENCE_DATA_STALE_MS = 30 * 60_000;
+
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
@@ -416,10 +420,14 @@ export function LeadDashboardPage() {
   const backendLeads: BackendLead[] = leadsPage?.content ?? [];
   // Real counsellors added via User Management feed the Agent filter, so it
   // stays in sync with who actually exists in the tenant.
+  // Reference data below changes rarely, but every refetch pays a full round trip
+  // plus the per-request auth chain. A long staleTime keeps repeat visits to this
+  // page down to the leads query alone.
   const usersQuery = useQuery({
     enabled: Boolean(tenantId) && canAssignLeads,
     queryKey: ["settings", "users", tenantId],
     queryFn: () => usersService.getUsers(tenantId),
+    staleTime: REFERENCE_DATA_STALE_MS,
   });
 
   // Distinct Source and Country values come from the backend so the drawer's
@@ -427,14 +435,19 @@ export function LeadDashboardPage() {
   const sourcesQuery = useQuery({
     queryKey: ["leads", "sources"],
     queryFn: leadApi.getSources,
+    staleTime: REFERENCE_DATA_STALE_MS,
   });
   const countriesQuery = useQuery({
     queryKey: ["leads", "countries"],
     queryFn: leadApi.getCountries,
+    staleTime: REFERENCE_DATA_STALE_MS,
   });
 
   const courseSearchOptionsQuery = useQuery({
-    enabled: !hasCourseSearchResults,
+    // Only feeds the advance-filter drawer (courseSearchFilterConfig), so it stays
+    // off the initial render path — it pulls 200 courses purely to build options.
+    enabled: !hasCourseSearchResults && drawerOpen,
+    staleTime: REFERENCE_DATA_STALE_MS,
     queryKey: ["courses", "search", "filter-options", selectedStudentId ?? "all"],
     queryFn: () =>
       leadApi.searchCourses({
