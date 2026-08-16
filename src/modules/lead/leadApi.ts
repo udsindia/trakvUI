@@ -198,6 +198,11 @@ export const leadApi = {
     return response.data;
   },
 
+  courseFilters: async (): Promise<CourseSearchResponse> => {
+    const response = await httpClient.get<CourseSearchResponse>(`${API_CONFIG.courses}/search/filters`);
+    return response.data;
+  },
+
   // Distinct filter values, sourced from the backend so the drawer reflects the
   // tenant's real data rather than a hardcoded list.
   getSources: async (): Promise<string[]> => {

@@ -76,6 +76,128 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
 
+type SearchFiltersApiInstitution = {
+  key?: string;
+  value?: string;
+};
+
+type SearchFiltersApiResponse = {
+  destinations?: string[];
+  institutions?: SearchFiltersApiInstitution[];
+  nearestCity?: string[];
+  intakeMonths?: string[];
+  intakeYears?: number[];
+  intakeAvailableOnly?: boolean;
+  courseLevels?: string[];
+  disciplines?: string[];
+  postStudyWorkPermit?: boolean;
+};
+
+const normalizeSearchFilterText = (value: string | undefined) => (value ?? "").trim();
+
+const normalizeCourseLevelValue = (value: string) => {
+  const normalized = normalizeSearchFilterText(value).toUpperCase();
+
+  switch (normalized) {
+    case "UNDERGRADUATE":
+      return "UNDERGRADUATE";
+    case "POSTGRADUATE_TAUGHT":
+      return "POSTGRADUATE_TAUGHT";
+    case "POSTGRADUATE_RESEARCH":
+      return "POSTGRADUATE_RESEARCH";
+    case "PHD":
+      return "PHD";
+    case "DIPLOMA":
+      return "DIPLOMA";
+    case "FOUNDATION":
+      return "FOUNDATION";
+    default:
+      return normalizeSearchFilterText(value);
+  }
+};
+
+const normalizeCourseLevelLabel = (value: string) => {
+  const normalized = normalizeCourseLevelValue(value).toUpperCase();
+
+  switch (normalized) {
+    case "UNDERGRADUATE":
+      return "Undergraduate";
+    case "POSTGRADUATE_TAUGHT":
+      return "Masters (PG)";
+    case "POSTGRADUATE_RESEARCH":
+      return "PhD";
+    case "PHD":
+      return "PhD";
+    case "DIPLOMA":
+      return "Diploma / Foundation";
+    case "FOUNDATION":
+      return "Diploma / Foundation";
+    default:
+      return normalizeSearchFilterText(value)
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+};
+
+function mapSearchFiltersToDynamicOptions(response?: SearchFiltersApiResponse) {
+  const country = Array.from(
+    new Set((response?.destinations ?? []).map((value) => normalizeSearchFilterText(value)).filter(Boolean)),
+  )
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({
+      label: value,
+      value: toAlpha2CountryCode(value) || value,
+    }));
+
+  const level = Array.from(
+    new Set((response?.courseLevels ?? []).map((value) => normalizeCourseLevelValue(value)).filter(Boolean)),
+  )
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({
+      label: normalizeCourseLevelLabel(value),
+      value,
+    }));
+
+  const intake = Array.from(
+    new Set((response?.intakeMonths ?? []).map((value) => normalizeSearchFilterText(value)).filter(Boolean)),
+  )
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({ label: value, value }));
+
+  const city = Array.from(
+    new Set((response?.nearestCity ?? []).map((value) => normalizeSearchFilterText(value)).filter(Boolean)),
+  )
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({ label: value, value }));
+
+  const institution = (response?.institutions ?? [])
+    .map((item) => ({
+      label: normalizeSearchFilterText(item?.value),
+      value: normalizeSearchFilterText(item?.key) || normalizeSearchFilterText(item?.value),
+    }))
+    .filter((item) => item.label && item.value);
+
+  const discipline = Array.from(
+    new Set((response?.disciplines ?? []).map((value) => normalizeSearchFilterText(value)).filter(Boolean)),
+  )
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({ label: value, value }));
+
+  return {
+    country,
+    level,
+    intake,
+    city,
+    institution,
+    discipline: discipline.length > 0 ? discipline : [
+      { label: "Computer Science", value: "computer-science" },
+      { label: "Data Science", value: "data-science" },
+      { label: "Business", value: "business" },
+      { label: "General", value: "general" },
+    ],
+  };
+}
+
 // TODO: section titles are temporarily disabled in the advance filter panel.
 // const sectionTitleByKey = new Map(
 //   buildCourseSearchFilterSections().flatMap((section) =>
@@ -151,48 +273,100 @@ function buildCourseSearchApiPayload(
   studentId: string | null,
 ): CourseSearchRequest {
   const payload: CourseSearchRequest = {
-    destinations: asString(filterValues[filterKeys.country.key])
-      ? [asString(filterValues[filterKeys.country.key])]
-      : undefined,
-    courseLevels: asString(filterValues[filterKeys.level.key])
-      ? [asString(filterValues[filterKeys.level.key])]
-      : undefined,
-    intakeMonths: asString(filterValues[filterKeys.intake.key])
-      ? [asString(filterValues[filterKeys.intake.key])]
-      : undefined,
-    intakeStatuses: asString(filterValues[filterKeys.intakeStatus.key])
-      ? [asString(filterValues[filterKeys.intakeStatus.key])]
-      : undefined,
-    nearestCity: asString(filterValues[filterKeys.nearestCity.key]) || undefined,
-    institutions: asString(filterValues[filterKeys.institution.key])
-      ? [{ name: asString(filterValues[filterKeys.institution.key]) }]
-      : undefined,
-    nationality: asString(filterValues[filterKeys.nationality.key]) || undefined,
-    regionState: asString(filterValues[filterKeys.regionState.key]) || undefined,
-    isOnshore: asStringArray(filterValues[filterKeys.onshore.key]).includes("onshore") || undefined,
-    highestEducationLevel: asString(filterValues[filterKeys.highestEducationLevel.key]) || undefined,
-    countryOfEducation: asString(filterValues[filterKeys.countryOfEducation.key]) || undefined,
-    gradingSystem: asString(filterValues[filterKeys.gradingSystem.key]) || undefined,
-    backlogs: asString(filterValues[filterKeys.backlogs.key]) || undefined,
-    educationGap: asString(filterValues[filterKeys.educationGap.key]) || undefined,
-    disciplines: asString(filterValues[filterKeys.discipline.key])
-      ? [asString(filterValues[filterKeys.discipline.key])]
-      : undefined,
-    durations: asString(filterValues[filterKeys.duration.key])
-      ? [asString(filterValues[filterKeys.duration.key])]
-      : undefined,
-    deliveryModes: asString(filterValues[filterKeys.delivery.key])
-      ? [asString(filterValues[filterKeys.delivery.key])]
-      : undefined,
-    postStudyWorkPermit: asString(filterValues[filterKeys.postStudyWorkPermit.key])
-      ? asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes"
-      : undefined,
-    studentId: studentId ?? undefined,
-    query: query.trim() || undefined,
-    sort: sort || undefined,
-    page: 0,
-    size: 50,
+    destinations: [],
+    institutions: [],
+    nearestCity: null as any,
+    intakeMonths: [],
+    intakeYears: [],
+    intakeAvailableOnly: false,
+    intakeStatuses: [],
+    courseLevels: [],
+    disciplines: [],
+    durations: [],
+    deliveryModes: [],
+    postStudyWorkPermit: null as any,
+    nationality: null as any,
+    regionState: null as any,
+    isOnshore: false,
+    highestEducationLevel: null as any,
+    countryOfEducation: null as any,
+    gradingSystem: null as any,
+    backlogs: null as any,
+    educationGap: null as any,
+    // studentId: studentId ?? null,
+    // query: query.trim() || null,
+    sort: sort || null,
   };
+
+  if (asString(filterValues[filterKeys.country.key])) {
+    payload.destinations = [asString(filterValues[filterKeys.country.key])];
+  }
+
+  if (asString(filterValues[filterKeys.level.key])) {
+    payload.courseLevels = [asString(filterValues[filterKeys.level.key])];
+  }
+
+  if (asString(filterValues[filterKeys.intake.key])) {
+    payload.intakeMonths = [asString(filterValues[filterKeys.intake.key])];
+  }
+
+  if (asString(filterValues[filterKeys.intakeStatus.key])) {
+    payload.intakeStatuses = [asString(filterValues[filterKeys.intakeStatus.key])];
+  }
+
+  if (asString(filterValues[filterKeys.nearestCity.key])) {
+    payload.nearestCity = asString(filterValues[filterKeys.nearestCity.key]);
+  }
+
+  if (asString(filterValues[filterKeys.institution.key])) {
+    payload.institutions = [{ name: asString(filterValues[filterKeys.institution.key]) }];
+  }
+
+  if (asString(filterValues[filterKeys.nationality.key])) {
+    payload.nationality = asString(filterValues[filterKeys.nationality.key]);
+  }
+
+  if (asString(filterValues[filterKeys.regionState.key])) {
+    payload.regionState = asString(filterValues[filterKeys.regionState.key]);
+  }
+
+  payload.isOnshore = asStringArray(filterValues[filterKeys.onshore.key]).includes("onshore");
+
+  if (asString(filterValues[filterKeys.highestEducationLevel.key])) {
+    payload.highestEducationLevel = asString(filterValues[filterKeys.highestEducationLevel.key]);
+  }
+
+  if (asString(filterValues[filterKeys.countryOfEducation.key])) {
+    payload.countryOfEducation = asString(filterValues[filterKeys.countryOfEducation.key]);
+  }
+
+  if (asString(filterValues[filterKeys.gradingSystem.key])) {
+    payload.gradingSystem = asString(filterValues[filterKeys.gradingSystem.key]);
+  }
+
+  if (asString(filterValues[filterKeys.backlogs.key])) {
+    payload.backlogs = asString(filterValues[filterKeys.backlogs.key]);
+  }
+
+  if (asString(filterValues[filterKeys.educationGap.key])) {
+    payload.educationGap = asString(filterValues[filterKeys.educationGap.key]);
+  }
+
+  if (asString(filterValues[filterKeys.discipline.key])) {
+    payload.disciplines = [asString(filterValues[filterKeys.discipline.key])];
+  }
+
+  if (asString(filterValues[filterKeys.duration.key])) {
+    payload.durations = [asString(filterValues[filterKeys.duration.key])];
+  }
+
+  if (asString(filterValues[filterKeys.delivery.key])) {
+    payload.deliveryModes = [asString(filterValues[filterKeys.delivery.key])];
+  }
+
+  if (asString(filterValues[filterKeys.postStudyWorkPermit.key])) {
+    payload.postStudyWorkPermit = asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes";
+  }
 
   const durationValue = asString(filterValues[filterKeys.duration.key]);
   if (durationValue) {
@@ -388,11 +562,7 @@ export function CourseSearchPage() {
   const { data: filterOptionsResponse, isLoading: isLoadingFilterOptions } = useQuery({
     queryKey: ["courses", "search", "filter-options"],
     queryFn: () =>
-      leadApi.searchCourses({
-        intakeAvailableOnly: true,
-        page: 0,
-        size: 200,
-      }),
+      leadApi.courseFilters(),
   });
 
   const countryFilterOptions = useMemo(() => {
@@ -414,12 +584,23 @@ export function CourseSearchPage() {
   }, [countries]);
 
   const dynamicOptions = useMemo(() => {
-    const results = filterOptionsResponse?.content ?? filterOptionsResponse?.items ?? [];
+    const response = filterOptionsResponse as SearchFiltersApiResponse | undefined;
 
-    const collect = (extract: (item: (typeof results)[number]) => string | undefined) =>
+    const legacyResults =
+      filterOptionsResponse && typeof filterOptionsResponse === "object" && !Array.isArray(filterOptionsResponse)
+        ? ("content" in filterOptionsResponse || "items" in filterOptionsResponse
+          ? (filterOptionsResponse.content ?? filterOptionsResponse.items ?? [])
+          : [])
+        : [];
+
+    if (response && ("destinations" in response || "institutions" in response || "nearestCity" in response || "courseLevels" in response || "disciplines" in response)) {
+      return mapSearchFiltersToDynamicOptions(response);
+    }
+
+    const collect = (extract: (item: (typeof legacyResults)[number]) => string | undefined) =>
       Array.from(
         new Set(
-          results
+          legacyResults
             .map(extract)
             .filter((value): value is string => Boolean(value && value.trim())),
         ),
@@ -481,7 +662,7 @@ export function CourseSearchPage() {
 
     const discipline = Array.from(
       new Set(
-        results.flatMap((item) => {
+        legacyResults.flatMap((item) => {
           const list: string[] = [];
           if (Array.isArray(item.disciplines)) {
             list.push(
