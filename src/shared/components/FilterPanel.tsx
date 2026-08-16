@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -120,6 +121,24 @@ function isCheckboxGroupValue(value: FilterPanelValue | undefined): value is str
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 }
 
+function areRangesEqual(left: [number, number] | undefined, right: [number, number] | undefined) {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return left[0] === right[0] && left[1] === right[1];
+}
+
+function resolveSliderRange(
+  draftValues: Record<string, [number, number]>,
+  key: string,
+  currentValue: FilterPanelValue,
+  min: number,
+  max: number,
+): [number, number] {
+  return draftValues[key] ?? (isSliderValue(currentValue) ? currentValue : [min, max]);
+}
+
 export function getDefaultFilterPanelValues(filtersConfig: FilterConfig[]): FilterPanelValues {
   return filtersConfig.reduce<FilterPanelValues>((accumulator, filterConfig) => {
     accumulator[filterConfig.key] = createDefaultValue(filterConfig);
@@ -139,6 +158,44 @@ export function FilterPanel({
   values,
   width = 320,
 }: FilterPanelProps) {
+  const [sliderDraftValues, setSliderDraftValues] = useState<Record<string, [number, number]>>({});
+
+  useEffect(() => {
+    setSliderDraftValues((previous) => {
+      const next: Record<string, [number, number]> = {};
+
+      for (const filterConfig of filtersConfig) {
+        if (filterConfig.type !== "slider") {
+          continue;
+        }
+
+        const value = values[filterConfig.key];
+        next[filterConfig.key] = isSliderValue(value)
+          ? value
+          : [filterConfig.min, filterConfig.max];
+      }
+
+      const previousKeys = Object.keys(previous);
+      const nextKeys = Object.keys(next);
+
+      if (previousKeys.length === nextKeys.length) {
+        let changed = false;
+        for (const key of nextKeys) {
+          if (!areRangesEqual(previous[key], next[key])) {
+            changed = true;
+            break;
+          }
+        }
+
+        if (!changed) {
+          return previous;
+        }
+      }
+
+      return next;
+    });
+  }, [filtersConfig, values]);
+
   const updateFilterValue = (key: string, value: FilterPanelValue) => {
     onFiltersChange({
       ...values,
@@ -318,6 +375,16 @@ export function FilterPanel({
 
               {filterConfig.type === "slider" ? (
                 <Box px={0.5}>
+                  {(() => {
+                    const sliderValue = resolveSliderRange(
+                      sliderDraftValues,
+                      filterConfig.key,
+                      currentValue,
+                      filterConfig.min,
+                      filterConfig.max,
+                    );
+
+                    return (
                   <Slider
                     disableSwap
                     disabled={filterConfig.disabled}
@@ -345,9 +412,19 @@ export function FilterPanel({
                         width: 14,
                       },
                     }}
-                    value={isSliderValue(currentValue) ? currentValue : [filterConfig.min, filterConfig.max]}
+                    value={sliderValue}
                     valueLabelDisplay="off"
                     onChange={(_, value) => {
+                      if (!Array.isArray(value)) {
+                        return;
+                      }
+
+                      setSliderDraftValues((previous) => ({
+                        ...previous,
+                        [filterConfig.key]: [value[0], value[1]],
+                      }));
+                    }}
+                    onChangeCommitted={(_, value) => {
                       if (!Array.isArray(value)) {
                         return;
                       }
@@ -355,15 +432,31 @@ export function FilterPanel({
                       updateFilterValue(filterConfig.key, [value[0], value[1]]);
                     }}
                   />
+                    );
+                  })()}
 
                   <Stack direction="row" spacing={1.5} sx={{ justifyContent: "space-between", mt: 0.5 }}>
                     <Typography color="text.secondary" variant="caption">
                       {filterConfig.min}
                     </Typography>
                     <Typography color="text.secondary" variant="caption">
-                      {isSliderValue(currentValue)
-                        ? Math.round((currentValue[0] + currentValue[1]) / 2)
-                        : Math.round((filterConfig.min + filterConfig.max) / 2)}
+                      {Math.round(
+                        (resolveSliderRange(
+                          sliderDraftValues,
+                          filterConfig.key,
+                          currentValue,
+                          filterConfig.min,
+                          filterConfig.max,
+                        )[0] +
+                          resolveSliderRange(
+                            sliderDraftValues,
+                            filterConfig.key,
+                            currentValue,
+                            filterConfig.min,
+                            filterConfig.max,
+                          )[1]) /
+                          2,
+                      )}
                     </Typography>
                     <Typography color="text.secondary" variant="caption">
                       {filterConfig.max}

@@ -48,7 +48,7 @@ import type {
   CourseImportResultResponse,
 } from "@/modules/universities/universitiesApi.types";
 import {
-  buildCourseSearchFilterSections,
+  // buildCourseSearchFilterSections, // temporarily unused: section titles disabled
   buildCourseSearchFilterConfig,
   getCourseSearchDefaultFilterValues,
   getCourseSearchSliderFallbacks,
@@ -76,11 +76,12 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
 
-const sectionTitleByKey = new Map(
-  buildCourseSearchFilterSections().flatMap((section) =>
-    section.filterKeys.map((key, index) => [key, index === 0 ? section.title : undefined] as const),
-  ),
-);
+// TODO: section titles are temporarily disabled in the advance filter panel.
+// const sectionTitleByKey = new Map(
+//   buildCourseSearchFilterSections().flatMap((section) =>
+//     section.filterKeys.map((key, index) => [key, index === 0 ? section.title : undefined] as const),
+//   ),
+// );
 
 function countActiveFilters(
   values: FilterPanelValues,
@@ -522,13 +523,13 @@ export function CourseSearchPage() {
         return {
           ...filter,
           helperText: filter.helperText,
-          sectionTitle: sectionTitleByKey.get(filter.key),
+          // sectionTitle: sectionTitleByKey.get(filter.key), // temporarily disabled
         };
       }
 
       return {
         ...filter,
-        sectionTitle: sectionTitleByKey.get(filter.key),
+        // sectionTitle: sectionTitleByKey.get(filter.key), // temporarily disabled
         options: dynamicOptions.country.length > 0 ? dynamicOptions.country : countryFilterOptions,
       };
     });
