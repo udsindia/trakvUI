@@ -206,10 +206,30 @@ function readStoredSession() {
   try {
     const parsedSession = JSON.parse(serializedSession) as unknown;
 
-    return isValidSession(parsedSession) ? parsedSession : null;
+    return isValidSession(parsedSession) ? withCurrentModuleDefaults(parsedSession) : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Sessions are serialized with the module map that existed at login, and resolveModules
+ * reads a missing key as "disabled" — so a module added in a later release stays invisible
+ * to anyone already signed in until their session expires. Backfill missing keys from the
+ * current defaults; stored values still win, so a deliberately disabled module stays off.
+ */
+function withCurrentModuleDefaults(session: AuthSession): AuthSession {
+  if (!session.tenant) {
+    return session;
+  }
+
+  return {
+    ...session,
+    tenant: {
+      ...session.tenant,
+      enabledModules: { ...defaultTenantModules, ...session.tenant.enabledModules },
+    },
+  };
 }
 
 function wait(durationMs: number) {
