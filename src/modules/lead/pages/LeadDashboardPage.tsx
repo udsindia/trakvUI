@@ -25,7 +25,11 @@ import {
 } from "@/modules/lead/components/LeadTableContainer";
 import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
 import { leadApi, type BackendLead } from "@/modules/lead/leadApi";
-import { fromBackendLeadStage, toBackendLeadStage } from "@/modules/lead/leadStageMappers";
+import {
+  ENROLLED_STAGE,
+  fromBackendLeadStage,
+  toBackendLeadStage,
+} from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import {
@@ -44,7 +48,8 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "new", label: "New" },
   { key: "contacted", label: "Contacted" },
   { key: "qualified", label: "Qualified" },
-  { key: "proposal", label: "Proposal" },
+  { key: "prospective", label: "Prospective" },
+  { key: "enrolled", label: "Enrolled" },
 ];
 
 const filterConfig: FilterConfig[] = [
@@ -366,7 +371,14 @@ export function LeadDashboardPage() {
         leadStage: toBackendLeadStage(stage),
       });
       await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
-      setSnack(`Stage updated to ${stage}`);
+      // Enrolling creates the student record server-side, so the application
+      // student picker has to be refetched for it to show up.
+      if (stage === ENROLLED_STAGE) {
+        await queryClient.invalidateQueries({ queryKey: ["students"] });
+        setSnack("Lead enrolled — student record created");
+      } else {
+        setSnack(`Stage updated to ${stage}`);
+      }
     } catch {
       setSnack("Failed to update stage");
     }

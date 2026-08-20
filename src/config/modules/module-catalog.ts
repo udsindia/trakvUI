@@ -42,13 +42,29 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.LEAD_VIEW],
   },
   {
+    key: MODULE_KEYS.STUDENTS,
+    title: "Students",
+    navLabel: "Students",
+    path: "students",
+    icon: MODULE_ICON_KEYS.STUDENTS,
+    description: "Enrolled students, their counsellor, and where they came from.",
+    order: 3,
+    allowedRoles: [
+      ROLES.SUPER_ADMIN,
+      ROLES.AGENCY_ADMIN,
+      ROLES.COUNSELLOR,
+      ROLES.APPLICATION_MANAGER,
+    ],
+    requiredPermissions: [PERMISSIONS.STUDENTS_VIEW],
+  },
+  {
     key: MODULE_KEYS.APPLICATIONS,
     title: "Applications",
     navLabel: "Applications",
     path: "applications",
     icon: MODULE_ICON_KEYS.APPLICATIONS,
     description: "Application lifecycle orchestration for students and counsellors.",
-    order: 3,
+    order: 4,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -72,7 +88,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.ACTIVITIES,
     description: "Tasks, reminders, and case coordination timelines.",
-    order: 4,
+    order: 5,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -88,7 +104,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "courses",
     icon: MODULE_ICON_KEYS.UNIVERSITIES,
     description: "Search universities and courses, review eligibility, and build shortlists.",
-    order: 5,
+    order: 6,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -105,7 +121,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "universities",
     icon: MODULE_ICON_KEYS.UNIVERSITIES_BROWSE,
     description: "Browse partner institutions, view courses and build shortlists.",
-    order: 6,
+    order: 7,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -138,7 +154,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
-    order: 7,
+    order: 8,
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,

@@ -23,10 +23,18 @@ interface Paged<T> {
   content?: T[];
 }
 
+/**
+ * The list endpoint pages at 20 by default, which would silently hide older students
+ * from the picker as leads get enrolled. Ask for one large page instead — this is a
+ * dropdown, so every student has to be selectable.
+ */
+const STUDENT_PICKER_PAGE_SIZE = 500;
+
 export const studentsApi = {
   getStudents: async (): Promise<StudentOption[]> => {
     const response = await httpClient.get<BackendStudentSummary[] | Paged<BackendStudentSummary>>(
       API_CONFIG.students,
+      { params: { page: 0, size: STUDENT_PICKER_PAGE_SIZE } },
     );
     const data = response.data;
     const list = Array.isArray(data) ? data : data?.content ?? [];

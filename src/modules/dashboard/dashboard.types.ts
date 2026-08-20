@@ -29,7 +29,7 @@ export interface DashboardLeadDto {
   phone: string;
   email: string;
   isArchived: boolean;
-  leadStage: "New" | "Contacted" | "Qualified" | "Lost" | "Converted" | string;
+  leadStage: "New" | "Contacted" | "Qualified" | "Prospective" | "Lost" | "Enrolled" | string;
   assignedTo: DashboardUserReferenceDto | null;
   sourceName: string;
   score: number | null;

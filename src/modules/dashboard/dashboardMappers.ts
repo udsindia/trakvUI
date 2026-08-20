@@ -21,8 +21,10 @@ const LEAD_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
   NEW: { label: "New", color: "#4f46e5" },
   CONTACTED: { label: "Contacted", color: "#7c3aed" },
   QUALIFIED: { label: "Qualified", color: "#ec4899" },
+  PROSPECTIVE: { label: "Prospective", color: "#f97316" },
   APPLIED: { label: "Applied", color: "#ef4444" },
-  CONVERTED: { label: "Converted", color: "#f97316" },
+  // The pipeline stores the enrolled stage as CONVERTED; both keys render as "Enrolled".
+  CONVERTED: { label: "Enrolled", color: "#10b981" },
   ENROLLED: { label: "Enrolled", color: "#10b981" },
   LOST: { label: "Lost", color: "#94a3b8" },
 };

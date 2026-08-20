@@ -5,6 +5,7 @@ import SpeedRounded from "@mui/icons-material/SpeedRounded";
 import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
 import SchoolRounded from "@mui/icons-material/SchoolRounded";
+import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
@@ -24,6 +25,7 @@ export interface NavigationItem {
 const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   dashboard: <SpeedRounded />,
   leads: <TrendingUpRounded />,
+  students: <GroupsRounded />,
   applications: <AssignmentRounded />,
   activities: <EventNoteRounded />,
   universities: <SchoolRounded />,
