@@ -21,6 +21,7 @@ import {
 } from "@/modules/lead/components/LeadQuickFilters";
 import {
   LeadTableContainer,
+  type LeadAgentOption,
   type LeadRow,
 } from "@/modules/lead/components/LeadTableContainer";
 import { ImportLeadsDialog } from "@/modules/lead/components/ImportLeadsDialog";
@@ -365,6 +366,35 @@ export function LeadDashboardPage() {
     }
   };
 
+  const agentOptions: LeadAgentOption[] = useMemo(
+    () =>
+      (usersQuery.data ?? [])
+        .filter((user) => user.active)
+        .map((user) => ({ agentId: user.id, agentName: user.name })),
+    [usersQuery.data],
+  );
+
+  const handleAssignLeads = async (ids: string[], agentId: string) => {
+    const agentName = agentOptions.find((option) => option.agentId === agentId)?.agentName ?? "";
+    try {
+      // The bulk endpoint takes the entity field name (assignedTo), unlike the
+      // single-lead PATCH payload (assignedToId).
+      if (ids.length > 1) {
+        await leadApi.bulkUpdateLeads(ids, { assignedTo: agentId });
+      } else {
+        await leadApi.updateLead(ids[0], { assignedToId: agentId });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+      setSnack(
+        ids.length > 1
+          ? `${ids.length} leads assigned to ${agentName}`
+          : `Lead assigned to ${agentName}`,
+      );
+    } catch {
+      setSnack("Failed to assign lead(s)");
+    }
+  };
+
   const handleUpdateStage = async (id: string, stage: string) => {
     try {
       await leadApi.updateLead(id, {
@@ -503,6 +533,9 @@ export function LeadDashboardPage() {
                 paginationLabel={paginationLabel}
                 onDeleteLead={handleDeleteLead}
                 onBulkDelete={handleBulkDelete}
+                agentOptions={agentOptions}
+                canAssign={canAssignLeads}
+                onAssignLeads={handleAssignLeads}
                 onUpdateStage={handleUpdateStage}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}

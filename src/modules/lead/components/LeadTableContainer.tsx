@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
 import SwapHorizRounded from "@mui/icons-material/SwapHorizRounded";
 import {
   Box,
@@ -47,8 +48,18 @@ export const LEAD_STAGES = [
 ] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
 
+/** A user a lead can be assigned to, as offered by the assign pickers. */
+export type LeadAgentOption = {
+  agentId: string;
+  agentName: string;
+};
+
 type LeadTableContainerProps = {
   leads: LeadRow[];
+  /** Assign controls are hidden entirely unless the viewer holds LEAD_ASSIGN. */
+  canAssign?: boolean;
+  agentOptions?: LeadAgentOption[];
+  onAssignLeads?: (ids: string[], agentId: string, signal?: AbortSignal) => Promise<void>;
   onBulkDelete: (ids: string[], signal?: AbortSignal) => Promise<void>;
   onDeleteLead: (id: string, signal?: AbortSignal) => Promise<void>;
   onUpdateStage: (id: string, stage: string, signal?: AbortSignal) => Promise<void>;
@@ -89,6 +100,9 @@ function getScoreColor(score: number) {
 
 export function LeadTableContainer({
   leads,
+  canAssign = false,
+  agentOptions = [],
+  onAssignLeads,
   onBulkDelete,
   onDeleteLead,
   onUpdateStage,
@@ -109,6 +123,12 @@ export function LeadTableContainer({
   const [bulkStageDialogOpen, setBulkStageDialogOpen] = useState(false);
   const [bulkStageValue, setBulkStageValue] = useState<string>("New");
   const [actionLoading, setActionLoading] = useState(false);
+  // A single dialog serves both the row action and the bulk action; the id list
+  // decides which, so there is one place where assignment is confirmed.
+  const [assignDialogIds, setAssignDialogIds] = useState<string[] | null>(null);
+  const [assignValue, setAssignValue] = useState("");
+
+  const assignEnabled = canAssign && Boolean(onAssignLeads);
 
   useEffect(() => {
     setSelectedLeadIds((current) =>
@@ -209,6 +229,36 @@ export function LeadTableContainer({
     setBulkStageDialogOpen(true);
   };
 
+  const handleOpenAssign = (leadIds: string[]) => {
+    // Preselect the current owner when reassigning a single lead, so the dialog opens
+    // showing who has it rather than an empty box.
+    const current =
+      leadIds.length === 1
+        ? agentOptions.find(
+            (option) => option.agentName === leads.find((l) => l.id === leadIds[0])?.agent,
+          )
+        : undefined;
+    setAssignValue(current?.agentId ?? "");
+    setAssignDialogIds(leadIds);
+  };
+
+  const handleAssignConfirm = async () => {
+    if (!assignDialogIds || !assignValue || !onAssignLeads) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+    setActionLoading(true);
+    try {
+      await onAssignLeads(assignDialogIds, assignValue, signal);
+      if (!signal.aborted && assignDialogIds.length > 1) setSelectedLeadIds([]);
+    } finally {
+      if (!signal.aborted) {
+        setActionLoading(false);
+        setAssignDialogIds(null);
+      }
+    }
+  };
+
   const columns: DataTableColumn<LeadRow>[] = [
     {
       id: "name",
@@ -296,6 +346,27 @@ export function LeadTableContainer({
       align: "right",
       render: (lead) => (
         <Stack direction="row" spacing={0.25} sx={{ justifyContent: "flex-end" }}>
+          {assignEnabled ? (
+            <Tooltip title="Assign to counsellor">
+              <IconButton
+                aria-label={`Assign ${lead.name}`}
+                disabled={actionLoading}
+                size="small"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "7px",
+                  color: "primary.main",
+                  height: 28,
+                  width: 28,
+                  "&:hover": { borderColor: "primary.main", bgcolor: "primary.50" },
+                }}
+                onClick={() => handleOpenAssign([lead.id])}
+              >
+                <PersonAddAltRounded fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           <Tooltip title="Change Stage">
             <IconButton
               aria-label={`Change stage for ${lead.name}`}
@@ -359,6 +430,25 @@ export function LeadTableContainer({
       <Button size="small" sx={{ color: "text.secondary", fontSize: 12, textTransform: "none" }} onClick={handleClearSelection}>
         Clear
       </Button>
+      {assignEnabled ? (
+        <Button
+          disabled={actionLoading}
+          size="small"
+          sx={{
+            bgcolor: "#4f9a86",
+            borderRadius: "8px",
+            color: "common.white",
+            fontSize: 12,
+            fontWeight: 700,
+            px: 1.5,
+            textTransform: "none",
+            "&:hover": { bgcolor: "#3f8a76" },
+          }}
+          onClick={() => handleOpenAssign(selectedLeadIds)}
+        >
+          Assign
+        </Button>
+      ) : null}
       <Button
         disabled={actionLoading}
         size="small"
@@ -422,6 +512,47 @@ export function LeadTableContainer({
           onToggleAll: handleToggleAllRows,
         }}
       />
+
+      {/* Assign dialog — serves both the row action and the bulk action */}
+      <Dialog open={assignDialogIds !== null} onClose={() => setAssignDialogIds(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>
+          {assignDialogIds && assignDialogIds.length > 1
+            ? `Assign ${assignDialogIds.length} Lead(s)`
+            : "Assign Lead"}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Counsellor</InputLabel>
+            <Select
+              label="Counsellor"
+              value={assignValue}
+              onChange={(e) => setAssignValue(e.target.value)}
+            >
+              {agentOptions.length === 0 ? (
+                <MenuItem disabled value="">
+                  No active counsellors — add one in User Management
+                </MenuItem>
+              ) : (
+                agentOptions.map((option) => (
+                  <MenuItem key={option.agentId} value={option.agentId}>
+                    {option.agentName}
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignDialogIds(null)}>Cancel</Button>
+          <Button
+            disabled={actionLoading || !assignValue}
+            variant="contained"
+            onClick={handleAssignConfirm}
+          >
+            Assign
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Per-row stage update dialog */}
       <Dialog open={stageDialogOpen} onClose={() => setStageDialogOpen(false)} maxWidth="xs" fullWidth>

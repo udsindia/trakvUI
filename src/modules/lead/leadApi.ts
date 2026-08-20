@@ -8,6 +8,17 @@ export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
   assignedToName?: string;
 };
 
+/**
+ * POST /api/leads/bulk binds `updates` to the Lead entity, so its keys are the entity's
+ * field names — `assignedTo`, not the `assignedToId` the single-lead PATCH takes. Keeping
+ * this separate from UpdateLeadPayload stops the two shapes being mixed up.
+ */
+export type BulkLeadUpdatePayload = {
+  assignedTo?: string;
+  leadStage?: string;
+  score?: number;
+};
+
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
@@ -243,7 +254,7 @@ export const leadApi = {
 
   bulkUpdateLeads: async (
     leadIds: string[],
-    updates: UpdateLeadPayload,
+    updates: BulkLeadUpdatePayload,
   ): Promise<BackendLead[]> => {
     const response = await httpClient.post<BackendLead[]>(`${API_CONFIG.leads}/bulk`, {
       leadIds,
