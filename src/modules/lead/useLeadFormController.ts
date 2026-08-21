@@ -9,10 +9,12 @@ import { selectAuthTenant } from "@/app/auth/authSlice";
 import { useAppSelector } from "@/app/store/hooks";
 import {
   COLLEGE_SOURCE,
+  OTHER_SOURCE,
   type AgentOption,
   type CreateLeadPayload,
   type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
+import { leadFormOptions } from "@/modules/lead/leadForm.options";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -22,6 +24,7 @@ const MONTH_NAMES = [
 const defaultLeadFormValues: LeadFormValues = {
   agent: "",
   collegeName: "",
+  otherSource: "",
   countries: [],
   courses: [],
   currentStudyLevel: "Not Specified",
@@ -68,7 +71,10 @@ export function buildCreateLeadPayload(
     countryCode,
     phoneNo,
     emailAddress: values.email.trim(),
-    leadSource: values.source,
+    // "Other" is a UI affordance, never a stored source name — the typed text is what
+    // gets saved, and the backend creates the lead_sources row if it is new.
+    leadSource:
+      values.source === OTHER_SOURCE ? values.otherSource.trim() : values.source,
     // Always sent (even blank) so switching away from College clears any
     // previously-saved college name on edit rather than leaving it stale.
     college: values.source === COLLEGE_SOURCE ? values.collegeName.trim() : "",
@@ -94,9 +100,17 @@ export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
       ? `${lead.targetIntakeYear}-${String(monthIndex + 1).padStart(2, "0")}-01`
       : "";
 
+  // A lead saved with a source the dropdown does not offer (older data already has
+  // Instagram, GOOGLE_ADS, META_ADS…) would otherwise open with the field blank and
+  // silently lose its source on save. Show those as "Other" with the text filled in.
+  const savedSource = lead.sourceName ?? "";
+  const isKnownSource =
+    !savedSource || leadFormOptions.sourceOptions.includes(savedSource);
+
   return {
     agent: lead.assignedToId ?? "",
     collegeName: lead.college ?? "",
+    otherSource: isKnownSource ? "" : savedSource,
     countries: lead.destinationCountries ?? [],
     courses: lead.fieldOfStudy ? [lead.fieldOfStudy] : [],
     currentStudyLevel: lead.currentStudyLevel || "Not Specified",
@@ -108,7 +122,7 @@ export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     notes: lead.notes ?? "",
     phone: [lead.countryCode, lead.phone].filter(Boolean).join(" ").trim(),
-    source: lead.sourceName ?? "",
+    source: isKnownSource ? savedSource : OTHER_SOURCE,
     tags: [],
   };
 }

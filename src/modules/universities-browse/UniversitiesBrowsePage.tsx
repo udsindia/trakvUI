@@ -21,8 +21,12 @@ import SearchRounded from "@mui/icons-material/SearchRounded";
 import StarRounded from "@mui/icons-material/StarRounded";
 import StarOutlineRounded from "@mui/icons-material/StarOutlineRounded";
 import AddRounded from "@mui/icons-material/AddRounded";
+import UploadRounded from "@mui/icons-material/UploadRounded";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
+import { CourseImportDialog } from "@/modules/universities/components/CourseImportDialog";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import {
   useCountries,
@@ -111,6 +115,11 @@ export function UniversitiesBrowsePage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [shortlistedCourseIds, setShortlistedCourseIds] = useState<string[]>([]);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  // Course import writes to the shared catalogue; CourseImportService guards both
+  // phases with UNIVERSITY_MANAGE, so the trigger is gated on the same permission.
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const { hasPermissions } = useAuth();
+  const canImportCourses = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
   const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(null);
 
   const { saveUniversityMutation } = useUniversityMutations();
@@ -240,6 +249,17 @@ export function UniversitiesBrowsePage() {
             sx={{ fontWeight: 700 }}
           />
         )}
+        {canImportCourses ? (
+          <Button
+            size="small"
+            startIcon={<UploadRounded />}
+            sx={{ textTransform: "none" }}
+            variant="outlined"
+            onClick={() => setImportDialogOpen(true)}
+          >
+            Import courses
+          </Button>
+        ) : null}
         <Button
           size="small"
           startIcon={<AddRounded />}
@@ -250,6 +270,8 @@ export function UniversitiesBrowsePage() {
           Add university
         </Button>
       </Box>
+
+      <CourseImportDialog open={importDialogOpen} onClose={() => setImportDialogOpen(false)} />
 
       {/* ---- Split panel: institution list + course table ---- */}
       <Box

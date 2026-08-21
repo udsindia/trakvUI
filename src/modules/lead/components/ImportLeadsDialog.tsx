@@ -25,6 +25,13 @@ import {
   Typography,
 } from "@mui/material";
 import { leadApi, type LeadImportResult } from "@/modules/lead/leadApi";
+import { leadFormOptions } from "@/modules/lead/leadForm.options";
+import {
+  COLLEGE_SOURCE,
+  MAX_SOURCE_LENGTH,
+  OTHER_SOURCE,
+  validateCustomSource,
+} from "@/modules/lead/leadForm.types";
 
 const EXPECTED_HEADERS = [
   "firstName",
@@ -90,8 +97,18 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
   const [detectedHeaders, setDetectedHeaders] = useState<string[] | null>(null);
   const [detectingHeaders, setDetectingHeaders] = useState(false);
   const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [isFromCollege, setIsFromCollege] = useState(false);
+  const [applySharedSource, setApplySharedSource] = useState(false);
+  const [sharedSource, setSharedSource] = useState(COLLEGE_SOURCE);
   const [collegeName, setCollegeName] = useState("");
+  const [otherSource, setOtherSource] = useState("");
+  // Expanded on demand when the columns already matched and the panel is collapsed.
+  const [reviewMapping, setReviewMapping] = useState(false);
+
+  const isFromCollege = applySharedSource && sharedSource === COLLEGE_SOURCE;
+  const isOtherSource = applySharedSource && sharedSource === OTHER_SOURCE;
+  const otherSourceError = isOtherSource
+    ? validateCustomSource(otherSource, leadFormOptions.sourceOptions)
+    : null;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<LeadImportResult | null>(null);
@@ -101,8 +118,11 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
     setDetectedHeaders(null);
     setDetectingHeaders(false);
     setMapping({});
-    setIsFromCollege(false);
+    setApplySharedSource(false);
+    setSharedSource(COLLEGE_SOURCE);
     setCollegeName("");
+    setOtherSource("");
+    setReviewMapping(false);
     setBusy(false);
     setError(null);
     setResult(null);
@@ -157,10 +177,15 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
     setResult(null);
     try {
       const cleanMapping = Object.fromEntries(Object.entries(mapping).filter(([, v]) => v));
+      // College keeps its own parameter (it also carries the college name); every other
+      // shared source goes through leadSource.
       const res = await leadApi.importLeads(
         file,
         cleanMapping,
         isFromCollege ? collegeName.trim() : undefined,
+        applySharedSource && !isFromCollege
+          ? (isOtherSource ? otherSource.trim() : sharedSource)
+          : undefined,
       );
       setResult(res);
       if (res.imported > 0) onImported();
@@ -176,6 +201,16 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
 
   const showMapping = Boolean(detectedHeaders) && !result;
 
+  // Every column in the file was recognised as one of our fields, and the one required
+  // field is among them — there is nothing for the user to decide, so the panel collapses
+  // to a confirmation they can expand if they want to check it.
+  const mappedHeaders = new Set(Object.values(mapping).filter(Boolean));
+  const fullyAutoMapped =
+    Boolean(detectedHeaders?.length) &&
+    Boolean(mapping.firstName) &&
+    (detectedHeaders ?? []).every((header) => mappedHeaders.has(header));
+  const showMappingRows = showMapping && (!fullyAutoMapped || reviewMapping);
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ fontWeight: 700 }}>Import Leads from CSV</DialogTitle>
@@ -185,27 +220,63 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={isFromCollege}
+                  checked={applySharedSource}
                   disabled={busy}
-                  onChange={(e) => setIsFromCollege(e.target.checked)}
+                  onChange={(e) => setApplySharedSource(e.target.checked)}
                 />
               }
-              label="This data is from a college"
+              label="All rows in this file share one lead source"
             />
-            {isFromCollege ? (
-              <TextField
-                autoFocus
-                disabled={busy}
-                fullWidth
-                helperText="Applied to every lead in this file — Lead Source will be set to College."
-                label="College Name"
-                placeholder="Enter the college's name"
-                required
-                size="small"
-                sx={{ mt: 1 }}
-                value={collegeName}
-                onChange={(e) => setCollegeName(e.target.value)}
-              />
+            {applySharedSource ? (
+              <Stack spacing={1} sx={{ mt: 1 }}>
+                <FormControl size="small" fullWidth>
+                  <Select
+                    disabled={busy}
+                    value={sharedSource}
+                    onChange={(e) => setSharedSource(e.target.value)}
+                  >
+                    {leadFormOptions.sourceOptions.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {isFromCollege ? (
+                  <TextField
+                    autoFocus
+                    disabled={busy}
+                    fullWidth
+                    helperText="Applied to every lead in this file — Lead Source will be set to College."
+                    label="College Name"
+                    placeholder="Enter the college's name"
+                    required
+                    size="small"
+                    value={collegeName}
+                    onChange={(e) => setCollegeName(e.target.value)}
+                  />
+                ) : null}
+
+                {isOtherSource ? (
+                  <TextField
+                    autoFocus
+                    disabled={busy}
+                    error={Boolean(otherSource && otherSourceError)}
+                    fullWidth
+                    helperText={
+                      (otherSource && otherSourceError) ||
+                      `Applied to every lead in this file (max ${MAX_SOURCE_LENGTH} characters).`
+                    }
+                    label="Specify Lead Source"
+                    placeholder="e.g. Instagram, Education Fair, Agent Partner"
+                    required
+                    size="small"
+                    value={otherSource}
+                    onChange={(e) => setOtherSource(e.target.value)}
+                  />
+                ) : null}
+              </Stack>
             ) : null}
           </Box>
 
@@ -221,15 +292,30 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
                 ))}
               </Box>
             </>
+          ) : !showMappingRows ? (
+            <Alert
+              severity="success"
+              action={
+                <Button color="inherit" size="small" onClick={() => setReviewMapping(true)}>
+                  Review
+                </Button>
+              }
+            >
+              All {detectedHeaders?.length} columns matched automatically — ready to import.
+            </Alert>
           ) : (
             <>
               <Alert severity="info">
                 We matched what we could automatically — adjust any that look wrong, then import.
               </Alert>
               <Stack spacing={1}>
-                {EXPECTED_HEADERS.filter(
-                  (field) => !isFromCollege || (field !== "leadSource" && field !== "college"),
-                ).map((field) => (
+                {EXPECTED_HEADERS.filter((field) => {
+                  // A shared source makes the file's own source column irrelevant; the college
+                  // column only becomes irrelevant when that shared source is College.
+                  if (field === "leadSource") return !applySharedSource;
+                  if (field === "college") return !isFromCollege;
+                  return true;
+                }).map((field) => (
                   <Stack key={field} direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
                     <Typography sx={{ fontSize: 12.5, width: 160, flexShrink: 0 }}>
                       {FIELD_LABELS[field]}
@@ -340,7 +426,8 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
             busy ||
             detectingHeaders ||
             (showMapping && !mapping.firstName) ||
-            (isFromCollege && !collegeName.trim())
+            (isFromCollege && !collegeName.trim()) ||
+            (isOtherSource && otherSourceError !== null)
           }
           startIcon={busy ? <CircularProgress size={16} color="inherit" /> : null}
           sx={{ textTransform: "none", borderRadius: "9px" }}

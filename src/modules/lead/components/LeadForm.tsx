@@ -18,6 +18,9 @@ import {
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
 import {
   COLLEGE_SOURCE,
+  MAX_SOURCE_LENGTH,
+  OTHER_SOURCE,
+  validateCustomSource,
   type LeadFormOptions,
   type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
@@ -56,6 +59,7 @@ export function LeadForm({
     name: "source",
   });
   const isCollegeSource = sourceValue === COLLEGE_SOURCE;
+  const isOtherSource = sourceValue === OTHER_SOURCE;
 
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
@@ -336,6 +340,38 @@ export function LeadForm({
                         id={field.name}
                         label="College Name"
                         placeholder="Enter the college's name"
+                        required
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                ) : null}
+
+                {isOtherSource ? (
+                  <Controller
+                    control={control}
+                    name="otherSource"
+                    rules={{
+                      validate: (value) => {
+                        // Skip entirely when the user has switched away from "Other",
+                        // so a stale value can never block submitting.
+                        if (!isOtherSource) return true;
+                        return validateCustomSource(value, options.sourceOptions) ?? true;
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.otherSource)}
+                        fullWidth
+                        helperText={
+                          errors.otherSource?.message ??
+                          `Saved as a new lead source (max ${MAX_SOURCE_LENGTH} characters).`
+                        }
+                        id={field.name}
+                        label="Specify Lead Source"
+                        placeholder="e.g. Instagram, Education Fair, Agent Partner"
                         required
                         slotProps={alwaysVisibleLabelSlotProps}
                         sx={fieldSx}

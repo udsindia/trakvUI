@@ -24,7 +24,16 @@ export const leadFormOptions: LeadFormOptions = {
     "Cyber Security",
   ],
   englishTestOptions: ["IELTS", "TOEFL", "PTE", "Duolingo", "Other", "None"],
-  sourceOptions: ["Website", "Referral", "Social Media", "Walk-in", "Email Campaign", "College"],
+  // "Other" must stay last — it reveals the free-text source field.
+  sourceOptions: [
+    "Website",
+    "Referral",
+    "Social Media",
+    "Walk-in",
+    "Email Campaign",
+    "College",
+    "Other",
+  ],
   studyLevelOptions: ["High School", "Diploma", "Bachelor's", "Master's", "PhD", "Not Specified"],
   tagOptions: ["High Intent", "Scholarship", "Priority", "Parent Involved", "Repeat Enquiry"],
 };

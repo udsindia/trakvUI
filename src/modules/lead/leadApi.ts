@@ -280,11 +280,14 @@ export const leadApi = {
    * @param mapping our field name -> the file's column header to read it from.
    * @param collegeName when set, every row in the batch is imported with Lead Source
    *                    "College" and this as its college name, regardless of mapping.
+   * @param leadSource when set, every row gets this source name, overriding any mapped
+   *                   leadSource column. Ignored by the server if collegeName is also set.
    */
   importLeads: async (
     file: File,
     mapping?: Record<string, string>,
     collegeName?: string,
+    leadSource?: string,
   ): Promise<LeadImportResult> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -294,6 +297,7 @@ export const leadApi = {
       }
     }
     if (collegeName) formData.append("collegeName", collegeName);
+    if (leadSource) formData.append("leadSource", leadSource);
     const response = await httpClient.post<LeadImportResult>(
       `${API_CONFIG.leads}/import`,
       formData,
