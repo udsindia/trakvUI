@@ -1,3 +1,4 @@
+import type { UniversityRequirementDto } from "@/modules/universities/universitiesApi.types";
 export type CourseLevel = "undergraduate" | "masters" | "phd" | "diploma";
 
 export type EligibilityStatus = "eligible" | "partial" | "not-eligible";
@@ -52,6 +53,12 @@ export interface University {
   links: UniversityLink[];
   internalNotes: string;
   generalRequirements: UniversityRequirement[];
+  /**
+   * Raw requirement rows straight from the API, kept alongside the flattened display
+   * list because the editor needs id/courseId and the score fields that
+   * mapRequirement discards.
+   */
+  requirementDtos?: UniversityRequirementDto[];
 }
 
 export interface CourseKeyDates {

@@ -1,4 +1,5 @@
 import { httpClient } from "@/shared/services/http/client";
+import type { UpdateApplicationPayload } from "@/modules/applications/applicationForm.types";
 import { API_CONFIG } from "@/config/api/config";
 import type {
   CreateApplicationPayload,
@@ -132,6 +133,18 @@ export const applicationsApi = {
   ): Promise<ApplicationDetail> => {
     const response = await httpClient.post<ApplicationDetail>(
       API_CONFIG.applications,
+      payload,
+    );
+    return response.data;
+  },
+
+  /** Partial update; permitted only while the application is still a draft. */
+  updateApplication: async (
+    id: string,
+    payload: UpdateApplicationPayload,
+  ): Promise<ApplicationDetail> => {
+    const response = await httpClient.patch<ApplicationDetail>(
+      `${API_CONFIG.applications}/${id}`,
       payload,
     );
     return response.data;

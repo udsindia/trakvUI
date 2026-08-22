@@ -9,8 +9,35 @@ export type StudyLevel =
   | "FOUNDATION"
   | "DIPLOMA";
 
-export type RequirementType = "LANGUAGE_TEST" | "DOCUMENT" | "ACADEMIC" | string;
+export type RequirementType =
+  | "LANGUAGE_TEST"
+  | "APTITUDE_TEST"
+  | "DOCUMENT"
+  | "ACADEMIC"
+  | "FINANCIAL"
+  | "WORK_EXPERIENCE"
+  | "OTHER";
 
+/**
+ * English-proficiency tests accepted on a REQUIREMENT. Mirrors the backend TestType
+ * enum. Distinct from LanguageTestType below, which is a student's own test record —
+ * the two enums have different members and are not interchangeable.
+ */
+export type TestType =
+  | "IELTS_ACADEMIC"
+  | "IELTS_GENERAL"
+  | "TOEFL_IBT"
+  | "PTE_ACADEMIC"
+  | "DUOLINGO"
+  | "MOI_LETTER"
+  | "INTER_ENGLISH"
+  | "CAMBRIDGE_C1"
+  | "CAMBRIDGE_C2";
+
+/** Aptitude / entrance tests. Backed by its own enum and column server-side. */
+export type AptitudeTestType = "GRE" | "GMAT" | "SAT" | "DMAT";
+
+/** A student's recorded language test — NOT valid on a requirement. */
 export type LanguageTestType = "IELTS_ACADEMIC" | "IELTS_UKVI" | "TOEFL_IBT" | string;
 
 export interface UniversitiesPageResponse<T> {
@@ -38,16 +65,23 @@ export interface UniversitySummaryDto {
 
 export interface UniversityRequirementDto {
   id?: string;
-  requirementType: RequirementType;
-  testType?: LanguageTestType;
-  documentName?: string;
-  minOverallScore?: number;
-  minListening?: number;
-  minReading?: number;
-  minWriting?: number;
-  minSpeaking?: number;
-  isMandatory?: boolean;
+  /** null → a university-level default, copied into new courses as a starting point. */
   courseId?: string | null;
+  requirementType: RequirementType;
+  testType?: TestType | null;
+  aptitudeTestType?: AptitudeTestType | null;
+  minOverallScore?: number | null;
+  minListening?: number | null;
+  minReading?: number | null;
+  minWriting?: number | null;
+  minSpeaking?: number | null;
+  minGpa?: number | null;
+  gpaScale?: string | null;
+  minPercentage?: number | null;
+  maxBacklogs?: number | null;
+  documentName?: string | null;
+  isMandatory?: boolean;
+  isTenantOverride?: boolean;
 }
 
 export interface UniversityDetailDto {
@@ -153,16 +187,29 @@ export interface CreateCoursePayload {
   courseUrl?: string;
 }
 
+/**
+ * PATCH /admin/courses/{id} — partial update. Any field left out is "no change",
+ * so only send what actually differs.
+ */
+export type UpdateCoursePayload = Partial<CreateCoursePayload> & {
+  isActive?: boolean;
+};
+
 export interface CreateRequirementPayload {
   courseId?: string | null;
   requirementType: RequirementType;
-  testType?: LanguageTestType;
+  testType?: TestType;
+  aptitudeTestType?: AptitudeTestType;
   documentName?: string;
   minOverallScore?: number;
   minListening?: number;
   minReading?: number;
   minWriting?: number;
   minSpeaking?: number;
+  minGpa?: number;
+  gpaScale?: string;
+  minPercentage?: number;
+  maxBacklogs?: number;
   isMandatory?: boolean;
 }
 
@@ -182,6 +229,33 @@ export interface CreatedCourseDto {
   studyLevel: StudyLevel;
   isActive: boolean;
   createdAt: string;
+}
+
+/** PATCH /admin/courses/{id} returns a narrower shape than the create endpoint. */
+export interface UpdatedCourseDto {
+  id: string;
+  name: string;
+  tuitionAmount: number | null;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+/**
+ * PATCH /admin/requirements/{id}. Null means "no change", so a value can be
+ * overwritten but NOT cleared through this endpoint.
+ */
+export interface UpdateRequirementPayload {
+  minOverallScore?: number;
+  minListening?: number;
+  minReading?: number;
+  minWriting?: number;
+  minSpeaking?: number;
+  minGpa?: number;
+  gpaScale?: string;
+  minPercentage?: number;
+  maxBacklogs?: number;
+  isMandatory?: boolean;
+  notes?: string;
 }
 
 export interface CreatedRequirementDto {

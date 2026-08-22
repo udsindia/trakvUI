@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Drawer,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -10,7 +11,14 @@ import {
 import { useEffect, useState } from "react";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import type { Course, CourseLevel } from "@/modules/universities/universities.types";
-import type { CourseInput } from "@/modules/universities/universitiesCatalogService";
+import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
+import { RequirementsEditor } from "@/modules/universities/components/RequirementsEditor";
+import {
+  emptyRequirementSet,
+  requirementSetIsEmpty,
+  type CourseInput,
+  type RequirementSet,
+} from "@/modules/universities/universitiesCatalogService";
 
 const levelLabels: Record<CourseLevel, string> = {
   undergraduate: "Undergraduate",
@@ -30,10 +38,32 @@ function arrayToLines(values: string[]) {
   return values.join("\n");
 }
 
+const TUITION_CURRENCIES = ["GBP", "EUR", "USD", "AUD", "CAD", "INR"];
+
+/** IELTS still drives the eligibility badge, so it is mirrored onto the legacy fields. */
+function deriveIeltsFields(tests: RequirementSet["languageTests"]) {
+  const ielts = tests.find(
+    (test) => test.testType === "IELTS_ACADEMIC" || test.testType === "IELTS_GENERAL",
+  );
+  if (!ielts) {
+    return { ieltsMin: 0, ieltsPerBand: undefined, ieltsLabel: "No IELTS requirement" };
+  }
+  const bands = [ielts.minListening, ielts.minReading, ielts.minWriting, ielts.minSpeaking].filter(
+    (band): band is number => typeof band === "number" && band > 0,
+  );
+  return {
+    ieltsMin: ielts.minOverallScore ?? 0,
+    ieltsPerBand: bands.length > 0 ? Math.min(...bands) : undefined,
+    ieltsLabel: `IELTS ${ielts.minOverallScore ?? 0}+`,
+  };
+}
+
 function emptyCourse(universityId: string): CourseInput {
   return {
     universityId,
     name: "",
+    tuitionCurrency: "GBP",
+    requirementSet: emptyRequirementSet(),
     level: "masters",
     levelLabel: levelLabels.masters,
     intakes: [],
@@ -72,6 +102,12 @@ type CourseFormDrawerProps = {
   onSave: (input: CourseInput) => void;
   open: boolean;
   universityId: string;
+  /**
+   * University-level defaults, used to prefill a NEW course. They are copied, not
+   * shared: the course keeps its own rows, so changing the defaults later leaves
+   * existing courses alone.
+   */
+  universityDefaults?: RequirementSet;
 };
 
 export function CourseFormDrawer({
@@ -80,6 +116,7 @@ export function CourseFormDrawer({
   onSave,
   open,
   universityId,
+  universityDefaults,
 }: CourseFormDrawerProps) {
   const [form, setForm] = useState<CourseInput>(emptyCourse(universityId));
   const [intakesText, setIntakesText] = useState("");
@@ -88,17 +125,26 @@ export function CourseFormDrawer({
 
   useEffect(() => {
     if (course) {
-      setForm({ ...course });
+      // Deliberately empty on edit: the course's stored requirements are not loaded
+      // (mapCourseToUi drops them), so anything left here would be re-posted as a
+      // duplicate. The editor's hint says so.
+      setForm({ ...course, requirementSet: emptyRequirementSet() });
       setIntakesText(course.intakes.join(", "));
       setSemester1Text(arrayToLines(course.curriculum.semester1));
       setSemester2Text(arrayToLines(course.curriculum.semester2));
     } else {
-      setForm(emptyCourse(universityId));
+      // Copied, not referenced — structuredClone keeps the caller's defaults immutable.
+      setForm({
+        ...emptyCourse(universityId),
+        requirementSet: universityDefaults
+          ? structuredClone(universityDefaults)
+          : emptyRequirementSet(),
+      });
       setIntakesText("");
       setSemester1Text("");
       setSemester2Text("");
     }
-  }, [course, open, universityId]);
+  }, [course, open, universityId, universityDefaults]);
 
   const handleLevelChange = (level: CourseLevel) => {
     setForm((current) => ({
@@ -120,8 +166,11 @@ export function CourseFormDrawer({
         semester1: linesToArray(semester1Text),
         semester2: linesToArray(semester2Text),
       },
+      ...deriveIeltsFields(form.requirementSet?.languageTests ?? []),
       fees: {
         ...form.fees,
+        // Derived, never typed: the label and the number cannot drift apart.
+        tuitionPerYear: formatTuitionLakhs(form.tuitionLakhs),
         applicationFee: form.fees.applicationFee || form.applicationFee,
       },
     });
@@ -195,16 +244,20 @@ export function CourseFormDrawer({
           />
           <TextField
             fullWidth
-            label="Tuition display"
+            select
+            label="Currency"
             size="small"
-            value={form.fees.tuitionPerYear}
+            value={form.tuitionCurrency ?? "GBP"}
             onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                fees: { ...current.fees, tuitionPerYear: event.target.value },
-              }))
+              setForm((current) => ({ ...current, tuitionCurrency: event.target.value }))
             }
-          />
+          >
+            {TUITION_CURRENCIES.map((code) => (
+              <MenuItem key={code} value={code}>
+                {code}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
         <Stack direction="row" spacing={1.5}>
           <TextField
@@ -269,46 +322,19 @@ export function CourseFormDrawer({
           }
         />
 
-        <Typography color="text.secondary" variant="subtitle2">
-          English requirements
-        </Typography>
-        <Stack direction="row" spacing={1.5}>
-          <TextField
-            fullWidth
-            label="IELTS minimum"
-            size="small"
-            type="number"
-            inputProps={{ step: 0.5 }}
-            value={form.ieltsMin}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                ieltsMin: Number(event.target.value) || 0,
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            label="IELTS per band"
-            size="small"
-            type="number"
-            inputProps={{ step: 0.5 }}
-            value={form.ieltsPerBand ?? ""}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                ieltsPerBand: event.target.value ? Number(event.target.value) : undefined,
-              }))
-            }
-          />
-        </Stack>
-        <TextField
-          fullWidth
-          label="IELTS label"
-          size="small"
-          value={form.ieltsLabel}
-          onChange={(event) => setForm((current) => ({ ...current, ieltsLabel: event.target.value }))}
+        <Divider />
+        <RequirementsEditor
+          hint={
+            course
+              ? "Requirements already saved for this course aren't listed here and are left untouched. Anything added below is appended to them."
+              : universityDefaults && !requirementSetIsEmpty(universityDefaults)
+                ? "Prefilled from this university's defaults. Edit freely — the course keeps its own copy, so later changes to the university defaults won't affect it."
+                : undefined
+          }
+          value={form.requirementSet ?? emptyRequirementSet()}
+          onChange={(next) => setForm((current) => ({ ...current, requirementSet: next }))}
         />
+        <Divider />
 
         <Typography color="text.secondary" variant="subtitle2">
           Key dates

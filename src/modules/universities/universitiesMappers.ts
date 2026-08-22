@@ -280,6 +280,7 @@ export function mapUniversityDetailToUi(detail: UniversityDetailDto): University
     links: detail.website ? [{ label: "University website", url: detail.website }] : [],
     internalNotes: "",
     generalRequirements: requirements.map(mapRequirement),
+    requirementDtos: requirements,
   };
 }
 

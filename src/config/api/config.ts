@@ -11,5 +11,6 @@ export const API_CONFIG = {
   universities: "/universities",
   adminUniversities: "/admin/universities",
   adminCourses: "/admin/courses",
+  adminRequirements: "/admin/requirements",
   courses: "/courses",
 } as const;

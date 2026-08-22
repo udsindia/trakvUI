@@ -9,6 +9,9 @@ import type {
   CreateCoursePayload,
   CreateRequirementPayload,
   CreateUniversityPayload,
+  UpdateCoursePayload,
+  UpdateRequirementPayload,
+  UpdatedCourseDto,
   CourseDto,
   CreatedCourseDto,
   CreatedRequirementDto,
@@ -228,12 +231,38 @@ export const universitiesApi = {
     return response.data;
   },
 
+  /** Partial update — only the fields present in the payload are applied. */
+  updateCourse: async (
+    courseId: string,
+    payload: UpdateCoursePayload,
+  ): Promise<UpdatedCourseDto> => {
+    const response = await httpClient.patch<UpdatedCourseDto>(
+      `${API_CONFIG.adminCourses}/${courseId}`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
   createCourse: async (
     universityId: string,
     payload: CreateCoursePayload,
   ): Promise<CreatedCourseDto> => {
     const response = await httpClient.post<CreatedCourseDto>(
       `${API_CONFIG.adminUniversities}/${universityId}/courses`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** Partial update of an existing requirement row. Null fields are left unchanged. */
+  updateRequirement: async (
+    requirementId: string,
+    payload: UpdateRequirementPayload,
+  ): Promise<CreatedRequirementDto> => {
+    const response = await httpClient.patch<CreatedRequirementDto>(
+      `${API_CONFIG.adminRequirements}/${requirementId}`,
       payload,
       createAuthRequestConfig(),
     );

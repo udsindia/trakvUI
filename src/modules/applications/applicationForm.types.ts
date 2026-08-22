@@ -22,6 +22,12 @@ export type ApplicationFormValues = {
   studentId: string | "";
   /** Selected university id — used to load courses; name is stored in targetUniversity. */
   universityId: string;
+  /**
+   * True when the user has deliberately opted out of the catalogue and is typing the
+   * university and course names. Kept explicit so linkage is never lost by accident —
+   * the id is only cleared because someone asked for it.
+   */
+  useCustomUniversity: boolean;
   targetUniversity: string;
   /** Selected course id — used for the select value; name is stored in courseName. */
   courseId: string;
@@ -47,6 +53,24 @@ export type VisaFormValues = {
   interviewDate?: string;
   financialDocumentsProvided: boolean;
   notes: string;
+};
+
+/**
+ * PATCH /applications/{id}. Null/omitted means "no change".
+ * destinationCountry is absent on purpose — the stage sequence is cloned from that
+ * country at creation, so it cannot be changed afterwards.
+ */
+export type UpdateApplicationPayload = {
+  assignedTo?: string;
+  universityName?: string;
+  courseName?: string;
+  courseId?: string;
+  studyLevel?: string;
+  intakeMonth?: string;
+  intakeYear?: number;
+  tuitionFeeInr?: number;
+  applicationFeeInr?: number;
+  notes?: string;
 };
 
 export type CreateApplicationPayload = {

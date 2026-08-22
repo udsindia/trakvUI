@@ -16,12 +16,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { AddRounded } from "@mui/icons-material";
+import { AddRounded, ChecklistRounded } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
+import { UniversityDefaultsDialog } from "@/modules/universities/components/UniversityDefaultsDialog";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
 import { UniversityHero } from "@/modules/universities/components/UniversityHero";
@@ -32,7 +33,11 @@ import {
   useUniversityCourses,
   useUniversityMutations,
 } from "@/modules/universities/useUniversitiesCatalog";
-import type { CourseInput } from "@/modules/universities/universitiesCatalogService";
+import {
+  fromRequirementDtos,
+  type CourseInput,
+  type RequirementSet,
+} from "@/modules/universities/universitiesCatalogService";
 import {
   getEligibilityChipSx,
   sectionCardHeaderSx,
@@ -59,13 +64,41 @@ export function UniversityDetailsPage() {
   const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
   // Courses can be added one at a time here, as a follow-up to a bulk import that
   // brought in the university without its courses. Same permission the import uses.
-  const { saveCourseMutation } = useUniversityMutations();
+  const { saveCourseMutation, saveUniversityDefaultsMutation } = useUniversityMutations();
   const { hasPermissions } = useAuth();
   const canAddCourse = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
+  const [defaultsDialogOpen, setDefaultsDialogOpen] = useState(false);
   const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(
     null,
   );
+
+  // course_id === null marks a university-level default rather than a course's own row.
+  const universityDefaults = fromRequirementDtos(
+    (university?.requirementDtos ?? []).filter((requirement) => !requirement.courseId),
+  );
+
+  const handleSaveDefaults = async (set: RequirementSet, applyToCourseIds: string[]) => {
+    if (!universityId) {
+      return;
+    }
+    const result = await saveUniversityDefaultsMutation.mutateAsync({
+      universityId,
+      set,
+      applyToCourseIds,
+      // Every stored row for this university, so the save can update matches in place
+      // rather than adding a second copy.
+      existing: university?.requirementDtos ?? [],
+    });
+    setSnack(
+      result.failed > 0
+        ? { message: `${result.failed} requirement(s) could not be saved.`, severity: "error" }
+        : {
+            message: `Requirements saved — ${result.created} added, ${result.updated} updated`,
+            severity: "success",
+          },
+    );
+  };
 
   const handleSaveCourse = async (input: CourseInput) => {
     if (!universityId) {
@@ -75,8 +108,13 @@ export function UniversityDetailsPage() {
       await saveCourseMutation.mutateAsync({ ...input, universityId });
       setCourseDrawerOpen(false);
       setSnack({ message: "Course added", severity: "success" });
-    } catch {
-      setSnack({ message: "Failed to save course", severity: "error" });
+    } catch (error) {
+      // saveCourse throws with a specific message when the course saved but its English
+      // test requirements did not — surface that rather than a blanket failure.
+      setSnack({
+        message: error instanceof Error ? error.message : "Failed to save course",
+        severity: "error",
+      });
     }
   };
 
@@ -159,6 +197,17 @@ export function UniversityDetailsPage() {
                     Courses at {university.shortName} ({courses.length})
                   </Typography>
                   <Stack direction="row" spacing={1}>
+                    {canAddCourse ? (
+                      <Button
+                        size="small"
+                        startIcon={<ChecklistRounded />}
+                        sx={{ textTransform: "none" }}
+                        variant="outlined"
+                        onClick={() => setDefaultsDialogOpen(true)}
+                      >
+                        Default requirements
+                      </Button>
+                    ) : null}
                     {canAddCourse ? (
                       <Button
                         size="small"
@@ -267,12 +316,22 @@ export function UniversityDetailsPage() {
       </Box>
 
       {canAddCourse && universityId ? (
-        <CourseFormDrawer
-          open={courseDrawerOpen}
-          universityId={universityId}
-          onClose={() => setCourseDrawerOpen(false)}
-          onSave={handleSaveCourse}
-        />
+        <>
+          <CourseFormDrawer
+            open={courseDrawerOpen}
+            universityDefaults={universityDefaults}
+            universityId={universityId}
+            onClose={() => setCourseDrawerOpen(false)}
+            onSave={handleSaveCourse}
+          />
+          <UniversityDefaultsDialog
+            existingCourseIds={courses.map((course) => course.id)}
+            initial={universityDefaults}
+            open={defaultsDialogOpen}
+            onClose={() => setDefaultsDialogOpen(false)}
+            onSave={handleSaveDefaults}
+          />
+        </>
       ) : null}
 
       <Snackbar

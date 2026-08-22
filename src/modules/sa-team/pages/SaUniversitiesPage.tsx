@@ -194,8 +194,8 @@ export function SaUniversityDetailPage({
       setCourseDrawerOpen(false);
       setEditingCourse(null);
       setSnack("Course added");
-    } catch {
-      setSnack("Failed to save course");
+    } catch (error) {
+      setSnack(error instanceof Error ? error.message : "Failed to save course");
     }
   };
 

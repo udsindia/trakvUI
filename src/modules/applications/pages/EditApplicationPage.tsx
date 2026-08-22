@@ -1,11 +1,22 @@
 import { Box, Paper } from "@mui/material";
+import { useParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationForm } from "@/modules/applications/components/ApplicationForm";
 import { useApplicationFormController } from "@/modules/applications/useApplicationFormController";
 
-export function AddApplicationPage() {
+/**
+ * Edits an existing application, reusing the create form and controller.
+ *
+ * The backend only permits this while the application is still a draft — open and still
+ * in the first stage of its sequence. Once it has advanced, the PATCH is refused and the
+ * form surfaces that as a form-level error. The details page hides the Edit button in
+ * that case, so this is the belt-and-braces path.
+ */
+export function EditApplicationPage() {
+  const { id } = useParams<{ id: string }>();
   const {
     form,
+    isEditMode,
     students,
     countries,
     universities,
@@ -24,7 +35,7 @@ export function AddApplicationPage() {
     handleCourseNameChange,
     handleCancel,
     handleFormSubmit,
-  } = useApplicationFormController();
+  } = useApplicationFormController({ applicationId: id });
 
   return (
     <Paper
@@ -42,10 +53,6 @@ export function AddApplicationPage() {
         overflow: "hidden",
       }}
     >
-      {/* <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
-        <PageHeader subtitle="Applications > New Application" title="Add New Application" />
-      </Box> */}
-
       <Box
         sx={{
           bgcolor: "#fcfdff",
@@ -56,15 +63,10 @@ export function AddApplicationPage() {
           py: { xs: 2.5, md: 3.5 },
         }}
       >
-        <Box
-          sx={{
-            marginInline: "auto",
-            maxWidth: 920,
-            width: "100%",
-          }}
-        >
+        <Box sx={{ marginInline: "auto", maxWidth: 920, width: "100%" }}>
           <ApplicationForm
             form={form}
+            isEditMode={isEditMode}
             students={students}
             countries={countries}
             universities={universities}

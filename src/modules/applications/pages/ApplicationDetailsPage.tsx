@@ -21,9 +21,12 @@ import {
   Typography,
 } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { EditOutlined } from "@mui/icons-material";
+import { useAuth } from "@/app/auth/authHooks";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
-import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
+import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 
 const TERMINAL_OUTCOMES = [
   "OFFER_ACCEPTED",
@@ -56,6 +59,8 @@ function formatDateTime(value?: string | null) {
 export function ApplicationDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasPermissions } = useAuth();
+  const canEdit = hasPermissions([PERMISSIONS.APPLICATIONS_MANAGE]);
   const queryClient = useQueryClient();
 
   const [moveNote, setMoveNote] = useState("");
@@ -112,6 +117,10 @@ export function ApplicationDetailsPage() {
   const currentStage = stages.find((s) => s.id === application.currentStageId);
   const currentIndex = currentStage ? stages.indexOf(currentStage) : -1;
   const isClosed = application.outcome !== "IN_PROGRESS";
+  // There is no stored DRAFT state — every application is created IN_PROGRESS. "Draft"
+  // here means it has not advanced yet, which is exactly what PATCH /applications/{id}
+  // allows. Keep this in step with ApplicationService.updateApplication.
+  const isDraft = !isClosed && (currentIndex <= 0);
   const nextStage = currentStage
     ? stages.find((s) => s.stageOrder === currentStage.stageOrder + 1)
     : stages[0];
@@ -141,9 +150,23 @@ export function ApplicationDetailsPage() {
           subtitle="Applications > Details"
           title={`${application.universityName} — ${application.courseName}`}
           actions={
-            <Button variant="outlined" onClick={() => navigate(applicationsRoutePaths.dashboard)}>
-              Back to List
-            </Button>
+            <Stack direction="row" spacing={1.5}>
+              {canEdit && isDraft ? (
+                <Button
+                  startIcon={<EditOutlined />}
+                  variant="outlined"
+                  onClick={() => navigate(applicationEditPath(id!))}
+                >
+                  Edit
+                </Button>
+              ) : null}
+              <Button
+                variant="outlined"
+                onClick={() => navigate(applicationsRoutePaths.dashboard)}
+              >
+                Back to List
+              </Button>
+            </Stack>
           }
         />
       </Box>

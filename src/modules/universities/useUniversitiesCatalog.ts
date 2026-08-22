@@ -1,3 +1,4 @@
+import type { UniversityRequirementDto } from "@/modules/universities/universitiesApi.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/useAuth";
 import { universitiesApi } from "@/modules/universities/universitiesApi";
@@ -12,6 +13,7 @@ import {
   universityCoursesQueryKey,
   universityQueryKey,
   type CourseInput,
+  type RequirementSet,
   type UniversityInput,
 } from "@/modules/universities/universitiesCatalogService";
 import { resolveAccessToken } from "@/shared/services/http/authHeaders";
@@ -130,6 +132,27 @@ export function useUniversityMutations() {
     onSuccess: invalidateAll,
   });
 
+  const saveUniversityDefaultsMutation = useMutation({
+    mutationFn: ({
+      universityId,
+      set,
+      applyToCourseIds,
+      existing,
+    }: {
+      universityId: string;
+      set: RequirementSet;
+      applyToCourseIds?: string[];
+      existing?: UniversityRequirementDto[];
+    }) =>
+      universitiesCatalogService.saveUniversityDefaults(
+        universityId,
+        set,
+        applyToCourseIds,
+        existing,
+      ),
+    onSuccess: invalidateAll,
+  });
+
   const createRequirementMutation = useMutation({
     mutationFn: ({
       universityId,
@@ -144,6 +167,7 @@ export function useUniversityMutations() {
   return {
     saveUniversityMutation,
     saveCourseMutation,
+    saveUniversityDefaultsMutation,
     createRequirementMutation,
   };
 }

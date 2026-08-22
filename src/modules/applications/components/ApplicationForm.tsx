@@ -1,12 +1,15 @@
 import type { FormEventHandler } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
+  Checkbox,
   CircularProgress,
   Divider,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -35,7 +38,15 @@ type ApplicationFormProps = {
   universitiesError?: boolean;
   coursesError?: boolean;
   onCountryChange: (countryCode: string) => void;
+  /** Edit mode locks the fields that cannot change after creation. */
+  isEditMode?: boolean;
   onUniversityChange: (universityId: string) => void;
+  /** A university typed by hand rather than picked from the catalogue. */
+  onUniversityNameChange: (name: string) => void;
+  /** Switches between catalogue selection and typing the names by hand. */
+  onCustomUniversityToggle: (enabled: boolean) => void;
+  /** A course typed by hand rather than picked from the catalogue. */
+  onCourseNameChange: (name: string) => void;
   onCourseChange: (courseId: string) => void;
   onCancel: () => void;
   onSubmit: FormEventHandler<HTMLFormElement>;
@@ -54,7 +65,11 @@ export function ApplicationForm({
   universitiesError = false,
   coursesError = false,
   onCountryChange,
+  isEditMode = false,
   onUniversityChange,
+  onUniversityNameChange,
+  onCustomUniversityToggle,
+  onCourseNameChange,
   onCourseChange,
   onCancel,
   onSubmit,
@@ -67,6 +82,9 @@ export function ApplicationForm({
 
   const destinationCountry = watch("destinationCountry");
   const universityId = watch("universityId");
+  const targetUniversity = watch("targetUniversity");
+  const courseId = watch("courseId");
+  const useCustomUniversity = watch("useCustomUniversity");
 
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
@@ -101,14 +119,20 @@ export function ApplicationForm({
     if (!destinationCountry) {
       return "Select a destination country first.";
     }
+    if (useCustomUniversity) {
+      // Typing a name that exists still links it — the controller matches on exact name.
+      return universityId
+        ? "Matches a catalogue entry — it will be linked."
+        : "Saved as typed, with no catalogue link.";
+    }
     if (universitiesError) {
-      return "Could not load universities for this country.";
+      return "Could not load the catalogue — tick the box above to type the name.";
     }
     if (universitiesLoading) {
       return "Loading universities…";
     }
     if (universities.length === 0) {
-      return "No universities found for this country.";
+      return "No catalogue entries for this country — tick the box above to type the name.";
     }
     return undefined;
   })();
@@ -117,17 +141,20 @@ export function ApplicationForm({
     if (errors.courseName?.message) {
       return errors.courseName.message;
     }
-    if (!universityId) {
-      return "Select a university first.";
+    if (!targetUniversity) {
+      return "Enter a university first.";
+    }
+    if (useCustomUniversity || !universityId) {
+      return "Saved as typed, with no catalogue link.";
     }
     if (coursesError) {
-      return "Could not load courses for this university.";
+      return "Could not load this university's courses.";
     }
     if (coursesLoading) {
       return "Loading courses…";
     }
     if (courses.length === 0) {
-      return "No courses found for this university.";
+      return "No courses listed for this university yet.";
     }
     return undefined;
   })();
@@ -295,71 +322,165 @@ export function ApplicationForm({
                     )}
                   />
 
-                  <Controller
-                    control={control}
-                    name="universityId"
-                    rules={{ required: "Target university is required." }}
-                    render={({ field }) => (
-                      <TextField
-                        disabled={!destinationCountry || universitiesLoading}
-                        error={Boolean(errors.targetUniversity) || Boolean(errors.universityId) || universitiesError}
-                        fullWidth
-                        helperText={universityHelperText}
-                        id={field.name}
-                        label="Target University"
-                        required
-                        select
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        value={field.value || ""}
-                        onBlur={field.onBlur}
-                        onChange={(event) => onUniversityChange(event.target.value)}
-                      >
-                        <MenuItem disabled value="">
-                          Select university
-                        </MenuItem>
-                        {universities.map((university) => (
-                          <MenuItem key={university.id} value={university.id}>
-                            {university.name}
-                            {university.city ? ` — ${university.city}` : ""}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
+                  {/*
+                    Two explicit modes rather than one free-text field.
+
+                    Off-catalogue entry used to be implicit — any typing cleared
+                    universityId — which meant a user typing a name that WAS in the
+                    catalogue silently produced an unlinked record. The checkbox makes
+                    the choice deliberate, so linkage is only ever lost on purpose.
+
+                    Applications store university_name (NOT NULL) with university_id
+                    nullable, so both modes are valid; the id just drives the course list.
+                  */}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={useCustomUniversity}
+                        disabled={!destinationCountry}
+                        size="small"
+                        onChange={(event) => onCustomUniversityToggle(event.target.checked)}
+                      />
+                    }
+                    label="University is not in our catalogue"
+                    sx={{ ml: 0 }}
                   />
 
-                  <Controller
-                    control={control}
-                    name="courseId"
-                    rules={{ required: "Course is required." }}
-                    render={({ field }) => (
-                      <TextField
-                        disabled={!universityId || coursesLoading}
-                        error={Boolean(errors.courseName) || Boolean(errors.courseId) || coursesError}
-                        fullWidth
-                        helperText={courseHelperText}
-                        id={field.name}
-                        label="Course"
-                        required
-                        select
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        value={field.value || ""}
-                        onBlur={field.onBlur}
-                        onChange={(event) => onCourseChange(event.target.value)}
-                      >
-                        <MenuItem disabled value="">
-                          Select course
-                        </MenuItem>
-                        {courses.map((course) => (
-                          <MenuItem key={course.id} value={course.id}>
-                            {course.name}
-                            {course.code ? ` (${course.code})` : ""}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  />
+                  {useCustomUniversity ? (
+                    <Controller
+                      control={control}
+                      name="targetUniversity"
+                      rules={{ required: "Target university is required." }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          disabled={!destinationCountry}
+                          error={Boolean(errors.targetUniversity)}
+                          fullWidth
+                          helperText={universityHelperText}
+                          id={field.name}
+                          label="Target University"
+                          required
+                          slotProps={alwaysVisibleLabelSlotProps}
+                          sx={fieldSx}
+                          onChange={(event) => onUniversityNameChange(event.target.value)}
+                        />
+                      )}
+                    />
+                  ) : (
+                    <Controller
+                      control={control}
+                      name="targetUniversity"
+                      rules={{ required: "Target university is required." }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          disabled={!destinationCountry || universitiesLoading}
+                          options={universities}
+                          getOptionLabel={(option) => option.name}
+                          isOptionEqualToValue={(option, selected) => option.id === selected.id}
+                          renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                              {option.name}
+                              {option.city ? ` — ${option.city}` : ""}
+                            </li>
+                          )}
+                          value={
+                            universities.find((university) => university.id === universityId) ??
+                            null
+                          }
+                          onChange={(_event, option) =>
+                            onUniversityChange(option ? option.id : "")
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              error={
+                                Boolean(errors.targetUniversity) ||
+                                Boolean(errors.universityId) ||
+                                universitiesError
+                              }
+                              fullWidth
+                              helperText={universityHelperText}
+                              id={field.name}
+                              label="Target University"
+                              required
+                              sx={fieldSx}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  )}
+
+                  {/*
+                    The course follows the university: a catalogue university offers its
+                    courses, a custom one has none to offer so the name is typed.
+                  */}
+                  {useCustomUniversity || !universityId ? (
+                    <Controller
+                      control={control}
+                      name="courseName"
+                      rules={{ required: "Course is required." }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          disabled={!targetUniversity}
+                          error={Boolean(errors.courseName)}
+                          fullWidth
+                          helperText={courseHelperText}
+                          id={field.name}
+                          label="Course"
+                          required
+                          slotProps={alwaysVisibleLabelSlotProps}
+                          sx={fieldSx}
+                          onChange={(event) => onCourseNameChange(event.target.value)}
+                        />
+                      )}
+                    />
+                  ) : (
+                    <Controller
+                      control={control}
+                      name="courseName"
+                      rules={{ required: "Course is required." }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          disabled={coursesLoading}
+                          options={courses}
+                          getOptionLabel={(option) => option.name}
+                          isOptionEqualToValue={(option, selected) => option.id === selected.id}
+                          renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                              {option.name}
+                              {option.code ? ` (${option.code})` : ""}
+                            </li>
+                          )}
+                          value={courses.find((course) => course.id === courseId) ?? null}
+                          onChange={(_event, option) =>
+                            onCourseChange(option ? option.id : "")
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              error={
+                                Boolean(errors.courseName) ||
+                                Boolean(errors.courseId) ||
+                                coursesError
+                              }
+                              fullWidth
+                              helperText={courseHelperText}
+                              id={field.name}
+                              label="Course"
+                              required
+                              sx={fieldSx}
+                              onBlur={field.onBlur}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  )}
+
                   <Stack direction="row" spacing={2}>
                     <Controller
                       control={control}
@@ -435,7 +556,7 @@ export function ApplicationForm({
                 type="submit"
                 variant="contained"
               >
-                {isSubmitting ? "Saving..." : "Save Application"}
+                {isSubmitting ? "Saving..." : isEditMode ? "Save Changes" : "Save Application"}
               </Button>
             </Stack>
           </Stack>
