@@ -15,14 +15,24 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { useState } from "react";
+import { AddRounded } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { useAuth } from "@/app/auth/authHooks";
+import { PERMISSIONS } from "@/config/permissions/permissions";
+import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
 import { UniversityHero } from "@/modules/universities/components/UniversityHero";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { courseDetailsPath, universitiesRoutePaths } from "@/modules/universities/universitiesRoutePaths";
-import { useUniversity, useUniversityCourses } from "@/modules/universities/useUniversitiesCatalog";
+import {
+  useUniversity,
+  useUniversityCourses,
+  useUniversityMutations,
+} from "@/modules/universities/useUniversitiesCatalog";
+import type { CourseInput } from "@/modules/universities/universitiesCatalogService";
 import {
   getEligibilityChipSx,
   sectionCardHeaderSx,
@@ -30,6 +40,7 @@ import {
   universitiesPagePaperSx,
 } from "@/modules/universities/universitiesStyles";
 import { FeedbackState } from "@/shared/components/FeedbackState";
+import { Snackbar, Alert } from "@mui/material";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import type { EligibilityStatus } from "@/modules/universities/universities.types";
 import { dataTableSx } from "@/shared/ui/tableStyles";
@@ -46,6 +57,28 @@ export function UniversityDetailsPage() {
   const navigate = useNavigate();
   const { data: university, isLoading: universityLoading } = useUniversity(universityId);
   const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
+  // Courses can be added one at a time here, as a follow-up to a bulk import that
+  // brought in the university without its courses. Same permission the import uses.
+  const { saveCourseMutation } = useUniversityMutations();
+  const { hasPermissions } = useAuth();
+  const canAddCourse = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
+  const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
+  const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(
+    null,
+  );
+
+  const handleSaveCourse = async (input: CourseInput) => {
+    if (!universityId) {
+      return;
+    }
+    try {
+      await saveCourseMutation.mutateAsync({ ...input, universityId });
+      setCourseDrawerOpen(false);
+      setSnack({ message: "Course added", severity: "success" });
+    } catch {
+      setSnack({ message: "Failed to save course", severity: "error" });
+    }
+  };
 
   if (universityLoading || coursesLoading) {
     return <LoadingScreen />;
@@ -125,13 +158,26 @@ export function UniversityDetailsPage() {
                   <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
                     Courses at {university.shortName} ({courses.length})
                   </Typography>
-                  <Button
-                    size="small"
-                    sx={{ textTransform: "none" }}
-                    onClick={() => navigate(universitiesRoutePaths.search)}
-                  >
-                    View all
-                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    {canAddCourse ? (
+                      <Button
+                        size="small"
+                        startIcon={<AddRounded />}
+                        sx={{ textTransform: "none" }}
+                        variant="outlined"
+                        onClick={() => setCourseDrawerOpen(true)}
+                      >
+                        Add course
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="small"
+                      sx={{ textTransform: "none" }}
+                      onClick={() => navigate(universitiesRoutePaths.search)}
+                    >
+                      View all
+                    </Button>
+                  </Stack>
                 </Stack>
                 <TableContainer>
                   <Table sx={dataTableSx}>
@@ -219,6 +265,26 @@ export function UniversityDetailsPage() {
           </Stack>
         </Box>
       </Box>
+
+      {canAddCourse && universityId ? (
+        <CourseFormDrawer
+          open={courseDrawerOpen}
+          universityId={universityId}
+          onClose={() => setCourseDrawerOpen(false)}
+          onSave={handleSaveCourse}
+        />
+      ) : null}
+
+      <Snackbar
+        anchorOrigin={{ horizontal: "center", vertical: "bottom" }}
+        autoHideDuration={3000}
+        open={Boolean(snack)}
+        onClose={() => setSnack(null)}
+      >
+        <Alert severity={snack?.severity ?? "success"} variant="filled">
+          {snack?.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 }

@@ -223,6 +223,11 @@ export interface CourseImportPreviewRow extends CourseImportFields {
   universityId: string;
   status: "NEW" | "DUPLICATE";
   existingCourseId: string | null;
+  /**
+   * Optional cells the backend could not parse. The row still imports — these name the
+   * values that were dropped, so the user can fix the source file if they care.
+   */
+  warnings?: string[];
 }
 
 export interface CourseImportInvalidRow {
@@ -265,4 +270,93 @@ export interface CourseImportResultResponse {
   skipped: number;
   failed: number;
   results: CourseImportItemResult[];
+}
+
+/* ── University import ──────────────────────────────────────────────────────
+ * Two-phase like the course import, but the unit is a university that may carry
+ * courses. Only university_name, country_code and university_type are required, so
+ * a three-column CSV imports universities on their own.
+ */
+
+export interface UniversityImportCourse {
+  name: string;
+  code: string | null;
+  studyLevel: string | null;
+  subjectArea: string | null;
+  durationMonths: number | null;
+  tuitionCurrency: string | null;
+  tuitionAmount: number | null;
+}
+
+export interface UniversityImportPreviewRow {
+  /** Source CSV line numbers — several rows collapse into one university, e.g. "2, 3". */
+  rowRef: string;
+  name: string;
+  countryCode: string;
+  city: string | null;
+  universityType: string | null;
+  qsRanking: number | null;
+  website: string | null;
+  status: "NEW" | "DUPLICATE";
+  existingUniversityId: string | null;
+  courses: UniversityImportCourse[];
+  /**
+   * Optional cells that could not be parsed, plus any course that had to be skipped.
+   * The university still imports. Each entry is prefixed with its source line, since
+   * one university may span several rows.
+   */
+  warnings?: string[];
+}
+
+export interface UniversityImportInvalidRow {
+  line: number;
+  values: Record<string, string | null>;
+  errors: string[];
+}
+
+export interface UniversityImportPreviewResponse {
+  totalRows: number;
+  summary: {
+    newUniversities: number;
+    duplicateUniversities: number;
+    invalidRows: number;
+    totalCourses: number;
+  };
+  universities: UniversityImportPreviewRow[];
+  invalidRows: UniversityImportInvalidRow[];
+}
+
+export type UniversityDuplicateAction = "SKIP" | "UPDATE" | "CREATE";
+
+export interface UniversityImportCommitItem {
+  name: string;
+  countryCode: string;
+  city: string | null;
+  universityType: string | null;
+  qsRanking: number | null;
+  website: string | null;
+  onDuplicate: UniversityDuplicateAction;
+  courses: UniversityImportCourse[];
+}
+
+export interface UniversityImportCommitPayload {
+  universities: UniversityImportCommitItem[];
+}
+
+export interface UniversityImportItemResult {
+  name: string;
+  countryCode: string;
+  action: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED";
+  universityId: string | null;
+  coursesCreated: number;
+  errors: string[];
+}
+
+export interface UniversityImportResultResponse {
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  coursesCreated: number;
+  results: UniversityImportItemResult[];
 }

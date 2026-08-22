@@ -113,6 +113,9 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
     }
   };
 
+  const partialCount =
+    previewResult?.courses.filter((row) => (row.warnings?.length ?? 0) > 0).length ?? 0;
+
   const handleToggleDuplicateDecision = (line: number, createAnyway: boolean) => {
     setDuplicateDecisions((prev) => ({ ...prev, [line]: createAnyway ? "CREATE" : "SKIP" }));
   };
@@ -183,8 +186,10 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
             <>
               <Alert severity="info">
                 Upload a CSV file using the exact headers below. The required columns are
-                university_name, country_code, and course_name. Nothing is written until you
-                review the preview and confirm.
+                university_name, country_code, course_name and study_level — every other column
+                is optional, and a cell that can&apos;t be read is dropped rather than failing the
+                row. The university must already exist in your catalogue. Nothing is written
+                until you review the preview and confirm.
               </Alert>
               <Stack
                 alignItems={{ xs: "stretch", sm: "center" }}
@@ -222,6 +227,9 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
                 <Chip color="success" label={`${previewResult.summary.newCourses} new`} size="small" />
                 <Chip color="warning" label={`${previewResult.summary.duplicateCourses} duplicate`} size="small" />
                 <Chip color="error" label={`${previewResult.summary.invalidRows} invalid`} size="small" />
+                {partialCount > 0 ? (
+                  <Chip color="info" label={`${partialCount} partial`} size="small" variant="outlined" />
+                ) : null}
               </Stack>
 
               {previewResult.courses.length > 0 ? (
@@ -241,7 +249,14 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
                         <TableRow key={row.line}>
                           <TableCell>{row.line}</TableCell>
                           <TableCell>{row.universityName} ({row.countryCode})</TableCell>
-                          <TableCell>{row.courseName}</TableCell>
+                          <TableCell>
+                            {row.courseName}
+                            {row.warnings?.length ? (
+                              <Typography color="text.secondary" sx={{ fontSize: 11 }}>
+                                Imported without: {row.warnings.join("; ")}
+                              </Typography>
+                            ) : null}
+                          </TableCell>
                           <TableCell>
                             <Chip
                               color={row.status === "NEW" ? "success" : "warning"}

@@ -27,6 +27,7 @@ import { useAuth } from "@/app/auth/useAuth";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { CourseImportDialog } from "@/modules/universities/components/CourseImportDialog";
+import { UniversityImportDialog } from "@/modules/universities/components/UniversityImportDialog";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import {
   useCountries,
@@ -115,9 +116,10 @@ export function UniversitiesBrowsePage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [shortlistedCourseIds, setShortlistedCourseIds] = useState<string[]>([]);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
-  // Course import writes to the shared catalogue; CourseImportService guards both
-  // phases with UNIVERSITY_MANAGE, so the trigger is gated on the same permission.
+  // Both imports write to the shared catalogue; their services guard every phase with
+  // UNIVERSITY_MANAGE, so the triggers are gated on the same permission.
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [universityImportDialogOpen, setUniversityImportDialogOpen] = useState(false);
   const { hasPermissions } = useAuth();
   const canImportCourses = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
   const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(null);
@@ -255,6 +257,17 @@ export function UniversitiesBrowsePage() {
             startIcon={<UploadRounded />}
             sx={{ textTransform: "none" }}
             variant="outlined"
+            onClick={() => setUniversityImportDialogOpen(true)}
+          >
+            Import universities
+          </Button>
+        ) : null}
+        {canImportCourses ? (
+          <Button
+            size="small"
+            startIcon={<UploadRounded />}
+            sx={{ textTransform: "none" }}
+            variant="outlined"
             onClick={() => setImportDialogOpen(true)}
           >
             Import courses
@@ -270,6 +283,11 @@ export function UniversitiesBrowsePage() {
           Add university
         </Button>
       </Box>
+
+      <UniversityImportDialog
+        open={universityImportDialogOpen}
+        onClose={() => setUniversityImportDialogOpen(false)}
+      />
 
       <CourseImportDialog open={importDialogOpen} onClose={() => setImportDialogOpen(false)} />
 

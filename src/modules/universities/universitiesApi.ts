@@ -18,11 +18,42 @@ import type {
   UniversitiesPageResponse,
   UniversityCoursesPageResponse,
   UniversityDetailDto,
+  UniversityImportCommitPayload,
+  UniversityImportPreviewResponse,
+  UniversityImportResultResponse,
   UniversitySummaryDto,
   UpdateUniversityPayload,
 } from "@/modules/universities/universitiesApi.types";
 
 const DEFAULT_PAGE_SIZE = 100;
+
+/**
+ * Builds the multipart body + config for a CSV upload.
+ *
+ * The auth config sets a JSON Content-Type; axios must own that header for multipart so
+ * it can append the boundary. Depending on the axios version `headers` is either an
+ * AxiosHeaders instance (has .delete) or a plain object, hence the guarded removal.
+ */
+function buildCsvUpload(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const config = createAuthRequestConfig();
+
+  try {
+    if (config.headers && typeof (config.headers as any).delete === "function") {
+      (config.headers as any).delete("Content-Type");
+    }
+  } catch {
+    // ignore header adjustment failures and proceed — axios will attempt to set headers
+  }
+  config.headers = {
+    ...config.headers,
+    "Content-Type": "multipart/form-data",
+  };
+
+  return { formData, config };
+}
 
 async function fetchAllUniversityPages<T>(
   fetchPage: (page: number, size: number) => Promise<UniversitiesPageResponse<T>>,
@@ -143,22 +174,7 @@ export const universitiesApi = {
 
   /** Parses + validates the CSV and reports what would happen — writes nothing. */
   previewCourseImport: async (file: File): Promise<CourseImportPreviewResponse> => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const config = createAuthRequestConfig();
-
-    try {
-      if (config.headers && typeof (config.headers as any).delete === "function") {
-        (config.headers as any).delete("Content-Type");
-      }
-    } catch (e) {
-      // ignore header adjustment failures and proceed — axios will attempt to set headers
-    }
-    config.headers = {
-      ...config.headers,
-      "Content-Type": "multipart/form-data",
-    };
+    const { formData, config } = buildCsvUpload(file);
 
     const response = await httpClient.post<CourseImportPreviewResponse>(
       `${API_CONFIG.adminCourses}/import/preview`,
@@ -175,6 +191,39 @@ export const universitiesApi = {
       `${API_CONFIG.adminCourses}/import/commit`,
       payload,
       createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** Same two-phase flow as the course import, but the unit is a university. */
+  previewUniversityImport: async (file: File): Promise<UniversityImportPreviewResponse> => {
+    const { formData, config } = buildCsvUpload(file);
+
+    const response = await httpClient.post<UniversityImportPreviewResponse>(
+      `${API_CONFIG.adminUniversities}/import/preview`,
+      formData,
+      config,
+    );
+
+    return response.data;
+  },
+
+  commitUniversityImport: async (
+    payload: UniversityImportCommitPayload,
+  ): Promise<UniversityImportResultResponse> => {
+    const response = await httpClient.post<UniversityImportResultResponse>(
+      `${API_CONFIG.adminUniversities}/import/commit`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** CSV template with the expected university columns, served by the backend. */
+  downloadUniversityImportTemplate: async (): Promise<string> => {
+    const response = await httpClient.get<string>(
+      `${API_CONFIG.adminUniversities}/import/template`,
+      { ...createAuthRequestConfig(), responseType: "text" },
     );
     return response.data;
   },

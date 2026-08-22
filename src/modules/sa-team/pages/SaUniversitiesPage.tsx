@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { CourseFormDrawer } from "@/modules/sa-team/components/CourseFormDrawer";
+import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
