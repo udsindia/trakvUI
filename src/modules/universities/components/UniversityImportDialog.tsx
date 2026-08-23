@@ -25,6 +25,16 @@ import {
   Typography,
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  UNIVERSITY_IMPORT_FIELDS,
+  UNIVERSITY_IMPORT_GROUPS,
+  UNIVERSITY_IMPORT_REQUIRED,
+  IMPORT_FIELD_LABELS,
+} from "@/config/universities/importFields";
+import {
+  ImportColumnMapper,
+  autoMapHeaders,
+} from "@/modules/universities/components/ImportColumnMapper";
 import { universitiesApi } from "@/modules/universities/universitiesApi";
 import { universitiesCatalogQueryKey } from "@/modules/universities/universitiesCatalogService";
 import type {
@@ -44,14 +54,13 @@ type UniversityImportDialogProps = {
  * Nothing is written until the user confirms.
  *
  * Mirrors CourseImportDialog, with two differences that come from the backend:
- *   - a university may carry courses, so several CSV lines collapse into one preview row
- *     (hence rowRef rather than a single line number), and
+ *   - rows describing the same university collapse into one preview row (hence rowRef
+ *     rather than a single line number), and
  *   - duplicates offer UPDATE as well as SKIP/CREATE.
  *
- * Course columns are optional — a CSV of just university_name and country_code imports
- * universities on their own. Parsing is lenient: only those two fields are fatal, a bad
- * optional cell is dropped with a warning, and an unusable course is skipped without
- * costing the university.
+ * Universities only. Courses are imported from their own button, against universities
+ * that already exist. Parsing is lenient: only university_name and country_code are
+ * fatal, and a bad optional cell is dropped with a warning rather than failing the row.
  *
  * Both phases are guarded by UNIVERSITY_MANAGE (UniversityImportService), so hosts
  * should gate the trigger on the same permission.
@@ -64,6 +73,9 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
   const [importing, setImporting] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [detectedHeaders, setDetectedHeaders] = useState<string[] | null>(null);
+  const [mappingNotice, setMappingNotice] = useState<string | null>(null);
+  const [mapping, setMapping] = useState<Record<string, string>>({});
   const [previewResult, setPreviewResult] = useState<UniversityImportPreviewResponse | null>(null);
   const [commitResult, setCommitResult] = useState<UniversityImportResultResponse | null>(null);
   const [duplicateDecisions, setDuplicateDecisions] = useState<
@@ -111,6 +123,36 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
 
     setSelectedFile(file);
     resetPreview();
+    void detectColumns(file);
+  };
+
+  /**
+   * Reads the file's own headers so the mapping step can be shown before previewing.
+   * A failure here is not fatal: the preview still runs and the backend falls back to
+   * matching header text, exactly as it did before mapping existed.
+   */
+  const detectColumns = async (file: File) => {
+    setMappingNotice(null);
+    try {
+      const headers = await universitiesApi.detectUniversityImportColumns(file);
+      setDetectedHeaders(headers);
+      setMapping(autoMapHeaders(UNIVERSITY_IMPORT_FIELDS, headers));
+    } catch (error) {
+      setDetectedHeaders(null);
+      setMapping({});
+      // Not fatal — preview still works off header-name matching. But it must not be
+      // silent: a missing mapping step with no explanation is impossible to diagnose,
+      // and the usual cause is a server that predates this endpoint.
+      const status =
+        typeof error === "object" && error !== null && "response" in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
+      setMappingNotice(
+        status === 404
+          ? "Column mapping is unavailable — the server does not have this endpoint yet. Restart the backend to enable it. You can still import if the file uses our column names."
+          : "Could not read this file's column headers, so the mapping step is unavailable. You can still import if the file uses our column names.",
+      );
+    }
   };
 
   const handlePreviewImport = async () => {
@@ -125,7 +167,7 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
     setDuplicateDecisions({});
 
     try {
-      const result = await universitiesApi.previewUniversityImport(selectedFile);
+      const result = await universitiesApi.previewUniversityImport(selectedFile, mapping);
       setPreviewResult(result);
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Unable to preview the import.");
@@ -149,15 +191,16 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
       universityType: row.universityType,
       qsRanking: row.qsRanking,
       website: row.website,
+      livingCostCurrency: row.livingCostCurrency,
+      livingCostAmount: row.livingCostAmount,
       onDuplicate: row.status === "DUPLICATE" ? duplicateDecisions[row.rowRef] ?? "SKIP" : "SKIP",
-      courses: row.courses,
     }));
 
     try {
       const result = await universitiesApi.commitUniversityImport({ universities });
       setCommitResult(result);
       setPreviewResult(null);
-      if (result.created > 0 || result.updated > 0 || result.coursesCreated > 0) {
+      if (result.created > 0 || result.updated > 0) {
         await queryClient.invalidateQueries({ queryKey: universitiesCatalogQueryKey });
       }
     } catch (error) {
@@ -169,6 +212,9 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
 
   const handleClose = () => {
     setSelectedFile(null);
+    setDetectedHeaders(null);
+    setMapping({});
+    setMappingNotice(null);
     setPreviewResult(null);
     setCommitResult(null);
     setImportError(null);
@@ -196,11 +242,9 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                 Upload a CSV using the template headers. Only university_name and country_code
                 are required — every other cell is optional, and anything that can&apos;t be read
                 is dropped with a warning rather than failing the row. Country codes are 2-letter
-                ISO (GB, not GBR); university_type is PUBLIC, PRIVATE or RESEARCH_INTENSIVE. Fill
-                the course columns to create courses at the same time, repeating the university on
-                each row to attach several — a course that can&apos;t be created is skipped on its
-                own and the university still imports. Nothing is written until you review the
-                preview and confirm.
+                ISO (GB, not GBR); university_type is PUBLIC, PRIVATE or RESEARCH_INTENSIVE. Use
+                Import courses to add courses to these universities afterwards. Nothing is written
+                until you review the preview and confirm.
               </Alert>
               <Stack
                 alignItems={{ xs: "stretch", sm: "center" }}
@@ -230,6 +274,22 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                   Selected file: {selectedFile.name}
                 </Typography>
               ) : null}
+
+              {mappingNotice && !previewResult ? (
+                <Alert severity="warning">{mappingNotice}</Alert>
+              ) : null}
+
+              {selectedFile && detectedHeaders && !previewResult ? (
+                <ImportColumnMapper
+                  groups={UNIVERSITY_IMPORT_GROUPS}
+                  headers={detectedHeaders}
+                  labels={IMPORT_FIELD_LABELS}
+                  requiredFields={UNIVERSITY_IMPORT_REQUIRED}
+                  value={mapping}
+                  onChange={setMapping}
+                />
+              ) : null}
+
             </>
           ) : null}
 
@@ -254,11 +314,6 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                   label={`${previewResult.summary.invalidRows} invalid`}
                   size="small"
                 />
-                <Chip
-                  label={`${previewResult.summary.totalCourses} courses`}
-                  size="small"
-                  variant="outlined"
-                />
                 {partialCount > 0 ? (
                   <Chip color="info" label={`${partialCount} partial`} size="small" variant="outlined" />
                 ) : null}
@@ -272,7 +327,6 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                         <TableCell>Line</TableCell>
                         <TableCell>University</TableCell>
                         <TableCell>Type</TableCell>
-                        <TableCell>Courses</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell>Action</TableCell>
                       </TableRow>
@@ -295,7 +349,6 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                             ) : null}
                           </TableCell>
                           <TableCell>{row.universityType ?? "—"}</TableCell>
-                          <TableCell>{row.courses.length}</TableCell>
                           <TableCell>
                             <Chip
                               color={row.status === "NEW" ? "success" : "warning"}
@@ -363,8 +416,7 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
             <>
               <Alert severity={commitResult.failed > 0 ? "warning" : "success"}>
                 {commitResult.created} created, {commitResult.updated} updated,{" "}
-                {commitResult.skipped} skipped, {commitResult.failed} failed —{" "}
-                {commitResult.coursesCreated} courses added.
+                {commitResult.skipped} skipped, {commitResult.failed} failed.
               </Alert>
               {commitResult.results.length > 0 ? (
                 <List dense sx={{ maxHeight: 240, overflow: "auto" }}>
@@ -376,9 +428,7 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                     >
                       <ListItemText
                         primaryTypographyProps={{ fontSize: 12.5 }}
-                        primary={`${result.name} (${result.countryCode}) — ${result.action}${
-                          result.coursesCreated > 0 ? `, ${result.coursesCreated} courses` : ""
-                        }`}
+                        primary={`${result.name} (${result.countryCode}) — ${result.action}`}
                         secondary={result.errors.length > 0 ? result.errors.join("; ") : null}
                         secondaryTypographyProps={{ color: "error", fontSize: 11.5 }}
                       />

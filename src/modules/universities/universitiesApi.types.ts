@@ -284,12 +284,31 @@ export interface CourseImportFields {
   courseUrl: string | null;
   applicationFeeCurrency: string | null;
   applicationFeeAmount: number | null;
-  livingCostCurrency: string | null;
-  livingCostAmount: number | null;
   courseStartDate: string | null; // yyyy-MM-dd
   courseEndDate: string | null;   // yyyy-MM-dd
   pgwpEligible: boolean | null;
   scholarshipNote: string | null;
+  intakeMonth: string | null;
+  intakeYear: number | null;
+  intakeAvailable: boolean | null;
+  applicationDeadline: string | null; // yyyy-MM-dd
+  // ── Eligibility. null means the test is not accepted. ──
+  ieltsOverall: number | null;
+  /** One minimum applied to all four IELTS bands. */
+  ieltsPerBand: number | null;
+  toeflOverall: number | null;
+  pteOverall: number | null;
+  duolingoOverall: number | null;
+  interEnglishOverall: number | null;
+  /** MOI is a waiver, not a score. */
+  moiAccepted: boolean | null;
+  greScore: number | null;
+  gmatScore: number | null;
+  satScore: number | null;
+  dmatScore: number | null;
+  minGpa: number | null;
+  gpaScale: string | null;
+  maxBacklogs: number | null;
 }
 
 export interface CourseImportPreviewRow extends CourseImportFields {
@@ -347,20 +366,9 @@ export interface CourseImportResultResponse {
 }
 
 /* ── University import ──────────────────────────────────────────────────────
- * Two-phase like the course import, but the unit is a university that may carry
- * courses. Only university_name, country_code and university_type are required, so
- * a three-column CSV imports universities on their own.
+ * Two-phase like the course import. Universities only — courses have their own
+ * importer, so this one never creates them.
  */
-
-export interface UniversityImportCourse {
-  name: string;
-  code: string | null;
-  studyLevel: string | null;
-  subjectArea: string | null;
-  durationMonths: number | null;
-  tuitionCurrency: string | null;
-  tuitionAmount: number | null;
-}
 
 export interface UniversityImportPreviewRow {
   /** Source CSV line numbers — several rows collapse into one university, e.g. "2, 3". */
@@ -371,9 +379,11 @@ export interface UniversityImportPreviewRow {
   universityType: string | null;
   qsRanking: number | null;
   website: string | null;
+  /** Living cost belongs to the place, so it is held here rather than per course. */
+  livingCostCurrency: string | null;
+  livingCostAmount: number | null;
   status: "NEW" | "DUPLICATE";
   existingUniversityId: string | null;
-  courses: UniversityImportCourse[];
   /**
    * Optional cells that could not be parsed, plus any course that had to be skipped.
    * The university still imports. Each entry is prefixed with its source line, since
@@ -394,7 +404,6 @@ export interface UniversityImportPreviewResponse {
     newUniversities: number;
     duplicateUniversities: number;
     invalidRows: number;
-    totalCourses: number;
   };
   universities: UniversityImportPreviewRow[];
   invalidRows: UniversityImportInvalidRow[];
@@ -409,8 +418,9 @@ export interface UniversityImportCommitItem {
   universityType: string | null;
   qsRanking: number | null;
   website: string | null;
+  livingCostCurrency: string | null;
+  livingCostAmount: number | null;
   onDuplicate: UniversityDuplicateAction;
-  courses: UniversityImportCourse[];
 }
 
 export interface UniversityImportCommitPayload {
@@ -422,7 +432,6 @@ export interface UniversityImportItemResult {
   countryCode: string;
   action: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED";
   universityId: string | null;
-  coursesCreated: number;
   errors: string[];
 }
 
@@ -431,6 +440,5 @@ export interface UniversityImportResultResponse {
   updated: number;
   skipped: number;
   failed: number;
-  coursesCreated: number;
   results: UniversityImportItemResult[];
 }

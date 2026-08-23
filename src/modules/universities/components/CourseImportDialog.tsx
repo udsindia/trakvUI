@@ -26,6 +26,16 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import sampleCsvUrl from "@/assets/course-import-sample.csv?url";
+import {
+  COURSE_IMPORT_FIELDS,
+  COURSE_IMPORT_GROUPS,
+  COURSE_IMPORT_REQUIRED,
+  IMPORT_FIELD_LABELS,
+} from "@/config/universities/importFields";
+import {
+  ImportColumnMapper,
+  autoMapHeaders,
+} from "@/modules/universities/components/ImportColumnMapper";
 import { universitiesApi } from "@/modules/universities/universitiesApi";
 import { universitiesCatalogQueryKey } from "@/modules/universities/universitiesCatalogService";
 import type {
@@ -55,6 +65,9 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
   const [importing, setImporting] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [detectedHeaders, setDetectedHeaders] = useState<string[] | null>(null);
+  const [mappingNotice, setMappingNotice] = useState<string | null>(null);
+  const [mapping, setMapping] = useState<Record<string, string>>({});
   const [previewResult, setPreviewResult] = useState<CourseImportPreviewResponse | null>(null);
   const [commitResult, setCommitResult] = useState<CourseImportResultResponse | null>(null);
   const [duplicateDecisions, setDuplicateDecisions] = useState<Record<number, "SKIP" | "CREATE">>({});
@@ -90,6 +103,36 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
     setPreviewResult(null);
     setCommitResult(null);
     setImportError(null);
+    void detectColumns(file);
+  };
+
+  /**
+   * Reads the file's own headers so the mapping step can be shown before previewing.
+   * A failure here is not fatal — the preview still runs and the backend falls back to
+   * matching header text, exactly as it did before mapping existed.
+   */
+  const detectColumns = async (file: File) => {
+    setMappingNotice(null);
+    try {
+      const headers = await universitiesApi.detectCourseImportColumns(file);
+      setDetectedHeaders(headers);
+      setMapping(autoMapHeaders(COURSE_IMPORT_FIELDS, headers));
+    } catch (error) {
+      setDetectedHeaders(null);
+      setMapping({});
+      // Not fatal — preview still works off header-name matching. But it must not be
+      // silent: a missing mapping step with no explanation is impossible to diagnose,
+      // and the usual cause is a server that predates this endpoint.
+      const status =
+        typeof error === "object" && error !== null && "response" in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
+      setMappingNotice(
+        status === 404
+          ? "Column mapping is unavailable — the server does not have this endpoint yet. Restart the backend to enable it. You can still import if the file uses our column names."
+          : "Could not read this file's column headers, so the mapping step is unavailable. You can still import if the file uses our column names.",
+      );
+    }
   };
 
   const handlePreviewImport = async () => {
@@ -104,7 +147,7 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
     setDuplicateDecisions({});
 
     try {
-      const result = await universitiesApi.previewCourseImport(selectedFile);
+      const result = await universitiesApi.previewCourseImport(selectedFile, mapping);
       setPreviewResult(result);
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Unable to preview the import.");
@@ -127,28 +170,17 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
     setImportError(null);
 
     try {
-      const items: CourseImportCommitItem[] = previewResult.courses.map((row) => ({
-        universityId: row.universityId,
-        universityName: row.universityName,
-        countryCode: row.countryCode,
-        courseName: row.courseName,
-        code: row.code,
-        studyLevel: row.studyLevel,
-        subjectArea: row.subjectArea,
-        durationMonths: row.durationMonths,
-        tuitionCurrency: row.tuitionCurrency,
-        tuitionAmount: row.tuitionAmount,
-        courseUrl: row.courseUrl,
-        applicationFeeCurrency: row.applicationFeeCurrency,
-        applicationFeeAmount: row.applicationFeeAmount,
-        livingCostCurrency: row.livingCostCurrency,
-        livingCostAmount: row.livingCostAmount,
-        courseStartDate: row.courseStartDate,
-        courseEndDate: row.courseEndDate,
-        pgwpEligible: row.pgwpEligible,
-        scholarshipNote: row.scholarshipNote,
-        onDuplicate: duplicateDecisions[row.line] ?? "SKIP",
-      }));
+      // Spread rather than listing fields: the preview row IS the commit item plus a
+      // few preview-only extras, and enumerating them by hand had already silently
+      // dropped the intake columns. Destructuring the extras out keeps the two in step
+      // as fields are added.
+      const items: CourseImportCommitItem[] = previewResult.courses.map((row) => {
+        const { line, status, existingCourseId, warnings, ...fields } = row;
+        void status;
+        void existingCourseId;
+        void warnings;
+        return { ...fields, onDuplicate: duplicateDecisions[line] ?? "SKIP" };
+      });
 
       const result = await universitiesApi.commitCourseImport({ courses: items });
       setCommitResult(result);
@@ -165,6 +197,9 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
 
   const handleClose = () => {
     setSelectedFile(null);
+    setDetectedHeaders(null);
+    setMapping({});
+    setMappingNotice(null);
     setImportError(null);
     setPreviewResult(null);
     setCommitResult(null);
@@ -215,6 +250,22 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
                   Selected file: {selectedFile.name}
                 </Typography>
               ) : null}
+
+              {mappingNotice && !previewResult ? (
+                <Alert severity="warning">{mappingNotice}</Alert>
+              ) : null}
+
+              {selectedFile && detectedHeaders && !previewResult ? (
+                <ImportColumnMapper
+                  groups={COURSE_IMPORT_GROUPS}
+                  headers={detectedHeaders}
+                  labels={IMPORT_FIELD_LABELS}
+                  requiredFields={COURSE_IMPORT_REQUIRED}
+                  value={mapping}
+                  onChange={setMapping}
+                />
+              ) : null}
+
             </>
           ) : null}
 

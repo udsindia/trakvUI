@@ -273,18 +273,6 @@ export function CourseFormDrawer({
               }))
             }
           />
-          <TextField
-            fullWidth
-            label="Living costs"
-            size="small"
-            value={form.fees.livingCosts}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                fees: { ...current.fees, livingCosts: event.target.value },
-              }))
-            }
-          />
         </Stack>
         <Stack direction="row" spacing={1.5}>
           <TextField

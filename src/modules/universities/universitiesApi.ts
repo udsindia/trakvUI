@@ -37,9 +37,15 @@ const DEFAULT_PAGE_SIZE = 100;
  * it can append the boundary. Depending on the axios version `headers` is either an
  * AxiosHeaders instance (has .delete) or a plain object, hence the guarded removal.
  */
-function buildCsvUpload(file: File) {
+function buildCsvUpload(file: File, mapping: Record<string, string> = {}) {
   const formData = new FormData();
   formData.append("file", file);
+  // mapping_<ourField>=<theirColumn>, the same convention the lead import uses.
+  for (const [field, header] of Object.entries(mapping)) {
+    if (header) {
+      formData.append(`mapping_${field}`, header);
+    }
+  }
 
   const config = createAuthRequestConfig();
 
@@ -175,9 +181,23 @@ export const universitiesApi = {
     return response.data;
   },
 
-  /** Parses + validates the CSV and reports what would happen — writes nothing. */
-  previewCourseImport: async (file: File): Promise<CourseImportPreviewResponse> => {
+  /** Column headers in the uploaded file, for the mapping step. */
+  detectCourseImportColumns: async (file: File): Promise<string[]> => {
     const { formData, config } = buildCsvUpload(file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.adminCourses}/import/columns`,
+      formData,
+      config,
+    );
+    return response.data.headers ?? [];
+  },
+
+  /** Parses + validates the CSV and reports what would happen — writes nothing. */
+  previewCourseImport: async (
+    file: File,
+    mapping: Record<string, string> = {},
+  ): Promise<CourseImportPreviewResponse> => {
+    const { formData, config } = buildCsvUpload(file, mapping);
 
     const response = await httpClient.post<CourseImportPreviewResponse>(
       `${API_CONFIG.adminCourses}/import/preview`,
@@ -198,9 +218,22 @@ export const universitiesApi = {
     return response.data;
   },
 
-  /** Same two-phase flow as the course import, but the unit is a university. */
-  previewUniversityImport: async (file: File): Promise<UniversityImportPreviewResponse> => {
+  detectUniversityImportColumns: async (file: File): Promise<string[]> => {
     const { formData, config } = buildCsvUpload(file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.adminUniversities}/import/columns`,
+      formData,
+      config,
+    );
+    return response.data.headers ?? [];
+  },
+
+  /** Same two-phase flow as the course import, but the unit is a university. */
+  previewUniversityImport: async (
+    file: File,
+    mapping: Record<string, string> = {},
+  ): Promise<UniversityImportPreviewResponse> => {
+    const { formData, config } = buildCsvUpload(file, mapping);
 
     const response = await httpClient.post<UniversityImportPreviewResponse>(
       `${API_CONFIG.adminUniversities}/import/preview`,
