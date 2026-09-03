@@ -39,3 +39,8 @@ export function getApiErrorMessage(error: unknown, fallback = "Something went wr
       return fallback;
   }
 }
+
+/** True for a 409 — the server refused because the record is still referenced. */
+export function isConflictError(error: unknown) {
+  return axios.isAxiosError(error) && error.response?.status === 409;
+}

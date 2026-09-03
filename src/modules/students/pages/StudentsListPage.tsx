@@ -15,6 +15,7 @@ import {
 import { studentsApi, type BackendStudent } from "@/modules/students/studentsApi";
 import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
+import { joinPhoneNumber } from "@/shared/utils/phone";
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -35,7 +36,7 @@ function mapBackendStudentToRow(
     id: student.id,
     name: name || student.email || "—",
     email: student.email ?? "",
-    phone: student.phone ?? "",
+    phone: joinPhoneNumber(student.countryCode, student.phone),
     nationality: student.nationality ?? "",
     highestDegree: student.highestDegree ?? "",
     // Falls back to an em-dash when the viewer cannot list users (no USER_VIEW).
@@ -60,7 +61,10 @@ export function StudentsListPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["students"],
+    // Distinct from ["students", "options"], which caches the picker-shaped rows —
+    // see the note in useApplicationFormController. Both still match an
+    // invalidateQueries({ queryKey: ["students"] }) prefix invalidation.
+    queryKey: ["students", "list"],
     queryFn: studentsApi.getStudents,
   });
 

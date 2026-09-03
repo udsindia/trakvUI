@@ -1,5 +1,6 @@
 import { httpClient } from "@/shared/services/http/client";
 import { API_CONFIG } from "@/config/api/config";
+import { joinPhoneNumber } from "@/shared/utils/phone";
 
 /** A student option for the application create picker. */
 export interface StudentOption {
@@ -15,6 +16,7 @@ interface BackendStudentSummary {
   firstName?: string;
   lastName?: string;
   email?: string;
+  countryCode?: string;
   phone?: string;
 }
 
@@ -42,7 +44,7 @@ export const studentsApi = {
       id: s.id,
       name: `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim() || s.email || s.id,
       email: s.email ?? "",
-      phone: s.phone ?? "",
+      phone: joinPhoneNumber(s.countryCode, s.phone),
     }));
   },
 };

@@ -21,6 +21,7 @@ import SearchRounded from "@mui/icons-material/SearchRounded";
 import StarRounded from "@mui/icons-material/StarRounded";
 import StarOutlineRounded from "@mui/icons-material/StarOutlineRounded";
 import AddRounded from "@mui/icons-material/AddRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
 import UploadRounded from "@mui/icons-material/UploadRounded";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/auth/useAuth";
@@ -35,9 +36,11 @@ import {
   useUniversityMutations,
 } from "@/modules/universities/useUniversitiesCatalog";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
+import type { University } from "@/modules/universities/universities.types";
 import { universityDetailsPath, courseDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { dataTableSx } from "@/shared/ui/tableStyles";
+import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 /* -----------------------------------------------------------------------
    Colour palette for university crests — cycles through brand tones
@@ -116,6 +119,7 @@ export function UniversitiesBrowsePage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [shortlistedCourseIds, setShortlistedCourseIds] = useState<string[]>([]);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [editingUniversity, setEditingUniversity] = useState<University | null>(null);
   // Both imports write to the shared catalogue; their services guard every phase with
   // UNIVERSITY_MANAGE, so the triggers are gated on the same permission.
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -126,13 +130,24 @@ export function UniversitiesBrowsePage() {
 
   const { saveUniversityMutation } = useUniversityMutations();
 
-  const handleAddUniversity = async (input: UniversityInput) => {
+  const handleSaveUniversity = async (input: UniversityInput) => {
+    const isEdit = Boolean(editingUniversity);
     try {
-      await saveUniversityMutation.mutateAsync(input);
+      await saveUniversityMutation.mutateAsync({
+        ...input,
+        id: editingUniversity?.id,
+      });
       setAddDrawerOpen(false);
-      setSnack({ message: "University added", severity: "success" });
-    } catch {
-      setSnack({ message: "Failed to add university", severity: "error" });
+      setEditingUniversity(null);
+      setSnack({
+        message: isEdit ? "University updated" : "University added",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnack({
+        message: getApiErrorMessage(error, `Failed to ${isEdit ? "update" : "add"} university`),
+        severity: "error",
+      });
     }
   };
 
@@ -141,12 +156,6 @@ export function UniversitiesBrowsePage() {
     isLoading: countriesLoading,
     isError: countriesError,
   } = useCountries();
-
-  // Auto-select first university when data loads
-  const displayedUniversityId =
-    selectedUniversityId ?? (universities.length > 0 ? universities[0].id : null);
-
-  const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
   const filteredUniversities = useMemo(() => {
     let result = universities;
@@ -157,13 +166,24 @@ export function UniversitiesBrowsePage() {
 
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter(
-        (u) => u.name.toLowerCase().includes(q) || u.country.toLowerCase().includes(q),
+      result = result.filter((u) =>
+        [u.name, u.shortName, u.city, u.country].some((field) =>
+          (field ?? "").toLowerCase().includes(q),
+        ),
       );
     }
 
     return result;
   }, [universities, searchQuery, selectedCountry]);
+
+  // The right-hand pane follows the filtered list: a search that no longer contains the
+  // selected university falls back to the first match rather than showing a stale one.
+  const displayedUniversityId =
+    (selectedUniversityId && filteredUniversities.some((u) => u.id === selectedUniversityId)
+      ? selectedUniversityId
+      : filteredUniversities[0]?.id) ?? null;
+
+  const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
   const coursesForSelected = useMemo(
     () => allCourses.filter((c) => c.universityId === displayedUniversityId),
@@ -203,7 +223,7 @@ export function UniversitiesBrowsePage() {
               </InputAdornment>
             ),
           }}
-          placeholder="University or country…"
+          placeholder="University, city or country…"
           size="small"
           sx={{
             "& .MuiOutlinedInput-root": { fontSize: 12.5 },
@@ -278,7 +298,10 @@ export function UniversitiesBrowsePage() {
           startIcon={<AddRounded />}
           sx={{ textTransform: "none" }}
           variant="contained"
-          onClick={() => setAddDrawerOpen(true)}
+          onClick={() => {
+            setEditingUniversity(null);
+            setAddDrawerOpen(true);
+          }}
         >
           Add university
         </Button>
@@ -444,14 +467,30 @@ export function UniversitiesBrowsePage() {
                       </Typography>
                     </Box>
                   </Stack>
-                  <Button
-                    size="small"
-                    sx={{ textTransform: "none" }}
-                    variant="outlined"
-                    onClick={() => navigate(universityDetailsPath(selectedUniversity.id))}
-                  >
-                    View University
-                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    {canImportCourses ? (
+                      <Button
+                        size="small"
+                        startIcon={<EditRounded />}
+                        sx={{ textTransform: "none" }}
+                        variant="outlined"
+                        onClick={() => {
+                          setEditingUniversity(selectedUniversity);
+                          setAddDrawerOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="small"
+                      sx={{ textTransform: "none" }}
+                      variant="outlined"
+                      onClick={() => navigate(universityDetailsPath(selectedUniversity.id))}
+                    >
+                      View University
+                    </Button>
+                  </Stack>
                 </Stack>
 
                 {/* Courses table */}
@@ -700,9 +739,12 @@ export function UniversitiesBrowsePage() {
 
       <UniversityFormDrawer
         open={addDrawerOpen}
-        university={null}
-        onClose={() => setAddDrawerOpen(false)}
-        onSave={handleAddUniversity}
+        university={editingUniversity}
+        onClose={() => {
+          setAddDrawerOpen(false);
+          setEditingUniversity(null);
+        }}
+        onSave={handleSaveUniversity}
       />
 
       <Snackbar

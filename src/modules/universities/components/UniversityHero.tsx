@@ -1,5 +1,5 @@
 import SchoolRounded from "@mui/icons-material/SchoolRounded";
-import { Avatar, Box, Chip, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Link, Stack, Typography } from "@mui/material";
 import type { University } from "@/modules/universities/universities.types";
 import { tagChipSx } from "@/modules/universities/universitiesStyles";
 
@@ -45,12 +45,21 @@ export function UniversityHero({ university, courseCount }: UniversityHeroProps)
               <Typography color="text.secondary" sx={{ fontSize: 13 }}>
                 {university.flag} {university.city}, {university.country}
               </Typography>
-              <Typography color="text.secondary" sx={{ fontSize: 13 }}>
-                Founded {university.founded}
-              </Typography>
-              <Typography color="text.secondary" sx={{ fontSize: 13 }}>
-                {university.website}
-              </Typography>
+              {university.founded ? (
+                <Typography color="text.secondary" sx={{ fontSize: 13 }}>
+                  Founded {university.founded}
+                </Typography>
+              ) : null}
+              {university.website ? (
+                <Link
+                  href={university.website}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  sx={{ fontSize: 13, fontWeight: 600 }}
+                >
+                  {university.website.replace(/^https?:\/\//, "")}
+                </Link>
+              ) : null}
             </Stack>
           </Box>
         </Stack>

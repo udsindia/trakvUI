@@ -119,7 +119,12 @@ export function useApplicationFormController(
   const useCustomUniversity = watch("useCustomUniversity");
 
   const { data: students } = useQuery({
-    queryKey: ["students"],
+    // "options", not a bare ["students"]: this fetcher returns picker-shaped
+    // StudentOption rows ({ id, name, email, phone }), while the students list fetches
+    // full StudentSummary rows under ["students", "list"]. One key for two shapes meant
+    // whichever page loaded last won the single cache entry, and the list then rendered
+    // options with no firstName/lastName — showing each student's email as their name.
+    queryKey: ["students", "options"],
     queryFn: studentsApi.getStudents,
   });
 

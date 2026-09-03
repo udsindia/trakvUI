@@ -15,6 +15,7 @@ import {
   type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
+import { joinPhoneNumber, splitPhoneNumber } from "@/shared/utils/phone";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -49,11 +50,10 @@ export function buildCreateLeadPayload(
   const firstName = nameParts[0] ?? "";
   const lastName = nameParts.slice(1).join(" ") || firstName;
 
-  // Split "+91 98765 43210" or "+91-9876543210" → countryCode="+91", phoneNo="9876543210"
-  const cleanPhone = values.phone.replace(/\s/g, "");
-  const phoneMatch = cleanPhone.match(/^(\+\d{1,3})(.+)$/);
-  const countryCode = phoneMatch?.[1] ?? "+91";
-  const phoneNo = (phoneMatch?.[2] ?? cleanPhone).replace(/\D/g, "");
+  // "+91 98765 43210" / "+919876543210" → countryCode="+91", phoneNo="9876543210".
+  // Matched against the real dial-code list — see splitPhoneNumber for why a width-based
+  // split silently ate the first digit of every number typed without a space.
+  const { countryCode, phoneNo } = splitPhoneNumber(values.phone);
 
   // "2024-09-01" → intakeMonth="September", year=2024
   const intakeDate = new Date(values.intakeDate);
@@ -121,7 +121,7 @@ export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
     isWhatsAppAvailable: lead.isWhatsAppAvailable ?? false,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     notes: lead.notes ?? "",
-    phone: [lead.countryCode, lead.phone].filter(Boolean).join(" ").trim(),
+    phone: joinPhoneNumber(lead.countryCode, lead.phone),
     source: isKnownSource ? savedSource : OTHER_SOURCE,
     tags: [],
   };

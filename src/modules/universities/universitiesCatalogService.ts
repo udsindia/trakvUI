@@ -237,6 +237,8 @@ export const universitiesCatalogService = {
         website: normalizeWebsiteUrl(input.website),
         universityType: input.universityType ?? defaultUniversityType(),
         qsRanking: input.qsRank,
+        // Always sent, so clearing the field in the drawer actually clears the stored note.
+        partnerNotes: input.internalNotes ?? "",
       });
       return mapUniversityDetailToUi(updated);
     }
@@ -342,6 +344,11 @@ export const universitiesCatalogService = {
       .filter((outcome) => outcome.status === "fulfilled").length;
 
     return { created: createdOk, updated: updatedOk, failed };
+  },
+
+  /** Archives a course by default; `purge` removes it permanently when nothing links to it. */
+  deleteCourse: async (courseId: string, purge = false): Promise<void> => {
+    await universitiesApi.deleteCourse(courseId, { purge });
   },
 
   saveCourse: async (input: CourseInput): Promise<Course> => {

@@ -23,6 +23,7 @@ import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { joinPhoneNumber } from "@/shared/utils/phone";
 
 const stageColor: Record<string, { backgroundColor: string; color: string }> = {
   New: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
@@ -94,7 +95,7 @@ export function LeadDetailsPage() {
   const stage = humanizeStage(lead?.leadStage);
   const chipStyle = stageColor[stage] ?? {};
   const phone = lead
-    ? [lead.countryCode, lead.phone].filter(Boolean).join(" ").trim() || "—"
+    ? joinPhoneNumber(lead.countryCode, lead.phone) || "—"
     : "—";
   const countries = lead?.destinationCountries?.length ? lead.destinationCountries.join(", ") : "—";
   const intake = lead && (lead.targetIntakeMonth || lead.targetIntakeYear)

@@ -132,6 +132,12 @@ export function useUniversityMutations() {
     onSuccess: invalidateAll,
   });
 
+  const deleteCourseMutation = useMutation({
+    mutationFn: ({ courseId, purge }: { courseId: string; purge?: boolean }) =>
+      universitiesCatalogService.deleteCourse(courseId, purge),
+    onSuccess: invalidateAll,
+  });
+
   const saveUniversityDefaultsMutation = useMutation({
     mutationFn: ({
       universityId,
@@ -167,6 +173,7 @@ export function useUniversityMutations() {
   return {
     saveUniversityMutation,
     saveCourseMutation,
+    deleteCourseMutation,
     saveUniversityDefaultsMutation,
     createRequirementMutation,
   };

@@ -1,6 +1,8 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -328,7 +330,8 @@ function buildCourseSearchApiPayload(
     backlogs: null as any,
     educationGap: null as any,
     // studentId: studentId ?? null,
-    // query: query.trim() || null,
+    // Free text over course name + university name — this is what the header search box drives.
+    query: query.trim() || undefined,
     sort: sort || null,
   };
 
@@ -773,28 +776,60 @@ export function CourseSearchPage() {
     setHasAppliedFilters(false);
   };
 
+  /**
+   * Every course lookup goes through here — the filter drawer, the header search box and
+   * the sort dropdown all re-query the API, since results are server-side only (there is
+   * no client-side filtering to fall back on).
+   */
+  const runCourseSearch = useCallback(
+    async (values: FilterPanelValues, query: string, sortValue: CourseSortOption) => {
+      setCourseSearchError(null);
+      setIsApplyingFilters(true);
+
+      try {
+        const payload = buildCourseSearchApiPayload(values, query, sortValue, studentId);
+        const response = await leadApi.searchCourses(payload);
+        setCourseResults(normalizeCourseSearchApiResults(response));
+        setHasAppliedFilters(true);
+        return true;
+      } catch (error) {
+        setCourseResults([]);
+        setHasAppliedFilters(false);
+        setCourseSearchError(
+          error instanceof Error ? error.message : "Unable to load courses. Please try again.",
+        );
+        return false;
+      } finally {
+        setIsApplyingFilters(false);
+      }
+    },
+    [studentId],
+  );
+
   const handleApplyFilters = async (values: FilterPanelValues) => {
     setFilterValues(values);
-    setCourseSearchError(null);
-    setIsApplyingFilters(true);
-
-    try {
-      const payload = buildCourseSearchApiPayload(values, searchQuery, sort, studentId);
-      const response = await leadApi.searchCourses(payload);
-      const results = normalizeCourseSearchApiResults(response);
-      setCourseResults(results);
-      setHasAppliedFilters(true);
+    const ok = await runCourseSearch(values, searchQuery, sort);
+    if (ok) {
       setDrawerOpen(false);
-    } catch (error) {
-      setCourseResults([]);
-      setHasAppliedFilters(false);
-      setCourseSearchError(
-        error instanceof Error ? error.message : "Unable to load courses. Please try again.",
-      );
-    } finally {
-      setIsApplyingFilters(false);
     }
   };
+
+  // Re-query when the search text or sort changes, but only once a first search has run —
+  // before that the page is still on its landing state and there is nothing to refine.
+  const hasSearchedRef = useRef(false);
+  useEffect(() => {
+    if (!hasAppliedFilters) {
+      hasSearchedRef.current = false;
+      return;
+    }
+    if (!hasSearchedRef.current) {
+      hasSearchedRef.current = true;
+      return;
+    }
+    void runCourseSearch(filterValues, searchQuery, sort);
+    // filterValues is intentionally omitted: applying filters already runs its own search.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, sort, hasAppliedFilters]);
 
   if (!hasAppliedFilters) {
     return (

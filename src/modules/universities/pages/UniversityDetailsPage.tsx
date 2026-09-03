@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   Chip,
+  IconButton,
   Link,
   Paper,
   Stack,
@@ -13,15 +14,23 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
-import { AddRounded, ChecklistRounded } from "@mui/icons-material";
+import { useMemo, useState } from "react";
+import {
+  AddRounded,
+  ChecklistRounded,
+  DeleteOutlineRounded,
+  EditRounded,
+} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
+import { CatalogDeleteDialog } from "@/modules/universities/components/CatalogDeleteDialog";
+import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { UniversityDefaultsDialog } from "@/modules/universities/components/UniversityDefaultsDialog";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
@@ -37,6 +46,7 @@ import {
   fromRequirementDtos,
   type CourseInput,
   type RequirementSet,
+  type UniversityInput,
 } from "@/modules/universities/universitiesCatalogService";
 import {
   getEligibilityChipSx,
@@ -45,9 +55,10 @@ import {
   universitiesPagePaperSx,
 } from "@/modules/universities/universitiesStyles";
 import { FeedbackState } from "@/shared/components/FeedbackState";
+import { getApiErrorMessage, isConflictError } from "@/shared/services/http/errorMessage";
 import { Snackbar, Alert } from "@mui/material";
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
-import type { EligibilityStatus } from "@/modules/universities/universities.types";
+import type { Course, EligibilityStatus } from "@/modules/universities/universities.types";
 import { dataTableSx } from "@/shared/ui/tableStyles";
 
 function getEligibilityBadge(status: EligibilityStatus, warning?: string) {
@@ -64,18 +75,32 @@ export function UniversityDetailsPage() {
   const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
   // Courses can be added one at a time here, as a follow-up to a bulk import that
   // brought in the university without its courses. Same permission the import uses.
-  const { saveCourseMutation, saveUniversityDefaultsMutation } = useUniversityMutations();
+  const {
+    deleteCourseMutation,
+    saveCourseMutation,
+    saveUniversityDefaultsMutation,
+    saveUniversityMutation,
+  } = useUniversityMutations();
   const { hasPermissions } = useAuth();
   const canAddCourse = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [coursePendingDelete, setCoursePendingDelete] = useState<Course | null>(null);
+  const [universityDrawerOpen, setUniversityDrawerOpen] = useState(false);
   const [defaultsDialogOpen, setDefaultsDialogOpen] = useState(false);
   const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(
     null,
   );
 
   // course_id === null marks a university-level default rather than a course's own row.
-  const universityDefaults = fromRequirementDtos(
-    (university?.requirementDtos ?? []).filter((requirement) => !requirement.courseId),
+  // Memoised because CourseFormDrawer keys its "reset the form" effect on this object: a
+  // fresh one each render wiped whatever was being typed on the next re-render.
+  const universityDefaults = useMemo(
+    () =>
+      fromRequirementDtos(
+        (university?.requirementDtos ?? []).filter((requirement) => !requirement.courseId),
+      ),
+    [university?.requirementDtos],
   );
 
   const handleSaveDefaults = async (set: RequirementSet, applyToCourseIds: string[]) => {
@@ -100,6 +125,43 @@ export function UniversityDetailsPage() {
     );
   };
 
+  const handleSaveUniversity = async (input: UniversityInput) => {
+    try {
+      await saveUniversityMutation.mutateAsync({ ...input, id: universityId });
+      setUniversityDrawerOpen(false);
+      setSnack({ message: "University updated", severity: "success" });
+    } catch (error) {
+      setSnack({
+        message: getApiErrorMessage(error, "Failed to update university"),
+        severity: "error",
+      });
+    }
+  };
+
+  const handleDeleteCourse = async (purge: boolean) => {
+    if (!coursePendingDelete) {
+      return;
+    }
+    try {
+      await deleteCourseMutation.mutateAsync({ courseId: coursePendingDelete.id, purge });
+      setSnack({
+        message: purge ? "Course deleted" : "Course archived",
+        severity: "success",
+      });
+      setCoursePendingDelete(null);
+    } catch (error) {
+      // A purge is refused with 409 while a student still has the course shortlisted —
+      // say so rather than showing a bare failure.
+      setSnack({
+        message:
+          purge && isConflictError(error)
+            ? "This course is linked to a student and cannot be deleted permanently. Archive it instead."
+            : getApiErrorMessage(error, "Failed to remove course"),
+        severity: "error",
+      });
+    }
+  };
+
   const handleSaveCourse = async (input: CourseInput) => {
     if (!universityId) {
       return;
@@ -107,7 +169,11 @@ export function UniversityDetailsPage() {
     try {
       await saveCourseMutation.mutateAsync({ ...input, universityId });
       setCourseDrawerOpen(false);
-      setSnack({ message: "Course added", severity: "success" });
+      setSnack({
+        message: editingCourse ? "Course updated" : "Course added",
+        severity: "success",
+      });
+      setEditingCourse(null);
     } catch (error) {
       // saveCourse throws with a specific message when the course saved but its English
       // test requirements did not — surface that rather than a blanket failure.
@@ -142,14 +208,27 @@ export function UniversityDetailsPage() {
     >
       <DetailPageHeader
         actions={
-          <Button
-            size="small"
-            sx={{ textTransform: "none" }}
-            variant="contained"
-            onClick={() => navigate(universitiesRoutePaths.search)}
-          >
-            View Courses ({courses.length})
-          </Button>
+          <Stack direction="row" spacing={1}>
+            {canAddCourse ? (
+              <Button
+                size="small"
+                startIcon={<EditRounded />}
+                sx={{ textTransform: "none" }}
+                variant="outlined"
+                onClick={() => setUniversityDrawerOpen(true)}
+              >
+                Edit university
+              </Button>
+            ) : null}
+            <Button
+              size="small"
+              sx={{ textTransform: "none" }}
+              variant="contained"
+              onClick={() => navigate(universitiesRoutePaths.search)}
+            >
+              View Courses ({courses.length})
+            </Button>
+          </Stack>
         }
         breadcrumb={{ universityId: university.id, universityName: university.name }}
       />
@@ -214,7 +293,10 @@ export function UniversityDetailsPage() {
                         startIcon={<AddRounded />}
                         sx={{ textTransform: "none" }}
                         variant="outlined"
-                        onClick={() => setCourseDrawerOpen(true)}
+                        onClick={() => {
+                          setEditingCourse(null);
+                          setCourseDrawerOpen(true);
+                        }}
                       >
                         Add course
                       </Button>
@@ -232,7 +314,15 @@ export function UniversityDetailsPage() {
                   <Table sx={dataTableSx}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: "#f8fbfe" }}>
-                        {["Course", "Intake", "Duration", "Tuition", "IELTS", "Eligible?"].map((header) => (
+                        {[
+                          "Course",
+                          "Intake",
+                          "Duration",
+                          "Tuition",
+                          "IELTS",
+                          "Eligible?",
+                          ...(canAddCourse ? ["Actions"] : []),
+                        ].map((header) => (
                           <TableCell
                             key={header}
                             sx={{
@@ -266,6 +356,37 @@ export function UniversityDetailsPage() {
                           <TableCell>
                             {getEligibilityBadge(course.eligibilityStatus, course.eligibilityWarning)}
                           </TableCell>
+                          {canAddCourse ? (
+                            <TableCell
+                              sx={{ whiteSpace: "nowrap" }}
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <Stack direction="row" spacing={0.5}>
+                                <Tooltip title="Edit course">
+                                  <IconButton
+                                    aria-label={`Edit ${course.name}`}
+                                    size="small"
+                                    onClick={() => {
+                                      setEditingCourse(course);
+                                      setCourseDrawerOpen(true);
+                                    }}
+                                  >
+                                    <EditRounded fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Remove course">
+                                  <IconButton
+                                    aria-label={`Remove ${course.name}`}
+                                    color="error"
+                                    size="small"
+                                    onClick={() => setCoursePendingDelete(course)}
+                                  >
+                                    <DeleteOutlineRounded fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Stack>
+                            </TableCell>
+                          ) : null}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -294,10 +415,17 @@ export function UniversityDetailsPage() {
 
             <SectionCard title="Useful Links">
               <Stack spacing={1}>
+                {university.links.length === 0 ? (
+                  <Typography color="text.disabled" sx={{ fontSize: 13 }}>
+                    No website on record for this university.
+                  </Typography>
+                ) : null}
                 {university.links.map((link) => (
                   <Link
                     key={link.label}
                     href={link.url}
+                    rel="noopener noreferrer"
+                    target="_blank"
                     sx={{ color: "secondary.main", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
                   >
                     {link.label}
@@ -307,9 +435,30 @@ export function UniversityDetailsPage() {
             </SectionCard>
 
             <SectionCard title="Internal Notes">
-              <Typography color="text.secondary" sx={{ fontSize: 13, lineHeight: 1.55 }}>
-                {university.internalNotes}
-              </Typography>
+              {university.internalNotes ? (
+                <Typography
+                  color="text.secondary"
+                  sx={{ fontSize: 13, lineHeight: 1.55, whiteSpace: "pre-wrap" }}
+                >
+                  {university.internalNotes}
+                </Typography>
+              ) : (
+                <Stack alignItems="flex-start" spacing={1}>
+                  <Typography color="text.disabled" sx={{ fontSize: 13 }}>
+                    No internal notes yet. Only your team can see these.
+                  </Typography>
+                  {canAddCourse ? (
+                    <Button
+                      size="small"
+                      startIcon={<EditRounded />}
+                      sx={{ textTransform: "none" }}
+                      onClick={() => setUniversityDrawerOpen(true)}
+                    >
+                      Add notes
+                    </Button>
+                  ) : null}
+                </Stack>
+              )}
             </SectionCard>
           </Stack>
         </Box>
@@ -318,11 +467,28 @@ export function UniversityDetailsPage() {
       {canAddCourse && universityId ? (
         <>
           <CourseFormDrawer
+            course={editingCourse}
             open={courseDrawerOpen}
             universityDefaults={universityDefaults}
             universityId={universityId}
-            onClose={() => setCourseDrawerOpen(false)}
+            onClose={() => {
+              setCourseDrawerOpen(false);
+              setEditingCourse(null);
+            }}
             onSave={handleSaveCourse}
+          />
+          <CatalogDeleteDialog
+            entity="course"
+            name={coursePendingDelete?.name ?? null}
+            submitting={deleteCourseMutation.isPending}
+            onClose={() => setCoursePendingDelete(null)}
+            onConfirm={handleDeleteCourse}
+          />
+          <UniversityFormDrawer
+            open={universityDrawerOpen}
+            university={university}
+            onClose={() => setUniversityDrawerOpen(false)}
+            onSave={handleSaveUniversity}
           />
           <UniversityDefaultsDialog
             existingCourseIds={courses.map((course) => course.id)}

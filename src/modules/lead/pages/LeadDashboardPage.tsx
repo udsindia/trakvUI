@@ -40,6 +40,7 @@ import {
   type FilterConfig,
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
+import { joinPhoneNumber } from "@/shared/utils/phone";
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -132,7 +133,7 @@ function mapBackendLeadToRow(lead: BackendLead): LeadRow {
     id: lead.id,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     email: lead.email ?? "",
-    phone: lead.phone ?? "",
+    phone: joinPhoneNumber(lead.countryCode, lead.phone),
     stage: fromBackendLeadStage(lead.leadStage),
     agent: lead.assignedToName ?? "—",
     source: lead.sourceName ?? "—",

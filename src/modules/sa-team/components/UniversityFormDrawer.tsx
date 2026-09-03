@@ -6,10 +6,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import type { University } from "@/modules/universities/universities.types";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
+import { useUniversity } from "@/modules/universities/useUniversitiesCatalog";
 
 const emptyUniversity = (): UniversityInput => ({
   name: "",
@@ -49,13 +50,36 @@ export function UniversityFormDrawer({
 }: UniversityFormDrawerProps) {
   const [form, setForm] = useState<UniversityInput>(emptyUniversity());
 
+  // Website and internal notes only exist on the detail response — a university picked from
+  // a list is summary-shaped and carries neither. Without this the fields would open blank
+  // and saving would wipe what is stored.
+  const { data: detail } = useUniversity(open && university?.id ? university.id : undefined);
+  const appliedDetailIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (university) {
       setForm({ ...university });
     } else {
       setForm(emptyUniversity());
     }
+    appliedDetailIdRef.current = null;
   }, [university, open]);
+
+  useEffect(() => {
+    if (!open || !detail || detail.id !== university?.id) {
+      return;
+    }
+    // Applied once per open so a background refetch cannot overwrite what is being typed.
+    if (appliedDetailIdRef.current === detail.id) {
+      return;
+    }
+    appliedDetailIdRef.current = detail.id;
+    setForm((current) => ({
+      ...current,
+      website: current.website || detail.website,
+      internalNotes: current.internalNotes || detail.internalNotes,
+    }));
+  }, [detail, open, university?.id]);
 
   const handleCountryChange = (countryCode: string) => {
     const option = courseSearchSettings.filters.country.options.find(
@@ -143,10 +167,27 @@ export function UniversityFormDrawer({
         </Stack>
         <TextField
           fullWidth
+          helperText="Shown as a link on the university page. https:// is added if you leave it off."
           label="Website"
           size="small"
           value={form.website}
           onChange={(event) => setForm((current) => ({ ...current, website: event.target.value }))}
+        />
+
+        <Typography color="text.secondary" variant="subtitle2">
+          Internal notes
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          helperText="Only your team sees this — it is stored against your agency, not the shared catalog."
+          label="Internal notes"
+          minRows={3}
+          size="small"
+          value={form.internalNotes ?? ""}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, internalNotes: event.target.value }))
+          }
         />
 
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>

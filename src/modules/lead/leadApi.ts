@@ -25,6 +25,8 @@ export interface BackendLead {
   consultancyId: string;
   firstName: string;
   lastName: string;
+  /** Dial code for `phone`, e.g. "+91". Always render the two together. */
+  countryCode?: string;
   phone: string;
   email: string;
   isArchived: boolean;

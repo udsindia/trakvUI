@@ -93,6 +93,9 @@ export interface UniversityDetailDto {
   universityType?: UniversityType;
   qsRanking?: number;
   isActive?: boolean;
+  isPreferredPartner?: boolean;
+  /** The tenant's own note on this university — shown as "Internal notes" in the UI. */
+  partnerNotes?: string | null;
   requirements?: UniversityRequirementDto[];
   createdAt?: string;
   updatedAt?: string;
@@ -174,6 +177,8 @@ export interface UpdateUniversityPayload {
   universityType?: UniversityType;
   qsRanking?: number;
   isActive?: boolean;
+  /** "" clears the note; omit the field to leave it unchanged. */
+  partnerNotes?: string;
 }
 
 export interface CreateCoursePayload {

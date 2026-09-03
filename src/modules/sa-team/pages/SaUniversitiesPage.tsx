@@ -1,10 +1,13 @@
 import AddRounded from "@mui/icons-material/AddRounded";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import SearchRounded from "@mui/icons-material/SearchRounded";
 import EditRounded from "@mui/icons-material/EditRounded";
 import {
   Alert,
   Box,
   Button,
   Chip,
+  InputAdornment,
   Snackbar,
   Stack,
   Table,
@@ -12,11 +15,13 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
+import { CatalogDeleteDialog } from "@/modules/universities/components/CatalogDeleteDialog";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
@@ -32,6 +37,7 @@ import {
 } from "@/modules/universities/useUniversitiesCatalog";
 import type { Course, University } from "@/modules/universities/universities.types";
 import { dataTableSx } from "@/shared/ui/tableStyles";
+import { getApiErrorMessage, isConflictError } from "@/shared/services/http/errorMessage";
 
 const SA_TEAL = "#0d7a7a";
 
@@ -41,7 +47,21 @@ export function SaUniversitiesPage() {
   const canManage = saAuthService.hasPermission(SA_PERMISSIONS.UNIVERSITIES_MANAGE);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingUniversity, setEditingUniversity] = useState<University | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [snack, setSnack] = useState<string | null>(null);
+
+  const visibleUniversities = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const all = data?.universities ?? [];
+    if (!query) {
+      return all;
+    }
+    return all.filter((university) =>
+      [university.name, university.shortName, university.city, university.country].some((field) =>
+        (field ?? "").toLowerCase().includes(query),
+      ),
+    );
+  }, [data?.universities, searchQuery]);
 
   const courseCountByUniversity = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -71,6 +91,22 @@ export function SaUniversitiesPage() {
             Manage the global university and course catalog used by tenant counsellors.
           </Typography>
         </Box>
+        <TextField
+          placeholder="Search university, city or country…"
+          size="small"
+          sx={{ width: { xs: "100%", md: 280 } }}
+          value={searchQuery}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRounded color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
         {canManage ? (
           <Button
             startIcon={<AddRounded />}
@@ -95,7 +131,7 @@ export function SaUniversitiesPage() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {(data?.universities ?? []).map((university) => (
+          {visibleUniversities.map((university) => (
             <TableRow key={university.id} hover>
               <TableCell>
                 <Stack spacing={0.25}>
@@ -155,6 +191,12 @@ export function SaUniversitiesPage() {
         </Alert>
       ) : null}
 
+      {!isLoading && (data?.universities.length ?? 0) > 0 && visibleUniversities.length === 0 ? (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          No universities match “{searchQuery}”.
+        </Alert>
+      ) : null}
+
       <UniversityFormDrawer
         open={drawerOpen}
         university={editingUniversity}
@@ -182,20 +224,38 @@ export function SaUniversityDetailPage({
 }) {
   const { data: university, isLoading: universityLoading } = useUniversity(universityId);
   const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
-  const { saveCourseMutation } = useUniversityMutations();
+  const { deleteCourseMutation, saveCourseMutation } = useUniversityMutations();
   const canManage = saAuthService.hasPermission(SA_PERMISSIONS.UNIVERSITIES_MANAGE);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [coursePendingDelete, setCoursePendingDelete] = useState<Course | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
   const handleSaveCourse = async (input: CourseInput) => {
     try {
       await saveCourseMutation.mutateAsync({ ...input, universityId });
       setCourseDrawerOpen(false);
+      setSnack(editingCourse ? "Course updated" : "Course added");
       setEditingCourse(null);
-      setSnack("Course added");
     } catch (error) {
-      setSnack(error instanceof Error ? error.message : "Failed to save course");
+      setSnack(getApiErrorMessage(error, "Failed to save course"));
+    }
+  };
+
+  const handleDeleteCourse = async (purge: boolean) => {
+    if (!coursePendingDelete) {
+      return;
+    }
+    try {
+      await deleteCourseMutation.mutateAsync({ courseId: coursePendingDelete.id, purge });
+      setSnack(purge ? "Course deleted" : "Course archived");
+      setCoursePendingDelete(null);
+    } catch (error) {
+      setSnack(
+        purge && isConflictError(error)
+          ? "This course is linked to a student and cannot be deleted permanently. Archive it instead."
+          : getApiErrorMessage(error, "Failed to remove course"),
+      );
     }
   };
 
@@ -260,7 +320,30 @@ export function SaUniversityDetailPage({
               <TableCell>{course.ieltsLabel}</TableCell>
               <TableCell>{course.deadline}</TableCell>
               <TableCell>
-                —
+                {canManage ? (
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      size="small"
+                      startIcon={<EditRounded />}
+                      onClick={() => {
+                        setEditingCourse(course);
+                        setCourseDrawerOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteOutlineRounded />}
+                      onClick={() => setCoursePendingDelete(course)}
+                    >
+                      Remove
+                    </Button>
+                  </Stack>
+                ) : (
+                  "—"
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -282,6 +365,14 @@ export function SaUniversityDetailPage({
           setEditingCourse(null);
         }}
         onSave={handleSaveCourse}
+      />
+
+      <CatalogDeleteDialog
+        entity="course"
+        name={coursePendingDelete?.name ?? null}
+        submitting={deleteCourseMutation.isPending}
+        onClose={() => setCoursePendingDelete(null)}
+        onConfirm={handleDeleteCourse}
       />
 
       <Snackbar

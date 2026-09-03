@@ -277,6 +277,18 @@ export const universitiesApi = {
     return response.data;
   },
 
+  /**
+   * Archives a course (soft delete) so shortlists that reference it survive, or purges it
+   * outright with `purge`. The backend refuses a purge with 409 when a student still has
+   * the course shortlisted — archive is the safe default.
+   */
+  deleteCourse: async (courseId: string, options: { purge?: boolean } = {}): Promise<void> => {
+    await httpClient.delete(
+      `${API_CONFIG.adminCourses}/${courseId}`,
+      createAuthRequestConfig({ params: { purge: options.purge ?? false } }),
+    );
+  },
+
   createCourse: async (
     universityId: string,
     payload: CreateCoursePayload,

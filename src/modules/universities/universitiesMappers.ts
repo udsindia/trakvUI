@@ -278,7 +278,7 @@ export function mapUniversityDetailToUi(detail: UniversityDetailDto): University
     about: "",
     trackRecord: defaultTrackRecord(),
     links: detail.website ? [{ label: "University website", url: detail.website }] : [],
-    internalNotes: "",
+    internalNotes: detail.partnerNotes ?? "",
     generalRequirements: requirements.map(mapRequirement),
     requirementDtos: requirements,
   };
