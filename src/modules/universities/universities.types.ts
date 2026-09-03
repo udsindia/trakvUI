@@ -48,6 +48,12 @@ export interface University {
   founded: number;
   website: string;
   qsRank?: number;
+  /**
+   * Active courses at this university, from the list response. The pages show this
+   * instead of counting a fetched course list — fetching every university's courses to
+   * count them is what made the catalogue page issue one request per university.
+   */
+  courseCount?: number;
   about: string;
   trackRecord: UniversityTrackRecord;
   links: UniversityLink[];

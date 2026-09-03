@@ -33,6 +33,7 @@ import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFor
 import {
   useCountries,
   useUniversitiesCatalog,
+  useUniversityCourses,
   useUniversityMutations,
 } from "@/modules/universities/useUniversitiesCatalog";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
@@ -112,7 +113,6 @@ export function UniversitiesBrowsePage() {
   const { data: catalog, isLoading } = useUniversitiesCatalog();
 
   const universities = catalog?.universities ?? [];
-  const allCourses = catalog?.courses ?? [];
 
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -185,14 +185,14 @@ export function UniversitiesBrowsePage() {
 
   const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
-  const coursesForSelected = useMemo(
-    () => allCourses.filter((c) => c.universityId === displayedUniversityId),
-    [allCourses, displayedUniversityId],
-  );
+  // Only the selected university's courses are fetched — see fetchCatalog for why the
+  // catalogue no longer pulls every university's courses up front.
+  const { data: coursesForSelected = [], isLoading: coursesLoading } =
+    useUniversityCourses(displayedUniversityId ?? undefined);
 
   const shortlistedCourses = useMemo(
-    () => allCourses.filter((c) => shortlistedCourseIds.includes(c.id)),
-    [allCourses, shortlistedCourseIds],
+    () => coursesForSelected.filter((c) => shortlistedCourseIds.includes(c.id)),
+    [coursesForSelected, shortlistedCourseIds],
   );
 
   const handleToggleShortlist = (courseId: string) => {
@@ -356,7 +356,13 @@ export function UniversitiesBrowsePage() {
           ) : (
             filteredUniversities.map((university, index) => {
               const isActive = university.id === displayedUniversityId;
-              const courseCount = allCourses.filter((c) => c.universityId === university.id).length;
+              // The selected row shows the count we actually fetched; the rest use the
+              // denormalised counter, which can lag for rows created before it was
+              // maintained (see docs/migration-university-course-count-backfill.sql).
+              const courseCount =
+                isActive && !coursesLoading
+                  ? coursesForSelected.length
+                  : university.courseCount ?? 0;
               return (
                 <Box
                   key={university.id}
@@ -460,7 +466,9 @@ export function UniversitiesBrowsePage() {
                       </Typography>
                       <Typography sx={{ color: "text.secondary", fontSize: 11, mt: 0.25 }}>
                         {selectedUniversity.city}, {selectedUniversity.country}
-                        &nbsp;·&nbsp;{coursesForSelected.length} courses
+                        &nbsp;·&nbsp;{coursesLoading
+                          ? "…"
+                          : `${coursesForSelected.length} courses`}
                         {selectedUniversity.qsRank
                           ? `&nbsp;·&nbsp;QS #${selectedUniversity.qsRank}`
                           : ""}
@@ -519,7 +527,15 @@ export function UniversitiesBrowsePage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {coursesForSelected.length === 0 ? (
+                      {coursesLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={8} sx={{ py: 4, textAlign: "center" }}>
+                            <Typography color="text.secondary" sx={{ fontSize: 13 }}>
+                              Loading courses…
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : coursesForSelected.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={8} sx={{ py: 4, textAlign: "center" }}>
                             <Typography color="text.secondary" sx={{ fontSize: 13 }}>

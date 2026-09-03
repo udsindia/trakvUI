@@ -63,13 +63,7 @@ export function SaUniversitiesPage() {
     );
   }, [data?.universities, searchQuery]);
 
-  const courseCountByUniversity = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const course of data?.courses ?? []) {
-      counts[course.universityId] = (counts[course.universityId] ?? 0) + 1;
-    }
-    return counts;
-  }, [data?.courses]);
+
 
   const handleSaveUniversity = async (input: UniversityInput) => {
     try {
@@ -147,7 +141,7 @@ export function SaUniversitiesPage() {
               <TableCell>{university.city}</TableCell>
               <TableCell>{university.qsRank ? `#${university.qsRank}` : "—"}</TableCell>
               <TableCell>
-                <Chip label={`${courseCountByUniversity[university.id] ?? 0} courses`} size="small" />
+                <Chip label={`${university.courseCount ?? 0} courses`} size="small" />
               </TableCell>
               <TableCell>
                 <Stack direction="row" spacing={1}>

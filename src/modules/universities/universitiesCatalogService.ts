@@ -184,20 +184,24 @@ export const universityQueryKey = (universityId: string) =>
 export const universityCoursesQueryKey = (universityId: string) =>
   ["universities", universityId, "courses"] as const;
 
+/**
+ * Universities only — deliberately without their courses.
+ *
+ * This used to fetch every university's courses up front, one request per university. At
+ * 160 universities that was ~164 requests per page load, all in parallel; the server
+ * authenticates each one against the database, so the connection pool starved, requests
+ * timed out, and the resulting 500s came back as bare 401s that logged the user out.
+ *
+ * Course counts come from `UniversitySummaryDto.courseCount` (maintained on every add,
+ * import and archive), and the pages load the courses of the *selected* university on
+ * demand through useUniversityCourses.
+ */
 async function fetchCatalog(): Promise<UniversitiesCatalog> {
   const summaries = await universitiesApi.listAllUniversities();
-  const universities = summaries.map((summary) => mapUniversitySummaryToUi(summary));
-
-  const courseResults = await Promise.all(
-    summaries.map(async (summary) => {
-      const courses = await universitiesApi.listAllUniversityCourses(summary.id);
-      return courses.map((course) => mapCourseToUi(course, summary.id));
-    }),
-  );
 
   return {
-    universities,
-    courses: courseResults.flat(),
+    universities: summaries.map((summary) => mapUniversitySummaryToUi(summary)),
+    courses: [],
   };
 }
 

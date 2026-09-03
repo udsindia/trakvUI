@@ -94,6 +94,7 @@ export interface UniversityDetailDto {
   qsRanking?: number;
   isActive?: boolean;
   isPreferredPartner?: boolean;
+  courseCount?: number;
   /** The tenant's own note on this university — shown as "Internal notes" in the UI. */
   partnerNotes?: string | null;
   requirements?: UniversityRequirementDto[];
