@@ -18,6 +18,9 @@ export const STUDY_LEVELS = [
 ] as const;
 export type StudyLevel = (typeof STUDY_LEVELS)[number];
 
+/** Sentinel id for the "Other" row appended to the course list. */
+export const OTHER_COURSE_ID = "__other_course__";
+
 export type ApplicationFormValues = {
   studentId: string | "";
   /** Selected university id — used to load courses; name is stored in targetUniversity. */
@@ -31,6 +34,12 @@ export type ApplicationFormValues = {
   targetUniversity: string;
   /** Selected course id — used for the select value; name is stored in courseName. */
   courseId: string;
+  /**
+   * True when "Other" was picked in the course list and the name is being typed. On save
+   * the course is added to the university's catalogue and the new id is used, so the next
+   * application can pick it from the list instead of typing it again.
+   */
+  useCustomCourse: boolean;
   courseName: string;
   studyLevel: StudyLevel | "";
   /** Destination country code from GET /universities/countries. */

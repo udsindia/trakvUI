@@ -181,14 +181,20 @@ export interface UpdateUniversityPayload {
   partnerNotes?: string;
 }
 
+/**
+ * Only name and studyLevel are required by the API. The rest are optional so a course can
+ * be added inline from the application form, where tuition and duration are not known —
+ * and because the backend rejects a non-positive durationMonths/tuitionAmount, sending a
+ * placeholder zero is worse than omitting the field.
+ */
 export interface CreateCoursePayload {
   name: string;
-  code: string;
   studyLevel: StudyLevel;
-  subjectArea: string;
-  durationMonths: number;
-  tuitionCurrency: string;
-  tuitionAmount: number;
+  code?: string;
+  subjectArea?: string;
+  durationMonths?: number;
+  tuitionCurrency?: string;
+  tuitionAmount?: number;
   courseUrl?: string;
 }
 

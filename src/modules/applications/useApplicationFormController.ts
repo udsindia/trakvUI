@@ -2,16 +2,21 @@ import axios from "axios";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
-import type {
-  CreateApplicationPayload,
-  ApplicationFormValues,
-  UpdateApplicationPayload,
+import {
+  OTHER_COURSE_ID,
+  type CreateApplicationPayload,
+  type ApplicationFormValues,
+  type UpdateApplicationPayload,
 } from "@/modules/applications/applicationForm.types";
-import type { CountryDto } from "@/modules/universities/universitiesApi.types";
+import type { CountryDto, CourseDto } from "@/modules/universities/universitiesApi.types";
+import { universitiesApi } from "@/modules/universities/universitiesApi";
+import { universityCoursesQueryKey } from "@/modules/universities/universitiesCatalogService";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import {
   useCountries,
   useUniversitiesByCountry,
@@ -28,6 +33,7 @@ const defaultApplicationFormValues: ApplicationFormValues = {
   useCustomUniversity: false,
   targetUniversity: "",
   courseId: "",
+  useCustomCourse: false,
   courseName: "",
   studyLevel: "",
   intakeMonth: "",
@@ -117,6 +123,10 @@ export function useApplicationFormController(
   const destinationCountry = watch("destinationCountry");
   const universityId = watch("universityId");
   const useCustomUniversity = watch("useCustomUniversity");
+
+  const queryClient = useQueryClient();
+  const { hasPermissions } = useAuth();
+  const canManageCourses = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
 
   const { data: students } = useQuery({
     // "options", not a bare ["students"]: this fetcher returns picker-shaped
@@ -210,6 +220,7 @@ export function useApplicationFormController(
     setValue("universityId", "");
     setValue("targetUniversity", "");
     setValue("courseId", "");
+    setValue("useCustomCourse", false);
     setValue("courseName", "");
     setValue("studyLevel", "");
     setValue("useCustomUniversity", false);
@@ -230,6 +241,7 @@ export function useApplicationFormController(
     setValue("universityId", nextUniversityId, { shouldValidate: true });
     setValue("targetUniversity", university?.name ?? "", { shouldValidate: true });
     setValue("courseId", "");
+    setValue("useCustomCourse", false);
     setValue("courseName", "");
     setValue("studyLevel", "");
   };
@@ -252,6 +264,7 @@ export function useApplicationFormController(
     setValue("targetUniversity", name, { shouldValidate: true });
     setValue("universityId", findUniversityByName(name)?.id ?? "");
     setValue("courseId", "");
+    setValue("useCustomCourse", false);
   };
 
   /** Switches between picking from the catalogue and typing the names. */
@@ -265,10 +278,22 @@ export function useApplicationFormController(
       setValue("studyLevel", "");
     }
     setValue("courseId", "");
+    setValue("useCustomCourse", false);
   };
 
   const handleCourseChange = (courseId: string) => {
+    // "Other" is not a course — it turns the field into a text box and the typed name is
+    // added to this university's catalogue on save (see resolveCourseId).
+    if (courseId === OTHER_COURSE_ID) {
+      setValue("useCustomCourse", true);
+      setValue("courseId", "");
+      setValue("courseName", "", { shouldValidate: false });
+      setValue("studyLevel", "POSTGRADUATE_TAUGHT");
+      return;
+    }
+
     const course = courses.find((c) => c.id === courseId);
+    setValue("useCustomCourse", false);
     setValue("courseId", courseId, { shouldValidate: true });
     setValue("courseName", course?.name ?? "", { shouldValidate: true });
     setValue("studyLevel", course?.studyLevel ?? "", { shouldValidate: true });
@@ -280,21 +305,95 @@ export function useApplicationFormController(
     setValue("courseId", "");
   };
 
+  /** Back to the catalogue list, dropping whatever was being typed. */
+  const handleCancelCustomCourse = () => {
+    setValue("useCustomCourse", false);
+    setValue("courseName", "", { shouldValidate: true });
+    setValue("courseId", "");
+    setValue("studyLevel", "");
+  };
+
   const handleCancel = () => {
     form.reset(defaultApplicationFormValues);
     navigate(applicationsRoutePaths.dashboard);
   };
 
+  /**
+   * Turns a typed-in course name into a catalogue course id, adding the course when it is
+   * genuinely new.
+   *
+   * Duplicates are guarded twice over: the loaded list is checked first (case-insensitive,
+   * trimmed), and if two people add the same course at once the API answers 409, at which
+   * point the list is refetched and the winner's id is used. Either way one course row
+   * exists, not two.
+   *
+   * The id comes back empty when the course could not be added — the application still
+   * saves, keeping the typed name, since applications.university_course_id is nullable.
+   * The name comes back canonical: matching an existing course adopts its spelling, so
+   * "  msc QUANTUM computing " is stored as "MSc Quantum Computing".
+   */
+  const resolveCourse = async (
+    values: ApplicationFormValues,
+  ): Promise<{ courseId: string; courseName: string }> => {
+    const name = values.courseName.trim();
+    if (!values.useCustomCourse || !name || !values.universityId) {
+      return { courseId: values.courseId, courseName: values.courseName };
+    }
+
+    const matches = (course: CourseDto) =>
+      course.name.trim().toLowerCase() === name.toLowerCase();
+
+    const existing = courses.find(matches);
+    if (existing) {
+      return { courseId: existing.id, courseName: existing.name };
+    }
+
+    if (!canManageCourses) {
+      // Adding to the shared catalogue needs UNIVERSITIES_MANAGE; without it the
+      // application keeps the typed name and simply carries no course id.
+      return { courseId: "", courseName: name };
+    }
+
+    try {
+      const created = await universitiesApi.createCourse(values.universityId, {
+        name,
+        studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",
+        // Same slug the course drawer generates, so inline-added courses look like the rest.
+        code: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32),
+        subjectArea: "General",
+      });
+      return { courseId: created.id, courseName: created.name };
+    } catch (error) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      if (status === 409) {
+        // Someone else added it between the check and the write — take theirs.
+        const refreshed = await universitiesApi.listAllUniversityCourses(values.universityId);
+        const winner = refreshed.find(matches);
+        return { courseId: winner?.id ?? "", courseName: winner?.name ?? name };
+      }
+      if (status === 403) {
+        return { courseId: "", courseName: name };
+      }
+      throw error;
+    } finally {
+      queryClient.invalidateQueries({
+        queryKey: universityCoursesQueryKey(values.universityId),
+      });
+    }
+  };
+
   const handleValidSubmit = async (values: ApplicationFormValues) => {
     try {
+      const submitted = { ...values, ...(await resolveCourse(values)) };
+
       if (applicationId) {
         await applicationsApi.updateApplication(
           applicationId,
-          buildUpdateApplicationPayload(values),
+          buildUpdateApplicationPayload(submitted),
         );
       } else {
         await applicationsApi.createApplication(
-          buildCreateApplicationPayload(values, countries),
+          buildCreateApplicationPayload(submitted, countries),
         );
       }
       form.reset(defaultApplicationFormValues);
@@ -347,6 +446,8 @@ export function useApplicationFormController(
     handleCustomUniversityToggle,
     handleCourseNameChange,
     handleCourseChange,
+    handleCancelCustomCourse,
+    canManageCourses,
     handleCancel,
     handleFormSubmit: form.handleSubmit(handleValidSubmit),
   };

@@ -31,8 +31,10 @@ export function EditApplicationPage() {
     handleUniversityChange,
     handleUniversityNameChange,
     handleCustomUniversityToggle,
+    handleCancelCustomCourse,
     handleCourseChange,
     handleCourseNameChange,
+    canManageCourses,
     handleCancel,
     handleFormSubmit,
   } = useApplicationFormController({ applicationId: id });
@@ -81,6 +83,8 @@ export function EditApplicationPage() {
             onUniversityChange={handleUniversityChange}
             onUniversityNameChange={handleUniversityNameChange}
             onCustomUniversityToggle={handleCustomUniversityToggle}
+            canManageCourses={canManageCourses}
+            onCancelCustomCourse={handleCancelCustomCourse}
             onCourseChange={handleCourseChange}
             onCourseNameChange={handleCourseNameChange}
             onCancel={handleCancel}

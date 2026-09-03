@@ -17,13 +17,27 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { ApplicationFormValues } from "@/modules/applications/applicationForm.types";
+import {
+  OTHER_COURSE_ID,
+  type ApplicationFormValues,
+} from "@/modules/applications/applicationForm.types";
 import type { StudentOption } from "@/modules/applications/studentsApi";
 import type {
   CountryDto,
   CourseDto,
   UniversitySummaryDto,
 } from "@/modules/universities/universitiesApi.types";
+
+/** API StudyLevel values, for a course being added from this form. */
+const STUDY_LEVEL_OPTIONS = [
+  { label: "Undergraduate", value: "UNDERGRADUATE" },
+  { label: "Masters (taught)", value: "POSTGRADUATE_TAUGHT" },
+  { label: "Masters (research)", value: "POSTGRADUATE_RESEARCH" },
+  { label: "Integrated Masters", value: "INTEGRATED_MASTERS" },
+  { label: "PhD", value: "PHD" },
+  { label: "Foundation", value: "FOUNDATION" },
+  { label: "Diploma", value: "DIPLOMA" },
+] as const;
 
 type ApplicationFormProps = {
   form: UseFormReturn<ApplicationFormValues>;
@@ -48,6 +62,10 @@ type ApplicationFormProps = {
   /** A course typed by hand rather than picked from the catalogue. */
   onCourseNameChange: (name: string) => void;
   onCourseChange: (courseId: string) => void;
+  /** Abandons the "Other" course entry and goes back to the catalogue list. */
+  onCancelCustomCourse: () => void;
+  /** Whether this user may add the typed course to the shared catalogue. */
+  canManageCourses?: boolean;
   onCancel: () => void;
   onSubmit: FormEventHandler<HTMLFormElement>;
 };
@@ -71,6 +89,8 @@ export function ApplicationForm({
   onCustomUniversityToggle,
   onCourseNameChange,
   onCourseChange,
+  onCancelCustomCourse,
+  canManageCourses = false,
   onCancel,
   onSubmit,
 }: ApplicationFormProps) {
@@ -85,6 +105,16 @@ export function ApplicationForm({
   const targetUniversity = watch("targetUniversity");
   const courseId = watch("courseId");
   const useCustomUniversity = watch("useCustomUniversity");
+  const useCustomCourse = watch("useCustomCourse");
+
+  /**
+   * A synthetic last row in the course list. Only its id and name are ever read — picking
+   * it swaps the field for a text box rather than selecting a course.
+   */
+  const courseOptions: CourseDto[] = [
+    ...courses,
+    { id: OTHER_COURSE_ID, name: "Other — add a new course" } as CourseDto,
+  ];
 
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
@@ -438,6 +468,67 @@ export function ApplicationForm({
                         />
                       )}
                     />
+                  ) : useCustomCourse ? (
+                    /*
+                      "Other" was picked: the name is typed here and added to this
+                      university's catalogue on save, so it can be selected next time.
+                    */
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={2}>
+                        <Controller
+                          control={control}
+                          name="courseName"
+                          rules={{ required: "Course is required." }}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              autoFocus
+                              error={Boolean(errors.courseName)}
+                              fullWidth
+                              helperText={
+                                errors.courseName?.message ??
+                                (canManageCourses
+                                  ? `Added to ${targetUniversity} so it can be picked next time.`
+                                  : "Saved on this application only — you cannot add to the shared catalogue.")
+                              }
+                              id={field.name}
+                              label="New course name"
+                              required
+                              slotProps={alwaysVisibleLabelSlotProps}
+                              sx={fieldSx}
+                              onChange={(event) => onCourseNameChange(event.target.value)}
+                            />
+                          )}
+                        />
+                        <Controller
+                          control={control}
+                          name="studyLevel"
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              fullWidth
+                              label="Study level"
+                              select
+                              slotProps={alwaysVisibleLabelSlotProps}
+                              sx={fieldSx}
+                            >
+                              {STUDY_LEVEL_OPTIONS.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </TextField>
+                          )}
+                        />
+                      </Stack>
+                      <Button
+                        size="small"
+                        sx={{ alignSelf: "flex-start", textTransform: "none" }}
+                        onClick={onCancelCustomCourse}
+                      >
+                        ← Pick from the course list instead
+                      </Button>
+                    </Stack>
                   ) : (
                     <Controller
                       control={control}
@@ -446,7 +537,7 @@ export function ApplicationForm({
                       render={({ field }) => (
                         <Autocomplete
                           disabled={coursesLoading}
-                          options={courses}
+                          options={courseOptions}
                           getOptionLabel={(option) => option.name}
                           isOptionEqualToValue={(option, selected) => option.id === selected.id}
                           renderOption={(props, option) => (
