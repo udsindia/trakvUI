@@ -166,6 +166,10 @@ export function useLeadFormController({
         await leadService.createLead(payload);
       }
       await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
+      // Editing a lead rewrites the student it produced (LeadService.syncFromLead), and the
+      // applications list renders that student's name — so both caches are now stale.
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
       form.reset(defaultLeadFormValues);
       navigate(returnPath);
     } catch (error) {
