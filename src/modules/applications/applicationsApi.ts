@@ -128,6 +128,17 @@ export const applicationsApi = {
     return Array.isArray(data) ? data : (data?.content ?? []);
   },
 
+  /** Every application belonging to one student, newest stage state included. */
+  getApplicationsByStudent: async (
+    studentId: string,
+  ): Promise<BackendApplication[]> => {
+    const response = await httpClient.get<BackendApplication[] | Paged<BackendApplication>>(
+      `${API_CONFIG.applications}/student/${studentId}`,
+    );
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.content ?? []);
+  },
+
   createApplication: async (
     payload: CreateApplicationPayload,
   ): Promise<ApplicationDetail> => {

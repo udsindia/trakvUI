@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { PermissionKey } from "@/config/permissions/permissions";
 import { PERMISSIONS } from "@/config/permissions/permissions";
+import { StudentDetailsPage } from "@/modules/students/pages/StudentDetailsPage";
 import { StudentsListPage } from "@/modules/students/pages/StudentsListPage";
 
 type StudentRouteDefinition = {
@@ -16,6 +17,12 @@ export const studentsRoutes: StudentRouteDefinition[] = [
     Component: StudentsListPage,
     index: true,
     key: "list",
+    requiredPermissions: [PERMISSIONS.STUDENTS_VIEW],
+  },
+  {
+    Component: StudentDetailsPage,
+    key: "details",
+    path: ":id",
     requiredPermissions: [PERMISSIONS.STUDENTS_VIEW],
   },
 ];

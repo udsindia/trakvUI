@@ -19,6 +19,40 @@ export interface BackendStudent {
   enrolledAt?: string;
 }
 
+/** One English-proficiency test on a student — backend LanguageTestDTO. */
+export interface StudentLanguageTest {
+  id: string;
+  testType?: string;
+  overallScore?: number | null;
+  bandListening?: number | null;
+  bandReading?: number | null;
+  bandWriting?: number | null;
+  bandSpeaking?: number | null;
+  testDate?: string | null;
+  expiryDate?: string | null;
+  moiInstitution?: string | null;
+  class12EnglishPct?: number | null;
+  primary?: boolean;
+  notes?: string | null;
+}
+
+/** Full student record — backend StudentDetailDTO. Adds everything the list omits. */
+export interface BackendStudentDetail extends BackendStudent {
+  enrolledBy?: string | null;
+  dateOfBirth?: string | null;
+  passportExpiryDate?: string | null;
+  passportIssueCountry?: string | null;
+  institutionName?: string | null;
+  fieldOfStudy?: string | null;
+  graduationYear?: number | null;
+  academicScore?: number | null;
+  scoreType?: string | null;
+  workExperienceMonths?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+  languageTests?: StudentLanguageTest[];
+}
+
 /** The list endpoint returns a Spring Page; older builds returned a raw array. */
 interface Paged<T> {
   content?: T[];
@@ -38,5 +72,13 @@ export const studentsApi = {
     );
     const data = response.data;
     return Array.isArray(data) ? data : data?.content ?? [];
+  },
+
+  /** One student in full, including their language tests. */
+  getStudentById: async (id: string): Promise<BackendStudentDetail> => {
+    const response = await httpClient.get<BackendStudentDetail>(
+      `${API_CONFIG.students}/${id}`,
+    );
+    return response.data;
   },
 };

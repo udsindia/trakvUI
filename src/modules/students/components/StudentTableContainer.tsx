@@ -15,6 +15,8 @@ export type StudentRow = {
 
 type StudentTableContainerProps = {
   students: StudentRow[];
+  /** Opens the student's detail page. */
+  onRowClick?: (student: StudentRow) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   page: number;
@@ -50,6 +52,7 @@ const originStyles = {
 
 export function StudentTableContainer({
   students,
+  onRowClick,
   onPageChange,
   onPageSizeChange,
   page,
@@ -115,6 +118,7 @@ export function StudentTableContainer({
       rows={students}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
+      onRowClick={onRowClick}
     />
   );
 }

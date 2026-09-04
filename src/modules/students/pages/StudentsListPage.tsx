@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { useAuth } from "@/app/auth/useAuth";
@@ -13,6 +14,7 @@ import {
   type StudentRow,
 } from "@/modules/students/components/StudentTableContainer";
 import { studentsApi, type BackendStudent } from "@/modules/students/studentsApi";
+import { studentDetailsPath } from "@/modules/students/studentsRoutePaths";
 import { usersService } from "@/modules/settings/usersService";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import { joinPhoneNumber } from "@/shared/utils/phone";
@@ -47,6 +49,7 @@ function mapBackendStudentToRow(
 }
 
 export function StudentsListPage() {
+  const navigate = useNavigate();
   const { hasPermissions, tenant } = useAuth();
   const tenantId = tenant?.tenantId ?? "";
   const canViewUsers = hasPermissions([PERMISSIONS.USERS_VIEW]);
@@ -230,6 +233,7 @@ export function StudentsListPage() {
             students={pagedRows}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            onRowClick={(student) => navigate(studentDetailsPath(student.id))}
           />
         )}
       </Box>
