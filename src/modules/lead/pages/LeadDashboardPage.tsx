@@ -222,23 +222,25 @@ export function LeadDashboardPage() {
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
+  /*
+    The whole list, not one server page. Filters, search and the stage-tab counts all run
+    on the client, so a single page made the table believe those rows were everything:
+    pageCount collapsed to 1 and the pager offered no way to reach the rest.
+
+    page/pageSize are deliberately absent from the key — paging is a client-side slice of
+    what is already here, so changing page must not refetch.
+  */
   const {
-    data: leadsPage,
+    data: allLeads,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["leads", "paginated", page, pageSize, "createdAt", "DESC"],
-    queryFn: () =>
-      leadApi.getLeadsPaginated({
-        page: page - 1,
-        size: pageSize,
-        sortBy: "createdAt",
-        sortDirection: "DESC",
-      }),
+    queryKey: ["leads", "paginated", "all", "createdAt", "DESC"],
+    queryFn: () => leadApi.getAllLeadsSorted({ sortBy: "createdAt", sortDirection: "DESC" }),
     placeholderData: (previousData) => previousData,
   });
 
-  const backendLeads: BackendLead[] = leadsPage?.content ?? [];
+  const backendLeads: BackendLead[] = allLeads ?? [];
 
   const usersQuery = useQuery({
     enabled: Boolean(tenantId) && canAssignLeads,

@@ -176,6 +176,9 @@ export interface LeadImportResult {
   skippedReasons: LeadImportSkip[];
 }
 
+/** Rows per request when pulling the full lead list; a few round trips, not one huge body. */
+const LEADS_FETCH_PAGE_SIZE = 200;
+
 export const leadApi = {
   getLeadCount: async (): Promise<number> => {
     const response = await httpClient.get<{ count: number }>(`${API_CONFIG.leads}/count`);
@@ -187,6 +190,44 @@ export const leadApi = {
     const response = await httpClient.get<BackendLead[]>(API_CONFIG.leads);
     console.debug("[leadApi] getLeads response:", response.data);
     return response.data;
+  },
+
+  /**
+   * Every lead for the tenant, in one list.
+   *
+   * The dashboard filters, searches and counts stage tabs on the client, so it needs the
+   * whole set: fetching a single server page made the table treat those rows as the entire
+   * dataset — "Showing 1–10 of 10" with one page button, no way to reach the rest.
+   *
+   * Pages through rather than asking for one enormous page, so a large tenant costs a
+   * handful of sequential requests instead of a single huge response.
+   */
+  getAllLeadsSorted: async ({
+    sortBy = "createdAt",
+    sortDirection = "DESC",
+  }: Omit<GetLeadsPaginatedParams, "page" | "size"> = {}): Promise<BackendLead[]> => {
+    const first = await leadApi.getLeadsPaginated({
+      page: 0,
+      size: LEADS_FETCH_PAGE_SIZE,
+      sortBy,
+      sortDirection,
+    });
+
+    const leads = [...(first.content ?? [])];
+    const totalPages =
+      first.totalPages ?? Math.ceil((first.totalElements ?? leads.length) / LEADS_FETCH_PAGE_SIZE);
+
+    for (let page = 1; page < totalPages; page += 1) {
+      const next = await leadApi.getLeadsPaginated({
+        page,
+        size: LEADS_FETCH_PAGE_SIZE,
+        sortBy,
+        sortDirection,
+      });
+      leads.push(...(next.content ?? []));
+    }
+
+    return leads;
   },
 
   getLeadsPaginated: async ({
