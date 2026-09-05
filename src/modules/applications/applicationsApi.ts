@@ -86,41 +86,6 @@ interface Paged<T> {
   content?: T[];
 }
 
-const OUTCOME_TO_STAGE: Record<string, ApplicationStage> = {
-  DRAFT: "Draft",
-  SUBMITTED: "Submitted",
-  IN_PROGRESS: "Processing",
-  PROCESSING: "Processing",
-  VISA_APPLIED: "Visa Applied",
-  VISA_APPROVED: "Visa Approved",
-  VISA_REJECTED: "Visa Rejected",
-  COMPLETED: "Completed",
-};
-
-const STAGE_TO_OUTCOME: Record<ApplicationStage, string> = {
-  Draft: "DRAFT",
-  Submitted: "SUBMITTED",
-  Processing: "IN_PROGRESS",
-  "Visa Applied": "VISA_APPLIED",
-  "Visa Approved": "VISA_APPROVED",
-  "Visa Rejected": "VISA_REJECTED",
-  Completed: "COMPLETED",
-};
-
-export function mapOutcomeToStage(
-  outcome: string | null | undefined,
-): ApplicationStage {
-  if (!outcome) {
-    return "Draft";
-  }
-
-  const normalized = outcome.trim().toUpperCase().replace(/\s+/g, "_");
-  return OUTCOME_TO_STAGE[normalized] ?? "Draft";
-}
-
-export function mapStageToOutcome(stage: ApplicationStage): string {
-  return STAGE_TO_OUTCOME[stage] ?? "DRAFT";
-}
 
 export const applicationsApi = {
   getApplications: async (): Promise<BackendApplication[]> => {

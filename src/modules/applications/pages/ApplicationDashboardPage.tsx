@@ -7,6 +7,7 @@ import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modul
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
+import { applicationStageLabel } from "@/modules/applications/applicationStage";
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
 
@@ -41,8 +42,7 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     targetCountry: app.targetCountry ?? countryDisplayName(app.destinationCountryCode),
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
-    // Backend sends the current stage name (or outcome for un-staged apps); fall back safely.
-    stage: app.currentStageName ?? app.stage ?? app.outcome ?? "Unknown",
+    stage: applicationStageLabel(app),
     createdAt: app.createdAt,
   };
 }

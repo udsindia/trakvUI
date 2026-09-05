@@ -5,10 +5,12 @@ import type { DashboardApplicationPipelineDto } from "@/modules/dashboard/dashbo
 import { PanelCard, PanelLink } from "@/modules/dashboard/components/PanelCard";
 import { PipelineBars } from "@/modules/dashboard/components/PipelineBars";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
-import { applicationsApi, mapOutcomeToStage } from "@/modules/applications/applicationsApi";
-import type { ApplicationStage } from "@/modules/applications/applicationForm.types";
+import { applicationsApi } from "@/modules/applications/applicationsApi";
+import { applicationStageLabel } from "@/modules/applications/applicationStage";
 
-const STAGE_STYLES: Record<ApplicationStage, { bgcolor: string; color: string }> = {
+// Keyed by label, not by ApplicationStage: a tenant's stage template supplies its own
+// names ("UK: CAS Applied"), and anything unlisted falls back to the neutral style below.
+const STAGE_STYLES: Record<string, { bgcolor: string; color: string }> = {
   Draft: { bgcolor: "#F1F5F9", color: "#475569" },
   Submitted: { bgcolor: "#EEF2FF", color: "#4338CA" },
   Processing: { bgcolor: "#FEF3C7", color: "#92400E" },
@@ -52,7 +54,8 @@ export function DashboardApplicationsSection({ pipeline }: DashboardApplications
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
     .map((app) => {
-      const stage = mapOutcomeToStage(app.outcome);
+      // Same derivation as the applications list, so the two cannot disagree.
+      const stage = applicationStageLabel(app);
 
       return {
         id: app.id,
