@@ -182,43 +182,34 @@ export function UniversitiesBrowsePage() {
     isError: countriesError,
   } = useCountries();
 
-  // The country chips still filter — picking one is a deliberate narrowing. The search
-  // box only reorders. See matchRank.
-  const { orderedUniversities, matchedIds } = useMemo(() => {
+  // Searching narrows the list to the institutions that match — scanning a filtered list
+  // is the point, and selecting the best one in the right-hand pane is not a substitute
+  // for that. Matches are still ordered best-first within the results (see matchRank), so
+  // the closest name is at the top rather than wherever the catalogue happens to put it.
+  const orderedUniversities = useMemo(() => {
     const inCountry = selectedCountry
       ? universities.filter((u) => u.country === selectedCountry)
       : universities;
 
     const q = searchQuery.trim().toLowerCase();
-    if (!q) {
-      return { orderedUniversities: inCountry, matchedIds: new Set<string>() };
-    }
+    if (!q) return inCountry;
 
     // Index carried through the sort so equally-ranked universities keep catalogue order
     // instead of being shuffled by an unstable comparator.
-    const ranked = inCountry
+    return inCountry
       .map((university, index) => ({ university, index, rank: matchRank(university, q) }))
-      .sort((a, b) => b.rank - a.rank || a.index - b.index);
-
-    return {
-      orderedUniversities: ranked.map((entry) => entry.university),
-      matchedIds: new Set(ranked.filter((entry) => entry.rank > 0).map((e) => e.university.id)),
-    };
+      .filter((entry) => entry.rank > 0)
+      .sort((a, b) => b.rank - a.rank || a.index - b.index)
+      .map((entry) => entry.university);
   }, [universities, searchQuery, selectedCountry]);
 
   const isSearching = searchQuery.trim().length > 0;
-  const matchCount = matchedIds.size;
 
-  // The right-hand pane follows the search. Nothing is filtered out any more, so "still in
-  // the list" is no longer enough to keep a selection — while searching, a university that
-  // does not match gives way to the best one that does.
-  const selectionStillApplies =
-    selectedUniversityId !== null &&
-    orderedUniversities.some((u) => u.id === selectedUniversityId) &&
-    (!isSearching || matchedIds.has(selectedUniversityId));
-
+  // A selection that the search has filtered out gives way to the best remaining match.
   const displayedUniversityId =
-    (selectionStillApplies ? selectedUniversityId : orderedUniversities[0]?.id) ?? null;
+    (selectedUniversityId && orderedUniversities.some((u) => u.id === selectedUniversityId)
+      ? selectedUniversityId
+      : orderedUniversities[0]?.id) ?? null;
 
   const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
@@ -402,7 +393,7 @@ export function UniversitiesBrowsePage() {
             <Box component="span" sx={{ color: "text.secondary", fontWeight: 600 }}>
               ·{" "}
               {isSearching
-                ? `${matchCount} match${matchCount === 1 ? "" : "es"} of ${orderedUniversities.length}`
+                ? `${orderedUniversities.length} match${orderedUniversities.length === 1 ? "" : "es"}`
                 : `${orderedUniversities.length} of ${universities.length}`}
             </Box>
           </Typography>
@@ -411,13 +402,15 @@ export function UniversitiesBrowsePage() {
             <Typography color="text.secondary" sx={{ fontSize: 13, px: 1, py: 3 }}>
               Loading universities…
             </Typography>
+          ) : orderedUniversities.length === 0 ? (
+            <Typography color="text.secondary" sx={{ fontSize: 12.5, px: 1, py: 3 }}>
+              {isSearching
+                ? `No institutions match “${searchQuery.trim()}”.`
+                : "No institutions yet."}
+            </Typography>
           ) : (
             orderedUniversities.map((university, index) => {
               const isActive = university.id === displayedUniversityId;
-              // Ranked order puts every match first, so the first non-match is where the
-              // results end and the rest of the catalogue begins.
-              const startsTheRest =
-                isSearching && matchCount > 0 && index === matchCount;
               // The selected row shows the count we actually fetched; the rest use the
               // denormalised counter, which can lag for rows created before it was
               // maintained (see docs/migration-university-course-count-backfill.sql).
@@ -427,23 +420,6 @@ export function UniversitiesBrowsePage() {
                   : university.courseCount ?? 0;
               return (
                 <Box key={university.id}>
-                  {startsTheRest ? (
-                    <Typography
-                      sx={{
-                        color: "text.disabled",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        mb: 0.75,
-                        mt: 1.5,
-                        px: 1,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Everything else
-                    </Typography>
-                  ) : null}
-
                   <Box
                     onClick={() => setSelectedUniversityId(university.id)}
                     sx={{
