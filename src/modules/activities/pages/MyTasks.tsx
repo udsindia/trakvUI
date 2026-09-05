@@ -21,6 +21,8 @@ import { useTaskBoard } from "@/modules/activities/hooks/useTaskBoard";
 import { taskColumnDefinitions } from "@/modules/activities/mock/mockData";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
+import { applicationsApi } from "@/modules/applications/applicationsApi";
+import { studentsApi } from "@/modules/applications/studentsApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import type { TaskPriority } from "@/modules/activities/types/types";
 
@@ -61,10 +63,24 @@ export function MyTasks() {
         ? undefined
         : (selectedPriorityValue as TaskPriority),
   });
+  // All three only load once the dialog opens, and share the keys their own list pages
+  // use, so a module already visited costs no extra request.
   const leadsQuery = useQuery({
     enabled: createTaskOpen,
     queryKey: ["leads"],
     queryFn: leadApi.getLeads,
+  });
+
+  const studentsQuery = useQuery({
+    enabled: createTaskOpen,
+    queryKey: ["students", "options"],
+    queryFn: studentsApi.getStudents,
+  });
+
+  const applicationsQuery = useQuery({
+    enabled: createTaskOpen,
+    queryKey: ["applications"],
+    queryFn: applicationsApi.getApplications,
   });
 
   const columns = useMemo(
@@ -226,10 +242,14 @@ export function MyTasks() {
         errorMessage={
           createTaskError ? getApiErrorMessage(createTaskError, "Unable to create task.") : null
         }
-        isLoadingLeads={leadsQuery.isLoading}
+        applications={applicationsQuery.data ?? []}
+        isLoadingLinks={
+          leadsQuery.isLoading || studentsQuery.isLoading || applicationsQuery.isLoading
+        }
         isSubmitting={isCreatingTask}
         leads={leadsQuery.data ?? []}
         open={createTaskOpen}
+        students={studentsQuery.data ?? []}
         onClose={() => setCreateTaskOpen(false)}
         onSubmit={createTask}
       />

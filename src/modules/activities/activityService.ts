@@ -127,7 +127,9 @@ export interface CreateTaskRequest {
   assignedToId?: string | null;
   description?: string;
   dueDate: string;
-  entityType: Extract<ActivityEntityType, "LEAD" | "GENERAL">;
+  // All four, matching com.Trakv.enums.EntityType and the tasks table, which has
+  // student_id and application_id alongside lead_id.
+  entityType: ActivityEntityType;
   leadId?: string | null;
   priority: TaskPriority;
   studentId?: string | null;
