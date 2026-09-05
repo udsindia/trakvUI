@@ -59,6 +59,28 @@ const CREST_COLORS = [
   "#D96F0E",
 ];
 
+/**
+ * How well a university answers the search, best first. 0 means no match.
+ *
+ * Searching reorders the list rather than trimming it: a name match floats to the top and
+ * everything else stays reachable underneath, so a mistyped query never looks like an
+ * empty catalogue. Name beats short name beats city or country, and an exact hit beats a
+ * prefix beats a substring — typing "york" puts York ahead of the New York colleges.
+ */
+function matchRank(university: University, query: string) {
+  const name = university.name.toLowerCase();
+  const shortName = (university.shortName ?? "").toLowerCase();
+
+  if (name === query || shortName === query) return 4;
+  if (name.startsWith(query) || shortName.startsWith(query)) return 3;
+  if (name.includes(query) || shortName.includes(query)) return 2;
+
+  const place = [university.city, university.country];
+  if (place.some((field) => (field ?? "").toLowerCase().includes(query))) return 1;
+
+  return 0;
+}
+
 function getCrestColor(index: number) {
   return CREST_COLORS[index % CREST_COLORS.length];
 }
@@ -160,31 +182,43 @@ export function UniversitiesBrowsePage() {
     isError: countriesError,
   } = useCountries();
 
-  const filteredUniversities = useMemo(() => {
-    let result = universities;
-
-    if (selectedCountry) {
-      result = result.filter((u) => u.country === selectedCountry);
-    }
+  // The country chips still filter — picking one is a deliberate narrowing. The search
+  // box only reorders. See matchRank.
+  const { orderedUniversities, matchedIds } = useMemo(() => {
+    const inCountry = selectedCountry
+      ? universities.filter((u) => u.country === selectedCountry)
+      : universities;
 
     const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      result = result.filter((u) =>
-        [u.name, u.shortName, u.city, u.country].some((field) =>
-          (field ?? "").toLowerCase().includes(q),
-        ),
-      );
+    if (!q) {
+      return { orderedUniversities: inCountry, matchedIds: new Set<string>() };
     }
 
-    return result;
+    // Index carried through the sort so equally-ranked universities keep catalogue order
+    // instead of being shuffled by an unstable comparator.
+    const ranked = inCountry
+      .map((university, index) => ({ university, index, rank: matchRank(university, q) }))
+      .sort((a, b) => b.rank - a.rank || a.index - b.index);
+
+    return {
+      orderedUniversities: ranked.map((entry) => entry.university),
+      matchedIds: new Set(ranked.filter((entry) => entry.rank > 0).map((e) => e.university.id)),
+    };
   }, [universities, searchQuery, selectedCountry]);
 
-  // The right-hand pane follows the filtered list: a search that no longer contains the
-  // selected university falls back to the first match rather than showing a stale one.
+  const isSearching = searchQuery.trim().length > 0;
+  const matchCount = matchedIds.size;
+
+  // The right-hand pane follows the search. Nothing is filtered out any more, so "still in
+  // the list" is no longer enough to keep a selection — while searching, a university that
+  // does not match gives way to the best one that does.
+  const selectionStillApplies =
+    selectedUniversityId !== null &&
+    orderedUniversities.some((u) => u.id === selectedUniversityId) &&
+    (!isSearching || matchedIds.has(selectedUniversityId));
+
   const displayedUniversityId =
-    (selectedUniversityId && filteredUniversities.some((u) => u.id === selectedUniversityId)
-      ? selectedUniversityId
-      : filteredUniversities[0]?.id) ?? null;
+    (selectionStillApplies ? selectedUniversityId : orderedUniversities[0]?.id) ?? null;
 
   const selectedUniversity = universities.find((u) => u.id === displayedUniversityId);
 
@@ -366,7 +400,10 @@ export function UniversitiesBrowsePage() {
           >
             Institutions&nbsp;
             <Box component="span" sx={{ color: "text.secondary", fontWeight: 600 }}>
-              · {filteredUniversities.length} of {universities.length}
+              ·{" "}
+              {isSearching
+                ? `${matchCount} match${matchCount === 1 ? "" : "es"} of ${orderedUniversities.length}`
+                : `${orderedUniversities.length} of ${universities.length}`}
             </Box>
           </Typography>
 
@@ -375,8 +412,12 @@ export function UniversitiesBrowsePage() {
               Loading universities…
             </Typography>
           ) : (
-            filteredUniversities.map((university, index) => {
+            orderedUniversities.map((university, index) => {
               const isActive = university.id === displayedUniversityId;
+              // Ranked order puts every match first, so the first non-match is where the
+              // results end and the rest of the catalogue begins.
+              const startsTheRest =
+                isSearching && matchCount > 0 && index === matchCount;
               // The selected row shows the count we actually fetched; the rest use the
               // denormalised counter, which can lag for rows created before it was
               // maintained (see docs/migration-university-course-count-backfill.sql).
@@ -385,57 +426,75 @@ export function UniversitiesBrowsePage() {
                   ? coursesForSelected.length
                   : university.courseCount ?? 0;
               return (
-                <Box
-                  key={university.id}
-                  onClick={() => setSelectedUniversityId(university.id)}
-                  sx={{
-                    alignItems: "center",
-                    border: "1px solid",
-                    borderColor: isActive ? "primary.main" : "transparent",
-                    borderRadius: 1.5,
-                    bgcolor: isActive ? "primary.50" : "transparent",
-                    cursor: "pointer",
-                    display: "flex",
-                    gap: 1.375,
-                    mb: 0.25,
-                    px: 1.125,
-                    py: 0.875,
-                    transition: "background .13s",
-                    "&:hover": {
-                      bgcolor: isActive ? "primary.50" : "action.hover",
-                    },
-                  }}
-                >
-                  <UniversityCrest
-                    color={getCrestColor(index)}
-                    initials={getInitials(university.name)}
-                    size={32}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box key={university.id}>
+                  {startsTheRest ? (
                     <Typography
-                      noWrap
                       sx={{
-                        color: isActive ? "primary.main" : "text.primary",
-                        fontSize: 12.5,
-                        fontWeight: 600,
-                        lineHeight: 1.3,
+                        color: "text.disabled",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                        mb: 0.75,
+                        mt: 1.5,
+                        px: 1,
+                        textTransform: "uppercase",
                       }}
                     >
-                      {university.name}
+                      Everything else
                     </Typography>
-                    <Typography noWrap sx={{ color: "text.disabled", fontSize: 10.5, mt: 0.25 }}>
-                      {university.city}, {university.country}
-                    </Typography>
-                  </Box>
-                  <Typography
+                  ) : null}
+
+                  <Box
+                    onClick={() => setSelectedUniversityId(university.id)}
                     sx={{
-                      color: isActive ? "primary.main" : "text.disabled",
-                      fontSize: 10.5,
-                      fontWeight: 700,
+                      alignItems: "center",
+                      border: "1px solid",
+                      borderColor: isActive ? "primary.main" : "transparent",
+                      borderRadius: 1.5,
+                      bgcolor: isActive ? "primary.50" : "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      gap: 1.375,
+                      mb: 0.25,
+                      px: 1.125,
+                      py: 0.875,
+                      transition: "background .13s",
+                      "&:hover": {
+                        bgcolor: isActive ? "primary.50" : "action.hover",
+                      },
                     }}
                   >
-                    {courseCount}
-                  </Typography>
+                    <UniversityCrest
+                      color={getCrestColor(index)}
+                      initials={getInitials(university.name)}
+                      size={32}
+                    />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        noWrap
+                        sx={{
+                          color: isActive ? "primary.main" : "text.primary",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {university.name}
+                      </Typography>
+                      <Typography noWrap sx={{ color: "text.disabled", fontSize: 10.5, mt: 0.25 }}>
+                        {university.city}, {university.country}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        color: isActive ? "primary.main" : "text.disabled",
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {courseCount}
+                    </Typography>
+                  </Box>
                 </Box>
               );
             })
