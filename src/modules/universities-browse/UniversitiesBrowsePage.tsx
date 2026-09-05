@@ -24,6 +24,7 @@ import AddRounded from "@mui/icons-material/AddRounded";
 import EditRounded from "@mui/icons-material/EditRounded";
 import UploadRounded from "@mui/icons-material/UploadRounded";
 import { useNavigate } from "react-router-dom";
+import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { useAuth } from "@/app/auth/useAuth";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
@@ -42,6 +43,7 @@ import { universityDetailsPath, courseDetailsPath } from "@/modules/universities
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { dataTableSx } from "@/shared/ui/tableStyles";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { useResizableColumn } from "@/modules/universities-browse/useResizableColumn";
 
 /* -----------------------------------------------------------------------
    Colour palette for university crests — cycles through brand tones
@@ -129,6 +131,7 @@ export function UniversitiesBrowsePage() {
   const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(null);
 
   const { saveUniversityMutation } = useUniversityMutations();
+  const { width: listWidth, isDragging, resizeHandleProps } = useResizableColumn();
 
   const handleSaveUniversity = async (input: UniversityInput) => {
     const isEdit = Boolean(editingUniversity);
@@ -202,13 +205,26 @@ export function UniversitiesBrowsePage() {
   };
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden" }}>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2,
+        display: "flex",
+        flexDirection: "column",
+        // Pinned to the viewport so the two panes scroll inside the page rather than
+        // dragging the whole page down with them.
+        height: { lg: `calc(100vh - ${NAVBAR_HEIGHT + 48}px)` },
+        minHeight: 0,
+        overflow: "hidden",
+      }}
+    >
       <Box
         sx={{
           alignItems: "center",
           borderBottom: "1px solid",
           borderColor: "divider",
           display: "flex",
+          flexShrink: 0,
           flexWrap: "wrap",
           gap: 1,
           px: 2.75,
@@ -318,16 +334,20 @@ export function UniversitiesBrowsePage() {
       <Box
         sx={{
           display: "grid",
+          flex: 1,
           gap: 0,
-          gridTemplateColumns: { xs: "1fr", lg: "290px 1fr" },
-          minHeight: 500,
+          // The middle track is the drag handle. Stacked on small screens, where there is
+          // no room to split and nothing to resize.
+          gridTemplateColumns: { xs: "1fr", lg: `${listWidth}px 7px 1fr` },
+          minHeight: { xs: 500, lg: 0 },
         }}
       >
         {/* Left: institution list */}
         <Box
           sx={{
-            borderRight: { lg: "1px solid" },
-            borderColor: { lg: "divider" },
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
             overflowY: "auto",
             p: 1.5,
           }}
@@ -335,6 +355,7 @@ export function UniversitiesBrowsePage() {
           <Typography
             sx={{
               color: "text.disabled",
+              flexShrink: 0,
               fontSize: 9.5,
               fontWeight: 700,
               letterSpacing: 1,
@@ -421,8 +442,26 @@ export function UniversitiesBrowsePage() {
           )}
         </Box>
 
+        {/* Drag handle between the two panes */}
+        <Box
+          {...resizeHandleProps}
+          sx={{
+            bgcolor: isDragging ? "primary.main" : "divider",
+            cursor: "col-resize",
+            display: { xs: "none", lg: "block" },
+            flexShrink: 0,
+            // The bar itself is hairline-thin; the column around it is the grab target.
+            backgroundClip: "content-box",
+            borderLeft: "3px solid transparent",
+            borderRight: "3px solid transparent",
+            transition: "background-color .15s",
+            "&:hover": { bgcolor: "primary.main" },
+            "&:focus-visible": { bgcolor: "primary.main", outline: "none" },
+          }}
+        />
+
         {/* Right: selected university + courses */}
-        <Box sx={{ minWidth: 0, overflowX: "hidden", p: 2 }}>
+        <Box sx={{ minHeight: 0, minWidth: 0, overflowX: "hidden", overflowY: "auto", p: 2 }}>
           {selectedUniversity ? (
             <>
               {/* University header card */}
