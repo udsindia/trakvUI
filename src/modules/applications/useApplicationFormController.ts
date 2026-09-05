@@ -41,13 +41,13 @@ const defaultApplicationFormValues: ApplicationFormValues = {
   tuitionFeeInr: "",
   applicationFeeInr: "",
   notes: "",
+  processedBy: "",
 };
 
 export function buildCreateApplicationPayload(
   values: ApplicationFormValues,
   countries: CountryDto[],
 ): CreateApplicationPayload {
-  const country = countries.find((c) => c.code === values.destinationCountry);
   const toOptionalNumber = (raw: string) => {
     const trimmed = raw.trim();
     if (!trimmed) {
@@ -63,12 +63,15 @@ export function buildCreateApplicationPayload(
     courseName: values.courseName,
     courseId: values.courseId || undefined,
     studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",
-    destinationCountry: country?.name ?? values.destinationCountry,
+    // GET /universities/countries already returns alpha-3, which is what the column
+    // stores. This used to send country.name into a code column.
+    destinationCountryCode: values.destinationCountry,
     intakeMonth: values.intakeMonth,
     intakeYear: Number(values.intakeYear),
     tuitionFeeInr: toOptionalNumber(values.tuitionFeeInr),
     applicationFeeInr: toOptionalNumber(values.applicationFeeInr),
     notes: values.notes.trim() || undefined,
+    processedBy: values.processedBy.trim() || undefined,
   };
 }
 
@@ -99,6 +102,9 @@ function buildUpdateApplicationPayload(
     tuitionFeeInr: toOptionalNumber(values.tuitionFeeInr),
     applicationFeeInr: toOptionalNumber(values.applicationFeeInr),
     notes: values.notes.trim() || undefined,
+    // Sent even when empty, unlike the fields above: the backend reads null as "no change",
+    // so an emptied box has to arrive as "" for clearing the third party to stick.
+    processedBy: values.processedBy.trim(),
   };
 }
 
@@ -178,11 +184,7 @@ export function useApplicationFormController(
     if (!editingApplication) {
       return;
     }
-    const country = countries.find(
-      (c) =>
-        c.name === editingApplication.destinationCountry ||
-        c.code === editingApplication.destinationCountry,
-    );
+    const country = countries.find((c) => c.code === editingApplication.destinationCountryCode);
 
     // Applications store names, not ids. Resolve the stored name against the catalogue
     // so an edit reopens in the mode it was created in: a match restores the link (and
@@ -193,16 +195,26 @@ export function useApplicationFormController(
         (editingApplication.universityName ?? "").trim().toLowerCase(),
     );
 
+    // Resolved here rather than left to the auto-fill effect above. Both write the same
+    // three fields, but this reset re-runs whenever the catalogue queries settle, and a
+    // late re-run would blank what the effect had already filled — the student id has not
+    // changed, so the effect never fires again to put it back. Since all three are
+    // required, that left the form permanently unsubmittable.
+    const student = students?.find((s) => s.id === editingApplication.studentId);
+
     form.reset({
       ...defaultApplicationFormValues,
       studentId: editingApplication.studentId ?? "",
+      studentName: student?.name ?? "",
+      email: student?.email ?? "",
+      phone: student?.phone ?? "",
       targetUniversity: editingApplication.universityName ?? "",
       universityId: matchedUniversity?.id ?? "",
       useCustomUniversity: !matchedUniversity,
       courseName: editingApplication.courseName ?? "",
       courseId: "",
       studyLevel: (editingApplication.studyLevel as ApplicationFormValues["studyLevel"]) ?? "",
-      destinationCountry: country?.code ?? editingApplication.destinationCountry ?? "",
+      destinationCountry: country?.code ?? editingApplication.destinationCountryCode ?? "",
       intakeMonth: editingApplication.intakeMonth ?? "",
       intakeYear: editingApplication.intakeYear ?? new Date().getFullYear(),
       tuitionFeeInr:
@@ -212,8 +224,9 @@ export function useApplicationFormController(
           ? String(editingApplication.applicationFeeInr)
           : "",
       notes: editingApplication.notes ?? "",
+      processedBy: editingApplication.processedBy ?? "",
     });
-  }, [editingApplication, countries, universities, form]);
+  }, [editingApplication, countries, universities, students, form]);
 
   const handleCountryChange = (countryCode: string) => {
     setValue("destinationCountry", countryCode, { shouldValidate: true });

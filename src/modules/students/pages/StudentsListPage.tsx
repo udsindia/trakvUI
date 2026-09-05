@@ -38,7 +38,7 @@ function mapBackendStudentToRow(
     id: student.id,
     name: name || student.email || "—",
     email: student.email ?? "",
-    phone: joinPhoneNumber(student.countryCode, student.phone),
+    phone: joinPhoneNumber(student.phoneCountryCode, student.phone),
     nationality: student.nationality ?? "",
     highestDegree: student.highestDegree ?? "",
     // Falls back to an em-dash when the viewer cannot list users (no USER_VIEW).

@@ -80,7 +80,7 @@ export type CreateLeadPayload = {
   assignedToName: string;
   firstName: string;
   lastName: string;
-  countryCode: string;
+  phoneCountryCode: string;
   phoneNo: string;
   emailAddress: string;
   leadSource: string;

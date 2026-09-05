@@ -19,10 +19,12 @@ export interface BackendApplication {
   universityName?: string;
   courseName?: string;
   studyLevel?: string | null;
-  destinationCountry?: string;
+  destinationCountryCode?: string;
   intakeMonth?: string;
   intakeYear?: number;
   currentStageName?: string | null;
+  /** Third party processing the application; absent or empty means in-house. */
+  processedBy?: string | null;
   outcome?: string;
 
   // Legacy/optional (may be absent)
@@ -51,7 +53,7 @@ export interface ApplicationDetail {
   universityName: string;
   courseName: string;
   studyLevel?: string | null;
-  destinationCountry?: string;
+  destinationCountryCode?: string;
   intakeMonth?: string;
   intakeYear?: number;
   tuitionFeeInr?: number | null;
@@ -61,6 +63,7 @@ export interface ApplicationDetail {
   outcomeReason?: string | null;
   closedAt?: string | null;
   notes?: string | null;
+  processedBy?: string | null;
   createdAt: string;
   updatedAt?: string;
   stages: ApplicationStageDetail[];

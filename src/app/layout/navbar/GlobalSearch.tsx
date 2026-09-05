@@ -120,7 +120,7 @@ export function GlobalSearch() {
             fullName(lead.firstName, lead.lastName),
             lead.email,
             lead.phone,
-            joinPhoneNumber(lead.countryCode, lead.phone),
+            joinPhoneNumber(lead.phoneCountryCode, lead.phone),
           ),
       )
       .slice(0, MAX_PER_GROUP)
@@ -128,7 +128,7 @@ export function GlobalSearch() {
         key: `lead-${lead.id}`,
         group: "Leads",
         primary: fullName(lead.firstName, lead.lastName) || lead.email || "Unnamed lead",
-        secondary: subtitle(lead.email, joinPhoneNumber(lead.countryCode, lead.phone)),
+        secondary: subtitle(lead.email, joinPhoneNumber(lead.phoneCountryCode, lead.phone)),
         to: leadRoutePaths.details(lead.id),
       }));
 
@@ -139,7 +139,7 @@ export function GlobalSearch() {
           fullName(student.firstName, student.lastName),
           student.email,
           student.phone,
-          joinPhoneNumber(student.countryCode, student.phone),
+          joinPhoneNumber(student.phoneCountryCode, student.phone),
         ),
       )
       .slice(0, MAX_PER_GROUP)
@@ -148,7 +148,7 @@ export function GlobalSearch() {
         group: "Students",
         primary:
           fullName(student.firstName, student.lastName) || student.email || "Unnamed student",
-        secondary: subtitle(student.email, joinPhoneNumber(student.countryCode, student.phone)),
+        secondary: subtitle(student.email, joinPhoneNumber(student.phoneCountryCode, student.phone)),
         to: studentDetailsPath(student.id),
       }));
 

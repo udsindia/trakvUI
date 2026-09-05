@@ -25,6 +25,7 @@ import { EditOutlined } from "@mui/icons-material";
 import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
+import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 
@@ -224,10 +225,11 @@ export function ApplicationDetailsPage() {
                       <Typography variant="body2"><strong>University:</strong> {application.universityName}</Typography>
                       <Typography variant="body2"><strong>Course:</strong> {application.courseName}</Typography>
                       <Typography variant="body2"><strong>Study Level:</strong> {humanize(application.studyLevel) || "—"}</Typography>
-                      <Typography variant="body2"><strong>Country:</strong> {application.destinationCountry || "—"}</Typography>
+                      <Typography variant="body2"><strong>Country:</strong> {countryDisplayName(application.destinationCountryCode) || "—"}</Typography>
                       <Typography variant="body2"><strong>Intake:</strong> {application.intakeMonth} {application.intakeYear}</Typography>
                       <Typography variant="body2"><strong>Tuition (INR):</strong> {application.tuitionFeeInr ?? "—"}</Typography>
                       <Typography variant="body2"><strong>Application Fee (INR):</strong> {application.applicationFeeInr ?? "—"}</Typography>
+                      <Typography variant="body2"><strong>Processed By:</strong> {application.processedBy || "In-house"}</Typography>
                       {application.notes && (
                         <Typography variant="body2"><strong>Notes:</strong> {application.notes}</Typography>
                       )}

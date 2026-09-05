@@ -618,6 +618,22 @@ export function ApplicationForm({
                       )}
                     />
                   </Stack>
+
+                  <Controller
+                    control={control}
+                    name="processedBy"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        helperText="The third party handling this application. Leave empty if it is processed in-house."
+                        id={field.name}
+                        label="Processed By"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
                 </Stack>
               </Grid>
             </Grid>

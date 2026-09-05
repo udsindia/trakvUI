@@ -5,6 +5,7 @@ import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography 
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modules/applications/components/ApplicationQuickFilters";
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
+import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
@@ -37,7 +38,7 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     id: app.id,
     studentName: app.studentName ?? "—",
     email: app.email ?? "",
-    targetCountry: app.targetCountry ?? app.destinationCountry ?? "",
+    targetCountry: app.targetCountry ?? countryDisplayName(app.destinationCountryCode),
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
     // Backend sends the current stage name (or outcome for un-staged apps); fall back safely.

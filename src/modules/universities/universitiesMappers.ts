@@ -80,6 +80,18 @@ function resolveCountry(countryCode: string) {
   return { alpha2: normalized.slice(0, 2), name: normalized, flag: "🏳️" };
 }
 
+/**
+ * Display name for a stored country code, e.g. "GBR" -> "United Kingdom".
+ *
+ * Data columns hold the code; the name is resolved here and only here, so every screen
+ * shows the same wording. Falls back to the raw code for a country not in the map, which
+ * is visible enough to notice and fix rather than silently blank.
+ */
+export function countryDisplayName(countryCode?: string | null): string {
+  if (!countryCode) return "";
+  return resolveCountry(countryCode).name;
+}
+
 export function toAlpha3CountryCode(countryCode: string): string {
   const normalized = countryCode.toUpperCase();
   if (normalized.length === 3) {

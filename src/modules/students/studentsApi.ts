@@ -11,8 +11,8 @@ export interface BackendStudent {
   firstName?: string;
   lastName?: string;
   email?: string;
-  /** Dial code for `phone`, e.g. "+91". */
-  countryCode?: string;
+  /** Dial code for `phone`, e.g. "+91". Not a country — see nationality for that. */
+  phoneCountryCode?: string;
   phone?: string;
   nationality?: string;
   highestDegree?: string;

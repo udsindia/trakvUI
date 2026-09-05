@@ -25,8 +25,8 @@ export interface BackendLead {
   consultancyId: string;
   firstName: string;
   lastName: string;
-  /** Dial code for `phone`, e.g. "+91". Always render the two together. */
-  countryCode?: string;
+  /** Dial code for `phone`, e.g. "+91". Not a country — always render the two together. */
+  phoneCountryCode?: string;
   phone: string;
   email: string;
   isArchived: boolean;
@@ -139,7 +139,7 @@ export interface LeadDetails {
   lastName: string;
   email: string;
   phone: string;
-  countryCode: string;
+  phoneCountryCode: string;
   leadStage: string;
   score: number | null;
   sourceId: string | null;

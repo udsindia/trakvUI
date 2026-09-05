@@ -71,7 +71,10 @@ export const courseSearchSettings = {
       section: "destinations-intakes",
       placeholder: "Select destination",
       options: [
-        { label: "UK", value: "GB" },
+        // Labels are the country's full name everywhere, matching CountryNames on the server
+        // and COUNTRY_ALPHA3_TO_UI on the client. A picker that said "UK" while every other
+        // screen said "United Kingdom" read as two different countries.
+        { label: "United Kingdom", value: "GB" },
         { label: "Ireland", value: "IE" },
         { label: "Australia", value: "AU" },
         { label: "Canada", value: "CA" },

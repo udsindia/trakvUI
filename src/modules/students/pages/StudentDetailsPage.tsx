@@ -20,6 +20,7 @@ import { useAuth } from "@/app/auth/useAuth";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { studentsApi } from "@/modules/students/studentsApi";
@@ -269,7 +270,7 @@ export function StudentDetailsPage() {
                               </Typography>
                               <Typography color="text.secondary" sx={{ fontSize: 12, mt: 0.25 }}>
                                 {[
-                                  application.destinationCountry,
+                                  countryDisplayName(application.destinationCountryCode),
                                   [application.intakeMonth, application.intakeYear]
                                     .filter(Boolean)
                                     .join(" "),
@@ -346,7 +347,7 @@ export function StudentDetailsPage() {
                 <InfoRow label="Email" value={student.email ?? ""} />
                 <InfoRow
                   label="Phone"
-                  value={joinPhoneNumber(student.countryCode, student.phone)}
+                  value={joinPhoneNumber(student.phoneCountryCode, student.phone)}
                 />
                 <InfoRow label="Nationality" value={student.nationality ?? ""} />
                 <InfoRow label="Date of birth" value={formatDate(student.dateOfBirth)} />

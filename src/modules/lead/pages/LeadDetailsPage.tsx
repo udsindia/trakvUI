@@ -95,7 +95,7 @@ export function LeadDetailsPage() {
   const stage = humanizeStage(lead?.leadStage);
   const chipStyle = stageColor[stage] ?? {};
   const phone = lead
-    ? joinPhoneNumber(lead.countryCode, lead.phone) || "—"
+    ? joinPhoneNumber(lead.phoneCountryCode, lead.phone) || "—"
     : "—";
   const countries = lead?.destinationCountries?.length ? lead.destinationCountries.join(", ") : "—";
   const intake = lead && (lead.targetIntakeMonth || lead.targetIntakeYear)

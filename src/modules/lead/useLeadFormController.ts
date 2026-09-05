@@ -68,7 +68,7 @@ export function buildCreateLeadPayload(
     assignedToName: assignedAgent?.agentName ?? "",
     firstName,
     lastName,
-    countryCode,
+    phoneCountryCode: countryCode,
     phoneNo,
     emailAddress: values.email.trim(),
     // "Other" is a UI affordance, never a stored source name — the typed text is what
@@ -121,7 +121,7 @@ export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
     isWhatsAppAvailable: lead.isWhatsAppAvailable ?? false,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     notes: lead.notes ?? "",
-    phone: joinPhoneNumber(lead.countryCode, lead.phone),
+    phone: joinPhoneNumber(lead.phoneCountryCode, lead.phone),
     source: isKnownSource ? savedSource : OTHER_SOURCE,
     tags: [],
   };

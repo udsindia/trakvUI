@@ -133,7 +133,7 @@ function mapBackendLeadToRow(lead: BackendLead): LeadRow {
     id: lead.id,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     email: lead.email ?? "",
-    phone: joinPhoneNumber(lead.countryCode, lead.phone),
+    phone: joinPhoneNumber(lead.phoneCountryCode, lead.phone),
     stage: fromBackendLeadStage(lead.leadStage),
     agent: lead.assignedToName ?? "—",
     source: lead.sourceName ?? "—",

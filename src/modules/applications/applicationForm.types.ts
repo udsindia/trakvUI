@@ -49,6 +49,8 @@ export type ApplicationFormValues = {
   tuitionFeeInr: string; // text input; converted to number on submit
   applicationFeeInr: string; // text input; converted to number on submit
   notes: string;
+  /** Third party handling the application; empty means in-house. */
+  processedBy: string;
   studentName: string | "";
   email: string | "";
   phone: string | "";
@@ -80,6 +82,8 @@ export type UpdateApplicationPayload = {
   tuitionFeeInr?: number;
   applicationFeeInr?: number;
   notes?: string;
+  /** Editable after the application advances, unlike every other field here. */
+  processedBy?: string;
 };
 
 export type CreateApplicationPayload = {
@@ -89,12 +93,13 @@ export type CreateApplicationPayload = {
   courseName: string;
   courseId?: string;
   studyLevel: string;
-  destinationCountry: string;
+  destinationCountryCode: string;
   intakeMonth: string;
   intakeYear: number;
   tuitionFeeInr?: number | null;
   applicationFeeInr?: number | null;
   notes?: string;
+  processedBy?: string;
   targetUniversity?: string;
   course?: string;
   leadId?: string;

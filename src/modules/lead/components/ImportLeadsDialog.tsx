@@ -55,7 +55,7 @@ const FIELD_LABELS: Record<string, string> = {
   firstName: "First Name",
   lastName: "Last Name",
   emailAddress: "Email Address",
-  countryCode: "Country Code",
+  countryCode: "Phone Country Code",
   phoneNo: "Phone Number",
   leadSource: "Lead Source",
   college: "College Name",

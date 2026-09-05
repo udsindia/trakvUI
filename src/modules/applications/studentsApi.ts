@@ -16,7 +16,7 @@ interface BackendStudentSummary {
   firstName?: string;
   lastName?: string;
   email?: string;
-  countryCode?: string;
+  phoneCountryCode?: string;
   phone?: string;
 }
 
@@ -44,7 +44,7 @@ export const studentsApi = {
       id: s.id,
       name: `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim() || s.email || s.id,
       email: s.email ?? "",
-      phone: joinPhoneNumber(s.countryCode, s.phone),
+      phone: joinPhoneNumber(s.phoneCountryCode, s.phone),
     }));
   },
 };
