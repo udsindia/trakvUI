@@ -6,22 +6,20 @@ import {
   Button,
   Divider,
   IconButton,
-  InputAdornment,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import AddRounded from "@mui/icons-material/AddRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
 import ListAltRounded from "@mui/icons-material/ListAltRounded";
 import NotificationsNoneRounded from "@mui/icons-material/NotificationsNoneRounded";
-import SearchRounded from "@mui/icons-material/SearchRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import type { Theme } from "@mui/material/styles";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { MobileMenuButton } from "@/app/layout/Sidebar";
 import { SERIF } from "@/shared/ui/vutrakTheme";
 import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
+import { GlobalSearch } from "@/app/layout/navbar/GlobalSearch";
 import { getNavigationItems } from "@/app/layout/navbar/navigation";
 import { UserMenu } from "@/app/layout/navbar/UserMenu";
 import type { DashboardQuickAction } from "@/modules/dashboard/dashboard.types";
@@ -178,31 +176,7 @@ export function Topbar({
         </Typography>
       </Box>
 
-      <TextField
-        placeholder="Search leads, students, apps…"
-        size="small"
-        sx={{
-          display: { xs: "none", sm: "block" },
-          flex: 1,
-          maxWidth: 300,
-          ml: 1.5,
-          "& .MuiOutlinedInput-root": {
-            bgcolor: "#F7FAFC",
-            borderRadius: "9px",
-            fontSize: 12,
-            height: 34,
-          },
-        }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchRounded sx={{ color: "text.disabled", fontSize: 14 }} />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
+      <GlobalSearch />
 
       <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", ml: "auto" }}>
         {actionButtons.map((action, index) => {

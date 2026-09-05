@@ -7,6 +7,10 @@ export const applicationsRoutePaths = {
   edit: `${APPLICATIONS_BASE_PATH}/:id/edit`,
 } as const;
 
+/** Concrete detail URL for one application. */
+export const applicationDetailsPath = (id: string) =>
+  `${APPLICATIONS_BASE_PATH}/${id}`;
+
 /** Concrete edit URL for one application. */
 export const applicationEditPath = (id: string) =>
   `${APPLICATIONS_BASE_PATH}/${id}/edit`;
