@@ -36,6 +36,24 @@ const ALPHA3_TO_ALPHA2: Record<string, string> = Object.fromEntries(
   Object.entries(COUNTRY_ALPHA3_TO_UI).map(([alpha3, value]) => [alpha3, value.alpha2]),
 );
 
+/**
+ * Spellings that are neither alpha-3 nor the alpha-2 of a country above, but still sit in
+ * the data: universities imported before the codes were normalised hold "UK" alongside
+ * "GBR". Without this they resolve to a country of their own, so one filter chip covers
+ * 8 institutions and the other 310. Mirrors CountryNames on the server.
+ */
+const LEGACY_CODE_ALIASES: Record<string, string> = {
+  UK: "GBR",
+  UAE: "ARE",
+};
+
+/** Any accepted spelling of a country code -> the alpha-3 the rest of the app compares on. */
+function toCanonicalAlpha3(countryCode: string): string {
+  const normalized = countryCode.trim().toUpperCase();
+  if (COUNTRY_ALPHA3_TO_UI[normalized]) return normalized;
+  return LEGACY_CODE_ALIASES[normalized] ?? ALPHA2_TO_ALPHA3[normalized] ?? normalized;
+}
+
 const STUDY_LEVEL_TO_UI: Record<StudyLevel, { level: CourseLevel; label: string }> = {
   UNDERGRADUATE: { level: "undergraduate", label: "Undergraduate" },
   POSTGRADUATE_TAUGHT: { level: "masters", label: "Postgraduate Taught" },
@@ -63,24 +81,17 @@ const CURRENCY_TO_INR_RATE: Record<string, number> = {
 };
 
 function resolveCountry(countryCode: string) {
-  const normalized = countryCode.toUpperCase();
-  const mapped = COUNTRY_ALPHA3_TO_UI[normalized];
+  const alpha3 = toCanonicalAlpha3(countryCode);
+  const mapped = COUNTRY_ALPHA3_TO_UI[alpha3];
 
   if (mapped) {
     return mapped;
   }
 
-  if (normalized.length === 2) {
-    const alpha3 = ALPHA2_TO_ALPHA3[normalized];
-    if (alpha3) {
-      return COUNTRY_ALPHA3_TO_UI[alpha3];
-    }
-  }
-
   // Unknown country: keep the code whole rather than slicing "ITA" down to "IT". The
   // sliced form matched nothing on the way back, so a country outside the map above
   // filtered to an empty list instead of just missing its flag and full name.
-  return { alpha2: normalized, name: normalized, flag: "🏳️" };
+  return { alpha2: alpha3, name: alpha3, flag: "🏳️" };
 }
 
 /**
@@ -96,16 +107,11 @@ export function countryDisplayName(countryCode?: string | null): string {
 }
 
 export function toAlpha3CountryCode(countryCode: string): string {
-  const normalized = countryCode.toUpperCase();
-  if (normalized.length === 3) {
-    return normalized;
-  }
-
-  return ALPHA2_TO_ALPHA3[normalized] ?? normalized;
+  return toCanonicalAlpha3(countryCode);
 }
 
 export function toAlpha2CountryCode(countryCode: string): string {
-  const normalized = countryCode.toUpperCase();
+  const normalized = toCanonicalAlpha3(countryCode);
   if (normalized.length === 2) {
     return normalized;
   }
