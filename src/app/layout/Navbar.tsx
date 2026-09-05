@@ -107,7 +107,7 @@ export function Navbar({
 
               <Stack sx={{ minWidth: 0 }} spacing={0.25}>
                 <Typography noWrap variant="subtitle1">
-                  EduTrack
+                  VUTrak
                 </Typography>
                 <Typography color="text.secondary" noWrap variant="body2">
                   {tenantName}

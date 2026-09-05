@@ -3,7 +3,7 @@ import type {
   RoleDefinition,
 } from "@/modules/settings/settings.types";
 
-const CUSTOM_ROLES_STORAGE_PREFIX = "edutrack.customRoles";
+const CUSTOM_ROLES_STORAGE_PREFIX = "vutrak.customRoles";
 
 function getStorageKey(tenantId: string) {
   return `${CUSTOM_ROLES_STORAGE_PREFIX}.${tenantId}`;

@@ -8,7 +8,7 @@ type ShellState = {
 
 const initialState: ShellState = {
   mobileNavigationOpen: false,
-  sidebarCollapsed: localStorage.getItem("trakv_sidebar_collapsed") === "1",
+  sidebarCollapsed: localStorage.getItem("vutrak_sidebar_collapsed") === "1",
 };
 
 const shellSlice = createSlice({
@@ -23,7 +23,7 @@ const shellSlice = createSlice({
     },
     toggleSidebarCollapsed: (state) => {
       state.sidebarCollapsed = !state.sidebarCollapsed;
-      localStorage.setItem("trakv_sidebar_collapsed", state.sidebarCollapsed ? "1" : "0");
+      localStorage.setItem("vutrak_sidebar_collapsed", state.sidebarCollapsed ? "1" : "0");
     },
   },
 });

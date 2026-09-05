@@ -45,12 +45,18 @@ const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
   ANALYST: ROLES.ANALYST,
 };
 
-const AUTH_STORAGE_KEY = "edutrack.auth.session";
+const AUTH_STORAGE_KEY = "vutrak.auth.session";
+/**
+ * The key this used to be stored under, back when the product was called EduTrack.
+ * Read once and carried over, so renaming the key does not sign everybody out on the
+ * next deploy. Safe to delete once no one has an EduTrack-era session left.
+ */
+const LEGACY_AUTH_STORAGE_KEY = "edutrack.auth.session";
 const AUTH_LOGIN_ENDPOINT = "/auth/login";
 const AUTH_MODE = import.meta.env.VITE_AUTH_MODE ?? "mock";
 const MOCK_AUTH_LATENCY_MS = 450;
 const MOCK_SESSION_DURATION_MS = 1000 * 60 * 60 * 8;
-const MOCK_TENANT_ID = "edutrack-demo";
+const MOCK_TENANT_ID = "vutrak-demo";
 const MOCK_TENANT_NAME = "Arpan Consultancy";
 
 type MockPersona = {
@@ -197,7 +203,16 @@ function readStoredSession() {
     return null;
   }
 
-  const serializedSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  let serializedSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
+
+  if (!serializedSession) {
+    serializedSession = window.localStorage.getItem(LEGACY_AUTH_STORAGE_KEY);
+
+    if (serializedSession) {
+      window.localStorage.setItem(AUTH_STORAGE_KEY, serializedSession);
+      window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+    }
+  }
 
   if (!serializedSession) {
     return null;
@@ -407,6 +422,7 @@ export const authService = {
 
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
     }
   },
 

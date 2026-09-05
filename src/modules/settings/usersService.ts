@@ -6,7 +6,7 @@ import type {
 } from "@/modules/settings/settings.types";
 
 const MOCK_LATENCY_MS = 300;
-const MOCK_USERS_STORAGE_PREFIX = "edutrack.mockUsers";
+const MOCK_USERS_STORAGE_PREFIX = "vutrak.mockUsers";
 
 function wait(durationMs: number) {
   return new Promise<void>((resolve) => {

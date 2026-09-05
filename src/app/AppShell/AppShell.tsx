@@ -23,7 +23,7 @@ function AppShellRuntime() {
         navigationModules={navigationModules}
         notificationsCount={notificationsCount}
         roles={roles}
-        tenantName={tenant?.tenantName ?? "EduTrack"}
+        tenantName={tenant?.tenantName ?? "VUTrak"}
         user={user}
         onLogout={onLogout}
       />

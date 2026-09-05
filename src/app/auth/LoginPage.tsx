@@ -68,7 +68,7 @@ export function LoginPage() {
                 </Typography>
                 <Typography color="text.secondary" textAlign="center" variant="body2">
                   Scan the QR code below to renew your subscription, or contact support to
-                  continue using EduTrack.
+                  continue using VUTrak.
                 </Typography>
               </Stack>
 

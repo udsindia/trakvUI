@@ -227,7 +227,7 @@ function SidebarContent({
                 lineHeight: 1.1,
               }}
             >
-              Trakv
+              VUTrak
             </Typography>
             <Typography
               noWrap
