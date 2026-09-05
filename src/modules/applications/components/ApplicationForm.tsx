@@ -3,6 +3,7 @@ import {
   Alert,
   Autocomplete,
   Box,
+  createFilterOptions,
   Button,
   Card,
   CardContent,
@@ -17,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, type UseFormReturn } from "react-hook-form";
+
 import {
   OTHER_COURSE_ID,
   type ApplicationFormValues,
@@ -29,6 +31,18 @@ import type {
 } from "@/modules/universities/universitiesApi.types";
 
 /** API StudyLevel values, for a course being added from this form. */
+/**
+ * Matches a student on name, email or phone rather than the label alone.
+ *
+ * The label is just the name, so the dropdown reads cleanly once a student is chosen --
+ * but two students often share a first name, and the email is what tells them apart.
+ * Built once at module scope; createFilterOptions returns a matcher, not a result.
+ */
+const filterStudents = createFilterOptions<StudentOption>({
+  stringify: (student) => `${student.name} ${student.email} ${student.phone}`,
+  trim: true,
+});
+
 const STUDY_LEVEL_OPTIONS = [
   { label: "Undergraduate", value: "UNDERGRADUATE" },
   { label: "Masters (taught)", value: "POSTGRADUATE_TAUGHT" },
@@ -250,34 +264,43 @@ export function ApplicationForm({
                   name="studentId"
                   rules={{ required: "Select the student this application is for." }}
                   render={({ field }) => (
-                    <TextField
-                      error={Boolean(errors.studentId)}
-                      fullWidth
+                    <Autocomplete
                       disabled={isEditMode}
-                      helperText={
-                        errors.studentId?.message ||
-                        (isEditMode
-                          ? "Fixed after creation. Moving an application to another student is not an edit."
-                          : "The application is filed against this student's record.")
-                      }
-                      id={field.name}
-                      label="Student"
-                      required
-                      select
-                      slotProps={alwaysVisibleLabelSlotProps}
-                      sx={fieldSx}
-                      {...field}
-                      value={field.value || ""}
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {students.map((student) => (
-                        <MenuItem key={student.id} value={student.id}>
-                          {student.name} ({student.email})
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      options={students}
+                      filterOptions={filterStudents}
+                      getOptionLabel={(option) => option.name || option.email}
+                      isOptionEqualToValue={(option, selected) => option.id === selected.id}
+                      renderOption={(props, option) => (
+                        <li {...props} key={option.id}>
+                          <Stack spacing={0} sx={{ minWidth: 0 }}>
+                            <Typography sx={{ fontSize: 13.5 }}>{option.name || "Unnamed student"}</Typography>
+                            <Typography sx={{ color: "text.disabled", fontSize: 11 }}>
+                              {[option.email, option.phone].filter(Boolean).join(" · ")}
+                            </Typography>
+                          </Stack>
+                        </li>
+                      )}
+                      value={students.find((student) => student.id === field.value) ?? null}
+                      onChange={(_event, option) => field.onChange(option ? option.id : "")}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          error={Boolean(errors.studentId)}
+                          fullWidth
+                          helperText={
+                            errors.studentId?.message ||
+                            (isEditMode
+                              ? "Fixed after creation. Moving an application to another student is not an edit."
+                              : "The application is filed against this student's record.")
+                          }
+                          label="Student"
+                          placeholder="Search by name, email or phone"
+                          required
+                          sx={fieldSx}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    />
                   )}
                 />
               </Grid>

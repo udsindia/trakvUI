@@ -90,10 +90,25 @@ export function splitPhoneNumber(
     : { countryCode: defaultCountryCode, phoneNo: digits };
 }
 
-/** "+91" + "8012380123" → "+91 8012380123". Blank parts are dropped. */
+/**
+ * "+91" + "8012380123" → "+91 8012380123". Blank parts are dropped.
+ *
+ * If the number already carries the dial code it is returned as it is, rather than
+ * gaining a second one. Plenty of stored rows are like that -- students created from
+ * leads have the code in both `phone_country_code` and `phone` -- which showed as
+ * "+91 +91 9988998800" everywhere the two were joined. Worse than the display: the lead
+ * form seeds its phone field from this, so a save wrote the doubled value back.
+ */
 export function joinPhoneNumber(
   countryCode: string | null | undefined,
   phoneNo: string | null | undefined,
 ): string {
-  return [countryCode?.trim(), phoneNo?.trim()].filter(Boolean).join(" ");
+  const code = countryCode?.trim() ?? "";
+  const local = phoneNo?.trim() ?? "";
+
+  if (code && local.replace(/\s+/g, "").startsWith(code.replace(/\s+/g, ""))) {
+    return local;
+  }
+
+  return [code, local].filter(Boolean).join(" ");
 }

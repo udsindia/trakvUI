@@ -51,3 +51,24 @@ test.describe("splitPhoneNumber", () => {
     expect(second).toEqual(first);
   });
 });
+
+test.describe("joinPhoneNumber", () => {
+  test("joins a dial code onto a local number", () => {
+    expect(joinPhoneNumber("+91", "8012380123")).toBe("+91 8012380123");
+  });
+
+  test("does not add a second dial code to a number that already has one", () => {
+    // The regression: students created from leads carry the code in both columns, so
+    // every screen that joined them showed "+91 +91 9988998800" -- and the lead form,
+    // which seeds its phone field from this, would have saved that back.
+    expect(joinPhoneNumber("+91", "+91 9988998800")).toBe("+91 9988998800");
+    expect(joinPhoneNumber("+91", "+919988998800")).toBe("+919988998800");
+    expect(joinPhoneNumber("+1", "+1 5551234567")).toBe("+1 5551234567");
+  });
+
+  test("drops blank parts rather than leaving a stray space", () => {
+    expect(joinPhoneNumber("+91", "")).toBe("+91");
+    expect(joinPhoneNumber("", "8012380123")).toBe("8012380123");
+    expect(joinPhoneNumber(null, undefined)).toBe("");
+  });
+});
