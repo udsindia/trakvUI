@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded } from "@mui/icons-material";
-import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography } from "@mui/material";
+import SearchRounded from "@mui/icons-material/SearchRounded";
+import { Badge, Box, Button, CircularProgress, Drawer, InputAdornment, Paper, Stack, TextField, Typography } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modules/applications/components/ApplicationQuickFilters";
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
@@ -51,7 +52,7 @@ export function ApplicationDashboardPage() {
   const [filterValues, setFilterValues] = useState<FilterPanelValues>({ country: "", stage: "" });
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [searchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -162,6 +163,12 @@ export function ApplicationDashboardPage() {
     setPage(normalizedPage);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    // A narrower result set can leave the current page past the end of it.
+    setPage(1);
+  };
+
   const handlePageSizeChange = (nextPageSize: number) => {
     if (nextPageSize === pageSize) return;
     setPageSize(nextPageSize);
@@ -198,6 +205,27 @@ export function ApplicationDashboardPage() {
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={handleQuickFilterChange} />
             </Box>
+
+            <TextField
+              placeholder="Search student, email, university or course"
+              size="small"
+              value={searchQuery}
+              sx={{
+                flexShrink: 0,
+                width: { xs: 180, md: 300 },
+                "& .MuiOutlinedInput-root": { borderRadius: "9px", fontSize: 13 },
+              }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRounded sx={{ color: "text.disabled", fontSize: 17 }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              onChange={(event) => handleSearchChange(event.target.value)}
+            />
 
             <Badge
               badgeContent={activeFilterCount}

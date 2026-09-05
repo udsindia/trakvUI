@@ -64,6 +64,23 @@ export function useUniversitiesByCountry(countryCode: string | undefined) {
   });
 }
 
+/**
+ * Every university the tenant has, across all countries.
+ *
+ * useUniversitiesByCountry is the right source once a destination is chosen. This one
+ * exists so the application form's university picker is usable *before* that: people
+ * think "apply to Oxford Brookes", not "apply to the UK, then Oxford Brookes".
+ */
+export function useAllUniversities(enabled: boolean) {
+  const apiEnabled = useUniversitiesApiEnabled(enabled);
+
+  return useQuery({
+    queryKey: ["universities", "all"] as const,
+    queryFn: () => universitiesApi.listAllUniversities(),
+    enabled: apiEnabled,
+  });
+}
+
 export function useUniversity(universityId: string | undefined) {
   const apiEnabled = useUniversitiesApiEnabled(Boolean(universityId));
 

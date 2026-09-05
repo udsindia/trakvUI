@@ -129,9 +129,30 @@ export function ApplicationForm({
     },
   } as const;
 
+  /** Muted ground, so a read-only field reads as a shown value rather than an input. */
+  const readOnlyFieldSx = {
+    "& .MuiOutlinedInput-root": {
+      bgcolor: "action.hover",
+      borderRadius: "9px",
+    },
+    "& .MuiOutlinedInput-input": {
+      cursor: "default",
+    },
+  };
+
+  const selectedStudentId = watch("studentId");
+  const derivedFieldHelperText = selectedStudentId
+    ? "From the student record. Edit it on the student to change it."
+    : "Fills in once you select a student.";
+
   const countryHelperText = (() => {
     if (errors.destinationCountry?.message) {
       return errors.destinationCountry.message;
+    }
+    if (isEditMode) {
+      // Matches ApplicationService: the stage sequence was cloned from this country at
+      // creation, so changing it would leave the application on the wrong sequence.
+      return "Fixed after creation — the stages were set from it. File a new application to change it.";
     }
     if (countriesError) {
       return "Could not load countries. Please refresh and try again.";
@@ -147,7 +168,7 @@ export function ApplicationForm({
       return errors.targetUniversity.message;
     }
     if (!destinationCountry) {
-      return "Select a destination country first.";
+      return "Search any university — the destination country follows from it.";
     }
     if (useCustomUniversity) {
       // Typing a name that exists still links it — the controller matches on exact name.
@@ -218,16 +239,30 @@ export function ApplicationForm({
 
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
+                {/*
+                  Required, not optional: CreateApplicationRequest declares
+                  @NotNull on studentId, so submitting without one is a 400. The
+                  label used to say "Optional", which meant the only way to find
+                  out was to fill the whole form and have it rejected.
+                */}
                 <Controller
                   control={control}
                   name="studentId"
+                  rules={{ required: "Select the student this application is for." }}
                   render={({ field }) => (
                     <TextField
                       error={Boolean(errors.studentId)}
                       fullWidth
-                      helperText={errors.studentId?.message || "Optional: Select an existing student to auto-fill details"}
+                      disabled={isEditMode}
+                      helperText={
+                        errors.studentId?.message ||
+                        (isEditMode
+                          ? "Fixed after creation. Moving an application to another student is not an edit."
+                          : "The application is filed against this student's record.")
+                      }
                       id={field.name}
-                      label="Select Student (Optional)"
+                      label="Student"
+                      required
                       select
                       slotProps={alwaysVisibleLabelSlotProps}
                       sx={fieldSx}
@@ -249,21 +284,25 @@ export function ApplicationForm({
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={3}>
+                  {/*
+                    Read-only, all three. They are filled from the selected student and
+                    are not part of either payload -- buildCreateApplicationPayload sends
+                    studentId, and the name shown on an application is resolved from the
+                    student record. Editing them here changed nothing and silently
+                    disagreed with the student page. Corrections belong on the student.
+                  */}
                   <Controller
                     control={control}
                     name="studentName"
-                    rules={{ required: "Student name is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.studentName)}
                         fullWidth
-                        helperText={errors.studentName?.message}
+                        helperText={derivedFieldHelperText}
                         id={field.name}
                         label="Student Name"
-                        placeholder="Enter full name"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
+                        placeholder="Select a student above"
+                        slotProps={{ ...alwaysVisibleLabelSlotProps, input: { readOnly: true } }}
+                        sx={readOnlyFieldSx}
                         {...field}
                       />
                     )}
@@ -272,25 +311,15 @@ export function ApplicationForm({
                   <Controller
                     control={control}
                     name="email"
-                    rules={{
-                      pattern: {
-                        message: "Enter a valid email address.",
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      },
-                      required: "Email address is required.",
-                    }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.email)}
                         fullWidth
-                        helperText={errors.email?.message}
+                        helperText={derivedFieldHelperText}
                         id={field.name}
                         label="Email Address"
-                        placeholder="name@example.com"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
-                        type="email"
+                        placeholder="Select a student above"
+                        slotProps={{ ...alwaysVisibleLabelSlotProps, input: { readOnly: true } }}
+                        sx={readOnlyFieldSx}
                         {...field}
                       />
                     )}
@@ -299,18 +328,15 @@ export function ApplicationForm({
                   <Controller
                     control={control}
                     name="phone"
-                    rules={{ required: "Phone number is required." }}
                     render={({ field }) => (
                       <TextField
-                        error={Boolean(errors.phone)}
                         fullWidth
-                        helperText={errors.phone?.message}
+                        helperText={derivedFieldHelperText}
                         id={field.name}
                         label="Phone Number"
-                        placeholder="+91 98765 43210"
-                        required
-                        slotProps={alwaysVisibleLabelSlotProps}
-                        sx={fieldSx}
+                        placeholder="Select a student above"
+                        slotProps={{ ...alwaysVisibleLabelSlotProps, input: { readOnly: true } }}
+                        sx={readOnlyFieldSx}
                         {...field}
                       />
                     )}
@@ -326,7 +352,7 @@ export function ApplicationForm({
                     rules={{ required: "Destination country is required." }}
                     render={({ field }) => (
                       <TextField
-                        disabled={countriesLoading}
+                        disabled={countriesLoading || isEditMode}
                         error={Boolean(errors.destinationCountry) || countriesError}
                         fullWidth
                         helperText={countryHelperText}
@@ -404,7 +430,7 @@ export function ApplicationForm({
                       rules={{ required: "Target university is required." }}
                       render={({ field }) => (
                         <Autocomplete
-                          disabled={!destinationCountry || universitiesLoading}
+                          disabled={universitiesLoading}
                           options={universities}
                           getOptionLabel={(option) => option.name}
                           isOptionEqualToValue={(option, selected) => option.id === selected.id}

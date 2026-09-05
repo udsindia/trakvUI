@@ -18,10 +18,12 @@ import { universityCoursesQueryKey } from "@/modules/universities/universitiesCa
 import { useAuth } from "@/app/auth/useAuth";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import {
+  useAllUniversities,
   useCountries,
   useUniversitiesByCountry,
   useUniversityCourseOptions,
 } from "@/modules/universities/useUniversitiesCatalog";
+import { toAlpha3CountryCode } from "@/modules/universities/universitiesMappers";
 
 const defaultApplicationFormValues: ApplicationFormValues = {
   studentId: "",
@@ -156,6 +158,18 @@ export function useApplicationFormController(
     isError: universitiesError,
   } = useUniversitiesByCountry(destinationCountry || undefined);
 
+  // Only fetched while no destination is chosen, so the ordinary country-first flow
+  // still costs exactly one university request.
+  const { data: allUniversities = [], isLoading: allUniversitiesLoading } =
+    useAllUniversities(!destinationCountry);
+
+  /**
+   * The picker's options. Narrowed to the destination once there is one; the whole
+   * catalogue before that, so the field is searchable from the moment the form opens
+   * rather than greyed out behind the country.
+   */
+  const universityOptions = destinationCountry ? universities : allUniversities;
+
   const {
     data: courses = [],
     isLoading: coursesLoading,
@@ -250,9 +264,19 @@ export function useApplicationFormController(
    * offer.
    */
   const handleUniversityChange = (nextUniversityId: string) => {
-    const university = universities.find((u) => u.id === nextUniversityId);
+    const university = universityOptions.find((u) => u.id === nextUniversityId);
     setValue("universityId", nextUniversityId, { shouldValidate: true });
     setValue("targetUniversity", university?.name ?? "", { shouldValidate: true });
+
+    // Picked before a destination was chosen: the university knows its own country, so
+    // fill it in rather than making the user state it twice. It still drives the stage
+    // template and the course list, so it has to be set before either is read.
+    if (!destinationCountry && university?.countryCode) {
+      setValue("destinationCountry", toAlpha3CountryCode(university.countryCode), {
+        shouldValidate: true,
+      });
+    }
+
     setValue("courseId", "");
     setValue("useCustomCourse", false);
     setValue("courseName", "");
@@ -445,10 +469,10 @@ export function useApplicationFormController(
     isEditMode,
     students: students ?? [],
     countries,
-    universities,
+    universities: universityOptions,
     courses,
     countriesLoading,
-    universitiesLoading,
+    universitiesLoading: universitiesLoading || allUniversitiesLoading,
     coursesLoading,
     countriesError,
     universitiesError,

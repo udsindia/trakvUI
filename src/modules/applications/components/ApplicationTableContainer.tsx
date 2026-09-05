@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
-import { Chip, IconButton, Stack, Typography } from "@mui/material";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import { Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { applicationEditPath } from "@/modules/applications/applicationsRoutePaths";
 
 export type ApplicationRow = {
   id: string;
@@ -71,7 +73,20 @@ export function ApplicationTableContainer({
   const navigate = useNavigate();
   const [actionLoading, setActionLoading] = useState(false);
 
-  const handleRowDelete = async (app: ApplicationRow) => {
+  // Row actions sit inside a row that navigates on click, so each one has to stop the
+  // event itself. Without this, cancelling the delete confirm still opened the
+  // application, and confirming it deleted the row and then navigated to it.
+  const stopRowClick = (event: MouseEvent) => {
+    event.stopPropagation();
+  };
+
+  const handleRowEdit = (event: MouseEvent, app: ApplicationRow) => {
+    stopRowClick(event);
+    navigate(applicationEditPath(app.id));
+  };
+
+  const handleRowDelete = async (event: MouseEvent, app: ApplicationRow) => {
+    stopRowClick(event);
     if (!onDeleteApplication) return;
     if (!window.confirm(`Delete the application for "${app.studentName}"? It will be archived and hidden from the list.`)) {
       return;
@@ -125,23 +140,45 @@ export function ApplicationTableContainer({
       align: "right",
       render: (app) => (
         <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
-          <IconButton
-            aria-label={`Delete ${app.studentName}`}
-            disabled={actionLoading || !onDeleteApplication}
-            size="small"
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: "7px",
-              color: "error.main",
-              height: 28,
-              width: 28,
-              "&:hover": { borderColor: "error.main", bgcolor: "error.50" },
-            }}
-            onClick={() => handleRowDelete(app)}
-          >
-            <DeleteOutlineRounded fontSize="small" />
-          </IconButton>
+          <Tooltip title="Edit application">
+            <IconButton
+              aria-label={`Edit the application for ${app.studentName}`}
+              disabled={actionLoading}
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "7px",
+                color: "text.secondary",
+                height: 28,
+                width: 28,
+                "&:hover": { borderColor: "primary.main", color: "primary.main" },
+              }}
+              onClick={(event) => handleRowEdit(event, app)}
+            >
+              <EditOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Delete application">
+            <IconButton
+              aria-label={`Delete the application for ${app.studentName}`}
+              disabled={actionLoading || !onDeleteApplication}
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "7px",
+                color: "error.main",
+                height: 28,
+                width: 28,
+                "&:hover": { borderColor: "error.main", bgcolor: "error.50" },
+              }}
+              onClick={(event) => handleRowDelete(event, app)}
+            >
+              <DeleteOutlineRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Stack>
       ),
     },
