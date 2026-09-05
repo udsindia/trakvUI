@@ -41,6 +41,7 @@ import type { UniversityInput } from "@/modules/universities/universitiesCatalog
 import type { University } from "@/modules/universities/universities.types";
 import { universityDetailsPath, courseDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
+import { countryDisplayName, toAlpha3CountryCode } from "@/modules/universities/universitiesMappers";
 import { dataTableSx } from "@/shared/ui/tableStyles";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import { useResizableColumn } from "@/modules/universities-browse/useResizableColumn";
@@ -140,6 +141,8 @@ export function UniversitiesBrowsePage() {
 
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // Holds an alpha-3 code, not a name: the chips come from the server and the rows are
+  // labelled on the client, so matching on wording would break the moment the two differ.
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [shortlistedCourseIds, setShortlistedCourseIds] = useState<string[]>([]);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
@@ -188,7 +191,7 @@ export function UniversitiesBrowsePage() {
   // the closest name is at the top rather than wherever the catalogue happens to put it.
   const orderedUniversities = useMemo(() => {
     const inCountry = selectedCountry
-      ? universities.filter((u) => u.country === selectedCountry)
+      ? universities.filter((u) => toAlpha3CountryCode(u.countryCode) === selectedCountry)
       : universities;
 
     const q = searchQuery.trim().toLowerCase();
@@ -286,17 +289,18 @@ export function UniversitiesBrowsePage() {
         {/* Country filter chips */}
         <Stack direction="row" spacing={0.75}>
           {countries.map((country) => {
-            const isActive = selectedCountry === country.name;
+            const code = toAlpha3CountryCode(country.code);
+            const isActive = selectedCountry === code;
             return (
               <Chip
-                key={country.name}
+                key={code}
                 clickable
                 color={isActive ? "primary" : undefined}
-                label={country.name}
+                label={countryDisplayName(code) || country.name}
                 size="small"
                 sx={{ fontSize: 11.5, fontWeight: 600 }}
                 variant={isActive ? "filled" : "outlined"}
-                onClick={() => setSelectedCountry((prev) => (prev === country.name ? null : country.name))}
+                onClick={() => setSelectedCountry((prev) => (prev === code ? null : code))}
               />
             );
           })}

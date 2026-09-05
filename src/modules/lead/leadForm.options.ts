@@ -15,7 +15,9 @@ export const leadFormOptions: LeadFormOptions = {
       agentName: "Priya Menon",
     },
   ],
-  countryOptions: ["Canada", "Australia", "United Kingdom", "Germany"],
+  // Must be the canonical spellings CountryNames.canonicalName produces, or the form
+  // offers a value the backend rewrites on save.
+  countryOptions: ["Canada", "Australia", "UK", "Germany"],
   courseOptions: [
     "MBA",
     "Computer Science",

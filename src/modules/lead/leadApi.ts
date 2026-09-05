@@ -269,6 +269,14 @@ export const leadApi = {
     return response.data;
   },
 
+  // Every country the backend accepts, not just the ones already in use. The form needs
+  // this one: saving a country the server does not recognise is now a 400, so a picker
+  // limited to the tenant's existing countries could never introduce a new destination.
+  getCountryCatalog: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/countries/catalog`);
+    return response.data;
+  },
+
   createLead: async (payload: CreateLeadPayload): Promise<BackendLead> => {
     console.debug("[leadApi] createLead payload:", payload);
     const response = await httpClient.post<BackendLead>(API_CONFIG.leads, payload);

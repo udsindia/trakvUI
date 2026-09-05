@@ -69,7 +69,8 @@ const filterConfig: FilterConfig[] = [
     label: "Country",
     key: "country",
     placeholder: "All Countries",
-    options: ["Canada", "Australia", "United Kingdom", "Germany"],
+    // Fallback only — replaced by the tenant's own countries once those load.
+    options: ["Canada", "Australia", "UK", "Germany"],
   },
   {
     type: "slider",

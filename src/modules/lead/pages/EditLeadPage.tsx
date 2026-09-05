@@ -7,6 +7,7 @@ import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { LeadForm } from "@/modules/lead/components/LeadForm";
 import { leadFormOptions } from "@/modules/lead/leadForm.options";
+import { useCountryCatalog } from "@/modules/lead/useCountryCatalog";
 import type { AgentOption } from "@/modules/lead/leadForm.types";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
@@ -55,9 +56,19 @@ export function EditLeadPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadQuery.data]);
 
+  // The catalogue is the server's own list, so the form can only offer countries the
+  // server will accept. Static options stand in until it loads, or if the call fails.
+  const countryCatalog = useCountryCatalog();
+
   const options = useMemo(
-    () => ({ ...leadFormOptions, agentOptions }),
-    [agentOptions],
+    () => ({
+      ...leadFormOptions,
+      agentOptions,
+      countryOptions: countryCatalog.data?.length
+        ? countryCatalog.data
+        : leadFormOptions.countryOptions,
+    }),
+    [agentOptions, countryCatalog.data],
   );
 
   return (

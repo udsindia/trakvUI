@@ -14,12 +14,12 @@ import type {
 } from "@/modules/universities/universities.types";
 
 const COUNTRY_ALPHA3_TO_UI: Record<string, { alpha2: string; name: string; flag: string }> = {
-  GBR: { alpha2: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  GBR: { alpha2: "GB", name: "UK", flag: "🇬🇧" },
   IRL: { alpha2: "IE", name: "Ireland", flag: "🇮🇪" },
   AUS: { alpha2: "AU", name: "Australia", flag: "🇦🇺" },
   CAN: { alpha2: "CA", name: "Canada", flag: "🇨🇦" },
   NZL: { alpha2: "NZ", name: "New Zealand", flag: "🇳🇿" },
-  USA: { alpha2: "US", name: "United States", flag: "🇺🇸" },
+  USA: { alpha2: "US", name: "USA", flag: "🇺🇸" },
   SGP: { alpha2: "SG", name: "Singapore", flag: "🇸🇬" },
   CHE: { alpha2: "CH", name: "Switzerland", flag: "🇨🇭" },
   DEU: { alpha2: "DE", name: "Germany", flag: "🇩🇪" },
@@ -77,11 +77,14 @@ function resolveCountry(countryCode: string) {
     }
   }
 
-  return { alpha2: normalized.slice(0, 2), name: normalized, flag: "🏳️" };
+  // Unknown country: keep the code whole rather than slicing "ITA" down to "IT". The
+  // sliced form matched nothing on the way back, so a country outside the map above
+  // filtered to an empty list instead of just missing its flag and full name.
+  return { alpha2: normalized, name: normalized, flag: "🏳️" };
 }
 
 /**
- * Display name for a stored country code, e.g. "GBR" -> "United Kingdom".
+ * Display name for a stored country code, e.g. "GBR" -> "UK".
  *
  * Data columns hold the code; the name is resolved here and only here, so every screen
  * shows the same wording. Falls back to the raw code for a country not in the map, which
