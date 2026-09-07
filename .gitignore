@@ -9,3 +9,15 @@ yarn-error.log*
 pnpm-debug.log*
 
 /temp/*
+
+# Playwright MCP debug artifacts (console logs, page snapshots, screenshots)
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Claude Code local session state
+.claude/
+
+# Local env overrides — these point at a chosen backend and must not ship
+.env.local
+.env.*.local
