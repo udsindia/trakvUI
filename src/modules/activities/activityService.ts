@@ -138,13 +138,27 @@ export interface CreateTaskRequest {
 
 export type CreateTaskResponse = BackendTaskDto;
 
+/**
+ * GET /api/tasks/summary — one row per agent, not one row for you.
+ *
+ * The shape here used to be a flat {pending, overdue, total, …}, which the server has
+ * never returned; nothing called it, so nothing noticed. It is TaskSummaryResponse:
+ * a generatedAt and a list of agents, each with their open/overdue/stuck/due-today counts.
+ *
+ * The list is scoped server-side — a tenant-wide role sees every agent, a manager their
+ * team, a counsellor only themselves — so the caller can render whatever comes back.
+ */
+export interface BackendAgentTaskSummaryDto {
+  agent: { id: string; name: string; avatarUrl?: string | null };
+  openCount: number;
+  overdueCount: number;
+  stuckCount: number;
+  dueTodayCount: number;
+}
+
 export interface BackendTaskSummaryDto {
-  completed?: number;
-  dueToday?: number;
-  inProgress?: number;
-  overdue?: number;
-  pending?: number;
-  total?: number;
+  generatedAt: string;
+  agents: BackendAgentTaskSummaryDto[];
 }
 
 export interface TaskNoteDto {

@@ -13,7 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
-import { ACTIVITY_ALL_AGENTS_OPTION_ID } from "@/modules/activities/activityService";
+import { ACTIVITY_ALL_AGENTS_OPTION_ID, activityService } from "@/modules/activities/activityService";
+import { TeamTaskSummary } from "@/modules/activities/components/TeamTaskSummary";
 import { CreateTaskModal } from "@/modules/activities/components/CreateTaskModal";
 import { TaskBoardColumn } from "@/modules/activities/components/TaskBoardColumn";
 import { TaskDetailsSidebar } from "@/modules/activities/components/TaskDetailsSidebar";
@@ -95,6 +96,14 @@ export function MyTasks() {
     enabled: createTaskOpen && canAssignTask && Boolean(tenantId),
     queryKey: ["settings", "users", tenantId],
     queryFn: () => usersService.getUsers(tenantId),
+  });
+
+  // Who is carrying what, across everyone this user is allowed to see. The server does the
+  // scoping, so this is fetched for everybody and the panel hides itself when it comes back
+  // with only the viewer in it.
+  const summaryQuery = useQuery({
+    queryKey: ["tasks", "summary"],
+    queryFn: () => activityService.getTaskSummary(),
   });
 
   const assigneeOptions = useMemo(
@@ -203,6 +212,19 @@ export function MyTasks() {
         </Box>
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
+          {/*
+            Above the board, because it is the question you ask first: who is carrying what.
+
+            Deliberately not clickable. The board below is findBoardForUser — strictly your
+            own tasks — so filtering it to another agent would always empty it. Drilling
+            into someone else's tasks needs /api/tasks/team, which nothing calls yet.
+          */}
+          <TeamTaskSummary
+            agents={summaryQuery.data?.agents ?? []}
+            isError={summaryQuery.isError}
+            isLoading={summaryQuery.isLoading}
+          />
+
           {isBoardLoading ? (
             <Stack sx={{ alignItems: "center", justifyContent: "center", minHeight: 320 }}>
               <CircularProgress size={32} />
