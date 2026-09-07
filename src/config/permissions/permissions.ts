@@ -27,6 +27,7 @@ export const PERMISSIONS = {
   STUDENTS_MANAGE: "STUDENT_EDIT",          // no STUDENT_MANAGE; closest is STUDENT_EDIT
   STUDENTS_DOCS: "STUDENT_DOCS",
   TASK_CREATE: "TASK_CREATE",
+  TASK_ASSIGN: "TASK_ASSIGN",               // may give a task to someone else
   TASK_VIEW: "TASK_VIEW",
   TASK_VIEW_TEAM: "TASK_VIEW_TEAM",         // no backend equivalent (kept distinct)
   TASK_UPDATE: "TASK_COMPLETE",             // closest granted task-write perm

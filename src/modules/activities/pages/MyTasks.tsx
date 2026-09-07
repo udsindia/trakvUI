@@ -23,14 +23,20 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
+import { usersService } from "@/modules/settings/usersService";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import type { TaskPriority } from "@/modules/activities/types/types";
 
 const allPriorityValue = "all";
 
 export function MyTasks() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, tenant } = useAuth();
   const canCreateTask = hasPermission(PERMISSIONS.TASK_CREATE);
+  // Without TASK_ASSIGN the task is the creator's own, so there is no team to fetch —
+  // and a counsellor cannot read the team endpoint anyway, the same reason AddLeadPage
+  // guards its own user query.
+  const canAssignTask = hasPermission(PERMISSIONS.TASK_ASSIGN);
+  const tenantId = tenant?.tenantId ?? "";
   const [selectedAgentId, setSelectedAgentId] = useState(ACTIVITY_ALL_AGENTS_OPTION_ID);
   const [selectedPriorityValue, setSelectedPriorityValue] = useState<string>(allPriorityValue);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -82,6 +88,22 @@ export function MyTasks() {
     queryKey: ["applications"],
     queryFn: applicationsApi.getApplications,
   });
+
+  // Shares the key AddLeadPage uses, so opening the task modal after the lead form costs
+  // no second request.
+  const assigneesQuery = useQuery({
+    enabled: createTaskOpen && canAssignTask && Boolean(tenantId),
+    queryKey: ["settings", "users", tenantId],
+    queryFn: () => usersService.getUsers(tenantId),
+  });
+
+  const assigneeOptions = useMemo(
+    () =>
+      (assigneesQuery.data ?? [])
+        .filter((user) => user.active)
+        .map((user) => ({ id: user.id, name: user.name })),
+    [assigneesQuery.data],
+  );
 
   const columns = useMemo(
     () =>
@@ -243,6 +265,9 @@ export function MyTasks() {
           createTaskError ? getApiErrorMessage(createTaskError, "Unable to create task.") : null
         }
         applications={applicationsQuery.data ?? []}
+        assignees={assigneeOptions}
+        canAssign={canAssignTask}
+        isLoadingAssignees={assigneesQuery.isLoading}
         isLoadingLinks={
           leadsQuery.isLoading || studentsQuery.isLoading || applicationsQuery.isLoading
         }

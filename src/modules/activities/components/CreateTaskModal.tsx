@@ -20,8 +20,16 @@ import type { StudentOption } from "@/modules/applications/studentsApi";
 import type { BackendLead } from "@/modules/lead/leadApi";
 import type { TaskPriority } from "@/modules/activities/types/types";
 
+/** Someone a task can be handed to. Only ever the people the server lets us assign to. */
+export type TaskAssigneeOption = {
+  id: string;
+  name: string;
+};
+
 export type CreateTaskFormValues = {
   applicationId: string;
+  /** Empty means "me" — the server assigns the creator when no assignee is sent. */
+  assignedToId: string;
   description: string;
   dueDate: string;
   entityType: ActivityEntityType;
@@ -33,7 +41,12 @@ export type CreateTaskFormValues = {
 
 type CreateTaskModalProps = {
   applications: BackendApplication[];
+  /** The people this user may assign to. Ignored unless canAssign. */
+  assignees?: TaskAssigneeOption[];
+  /** TASK_ASSIGN. Without it there is no choice to offer: the task is the creator's own. */
+  canAssign?: boolean;
   errorMessage?: string | null;
+  isLoadingAssignees?: boolean;
   isLoadingLinks?: boolean;
   isSubmitting?: boolean;
   leads: BackendLead[];
@@ -45,6 +58,7 @@ type CreateTaskModalProps = {
 
 const defaultValues: CreateTaskFormValues = {
   applicationId: "",
+  assignedToId: "",
   description: "",
   dueDate: "",
   entityType: "GENERAL",
@@ -73,7 +87,10 @@ function getApplicationLabel(application: BackendApplication) {
 
 export function CreateTaskModal({
   applications,
+  assignees = [],
+  canAssign = false,
   errorMessage,
+  isLoadingAssignees = false,
   isLoadingLinks = false,
   isSubmitting = false,
   leads,
@@ -130,6 +147,9 @@ export function CreateTaskModal({
             : null,
       applicationId: values.entityType === "APPLICATION" ? values.applicationId : null,
       priority: values.priority,
+      // Omitted without the permission, and omitted when left on "Me": the server assigns
+      // the creator when no assignee is sent, so there is nothing to say in either case.
+      assignedToId: canAssign && values.assignedToId ? values.assignedToId : null,
     });
     handleClose();
   };
@@ -214,6 +234,42 @@ export function CreateTaskModal({
                 )}
               />
             </Stack>
+
+            {/*
+              Only offered with TASK_ASSIGN. Without it the field is not disabled or
+              hidden-but-present, it simply is not part of the form: the server assigns the
+              creator either way, so showing a control that cannot change the outcome would
+              be a lie. "Me" stays the default even when the choice is available.
+            */}
+            {canAssign ? (
+              <Controller
+                control={control}
+                name="assignedToId"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    disabled={isSubmitting || isLoadingAssignees}
+                    fullWidth
+                    helperText={
+                      isLoadingAssignees
+                        ? "Loading your team…"
+                        : assignees.length === 0
+                          ? "No one else to assign to — this task will be yours."
+                          : undefined
+                    }
+                    label="Assign To"
+                    select
+                  >
+                    <MenuItem value="">Me</MenuItem>
+                    {assignees.map((assignee) => (
+                      <MenuItem key={assignee.id} value={assignee.id}>
+                        {assignee.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            ) : null}
 
             {/*
               Autocompletes rather than plain selects: these lists are as long as the
