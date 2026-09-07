@@ -1,11 +1,17 @@
-import type { UniversityRequirementDto } from "@/modules/universities/universitiesApi.types";
+import type {
+  UniversityRequirementDto,
+  UniversitySummaryDto,
+} from "@/modules/universities/universitiesApi.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useAuth } from "@/app/auth/useAuth";
 import { universitiesApi } from "@/modules/universities/universitiesApi";
 import type { CreateRequirementPayload } from "@/modules/universities/universitiesApi.types";
 import {
   mapCourseToUi,
   mapUniversityDetailToUi,
+  mapUniversitySummaryToUi,
+  toAlpha3CountryCode,
 } from "@/modules/universities/universitiesMappers";
 import {
   universitiesCatalogQueryKey,
@@ -14,6 +20,7 @@ import {
   universityQueryKey,
   type CourseInput,
   type RequirementSet,
+  type UniversitiesCatalog,
   type UniversityInput,
 } from "@/modules/universities/universitiesCatalogService";
 import { resolveAccessToken } from "@/shared/services/http/authHeaders";
@@ -26,16 +33,27 @@ function useUniversitiesApiEnabled(extraEnabled = true) {
 }
 
 export const countriesQueryKey = ["universities", "countries"] as const;
-export const universitiesByCountryQueryKey = (countryCode: string) =>
-  ["universities", "by-country", countryCode] as const;
+
+/**
+ * The single fetch behind every "all universities" view. One walk of the pages, one cache
+ * entry; each hook below shapes it with `select` rather than fetching its own copy.
+ * Declared at module scope so the selector identity is stable across renders.
+ */
+const fetchAllUniversities = () => universitiesApi.listAllUniversities();
+
+const selectCatalog = (rows: UniversitySummaryDto[]): UniversitiesCatalog => ({
+  universities: rows.map((summary) => mapUniversitySummaryToUi(summary)),
+  courses: [],
+});
 
 export function useUniversitiesCatalog() {
   const apiEnabled = useUniversitiesApiEnabled();
 
   return useQuery({
     queryKey: universitiesCatalogQueryKey,
-    queryFn: () => universitiesCatalogService.getCatalog(),
+    queryFn: fetchAllUniversities,
     enabled: apiEnabled,
+    select: selectCatalog,
   });
 }
 
@@ -49,18 +67,29 @@ export function useCountries() {
   });
 }
 
+/**
+ * The tenant's universities in one country.
+ *
+ * Filtered from the shared list rather than asked of the server: the whole catalogue is
+ * already in the cache, so a second request would fetch what we hold. Both sides of the
+ * comparison are folded to alpha-3, which also fixes the rows still stored under a legacy
+ * code — "UK" beside "GBR" — that an exact server-side match would miss.
+ */
 export function useUniversitiesByCountry(countryCode: string | undefined) {
   const apiEnabled = useUniversitiesApiEnabled(Boolean(countryCode));
+  const alpha3 = countryCode ? toAlpha3CountryCode(countryCode) : undefined;
+
+  const select = useCallback(
+    (rows: UniversitySummaryDto[]) =>
+      alpha3 ? rows.filter((row) => toAlpha3CountryCode(row.countryCode) === alpha3) : [],
+    [alpha3],
+  );
 
   return useQuery({
-    queryKey: universitiesByCountryQueryKey(countryCode ?? ""),
-    queryFn: async () => {
-      if (!countryCode) {
-        return [];
-      }
-      return universitiesApi.listAllUniversities({ countryCode });
-    },
+    queryKey: universitiesCatalogQueryKey,
+    queryFn: fetchAllUniversities,
     enabled: apiEnabled,
+    select,
   });
 }
 
@@ -75,8 +104,8 @@ export function useAllUniversities(enabled: boolean) {
   const apiEnabled = useUniversitiesApiEnabled(enabled);
 
   return useQuery({
-    queryKey: ["universities", "all"] as const,
-    queryFn: () => universitiesApi.listAllUniversities(),
+    queryKey: universitiesCatalogQueryKey,
+    queryFn: fetchAllUniversities,
     enabled: apiEnabled,
   });
 }

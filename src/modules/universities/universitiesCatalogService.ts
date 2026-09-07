@@ -178,7 +178,16 @@ export type CourseInput = Omit<
   requirementSet?: RequirementSet;
 };
 
-export const universitiesCatalogQueryKey = ["universities-catalog"] as const;
+/**
+ * The one cache entry holding every university the tenant has.
+ *
+ * Named for the catalogue but keyed under "universities" because the catalogue, the
+ * application form's picker and the per-country lookup are all the same list, and used to
+ * be three separate cache entries that each walked every page of /api/universities. Opening
+ * the application form re-downloaded what the browse page had just fetched. They now share
+ * this key and differ only in how they `select` from it.
+ */
+export const universitiesCatalogQueryKey = ["universities", "all"] as const;
 export const universityQueryKey = (universityId: string) =>
   ["universities", universityId] as const;
 export const universityCoursesQueryKey = (universityId: string) =>

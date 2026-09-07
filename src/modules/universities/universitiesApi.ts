@@ -64,19 +64,35 @@ function buildCsvUpload(file: File, mapping: Record<string, string> = {}) {
   return { formData, config };
 }
 
+/**
+ * Every page of a listing, as one array.
+ *
+ * The pages after the first are independent of each other, so they go out together. Walked
+ * one after another they were the catalogue's whole load time: the server clamps `size` to
+ * 50 however much we ask for, so ~160 universities is four round trips, and serially that
+ * is four times the latency for no reason.
+ *
+ * Page size comes from what the first response reports, not from what we asked for, so the
+ * offsets stay consistent with the server's own clamping.
+ */
 async function fetchAllUniversityPages<T>(
   fetchPage: (page: number, size: number) => Promise<UniversitiesPageResponse<T>>,
 ): Promise<T[]> {
   const firstPage = await fetchPage(0, DEFAULT_PAGE_SIZE);
-  const allItems = [...firstPage.content];
-  const totalPages = Math.ceil(firstPage.totalElements / firstPage.size);
+  const pageSize = firstPage.size || DEFAULT_PAGE_SIZE;
+  const totalPages = Math.ceil(firstPage.totalElements / pageSize);
 
-  for (let page = 1; page < totalPages; page += 1) {
-    const nextPage = await fetchPage(page, DEFAULT_PAGE_SIZE);
-    allItems.push(...nextPage.content);
+  if (totalPages <= 1) {
+    return [...firstPage.content];
   }
 
-  return allItems;
+  const laterPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 1, pageSize)),
+  );
+
+  // Rebuilt in page order, not arrival order — the server's ORDER BY is what makes the
+  // walk stable, and resolving out of order would throw that away.
+  return [...firstPage.content, ...laterPages.flatMap((page) => page.content)];
 }
 
 async function fetchAllCoursePages(
@@ -93,13 +109,17 @@ async function fetchAllCoursePages(
     return response.data;
   };
 
+  // Same shape as fetchAllUniversityPages — the later pages go out together.
   const firstPage = await fetchPage(0, DEFAULT_PAGE_SIZE);
+  const pageSize = firstPage.size || DEFAULT_PAGE_SIZE;
+  const totalPages = Math.ceil(firstPage.totalElements / pageSize);
   const allItems = [...firstPage.content];
-  const totalPages = Math.ceil(firstPage.totalElements / firstPage.size);
 
-  for (let page = 1; page < totalPages; page += 1) {
-    const nextPage = await fetchPage(page, DEFAULT_PAGE_SIZE);
-    allItems.push(...nextPage.content);
+  if (totalPages > 1) {
+    const laterPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 1, pageSize)),
+    );
+    allItems.push(...laterPages.flatMap((page) => page.content));
   }
 
   return allItems;
