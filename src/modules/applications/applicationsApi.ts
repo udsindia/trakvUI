@@ -69,6 +69,37 @@ export interface ApplicationDetail {
   stages: ApplicationStageDetail[];
 }
 
+/**
+ * One event on an application's timeline — backend TimelineItemResponse.
+ *
+ * kind says which table it came from. A TASK carries its title in `note`; an ACTIVITY
+ * carries its outcome notes there, which is how a completed task reads ("Task completed:
+ * …") once InteractionService.completeTask has bridged it across.
+ */
+export interface TimelineItem {
+  id: string;
+  kind: "TASK" | "ACTIVITY";
+  type?: string | null;
+  note?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  dueDate?: string | null;
+  rescheduleCount?: number | null;
+  agentId?: string | null;
+  source?: string | null;
+  eventAt: string;
+  isPreEnrolment?: boolean;
+}
+
+interface TimelineResponse {
+  entityId: string | null;
+  entityName: string | null;
+  items: TimelineItem[];
+  totalElements: number;
+  page: number;
+  size: number;
+}
+
 /** A stage-transition audit entry — backend StageHistoryDTO. */
 export interface StageHistoryEntry {
   id: string;
@@ -168,5 +199,20 @@ export const applicationsApi = {
       `${API_CONFIG.applications}/${id}/history`,
     );
     return response.data;
+  },
+
+  /**
+   * The application's tasks and activities, newest first.
+   *
+   * Lives under /api/activities rather than /api/applications because the server builds it
+   * by unioning the two tables (ActivityRepository.findApplicationTimeline); the endpoint
+   * is named for where the query lives, not for what it returns.
+   */
+  getTimeline: async (id: string, size = 50): Promise<TimelineItem[]> => {
+    const response = await httpClient.get<TimelineResponse>(
+      `${API_CONFIG.activities}/application/${id}`,
+      { params: { page: 0, size } },
+    );
+    return response.data?.items ?? [];
   },
 };

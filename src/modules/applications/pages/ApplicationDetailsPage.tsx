@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -79,6 +79,48 @@ export function ApplicationDetailsPage() {
     queryFn: () => applicationsApi.getHistory(id!),
     enabled: !!id,
   });
+
+  const { data: timeline = [] } = useQuery({
+    queryKey: ["application", id, "timeline"],
+    queryFn: () => applicationsApi.getTimeline(id!),
+    enabled: !!id,
+  });
+
+  /**
+   * Stage moves, tasks and activities as one story, oldest first.
+   *
+   * A task and its completion are two entries, not one: the task appears when it was
+   * raised, and the activity the server bridges on completion appears at the moment it was
+   * finished, carrying the completion note. Collapsing them would put the whole thing at
+   * one timestamp and lose the note or the due date, and the bridge is best-effort on the
+   * server anyway — a task whose bridge failed still shows up here as itself.
+   */
+  const timelineEntries = useMemo(() => {
+    const stageEntries = history.map((entry) => ({
+      at: entry.changedAt,
+      id: `stage-${entry.id}`,
+      kind: "STAGE" as const,
+      note: entry.note ?? "",
+      title: entry.fromStageName
+        ? `${entry.fromStageName} → ${entry.toStageName ?? ""}`
+        : (entry.toStageName ?? "Stage set"),
+    }));
+
+    const eventEntries = timeline.map((item) => ({
+      at: item.eventAt,
+      dueDate: item.dueDate,
+      id: `${item.kind.toLowerCase()}-${item.id}`,
+      kind: item.kind,
+      note: item.kind === "ACTIVITY" ? (item.note ?? "") : "",
+      priority: item.priority,
+      status: item.status,
+      title: item.kind === "TASK" ? (item.note ?? "Task") : (item.type ?? "Activity"),
+    }));
+
+    return [...stageEntries, ...eventEntries].sort(
+      (a, b) => new Date(a.at).getTime() - new Date(b.at).getTime(),
+    );
+  }, [history, timeline]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["application", id] });
@@ -338,20 +380,36 @@ export function ApplicationDetailsPage() {
               <CardContent>
                 <Typography variant="h6" mb={2}>Stage History</Typography>
                 <Divider sx={{ mb: 2 }} />
-                {history.length === 0 ? (
+                {timelineEntries.length === 0 ? (
                   <Typography color="text.secondary" variant="body2">No history yet.</Typography>
                 ) : (
                   <Stack spacing={2}>
-                    {history.map((h) => (
-                      <Box key={h.id}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {h.fromStageName ? `${h.fromStageName} → ` : ""}{h.toStageName}
-                        </Typography>
-                        {h.note && (
-                          <Typography variant="body2" color="text.secondary">{h.note}</Typography>
+                    {timelineEntries.map((entry) => (
+                      <Box key={entry.id}>
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                          {/* The stage moves are the spine of this list, so only the
+                              things woven into it are labelled. */}
+                          {entry.kind !== "STAGE" && (
+                            <Chip
+                              color={entry.kind === "TASK" ? "warning" : "info"}
+                              label={entry.kind === "TASK" ? "Task" : "Activity"}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                          <Typography variant="body2" fontWeight={600}>
+                            {entry.title}
+                          </Typography>
+                          {entry.kind === "TASK" && entry.status && (
+                            <Chip label={entry.status} size="small" />
+                          )}
+                        </Stack>
+                        {entry.note && (
+                          <Typography variant="body2" color="text.secondary">{entry.note}</Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          {formatDateTime(h.changedAt)}
+                          {formatDateTime(entry.at)}
+                          {entry.kind === "TASK" && entry.dueDate ? ` · due ${entry.dueDate}` : ""}
                         </Typography>
                       </Box>
                     ))}
