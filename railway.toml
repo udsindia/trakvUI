@@ -4,8 +4,15 @@ builder = "NIXPACKS"
 buildCommand = "npm run build"
 
 [deploy]
-# 'serve' statically serves the Vite build output on the PORT Railway assigns
-startCommand = "npx serve -s dist -l $PORT"
+# 'serve' statically serves the Vite build output on the PORT Railway assigns.
+#
+# --config points at serve.json, which stops browsers caching index.html. Without it the
+# entry document ships no Cache-Control at all, so a browser holds on to it heuristically
+# and keeps requesting the hashed chunks that old copy names -- which are still on disk
+# from the previous deploy. Everything loads, a build behind, and redeploying does not
+# help. The path is resolved relative to the SERVED directory, not the working directory,
+# hence the '../'.
+startCommand = "npx serve -s dist -l $PORT --config ../serve.json"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
