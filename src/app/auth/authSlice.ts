@@ -45,7 +45,15 @@ function resetSessionState(state: AuthState) {
 
 export const initializeAuthSession = createAsyncThunk(
   "auth/initializeSession",
-  async () => authService.restoreSession(),
+  async () => {
+    const session = authService.restoreSession();
+    if (!session) {
+      return null;
+    }
+    // Permissions come back from the server rather than from what login stored, so a grant
+    // made since the user signed in reaches the UI on a page load instead of a re-login.
+    return authService.refreshPermissions(session);
+  },
 );
 
 export const login = createAsyncThunk<

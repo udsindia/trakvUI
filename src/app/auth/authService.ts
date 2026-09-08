@@ -395,6 +395,44 @@ export const authService = {
     }
   },
 
+  /**
+   * Re-reads the signed-in user's permissions and returns the session updated with them.
+   *
+   * A restored session carries whatever login stored, so a permission granted since then is
+   * invisible to the UI until the user signs in again — the API would accept the call while
+   * the button stayed hidden. That is routine now that agency admins are granted new
+   * permissions on deploy rather than by migration, so the refresh happens on every session
+   * restore, which is to say on every page load.
+   *
+   * A failure here returns the session untouched. Stale permissions are a nuisance; being
+   * thrown out of a valid session because one request failed is worse, and the server
+   * enforces the real answer regardless of what the UI believes.
+   */
+  async refreshPermissions(session: AuthSession): Promise<AuthSession> {
+    try {
+      // The token goes on explicitly rather than through the httpClient interceptor.
+      // AuthProvider dispatches the session bootstrap in its first effect and registers
+      // that interceptor in its second, so at this point there is none: the request would
+      // go out unauthenticated, come back 401, and be swallowed by the catch below —
+      // silently leaving the stale permissions in place, which is the whole bug this
+      // method exists to fix.
+      const { data } = await httpClient.get<{ permissions?: string[] }>(
+        `${API_CONFIG.auth}/permissions`,
+        { headers: { Authorization: `Bearer ${session.tokens.accessToken}` } },
+      );
+      if (!Array.isArray(data?.permissions)) {
+        return session;
+      }
+
+      const permissions = data.permissions.map(normalizePermission);
+      const refreshed: AuthSession = { ...session, permissions };
+      this.persistSession(refreshed);
+      return refreshed;
+    } catch {
+      return session;
+    }
+  },
+
   restoreSession() {
     if (cachedSession) {
       if (isSessionExpired(cachedSession)) {
