@@ -89,3 +89,27 @@ export function applicationStageLabel(application: {
 export function mapStageToOutcome(stage: ApplicationStage): string {
   return STAGE_TO_OUTCOME[stage] ?? "DRAFT";
 }
+
+/**
+ * Solid tints rather than alpha overlays, so chips read consistently on both
+ * the white row and the tinted hover/selected states.
+ *
+ * Lives here rather than beside one table because two lists now draw the same
+ * stage — the applications table and the application-status column on the
+ * students list — and a stage that is blue in one and grey in the other reads
+ * as two different things. A stage with no entry falls back to MUI's default
+ * chip, which is the neutral grey a Draft already uses.
+ */
+export const applicationStageStyles: Record<
+  string,
+  { backgroundColor: string; color: string }
+> = {
+  Draft: { backgroundColor: "#EEF2F6", color: "#55707C" },
+  Submitted: { backgroundColor: "#E4EDFC", color: "#0F5AD4" },
+  Processing: { backgroundColor: "#FDEEDD", color: "#B35A00" },
+  "Visa Applied": { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
+  "Visa Approved": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  "Documents Verified": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  "Visa Rejected": { backgroundColor: "#FBE5E5", color: "#C0392F" },
+  Completed: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
+};

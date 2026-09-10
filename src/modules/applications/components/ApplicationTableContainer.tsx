@@ -4,6 +4,7 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import { Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { applicationStageStyles } from "@/modules/applications/applicationStage";
 import { applicationEditPath } from "@/modules/applications/applicationsRoutePaths";
 
 export type ApplicationRow = {
@@ -43,21 +44,6 @@ function formatCreatedDate(value?: string) {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
 }
-
-/**
- * Solid tints rather than alpha overlays, so chips read consistently on both
- * the white row and the tinted hover/selected states.
- */
-const stageStyles: Record<string, { backgroundColor: string; color: string }> = {
-  Draft: { backgroundColor: "#EEF2F6", color: "#55707C" },
-  Submitted: { backgroundColor: "#E4EDFC", color: "#0F5AD4" },
-  Processing: { backgroundColor: "#FDEEDD", color: "#B35A00" },
-  "Visa Applied": { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
-  "Visa Approved": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
-  "Documents Verified": { backgroundColor: "#E1F5EC", color: "#0B7A57" },
-  "Visa Rejected": { backgroundColor: "#FBE5E5", color: "#C0392F" },
-  Completed: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
-};
 
 export function ApplicationTableContainer({
   applications,
@@ -122,7 +108,7 @@ export function ApplicationTableContainer({
       id: "stage",
       header: "Stage",
       minWidth: 120,
-      render: (a) => <Chip label={a.stage} size="small" sx={{ ...(stageStyles[a.stage] || {}) }} />,
+      render: (a) => <Chip label={a.stage} size="small" sx={{ ...(applicationStageStyles[a.stage] || {}) }} />,
     },
     {
       id: "created",

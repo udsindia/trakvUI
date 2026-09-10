@@ -1,14 +1,29 @@
 import { Chip, Stack, Typography } from "@mui/material";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { applicationStageStyles } from "@/modules/applications/applicationStage";
 
 export type StudentRow = {
   id: string;
   name: string;
   email: string;
   phone: string;
-  nationality: string;
-  highestDegree: string;
+  /**
+   * The stage the student's newest application has reached, already labelled by
+   * applicationStageLabel. Empty when they have none, or when the viewer cannot see
+   * applications at all — the two read the same in this column, which is why the
+   * count below distinguishes them.
+   */
+  applicationStage: string;
+  /** How many applications the student has; drives the "+N" suffix. */
+  applicationCount: number;
   counsellor: string;
+  /** Source of the lead this student converted from; empty when there was no lead. */
+  leadSource: string;
+  /**
+   * Whether the student came through the lead pipeline. Not shown as its own column any
+   * more — every student is expected to have been a lead first — but still what the
+   * quick-filter tabs count, and what makes a sourceless row read as "Direct".
+   */
   fromLead: boolean;
   enrolledAt: string;
 };
@@ -41,15 +56,6 @@ function formatDate(value?: string) {
   return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
 }
 
-/**
- * Green for a student who arrived through the lead pipeline, neutral for one created
- * directly — the same green the Enrolled lead stage uses, so the two views agree.
- */
-const originStyles = {
-  lead: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
-  direct: { backgroundColor: "#EEF2F6", color: "#55707C" },
-};
-
 export function StudentTableContainer({
   students,
   onRowClick,
@@ -78,20 +84,50 @@ export function StudentTableContainer({
       ),
     },
     { id: "phone", header: "Phone", minWidth: 130, render: (s) => <TextCell value={s.phone} /> },
-    { id: "nationality", header: "Nationality", minWidth: 110, render: (s) => <TextCell value={s.nationality} /> },
-    { id: "degree", header: "Highest Degree", minWidth: 140, render: (s) => <TextCell value={s.highestDegree} /> },
+    {
+      id: "applicationStatus",
+      header: "Application Status",
+      minWidth: 170,
+      render: (s) => {
+        if (!s.applicationStage) {
+          return (
+            <Typography color="text.disabled" noWrap sx={{ fontSize: 11.5 }} variant="body2">
+              No application
+            </Typography>
+          );
+        }
+        return (
+          <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+            <Chip
+              label={s.applicationStage}
+              size="small"
+              sx={{ ...(applicationStageStyles[s.applicationStage] || {}) }}
+            />
+            {s.applicationCount > 1 ? (
+              <Typography color="text.disabled" noWrap sx={{ fontSize: 11 }} variant="caption">
+                +{s.applicationCount - 1}
+              </Typography>
+            ) : null}
+          </Stack>
+        );
+      },
+    },
     { id: "counsellor", header: "Counsellor", minWidth: 150, render: (s) => <TextCell value={s.counsellor} /> },
     {
-      id: "origin",
-      header: "Origin",
-      minWidth: 120,
-      render: (s) => (
-        <Chip
-          label={s.fromLead ? "Enrolled lead" : "Direct"}
-          size="small"
-          sx={s.fromLead ? originStyles.lead : originStyles.direct}
-        />
-      ),
+      id: "leadSource",
+      header: "Lead Source",
+      minWidth: 140,
+      // "Direct" only for a student with no lead at all. That should not happen — a
+      // student is meant to arrive by converting a lead — so it reads as the exception
+      // it is rather than being folded in with a lead whose source was left unset.
+      render: (s) =>
+        s.leadSource ? (
+          <TextCell value={s.leadSource} />
+        ) : (
+          <Typography color="text.disabled" noWrap sx={{ fontSize: 11.5 }} variant="body2">
+            {s.fromLead ? "—" : "Direct"}
+          </Typography>
+        ),
     },
     {
       id: "enrolled",

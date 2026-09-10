@@ -16,6 +16,11 @@ export interface BackendStudent {
   phone?: string;
   nationality?: string;
   highestDegree?: string;
+  /**
+   * Name of the source on the lead this student converted from. Null for a student
+   * created directly, which is the case the students list calls out as "Direct".
+   */
+  leadSourceName?: string | null;
   enrolledAt?: string;
 }
 

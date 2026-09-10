@@ -5,6 +5,8 @@ import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
+import { applicationsApi, type BackendApplication } from "@/modules/applications/applicationsApi";
+import { applicationStageLabel } from "@/modules/applications/applicationStage";
 import {
   ApplicationQuickFilters as QuickFilters,
   type ApplicationQuickFilterTab as QuickFilterTab,
@@ -31,18 +33,23 @@ const quickFilterDefinitions = [
 function mapBackendStudentToRow(
   student: BackendStudent,
   counsellorNames: Map<string, string>,
+  applicationsByStudent: Map<string, BackendApplication[]>,
 ): StudentRow {
   const name = [student.firstName, student.lastName].filter(Boolean).join(" ").trim();
+  const studentApplications = applicationsByStudent.get(student.id) ?? [];
 
   return {
     id: student.id,
     name: name || student.email || "—",
     email: student.email ?? "",
     phone: joinPhoneNumber(student.phoneCountryCode, student.phone),
-    nationality: student.nationality ?? "",
-    highestDegree: student.highestDegree ?? "",
+    // The newest application is the one that speaks for the student; older ones are
+    // counted, not named. Ordered on arrival below, so [0] is already the newest.
+    applicationStage: studentApplications[0] ? applicationStageLabel(studentApplications[0]) : "",
+    applicationCount: studentApplications.length,
     // Falls back to an em-dash when the viewer cannot list users (no USER_VIEW).
     counsellor: (student.assignedTo && counsellorNames.get(student.assignedTo)) || "",
+    leadSource: student.leadSourceName ?? "",
     fromLead: Boolean(student.leadId),
     enrolledAt: student.enrolledAt ?? "",
   };
@@ -53,6 +60,7 @@ export function StudentsListPage() {
   const { hasPermissions, tenant } = useAuth();
   const tenantId = tenant?.tenantId ?? "";
   const canViewUsers = hasPermissions([PERMISSIONS.USERS_VIEW]);
+  const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
@@ -78,14 +86,47 @@ export function StudentsListPage() {
     queryFn: () => usersService.getUsers(tenantId),
   });
 
+  /*
+    One list request for the whole page rather than one per student — the applications
+    list is already fetched this way elsewhere and shares this cache key with the
+    applications page, so opening either warms the other.
+  */
+  const { data: allApplications = [] } = useQuery({
+    enabled: canViewApplications,
+    queryKey: ["applications"],
+    queryFn: applicationsApi.getApplications,
+  });
+
   const counsellorNames = useMemo(
     () => new Map(users.map((user) => [user.id, user.name])),
     [users],
   );
 
+  const applicationsByStudent = useMemo(() => {
+    const grouped = new Map<string, BackendApplication[]>();
+    for (const application of allApplications) {
+      if (!application.studentId) continue;
+      const existing = grouped.get(application.studentId);
+      if (existing) {
+        existing.push(application);
+      } else {
+        grouped.set(application.studentId, [application]);
+      }
+    }
+    // Newest first, so the column names the application the student is actually working
+    // through rather than whichever one the server happened to return first.
+    for (const list of grouped.values()) {
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return grouped;
+  }, [allApplications]);
+
   const studentRows: StudentRow[] = useMemo(
-    () => backendStudents.map((student) => mapBackendStudentToRow(student, counsellorNames)),
-    [backendStudents, counsellorNames],
+    () =>
+      backendStudents.map((student) =>
+        mapBackendStudentToRow(student, counsellorNames, applicationsByStudent),
+      ),
+    [backendStudents, counsellorNames, applicationsByStudent],
   );
 
   const quickFilterTabs: QuickFilterTab[] = useMemo(
