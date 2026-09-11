@@ -13,4 +13,5 @@ export const API_CONFIG = {
   adminCourses: "/admin/courses",
   adminRequirements: "/admin/requirements",
   courses: "/courses",
+  stageTemplates: "/stage-templates",
 } as const;

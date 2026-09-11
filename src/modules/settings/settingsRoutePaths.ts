@@ -4,4 +4,5 @@ export const settingsRoutePaths = {
   roles: "/settings/roles",
   createRole: "/settings/roles/create",
   editRole: (roleId: string) => `/settings/roles/${roleId}/edit`,
+  stages: "/settings/stages",
 } as const;

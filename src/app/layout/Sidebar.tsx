@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Box,
@@ -11,6 +12,7 @@ import {
 import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import MenuRounded from "@mui/icons-material/MenuRounded";
 import AdminPanelSettingsRounded from "@mui/icons-material/AdminPanelSettingsRounded";
+import AltRouteRounded from "@mui/icons-material/AltRouteRounded";
 import PeopleRounded from "@mui/icons-material/PeopleRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import {
@@ -139,10 +141,16 @@ function SidebarContent({
       : []),
   ];
   const settingsItem = items.find((item) => item.id === "settings");
+  // Keyed on the child's suffix rather than chained ternaries, so the next settings
+  // page is one line here instead of another branch.
+  const adminIcons: Record<string, ReactNode> = {
+    team: <PeopleRounded />,
+    stages: <AltRouteRounded />,
+  };
   const adminItems =
     settingsItem?.children?.map((child) => ({
       ...child,
-      icon: child.id.endsWith(".team") ? <PeopleRounded /> : <AdminPanelSettingsRounded />,
+      icon: adminIcons[child.id.split(".").pop() ?? ""] ?? <AdminPanelSettingsRounded />,
     })) ?? [];
 
   const renderGroup = (label: string, groupItems: NavigationItem[]) => {

@@ -151,6 +151,13 @@ export const moduleCatalog: ModuleDefinition[] = [
         description: "Configure roles and permission assignments.",
         requiredPermissions: [PERMISSIONS.ROLES_VIEW],
       },
+      {
+        key: "stages",
+        navLabel: "Application Stages",
+        path: "stages",
+        description: "Stage sequences per destination country.",
+        requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
+      },
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",

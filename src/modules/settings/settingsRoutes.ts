@@ -6,6 +6,7 @@ import { AddUserPage } from "@/modules/settings/pages/AddUserPage";
 import { CreateRolePage } from "@/modules/settings/pages/CreateRolePage";
 import { EditRolePage } from "@/modules/settings/pages/EditRolePage";
 import { RolesPage } from "@/modules/settings/pages/RolesPage";
+import { StageTemplatesPage } from "@/modules/settings/pages/StageTemplatesPage";
 import { TeamPage } from "@/modules/settings/pages/TeamPage";
 import {
   hasAllPermissions,
@@ -65,6 +66,15 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "edit-role",
     path: "roles/:roleId/edit",
     anyOfPermissions: [PERMISSIONS.ROLES_VIEW, PERMISSIONS.ROLES_MANAGE],
+  },
+  {
+    // Readable by anyone who can see applications - the sequence is what an
+    // application's pipeline is drawn from. The page itself hides every control
+    // without SETTINGS_MANAGE, and the API refuses the writes regardless.
+    Component: StageTemplatesPage,
+    key: "stages",
+    path: "stages",
+    anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.APPLICATIONS_VIEW],
   },
 ];
 
