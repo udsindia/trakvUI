@@ -1,3 +1,4 @@
+import DeleteSweepRounded from "@mui/icons-material/DeleteSweepRounded";
 import BlockRounded from "@mui/icons-material/BlockRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
@@ -25,6 +26,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
+import { TenantWipeDialog } from "@/modules/sa-team/components/TenantWipeDialog";
 import type { TenantSummary } from "@/modules/sa-team/sa.types";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
 import { saTeamApi } from "@/modules/sa-team/saTeamApi";
@@ -62,6 +64,8 @@ function TenantDrawer({
   const [snack, setSnack] = useState<string | null>(null);
   const canSuspend = saAuthService.hasPermission(SA_PERMISSIONS.TENANTS_SUSPEND);
   const canChangePlan = saAuthService.hasPermission(SA_PERMISSIONS.PLAN_MANAGE);
+  const canWipe = saAuthService.hasPermission(SA_PERMISSIONS.TENANT_WIPE);
+  const [wipeOpen, setWipeOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(tenant?.plan ?? "");
 
   const suspendMut = useMutation({
@@ -166,6 +170,24 @@ function TenantDrawer({
             </Box>
           )}
 
+          {canWipe && (
+            <Box>
+              <Button
+                fullWidth
+                color="error"
+                variant="text"
+                startIcon={<DeleteSweepRounded />}
+                onClick={() => setWipeOpen(true)}
+              >
+                Clear Tenant Data
+              </Button>
+              <Typography color="text.secondary" sx={{ display: "block", mt: 0.5 }} variant="caption">
+                Removes leads, students, applications and tasks. Keeps the workspace, its
+                users and its settings.
+              </Typography>
+            </Box>
+          )}
+
           {canSuspend && (
             <Box>
               {tenant.active ? (
@@ -195,6 +217,19 @@ function TenantDrawer({
           )}
         </Stack>
       </Drawer>
+
+      {tenant && (
+        <TenantWipeDialog
+          open={wipeOpen}
+          tenantId={tenant.id}
+          tenantName={tenant.name}
+          onClose={() => setWipeOpen(false)}
+          onWiped={(report) => {
+            setWipeOpen(false);
+            setSnack(`Cleared ${report.total} records from ${report.tenantName}`);
+          }}
+        />
+      )}
 
       <Snackbar
         open={!!snack}

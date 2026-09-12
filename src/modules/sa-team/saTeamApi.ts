@@ -27,6 +27,14 @@ saClient.interceptors.request.use((config) => {
   return config;
 });
 
+/** Backend TenantWipeReport — per-entity counts, ordered as the wipe runs. */
+export interface TenantWipeReport {
+  tenantId: string;
+  tenantName: string;
+  counts: Record<string, number>;
+  total: number;
+}
+
 export const saTeamApi = {
   // ── SA Team ──────────────────────────────────────────────────────────────
 
@@ -105,6 +113,23 @@ export const saTeamApi = {
 
   updateTenantPlan: async (id: string, plan: string): Promise<TenantSummary> => {
     const res = await saClient.patch<TenantSummary>(`/superadmin/tenants/${id}/plan`, { plan });
+    return res.data;
+  },
+
+  /** What clearing this tenant would remove, counted but not removed. */
+  async previewTenantWipe(id: string) {
+    const res = await saClient.get<TenantWipeReport>(`/superadmin/tenants/${id}/wipe-preview`);
+    return res.data;
+  },
+
+  /**
+   * Clears the tenant's operational records. confirmName must match the tenant's name;
+   * the server checks it too, so a caller cannot skip the guardrail.
+   */
+  async wipeTenantData(id: string, confirmName: string) {
+    const res = await saClient.post<TenantWipeReport>(`/superadmin/tenants/${id}/wipe`, {
+      confirmName,
+    });
     return res.data;
   },
 
