@@ -73,6 +73,46 @@ export function validateCustomSource(
   return null;
 }
 
+/** Shortest realistic runway for a new lead's intake — visa/admission processing needs it. */
+export const MIN_INTAKE_LEAD_DAYS = 60;
+
+function parseDateOnly(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function formatDateInput(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+/** Today, as an `<input type="date">` value — the picker's `min`, so past dates aren't selectable. */
+export function getTodayDateInput(): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return formatDateInput(today);
+}
+
+/**
+ * Validates a new lead's intake date. Returns an error message, or null when valid.
+ * The date picker's `min` already keeps past dates out; this catches dates that are
+ * technically in the future but too soon for the intake to realistically happen.
+ */
+export function validateIntakeDate(value: string): string | null {
+  const selected = parseDateOnly(value);
+  if (!selected) return null;
+
+  const earliest = new Date();
+  earliest.setHours(0, 0, 0, 0);
+  earliest.setDate(earliest.getDate() + MIN_INTAKE_LEAD_DAYS);
+
+  if (selected < earliest) {
+    return `Intake date must be at least ${MIN_INTAKE_LEAD_DAYS} days from today.`;
+  }
+  return null;
+}
+
 // Matches backend AddLeadRequestDTO
 export type CreateLeadPayload = {
   tenantId?: string;
