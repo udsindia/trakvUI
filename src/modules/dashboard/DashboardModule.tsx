@@ -17,6 +17,7 @@ import {
 import type { DashboardPeriod } from "@/modules/dashboard/dashboardDateRange";
 import { getDashboardDateRange } from "@/modules/dashboard/dashboardDateRange";
 import { dashboardService } from "@/modules/dashboard/dashboardService";
+import { stageNoticesApi } from "@/modules/applications/stageNoticesApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 const LIVE_REFRESH_MS = 30_000;
@@ -54,6 +55,31 @@ export default function DashboardModule() {
     ? activeSection
     : sectionTabs[0]?.id ?? "leads";
 
+  /*
+    Applications whose stage sequence changed underneath them and are waiting on a
+    counsellor's answer. Folded into the existing attention strip rather than given a tile
+    of its own: it is usually zero, and a permanent tile showing nothing is how a dashboard
+    starts being ignored.
+  */
+  const { data: stageNoticeCount = 0 } = useQuery({
+    queryKey: ["applications", "stage-notices", "count"],
+    queryFn: stageNoticesApi.count,
+  });
+
+  const attentionItems = useMemo(() => {
+    if (!stageNoticeCount) return roleConfig.attentionItems;
+    return [
+      {
+        action: "Review applications",
+        message: `${stageNoticeCount} application${stageNoticeCount === 1 ? "" : "s"} need${
+          stageNoticeCount === 1 ? "s" : ""
+        } a stage confirmed after a sequence change`,
+        tone: "warning" as const,
+      },
+      ...roleConfig.attentionItems,
+    ];
+  }, [stageNoticeCount, roleConfig.attentionItems]);
+
   return (
     <Stack spacing={1} sx={{ display: "flex", flexDirection: "column", gap: 1, minHeight: 0 }}>
       {dashboardQuery.isLoading ? <LinearProgress /> : null}
@@ -73,7 +99,7 @@ export default function DashboardModule() {
 
       <DashboardKpiGrid kpis={kpis} />
 
-      <DashboardAttentionStrip items={roleConfig.attentionItems} />
+      <DashboardAttentionStrip items={attentionItems} />
 
       <DashboardSectionTabs
         activeSection={currentSection}

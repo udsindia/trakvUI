@@ -25,6 +25,7 @@ import { EditOutlined } from "@mui/icons-material";
 import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
+import { StageChangeBanner } from "@/modules/applications/components/StageChangeBanner";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
@@ -217,6 +218,21 @@ export function ApplicationDetailsPage() {
       <Box sx={{ bgcolor: "#fcfdff", flex: 1, overflow: "auto", px: { xs: 2, md: 3.5 }, py: { xs: 2.5, md: 3.5 } }}>
         <Box sx={{ marginInline: "auto", maxWidth: 1000, width: "100%" }}>
           <Stack spacing={4}>
+            {/*
+              Sits above the pipeline it is talking about. Renders nothing unless this
+              application's stage sequence changed and the viewer is the assigned
+              counsellor - the server decides that, not this component.
+            */}
+            {id ? (
+              <StageChangeBanner
+                applicationId={id}
+                onResolved={() => {
+                  queryClient.invalidateQueries({ queryKey: ["application", id] });
+                  queryClient.invalidateQueries({ queryKey: ["application", id, "history"] });
+                }}
+              />
+            ) : null}
+
             {/* Lifecycle pipeline */}
             <Card>
               <CardContent>

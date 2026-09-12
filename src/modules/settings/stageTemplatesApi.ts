@@ -11,6 +11,7 @@ export const ANY_COUNTRY = "*";
 
 /** Where a resolved sequence came from — backend StageTemplateDTO.Source. */
 export type StageTemplateSource =
+  | "UNIVERSITY"
   | "TENANT"
   | "TENANT_DEFAULT"
   | "SYSTEM"
@@ -33,12 +34,14 @@ export interface StageTemplate {
 
 /** True when the tenant owns this sequence rather than inheriting it. */
 export function isOverride(source: StageTemplateSource) {
-  return source === "TENANT" || source === "TENANT_DEFAULT";
+  return source === "TENANT" || source === "TENANT_DEFAULT" || source === "UNIVERSITY";
 }
 
 /** How a sequence's origin reads in the UI. */
 export function sourceLabel(source: StageTemplateSource) {
   switch (source) {
+    case "UNIVERSITY":
+      return "This university's own";
     case "TENANT":
       return "Your sequence";
     case "TENANT_DEFAULT":
@@ -50,6 +53,20 @@ export function sourceLabel(source: StageTemplateSource) {
     case "FALLBACK":
       return "Built-in fallback";
   }
+}
+
+
+/** What saving a sequence would do to applications already in flight. */
+export interface StageChangePreview {
+  applicationsAffected: number;
+  applicationsNeedingAction: number;
+  changes: {
+    applicationId: string;
+    added: string[];
+    addedBehindCurrent: string[];
+    removed: string[];
+    keptBecausePassed: string[];
+  }[];
 }
 
 const BASE = API_CONFIG.stageTemplates;
@@ -78,6 +95,62 @@ export const stageTemplatesApi = {
   ): Promise<StageTemplate> => {
     const { data } = await httpClient.put<StageTemplate>(
       `${BASE}/${encodeURIComponent(countryCode)}`,
+      { stages },
+    );
+    return data;
+  },
+
+  /** The sequence in force for one university: its own, or the one it inherits. */
+  getForUniversity: async (universityId: string, countryCode?: string): Promise<StageTemplate> => {
+    const { data } = await httpClient.get<StageTemplate>(
+      `${BASE}/university/${universityId}`,
+      { params: countryCode ? { countryCode } : undefined },
+    );
+    return data;
+  },
+
+  saveForUniversity: async (
+    universityId: string,
+    stages: { name: string; active: boolean }[],
+    countryCode?: string,
+  ): Promise<StageTemplate> => {
+    const { data } = await httpClient.put<StageTemplate>(
+      `${BASE}/university/${universityId}`,
+      { stages },
+      { params: countryCode ? { countryCode } : undefined },
+    );
+    return data;
+  },
+
+  resetForUniversity: async (universityId: string, countryCode?: string): Promise<StageTemplate> => {
+    const { data } = await httpClient.delete<StageTemplate>(
+      `${BASE}/university/${universityId}`,
+      { params: countryCode ? { countryCode } : undefined },
+    );
+    return data;
+  },
+
+  /**
+   * What saving would do to applications already in flight. Asked before the save so the
+   * confirmation can name a real number rather than warn about change in the abstract.
+   */
+  previewCountry: async (
+    countryCode: string,
+    stages: { name: string; active: boolean }[],
+  ): Promise<StageChangePreview> => {
+    const { data } = await httpClient.post<StageChangePreview>(
+      `${BASE}/${encodeURIComponent(countryCode)}/preview`,
+      { stages },
+    );
+    return data;
+  },
+
+  previewUniversity: async (
+    universityId: string,
+    stages: { name: string; active: boolean }[],
+  ): Promise<StageChangePreview> => {
+    const { data } = await httpClient.post<StageChangePreview>(
+      `${BASE}/university/${universityId}/preview`,
       { stages },
     );
     return data;
