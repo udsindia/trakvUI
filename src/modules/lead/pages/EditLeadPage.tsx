@@ -43,7 +43,7 @@ export function EditLeadPage() {
     [usersQuery.data],
   );
 
-  const { form, handleCancel, handleFormSubmit } = useLeadFormController({
+  const { form, handleCancel, handleFormSubmit, isEditing } = useLeadFormController({
     agentOptions,
     editingLeadId: id,
   });
@@ -114,6 +114,7 @@ export function EditLeadPage() {
             <LeadForm
               canAssign={canAssign}
               form={form}
+              isEditing={isEditing}
               options={options}
               onCancel={handleCancel}
               onSubmit={handleFormSubmit}

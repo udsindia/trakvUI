@@ -18,9 +18,11 @@ import {
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
 import {
   COLLEGE_SOURCE,
+  getTodayDateInput,
   MAX_SOURCE_LENGTH,
   OTHER_SOURCE,
   validateCustomSource,
+  validateIntakeDate,
   type LeadFormOptions,
   type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
@@ -35,6 +37,12 @@ type LeadFormProps = {
   options: LeadFormOptions;
   /** Show the "Assigned Agent" field. Hidden for roles without LEAD_ASSIGN. */
   canAssign?: boolean;
+  /**
+   * True when editing an existing lead. An existing intake date (e.g. from a month
+   * that has since passed) shouldn't be blocked from being saved along with unrelated
+   * edits, so the past-date and 60-day-runway rules only apply to new leads.
+   */
+  isEditing?: boolean;
 };
 
 export function LeadForm({
@@ -43,6 +51,7 @@ export function LeadForm({
   onSubmit,
   options,
   canAssign = true,
+  isEditing = false,
 }: LeadFormProps) {
   const {
     control,
@@ -219,6 +228,8 @@ export function LeadForm({
                   name="intakeDate"
                   rules={{
                     required: "Intake date is required.",
+                    validate: (value) =>
+                      isEditing ? true : (validateIntakeDate(value) ?? true),
                   }}
                   render={({ field }) => (
                     <TextField
@@ -232,6 +243,7 @@ export function LeadForm({
                       slotProps={{
                         htmlInput: {
                           "aria-label": "Intake Date",
+                          min: isEditing ? undefined : getTodayDateInput(),
                         },
                         inputLabel: {
                           shrink: true,
