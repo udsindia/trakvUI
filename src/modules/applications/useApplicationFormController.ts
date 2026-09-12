@@ -62,6 +62,10 @@ export function buildCreateApplicationPayload(
   return {
     studentId: values.studentId,
     universityName: values.targetUniversity,
+    // The form already tracks this to load the course list; it just never sent it, so
+    // every application landed with a null university_id. The stage sequence is resolved
+    // from it, so without it an application can only inherit its country's stages.
+    universityId: values.universityId || undefined,
     courseName: values.courseName,
     courseId: values.courseId || undefined,
     studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",

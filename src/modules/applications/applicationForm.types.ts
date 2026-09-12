@@ -93,6 +93,7 @@ export type CreateApplicationPayload = {
   courseName: string;
   courseId?: string;
   studyLevel: string;
+  universityId?: string;
   destinationCountryCode: string;
   intakeMonth: string;
   intakeYear: number;
