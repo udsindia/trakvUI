@@ -32,6 +32,8 @@ import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDr
 import { CatalogDeleteDialog } from "@/modules/universities/components/CatalogDeleteDialog";
 import { UniversityStagesCard } from "@/modules/universities/components/UniversityStagesCard";
 import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
+import { UniversityAgenciesCard } from "@/modules/universities/components/UniversityAgenciesCard";
+import { UniversityLinksCard } from "@/modules/universities/components/UniversityLinksCard";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { UniversityDefaultsDialog } from "@/modules/universities/components/UniversityDefaultsDialog";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
@@ -284,6 +286,18 @@ export function UniversityDetailsPage() {
                 scope="university"
                 universityName={university.name}
               />
+            </SectionCard>
+
+            {/*
+              Beside the intakes rather than buried in settings: whoever is looking at this
+              university is the person who knows which agencies place students here.
+            */}
+            <SectionCard title="Links">
+              <UniversityLinksCard canManage={canAddCourse} universityId={university.id} />
+            </SectionCard>
+
+            <SectionCard title="Partner Agencies">
+              <UniversityAgenciesCard canManage={canAddCourse} universityId={university.id} />
             </SectionCard>
 
             <SectionCard title="General Entry Requirements">

@@ -7,6 +7,8 @@ import { CreateRolePage } from "@/modules/settings/pages/CreateRolePage";
 import { EditRolePage } from "@/modules/settings/pages/EditRolePage";
 import { RolesPage } from "@/modules/settings/pages/RolesPage";
 import { StageTemplatesPage } from "@/modules/settings/pages/StageTemplatesPage";
+import { ArchivePage } from "@/modules/settings/pages/ArchivePage";
+import { PartnerAgenciesPage } from "@/modules/settings/pages/PartnerAgenciesPage";
 import { TeamPage } from "@/modules/settings/pages/TeamPage";
 import {
   hasAllPermissions,
@@ -75,6 +77,23 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "stages",
     path: "stages",
     anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.APPLICATIONS_VIEW],
+  },
+  {
+    // Gated on the catalogue rather than on settings: agencies are added from the
+    // university pages, so anyone who can see those should be able to see this view of
+    // the same records.
+    Component: PartnerAgenciesPage,
+    key: "partner-agencies",
+    path: "partner-agencies",
+    anyOfPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+  },
+  {
+    // Visible to anyone who can see the records it lists — it shows nothing they could
+    // not already see before those records were filed away.
+    Component: ArchivePage,
+    key: "archive",
+    path: "archive",
+    anyOfPermissions: [PERMISSIONS.LEAD_VIEW, PERMISSIONS.STUDENTS_VIEW, PERMISSIONS.APPLICATIONS_VIEW],
   },
 ];
 

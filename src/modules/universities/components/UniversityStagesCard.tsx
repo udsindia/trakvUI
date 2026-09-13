@@ -15,6 +15,7 @@ import {
 } from "@/modules/settings/stageTemplatesApi";
 import { StageChangePreviewDialog } from "@/modules/settings/components/StageChangePreviewDialog";
 import { StageSequenceFlow } from "@/shared/components/StageFlow";
+import { StageStepsEditor } from "@/modules/universities/components/StageStepsEditor";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type UniversityStagesCardProps = {
@@ -193,7 +194,23 @@ export function UniversityStagesCard({
       {editing ? (
         <StageSequenceEditor stages={draft} onChange={setDraft} />
       ) : (
-        <StageSequenceFlow stages={template.stages} />
+        <>
+          <StageSequenceFlow stages={template.stages} />
+
+          {/*
+            Under the sequence, not inside it: these are notes about what happens during a
+            stage, and drawing them as part of the chain would imply an application passes
+            through them.
+          */}
+          <Typography color="text.secondary" sx={{ fontSize: 12, fontWeight: 700, mt: 2.5, mb: 1 }}>
+            REFERENCE STEPS
+          </Typography>
+          <StageStepsEditor
+            canManage={canManage}
+            stageNames={template.stages.map((stage) => stage.name)}
+            universityId={universityId}
+          />
+        </>
       )}
 
       <StageChangePreviewDialog

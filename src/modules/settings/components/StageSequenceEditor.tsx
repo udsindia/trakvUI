@@ -1,4 +1,6 @@
+import { useState } from "react";
 import AddRounded from "@mui/icons-material/AddRounded";
+import DragIndicatorRounded from "@mui/icons-material/DragIndicatorRounded";
 import ArrowDownwardRounded from "@mui/icons-material/ArrowDownwardRounded";
 import ArrowUpwardRounded from "@mui/icons-material/ArrowUpwardRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
@@ -47,9 +49,14 @@ type StageSequenceEditorProps = {
  * Controlled: it owns no state, so whoever renders it decides what saving means — which
  * differs by caller. Creating a university has no applications to reconcile; changing an
  * existing one does.
+ *
+ * Rows drag, and the up/down buttons stay. Drag is faster with a mouse and unusable
+ * without one, so removing the buttons would make reordering keyboard-inaccessible.
  */
 export function StageSequenceEditor({ stages, onChange, disabled }: StageSequenceEditorProps) {
   const { hasBlank, duplicate } = validateStages(stages);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const move = (index: number, delta: number) => {
     const next = [...stages];
@@ -59,11 +66,64 @@ export function StageSequenceEditor({ stages, onChange, disabled }: StageSequenc
     onChange(next);
   };
 
+  /**
+   * Dragging lifts a stage out and drops it in, rather than swapping with its neighbour —
+   * moving the first stage to the end should not send the last one to the front.
+   */
+  const dropAt = (target: number) => {
+    if (dragIndex === null || dragIndex === target) return;
+    const next = [...stages];
+    const [lifted] = next.splice(dragIndex, 1);
+    next.splice(target, 0, lifted);
+    onChange(next);
+  };
+
+  const endDrag = () => {
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+
   return (
     <>
       <Stack spacing={1}>
         {stages.map((stage, index) => (
-          <Stack key={stage.key} direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Stack
+            key={stage.key}
+            direction="row"
+            spacing={1}
+            draggable={!disabled}
+            sx={{
+              alignItems: "center",
+              opacity: dragIndex === index ? 0.4 : 1,
+              // A line where it would land, rather than moving the rows around under the
+              // cursor: the list is short and shuffling it mid-drag is disorienting.
+              borderTop: overIndex === index && dragIndex !== null && dragIndex > index
+                ? "2px solid" : "2px solid transparent",
+              borderBottom: overIndex === index && dragIndex !== null && dragIndex < index
+                ? "2px solid" : "2px solid transparent",
+              borderTopColor: overIndex === index && dragIndex !== null && dragIndex > index
+                ? "primary.main" : "transparent",
+              borderBottomColor: overIndex === index && dragIndex !== null && dragIndex < index
+                ? "primary.main" : "transparent",
+            }}
+            onDragEnd={endDrag}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setOverIndex(index);
+            }}
+            onDragStart={() => setDragIndex(index)}
+            onDrop={(event) => {
+              event.preventDefault();
+              dropAt(index);
+              endDrag();
+            }}
+          >
+            {!disabled ? (
+              <DragIndicatorRounded
+                aria-hidden
+                sx={{ color: "text.disabled", cursor: "grab", fontSize: 18, flexShrink: 0 }}
+              />
+            ) : null}
             <Typography
               color="text.disabled"
               sx={{ fontSize: 12, fontVariantNumeric: "tabular-nums", width: 22 }}
