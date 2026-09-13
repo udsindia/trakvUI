@@ -26,6 +26,7 @@ import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { StageChangeBanner } from "@/modules/applications/components/StageChangeBanner";
+import { ApplicationStageFlow } from "@/shared/components/StageFlow";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
@@ -244,31 +245,11 @@ export function ApplicationDetailsPage() {
                     size="small"
                   />
                 </Stack>
-                {stages.length > 0 ? (
-                  <Stepper
-                    activeStep={currentIndex < 0 ? 0 : currentIndex}
-                    alternativeLabel
-                    sx={{
-                      // Cleared milestones read steel-teal; the stage in play
-                      // takes the brand orange so "where are we now" is instant.
-                      "& .MuiStepIcon-root.Mui-completed": { color: "secondary.main" },
-                      "& .MuiStepIcon-root.Mui-active": { color: "primary.main" },
-                      "& .MuiStepConnector-line": { borderColor: "divider" },
-                      "& .MuiStepLabel-label": { fontSize: 11, fontWeight: 600 },
-                      "& .MuiStepLabel-label.Mui-active": { fontWeight: 700 },
-                    }}
-                  >
-                    {stages.map((s) => (
-                      <Step key={s.id} completed={Boolean(s.exitedAt)}>
-                        <StepLabel>{s.stageName}</StepLabel>
-                      </Step>
-                    ))}
-                  </Stepper>
-                ) : (
-                  <Typography color="text.secondary" variant="body2">
-                    This application has no stages.
-                  </Typography>
-                )}
+                <ApplicationStageFlow
+                  closed={isClosed}
+                  currentStageId={application.currentStageId}
+                  stages={stages}
+                />
               </CardContent>
             </Card>
 

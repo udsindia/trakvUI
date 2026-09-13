@@ -14,6 +14,7 @@ import {
   type StageChangePreview,
 } from "@/modules/settings/stageTemplatesApi";
 import { StageChangePreviewDialog } from "@/modules/settings/components/StageChangePreviewDialog";
+import { StageSequenceFlow } from "@/shared/components/StageFlow";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type UniversityStagesCardProps = {
@@ -192,19 +193,7 @@ export function UniversityStagesCard({
       {editing ? (
         <StageSequenceEditor stages={draft} onChange={setDraft} />
       ) : (
-        <Stack spacing={0.5}>
-          {template.stages.map((stage, index) => (
-            <Stack key={stage.name} direction="row" spacing={1.25}>
-              <Typography
-                color="text.disabled"
-                sx={{ fontSize: 12.5, fontVariantNumeric: "tabular-nums", width: 20 }}
-              >
-                {index + 1}.
-              </Typography>
-              <Typography sx={{ fontSize: 13.5 }}>{stage.name}</Typography>
-            </Stack>
-          ))}
-        </Stack>
+        <StageSequenceFlow stages={template.stages} />
       )}
 
       <StageChangePreviewDialog
