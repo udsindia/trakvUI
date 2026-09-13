@@ -19,7 +19,6 @@ import {
 
 type MainLayoutProps = {
   modules: ResolvedModule[];
-  notificationsCount: number;
   tenantName: string;
   userName: string;
   userRoles: string[];
@@ -28,7 +27,6 @@ type MainLayoutProps = {
 
 export function MainLayout({
   modules,
-  notificationsCount,
   tenantName,
   userName,
   userRoles,
@@ -77,7 +75,6 @@ export function MainLayout({
       >
         <Topbar
           modules={modules}
-          notificationsCount={notificationsCount}
           tenantName={tenantName}
           userName={userName}
           userRoles={userRoles}

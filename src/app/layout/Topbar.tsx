@@ -12,7 +12,7 @@ import {
 import AddRounded from "@mui/icons-material/AddRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
 import ListAltRounded from "@mui/icons-material/ListAltRounded";
-import NotificationsNoneRounded from "@mui/icons-material/NotificationsNoneRounded";
+import { NotificationBell } from "@/shared/components/NotificationBell";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import type { Theme } from "@mui/material/styles";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
@@ -26,7 +26,6 @@ import type { DashboardQuickAction } from "@/modules/dashboard/dashboard.types";
 
 type TopbarProps = {
   modules: ResolvedModule[];
-  notificationsCount: number;
   quickActions?: DashboardQuickAction[];
   tenantName: string;
   userName: string;
@@ -67,7 +66,6 @@ function resolvePageTitle(pathname: string, modules: ResolvedModule[]) {
 
 export function Topbar({
   modules,
-  notificationsCount,
   quickActions = [],
   tenantName,
   userName,
@@ -200,26 +198,7 @@ export function Topbar({
 
         <Divider flexItem orientation="vertical" sx={{ display: { xs: "none", sm: "block" }, my: 1.25 }} />
 
-        <IconButton
-          aria-label="notifications"
-          sx={{ ...iconButtonSx, position: "relative" }}
-        >
-          <NotificationsNoneRounded sx={{ fontSize: 15 }} />
-          {notificationsCount > 0 ? (
-            <Box
-              sx={{
-                bgcolor: "primary.main",
-                border: "1.5px solid #fff",
-                borderRadius: "50%",
-                height: 7,
-                position: "absolute",
-                right: 5,
-                top: 5,
-                width: 7,
-              }}
-            />
-          ) : null}
-        </IconButton>
+        <NotificationBell sx={iconButtonSx} />
 
         <IconButton
           aria-label="tasks"

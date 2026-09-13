@@ -45,6 +45,7 @@ export const LEAD_STAGES = [
   "Qualified",
   "Prospective",
   "Enrolled",
+  "Dead",
 ] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
 
@@ -84,6 +85,8 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
   Prospective: { backgroundColor: "#FDEEDD", color: "#B35A00" },
   Negotiation: { backgroundColor: "#FBF0DA", color: "#8A5B08" },
   Enrolled: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  // Grey, not red: a dead lead is closed, not a failure to be flagged at the reader.
+  Dead: { backgroundColor: "#E8EBEE", color: "#4A5A66" },
   Lost: { backgroundColor: "#FBE5E5", color: "#C0392F" },
   Archived: { backgroundColor: "#EEF2F6", color: "#55707C" },
 };

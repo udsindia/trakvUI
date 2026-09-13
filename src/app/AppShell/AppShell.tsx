@@ -8,7 +8,6 @@ function AppShellRuntime() {
     defaultModulePath,
     modules,
     navigationModules,
-    notificationsCount,
     onLogout,
     roles,
     tenant,
@@ -21,7 +20,6 @@ function AppShellRuntime() {
         defaultModulePath={defaultModulePath}
         modules={modules}
         navigationModules={navigationModules}
-        notificationsCount={notificationsCount}
         roles={roles}
         tenantName={tenant?.tenantName ?? "VUTrak"}
         user={user}

@@ -52,6 +52,7 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "qualified", label: "Qualified" },
   { key: "prospective", label: "Prospective" },
   { key: "enrolled", label: "Enrolled" },
+  { key: "dead", label: "Dead" },
 ];
 
 const filterConfig: FilterConfig[] = [

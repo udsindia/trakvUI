@@ -19,7 +19,6 @@ type AppRouterProps = {
   defaultModulePath: string;
   modules: ResolvedModule[];
   navigationModules: ResolvedModule[];
-  notificationsCount: number;
   roles: string[];
   tenantName: string;
   user: AuthenticatedUser | null;
@@ -30,7 +29,6 @@ export function AppRouter({
   defaultModulePath,
   modules,
   navigationModules,
-  notificationsCount,
   roles,
   tenantName,
   user,
@@ -54,7 +52,6 @@ export function AppRouter({
           element={
             <MainLayout
               modules={navigationModules}
-              notificationsCount={notificationsCount}
               tenantName={tenantName}
               userName={userName}
               userRoles={userRoles}

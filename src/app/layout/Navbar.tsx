@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
   AppBar,
-  Badge,
   Box,
   IconButton,
   Stack,
@@ -11,20 +10,19 @@ import {
   useTheme,
 } from "@mui/material";
 import MenuRounded from "@mui/icons-material/MenuRounded";
-import NotificationsNoneRounded from "@mui/icons-material/NotificationsNoneRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { DesktopNav } from "@/app/layout/navbar/DesktopNav";
 import { MobileNav } from "@/app/layout/navbar/MobileNav";
 import { UserMenu } from "@/app/layout/navbar/UserMenu";
 import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 import { getNavigationItems } from "@/app/layout/navbar/navigation";
+import { NotificationBell } from "@/shared/components/NotificationBell";
 
 export { NAVBAR_HEIGHT, TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 
 type NavbarProps = {
   modules: ResolvedModule[];
   mobileNavigationOpen: boolean;
-  notificationsCount: number;
   tenantName: string;
   userName: string;
   userRoles: string[];
@@ -36,7 +34,6 @@ type NavbarProps = {
 export function Navbar({
   modules,
   mobileNavigationOpen,
-  notificationsCount,
   tenantName,
   userName,
   userRoles,
@@ -121,11 +118,7 @@ export function Navbar({
           </Stack>
 
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexShrink: 0 }}>
-            <IconButton aria-label="notifications">
-              <Badge badgeContent={notificationsCount} color="primary">
-                <NotificationsNoneRounded />
-              </Badge>
-            </IconButton>
+            <NotificationBell />
 
             <UserMenu userName={userName} userRoles={userRoles} onLogout={onLogout} />
           </Stack>

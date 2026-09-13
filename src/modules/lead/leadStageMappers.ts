@@ -9,6 +9,7 @@ const UI_TO_BACKEND_STAGE: Record<string, string> = {
   Qualified: "QUALIFIED",
   Prospective: "PROSPECTIVE",
   Enrolled: "CONVERTED",
+  Dead: "DEAD",
 };
 
 const BACKEND_TO_UI_STAGE: Record<string, string> = {
@@ -20,12 +21,16 @@ const BACKEND_TO_UI_STAGE: Record<string, string> = {
   PROPOSAL_SENT: "Prospective",
   NEGOTIATION: "Negotiation",
   CONVERTED: "Enrolled",
+  DEAD: "Dead",
   LOST: "Lost",
   ARCHIVED: "Archived",
 };
 
 /** The stage whose selection enrols the lead as a student. */
 export const ENROLLED_STAGE = "Enrolled";
+
+/** The stage that writes a lead off. Selecting it notifies the agency admin. */
+export const DEAD_STAGE = "Dead";
 
 export function toBackendLeadStage(stage: string): string {
   return UI_TO_BACKEND_STAGE[stage] ?? stage.toUpperCase().replace(/\s+/g, "_");

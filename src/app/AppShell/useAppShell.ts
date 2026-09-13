@@ -41,7 +41,6 @@ export function useAppShell() {
     isInitializing,
     modules,
     navigationModules,
-    notificationsCount: 4,
     onLogout: logout,
     roles,
     tenant,
