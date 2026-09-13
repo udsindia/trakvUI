@@ -187,7 +187,16 @@ export interface TaskLinkedLeadDto {
 }
 
 export interface TaskBoardItemDto {
+  /**
+   * What this task is about, carried through so a follow-up raised on completion lands on
+   * the same lead, student or application rather than floating free.
+   */
+  applicationId?: string | null;
   assignedAgent: TaskAssignedAgentDto;
+  assignedToId?: string | null;
+  entityType?: ActivityEntityType;
+  leadId?: string | null;
+  studentId?: string | null;
   column: TaskColumnKey;
   completionNote?: string;
   description: string;
@@ -459,6 +468,11 @@ function mapBackendTaskToBoardItem(
 
   return {
     id: task.id,
+    applicationId: task.applicationId ?? null,
+    assignedToId: task.assignedTo?.id ?? null,
+    entityType: task.entityType,
+    leadId: task.leadId || null,
+    studentId: task.studentId ?? null,
     column: getTaskColumn(task, bucket),
     completionNote: task.completionNote ?? undefined,
     description: task.description?.trim() || "No task description provided.",
@@ -497,6 +511,11 @@ function mapBackendTaskToBoardItem(
 function mapTaskDtoToModel(task: TaskBoardItemDto): BoardTask {
   return {
     id: task.id,
+    applicationId: task.applicationId ?? null,
+    assignedToId: task.assignedToId ?? null,
+    entityType: task.entityType,
+    leadId: task.leadId ?? null,
+    studentId: task.studentId ?? null,
     column: task.column,
     title: task.title,
     description: task.description,
@@ -681,6 +700,50 @@ export const activityService = {
     const { data } = await httpClient.get<unknown>(`${API_CONFIG.tasks}/${taskId}`);
     return {
       task: mapBackendTaskToBoardItem(normalizeTask(data)),
+    };
+  },
+
+  /**
+   * The team's tasks, in the same shape as the personal board.
+   *
+   * /api/tasks/board is strictly the caller's own — an agency admin looking at it sees
+   * their own handful and concludes the team has no work. /api/tasks/team returns everyone
+   * inside their visibility scope, and the server does that scoping, so a counsellor
+   * calling this simply gets themselves back.
+   *
+   * Returned board-shaped rather than page-shaped so one board renders either: the column
+   * a task lands in comes from its own status when no bucket is supplied.
+   */
+  async getTeamTaskBoard(params: GetTaskBoardParams = {}): Promise<GetTaskBoardResponse> {
+    const { data } = await httpClient.get<BackendPageResponse<unknown>>(
+      `${API_CONFIG.tasks}/team`,
+      {
+        params: {
+          // The board is not paged, so this asks for enough to fill it in one go.
+          page: 0,
+          size: 200,
+          ...(params.agentId && params.agentId !== ACTIVITY_ALL_AGENTS_OPTION_ID
+            ? { agentId: params.agentId }
+            : {}),
+        },
+      },
+    );
+
+    const tasks = (data.content ?? [])
+      .map((task) => mapBackendTaskToBoardItem(normalizeTask(task)))
+      // agentId is applied server-side; priority is not offered by the endpoint, so it is
+      // filtered here to keep the two boards behaving the same.
+      .filter((task) => !params.priority || task.priority === params.priority);
+
+    return {
+      availableAgents: buildAgentOptions(tasks),
+      availablePriorities: ["LOW", "MEDIUM", "HIGH", "URGENT"],
+      filters: {
+        agentId:
+          params.agentId && params.agentId !== ACTIVITY_ALL_AGENTS_OPTION_ID ? params.agentId : null,
+        priority: params.priority ?? null,
+      },
+      tasks,
     };
   },
 

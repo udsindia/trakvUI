@@ -7,6 +7,8 @@ import {
   Paper,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +43,11 @@ export function MyTasks() {
   const [selectedAgentId, setSelectedAgentId] = useState(ACTIVITY_ALL_AGENTS_OPTION_ID);
   const [selectedPriorityValue, setSelectedPriorityValue] = useState<string>(allPriorityValue);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
+  /**
+   * Mine or the team's. Defaults to mine for everybody: an admin's own list is still the
+   * one they act on, and the team view is a step out of it rather than the resting state.
+   */
+  const [scope, setScope] = useState<"mine" | "team">("mine");
   const {
     availableAgents,
     cancelTask,
@@ -64,6 +71,7 @@ export function MyTasks() {
     taskMutationError,
     tasks,
   } = useTaskBoard({
+    scope,
     selectedAgentId,
     selectedPriority:
       selectedPriorityValue === allPriorityValue
@@ -105,6 +113,9 @@ export function MyTasks() {
     queryKey: ["tasks", "summary"],
     queryFn: () => activityService.getTaskSummary(),
   });
+
+  // More than one agent in the (server-scoped) summary means this user can see a team.
+  const canSeeTeam = (summaryQuery.data?.agents ?? []).length > 1;
 
   const assigneeOptions = useMemo(
     () =>
@@ -154,6 +165,30 @@ export function MyTasks() {
                   width: { xs: "100%", lg: "auto" },
                 }}
               >
+                {/*
+                  Only offered to somebody who can actually see other people. The summary
+                  is scoped by the server, so more than one agent in it means there is a
+                  team to look at; for a lone counsellor the toggle would be two names for
+                  the same list.
+                */}
+                {canSeeTeam ? (
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={scope}
+                    onChange={(_event, next) => {
+                      if (next) setScope(next);
+                    }}
+                  >
+                    <ToggleButton sx={{ textTransform: "none", px: 1.5 }} value="mine">
+                      My tasks
+                    </ToggleButton>
+                    <ToggleButton sx={{ textTransform: "none", px: 1.5 }} value="team">
+                      Team tasks
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                ) : null}
+
                 <TextField
                   select
                   size="small"

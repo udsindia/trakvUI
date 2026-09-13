@@ -67,9 +67,26 @@ export function DashboardActivitySection() {
     retry: 1,
   });
 
+  /**
+   * The team's tasks, not just the viewer's.
+   *
+   * This panel asks "what needs attention today", and for an agency admin the answer is
+   * rarely their own handful — reading the personal board made the whole agency look idle.
+   * The team endpoint is scoped by the server, so a counsellor calling it gets exactly
+   * their own tasks back and the panel means the same thing for them.
+   *
+   * Falls back to the personal board for anyone the team endpoint refuses, so a narrower
+   * role still sees their own work rather than an error.
+   */
   const { data: taskBoard, isLoading: loadingTasks } = useQuery({
     queryKey: ["dashboard-task-board"],
-    queryFn: () => activityService.getTaskBoard(),
+    queryFn: async () => {
+      try {
+        return await activityService.getTeamTaskBoard();
+      } catch {
+        return activityService.getTaskBoard();
+      }
+    },
     staleTime: 30_000,
     retry: 1,
   });

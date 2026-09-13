@@ -8,10 +8,12 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Divider,
   Drawer,
+  FormControlLabel,
   IconButton,
   Paper,
   Stack,
@@ -38,6 +40,11 @@ type TaskDetailsSidebarProps = {
   onClose: () => void;
   onMarkComplete: (input: {
     completionNote: string;
+    /**
+     * Raised after the task is completed, pointing at the same record. Optional: most
+     * tasks finish and that is the end of them.
+     */
+    followUp?: { title: string; dueDate: string } | null;
     taskId: string;
   }) => Promise<void> | void;
   onMarkInProgress: (taskId: string) => Promise<void> | void;
@@ -101,6 +108,11 @@ export function TaskDetailsSidebar({
   onRescheduleTask,
 }: TaskDetailsSidebarProps) {
   const [completionNote, setCompletionNote] = useState("");
+  // The follow-up, collapsed until asked for: completing a task is the common path and
+  // should not open a second form nobody wanted.
+  const [wantsFollowUp, setWantsFollowUp] = useState(false);
+  const [followUpTitle, setFollowUpTitle] = useState("");
+  const [followUpDue, setFollowUpDue] = useState("");
   const [completionError, setCompletionError] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
@@ -137,10 +149,27 @@ export function TaskDetailsSidebar({
       return;
     }
 
+    const followUpWanted = wantsFollowUp && followUpTitle.trim().length > 0;
+    if (wantsFollowUp && !followUpWanted) {
+      setCompletionError("Give the follow-up a title, or untick it.");
+      return;
+    }
+    if (followUpWanted && !followUpDue) {
+      setCompletionError("Give the follow-up a due date.");
+      return;
+    }
+
     await onMarkComplete({
       completionNote: trimmedCompletionNote,
+      followUp: followUpWanted
+        ? { title: followUpTitle.trim(), dueDate: followUpDue }
+        : null,
       taskId: task.id,
     });
+
+    setWantsFollowUp(false);
+    setFollowUpTitle("");
+    setFollowUpDue("");
   };
 
   const handleMarkInProgress = async () => {
@@ -503,6 +532,44 @@ export function TaskDetailsSidebar({
                         if (rescheduleError) setRescheduleError("");
                       }}
                     />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={wantsFollowUp}
+                          disabled={isActionPending || isClosedTask}
+                          size="small"
+                          onChange={(event) => setWantsFollowUp(event.target.checked)}
+                        />
+                      }
+                      label={
+                        <Typography sx={{ fontSize: 13 }}>Create a follow-up task</Typography>
+                      }
+                    />
+
+                    {wantsFollowUp ? (
+                      <Stack spacing={1.25}>
+                        <TextField
+                          disabled={isActionPending}
+                          fullWidth
+                          label="Follow-up"
+                          placeholder="What happens next?"
+                          size="small"
+                          value={followUpTitle}
+                          onChange={(event) => setFollowUpTitle(event.target.value)}
+                        />
+                        <TextField
+                          InputLabelProps={{ shrink: true }}
+                          disabled={isActionPending}
+                          helperText="Kept on the same lead, student or application as this one."
+                          label="Due"
+                          size="small"
+                          type="date"
+                          value={followUpDue}
+                          onChange={(event) => setFollowUpDue(event.target.value)}
+                        />
+                      </Stack>
+                    ) : null}
+
                     <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
                       <Button
                         disabled={isActionPending}

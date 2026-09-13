@@ -50,6 +50,18 @@ type CreateTaskModalProps = {
   isLoadingLinks?: boolean;
   isSubmitting?: boolean;
   leads: BackendLead[];
+  /**
+   * Opened from a lead, student or application page: the task is about that record and
+   * nothing else, so the pickers are replaced by a line naming it. Leaving them in would
+   * invite somebody to file the task against a different record than the page they are on.
+   */
+  lockedEntity?: {
+    entityType: ActivityEntityType;
+    id: string;
+    label: string;
+    /** An APPLICATION task carries its student too — see the submit handler. */
+    studentId?: string | null;
+  } | null;
   open: boolean;
   students: StudentOption[];
   onClose: () => void;
@@ -94,6 +106,7 @@ export function CreateTaskModal({
   isLoadingLinks = false,
   isSubmitting = false,
   leads,
+  lockedEntity = null,
   open,
   students,
   onClose,
@@ -109,7 +122,7 @@ export function CreateTaskModal({
     defaultValues,
     mode: "onBlur",
   });
-  const entityType = watch("entityType");
+  const entityType = lockedEntity?.entityType ?? watch("entityType");
 
   useEffect(() => {
     if (!open) {
@@ -133,19 +146,32 @@ export function CreateTaskModal({
         ? applications.find((item) => item.id === values.applicationId)
         : undefined;
 
+    // A locked record wins outright: the pickers are not rendered in that mode, so their
+    // values are whatever the defaults were and must not reach the request.
+    const effectiveType = lockedEntity?.entityType ?? values.entityType;
+
     await onSubmit({
       title: trimmedTitle,
       description: trimmedDescription,
       dueDate: values.dueDate,
-      entityType: values.entityType,
-      leadId: values.entityType === "LEAD" ? values.leadId : null,
-      studentId:
-        values.entityType === "STUDENT"
+      entityType: effectiveType,
+      leadId: lockedEntity
+        ? (effectiveType === "LEAD" ? lockedEntity.id : null)
+        : values.entityType === "LEAD"
+          ? values.leadId
+          : null,
+      studentId: lockedEntity
+        ? (effectiveType === "STUDENT" ? lockedEntity.id : (lockedEntity.studentId ?? null))
+        : values.entityType === "STUDENT"
           ? values.studentId
           : values.entityType === "APPLICATION"
             ? (application?.studentId ?? null)
             : null,
-      applicationId: values.entityType === "APPLICATION" ? values.applicationId : null,
+      applicationId: lockedEntity
+        ? (effectiveType === "APPLICATION" ? lockedEntity.id : null)
+        : values.entityType === "APPLICATION"
+          ? values.applicationId
+          : null,
       priority: values.priority,
       // Omitted without the permission, and omitted when left on "Me": the server assigns
       // the creator when no assignee is sent, so there is nothing to say in either case.
@@ -208,18 +234,28 @@ export function CreateTaskModal({
             />
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <Controller
-                control={control}
-                name="entityType"
-                render={({ field }) => (
-                  <TextField {...field} disabled={isSubmitting} fullWidth label="Link To" select>
-                    <MenuItem value="GENERAL">General</MenuItem>
-                    <MenuItem value="LEAD">Lead</MenuItem>
-                    <MenuItem value="STUDENT">Student</MenuItem>
-                    <MenuItem value="APPLICATION">Application</MenuItem>
-                  </TextField>
-                )}
-              />
+              {lockedEntity ? (
+                <TextField
+                  disabled
+                  fullWidth
+                  helperText="This task will be filed against this record."
+                  label="Link To"
+                  value={lockedEntity.label}
+                />
+              ) : (
+                <Controller
+                  control={control}
+                  name="entityType"
+                  render={({ field }) => (
+                    <TextField {...field} disabled={isSubmitting} fullWidth label="Link To" select>
+                      <MenuItem value="GENERAL">General</MenuItem>
+                      <MenuItem value="LEAD">Lead</MenuItem>
+                      <MenuItem value="STUDENT">Student</MenuItem>
+                      <MenuItem value="APPLICATION">Application</MenuItem>
+                    </TextField>
+                  )}
+                />
+              )}
 
               <Controller
                 control={control}
@@ -276,7 +312,7 @@ export function CreateTaskModal({
               tenant's data. Scrolling 154 leads to find one is the same problem the
               application form had.
             */}
-            {entityType === "LEAD" ? (
+            {!lockedEntity && entityType === "LEAD" ? (
               <Controller
                 control={control}
                 name="leadId"
@@ -317,7 +353,7 @@ export function CreateTaskModal({
               />
             ) : null}
 
-            {entityType === "STUDENT" ? (
+            {!lockedEntity && entityType === "STUDENT" ? (
               <Controller
                 control={control}
                 name="studentId"
@@ -358,7 +394,7 @@ export function CreateTaskModal({
               />
             ) : null}
 
-            {entityType === "APPLICATION" ? (
+            {!lockedEntity && entityType === "APPLICATION" ? (
               <Controller
                 control={control}
                 name="applicationId"

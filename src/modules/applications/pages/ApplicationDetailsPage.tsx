@@ -30,6 +30,7 @@ import { ApplicationStageChevrons } from "@/shared/components/StageFlow";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
+import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
 const TERMINAL_OUTCOMES = [
   "OFFER_ACCEPTED",
@@ -196,6 +197,13 @@ export function ApplicationDetailsPage() {
           title={`${application.universityName} — ${application.courseName}`}
           actions={
             <Stack direction="row" spacing={1.5}>
+              <AddTaskForRecordButton
+                entityId={application.id}
+                entityType="APPLICATION"
+                label={`${application.universityName} — ${application.courseName}`}
+                size="medium"
+                studentId={application.studentId}
+              />
               {canEdit && isDraft ? (
                 <Button
                   startIcon={<EditOutlined />}

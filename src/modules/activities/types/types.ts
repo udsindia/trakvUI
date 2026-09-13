@@ -78,7 +78,16 @@ export type TaskColumnKey = "todo" | "inProgress" | "done";
 
 export type TaskCardLabel = "PINNED" | "OVERDUE" | "COMPLETED" | "IN PROGRESS";
 
+/** Mirrors ActivityEntityType in activityService; kept local to avoid a circular import. */
+export type TaskEntityType = "LEAD" | "STUDENT" | "APPLICATION" | "GENERAL";
+
 export interface BoardTask extends Task {
+  /** What the task is about — needed to point a follow-up at the same record. */
+  applicationId?: string | null;
+  assignedToId?: string | null;
+  entityType?: TaskEntityType;
+  leadId?: string | null;
+  studentId?: string | null;
   column: TaskColumnKey;
   label?: TaskCardLabel;
   progress?: number;

@@ -27,6 +27,7 @@ import { studentsApi } from "@/modules/students/studentsApi";
 import { studentsRoutePaths } from "@/modules/students/studentsRoutePaths";
 import { usersService } from "@/modules/settings/usersService";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
 /** Outcome → chip colour, matching the applications pages. */
 const outcomeColor: Record<string, "default" | "success" | "error" | "warning" | "info"> = {
@@ -169,6 +170,12 @@ export function StudentDetailsPage() {
           title={fullName || student.email || "Student"}
           actions={
             <Stack direction="row" spacing={1.5}>
+              <AddTaskForRecordButton
+                entityId={student.id}
+                entityType="STUDENT"
+                label={fullName || student.email || "This student"}
+                size="medium"
+              />
               {fromLead ? (
                 <Button
                   variant="outlined"
