@@ -13,7 +13,10 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  MenuItem,
+  Snackbar,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
@@ -26,6 +29,8 @@ import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { LeadActivityTimeline } from "@/modules/lead/components/LeadActivityTimeline";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
+import { LEAD_STAGES } from "@/modules/lead/components/LeadTableContainer";
+import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
 
 const stageColor: Record<string, { backgroundColor: string; color: string }> = {
   New: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
@@ -95,6 +100,7 @@ export function LeadDetailsPage() {
   });
 
   const fullName = lead ? [lead.firstName, lead.lastName].filter(Boolean).join(" ") : "";
+  const { requestStageChange, dialogs, lastMessage, clearLastMessage } = useLeadStageChange();
   const stage = humanizeStage(lead?.leadStage);
   const chipStyle = stageColor[stage] ?? {};
   const phone = lead
@@ -107,6 +113,13 @@ export function LeadDetailsPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0, height: `calc(100vh - ${NAVBAR_HEIGHT}px)`, overflow: "auto", px: { xs: 2, md: 3 }, py: 2 }}>
+      {dialogs}
+      <Snackbar
+        autoHideDuration={3000}
+        message={lastMessage}
+        open={Boolean(lastMessage)}
+        onClose={clearLastMessage}
+      />
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "space-between" }}>
         <Button
           startIcon={<ArrowBackRounded />}
@@ -143,7 +156,35 @@ export function LeadDetailsPage() {
                   <Typography sx={{ fontSize: 18, fontWeight: 700 }}>{fullName}</Typography>
                   <Typography color="text.secondary" sx={{ fontSize: 13 }}>{lead.email || "—"}</Typography>
                 </Stack>
-                <Chip label={stage} size="small" sx={{ ...chipStyle, fontWeight: 600 }} />
+                {/*
+                  The stage lived only on the list, so reading a lead and then moving it
+                  meant going back out to find the row again. It is a dropdown here, going
+                  through the same dialogs the list uses.
+                */}
+                <TextField
+                  select
+                  size="small"
+                  sx={{ minWidth: 170 }}
+                  value={stage}
+                  onChange={(event) =>
+                    void requestStageChange({
+                      leadId: lead.id,
+                      leadName: fullName || "this lead",
+                      stage: event.target.value,
+                    })
+                  }
+                >
+                  {LEAD_STAGES.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                  {/* A stage the pipeline no longer offers still has to render its own
+                      current value, or the dropdown would show empty. */}
+                  {LEAD_STAGES.includes(stage as (typeof LEAD_STAGES)[number]) ? null : (
+                    <MenuItem value={stage}>{stage}</MenuItem>
+                  )}
+                </TextField>
               </Stack>
 
               <Divider sx={{ my: 2 }} />

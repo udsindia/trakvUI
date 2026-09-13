@@ -37,6 +37,12 @@ export type LeadRow = {
   score: number;
   source: string;
   stage: string;
+  /**
+   * Where the resulting student's application has actually got to. Null until the lead is
+   * enrolled and has one — the lead's own stage stops at Enrolled, and the journey does not.
+   */
+  downstreamStage?: string | null;
+  applicationCount?: number;
 };
 
 export const LEAD_STAGES = [
@@ -302,7 +308,23 @@ export function LeadTableContainer({
       id: "stage",
       header: "Stage",
       minWidth: 104,
-      render: (lead) => <Chip label={lead.stage} size="small" sx={{ ...(stageStyles[lead.stage] ?? {}) }} />,
+      render: (lead) => (
+        <Stack spacing={0.25}>
+          <Chip label={lead.stage} size="small" sx={{ ...(stageStyles[lead.stage] ?? {}) }} />
+          {/*
+            Under the lead's own stage rather than replacing it: both are true, and which
+            one matters depends on whether you are chasing the acquisition or the visa.
+          */}
+          {lead.downstreamStage ? (
+            <Typography color="text.secondary" sx={{ fontSize: 11, pl: 0.25 }}>
+              {lead.downstreamStage}
+              {lead.applicationCount && lead.applicationCount > 1
+                ? ` · ${lead.applicationCount} apps`
+                : ""}
+            </Typography>
+          ) : null}
+        </Stack>
+      ),
     },
     {
       id: "score",

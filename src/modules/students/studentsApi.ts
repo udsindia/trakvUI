@@ -58,6 +58,33 @@ export interface BackendStudentDetail extends BackendStudent {
   languageTests?: StudentLanguageTest[];
 }
 
+/**
+ * What PUT /api/students/{id} accepts — mirrors UpdateStudentRequest on the server.
+ *
+ * Everything optional, because this is used both to edit a whole profile and to fill in
+ * the handful of things a lead never captured at the moment it is enrolled.
+ */
+export interface UpdateStudentPayload {
+  assignedTo?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  phoneCountryCode?: string | null;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  nationality?: string | null;
+  passportExpiryDate?: string | null;
+  /** Three-letter ISO country code; the server rejects anything longer. */
+  passportIssueCountry?: string | null;
+  highestDegree?: string | null;
+  institutionName?: string | null;
+  fieldOfStudy?: string | null;
+  graduationYear?: number | null;
+  academicScore?: number | null;
+  scoreType?: string | null;
+  workExperienceMonths?: number | null;
+}
+
 /** The list endpoint returns a Spring Page; older builds returned a raw array. */
 interface Paged<T> {
   content?: T[];
@@ -83,6 +110,21 @@ export const studentsApi = {
   getStudentById: async (id: string): Promise<BackendStudentDetail> => {
     const response = await httpClient.get<BackendStudentDetail>(
       `${API_CONFIG.students}/${id}`,
+    );
+    return response.data;
+  },
+
+  /**
+   * Only the fields actually sent are applied — the server treats null as "no change", so
+   * a partial save never wipes what it did not mention.
+   */
+  updateStudent: async (
+    id: string,
+    payload: UpdateStudentPayload,
+  ): Promise<BackendStudentDetail> => {
+    const response = await httpClient.put<BackendStudentDetail>(
+      `${API_CONFIG.students}/${id}`,
+      payload,
     );
     return response.data;
   },

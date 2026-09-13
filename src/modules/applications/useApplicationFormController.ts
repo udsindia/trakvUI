@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
@@ -124,8 +124,21 @@ export function useApplicationFormController(
 ) {
   const isEditMode = Boolean(applicationId);
   const navigate = useNavigate();
+  /**
+   * Starting an application from a student's own page.
+   *
+   * The form otherwise opens blank with a picker of every student, which is the wrong
+   * question when you have just come from one of them. Only the id is seeded — the effect
+   * below fills the name, email and phone from it, the same way it does when somebody
+   * chooses from the picker.
+   */
+  const [searchParams] = useSearchParams();
+  const presetStudentId = searchParams.get("studentId") ?? "";
+
   const form = useForm<ApplicationFormValues>({
-    defaultValues: defaultApplicationFormValues,
+    defaultValues: presetStudentId
+      ? { ...defaultApplicationFormValues, studentId: presetStudentId }
+      : defaultApplicationFormValues,
     mode: "onBlur",
     reValidateMode: "onChange",
   });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -28,6 +29,8 @@ import { studentsRoutePaths } from "@/modules/students/studentsRoutePaths";
 import { usersService } from "@/modules/settings/usersService";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
+import { EditStudentDialog } from "@/modules/students/components/EditStudentDialog";
+import { applicationCreateForStudentPath } from "@/modules/applications/applicationsRoutePaths";
 
 /** Outcome → chip colour, matching the applications pages. */
 const outcomeColor: Record<string, "default" | "success" | "error" | "warning" | "info"> = {
@@ -148,6 +151,7 @@ export function StudentDetailsPage() {
 
   const fullName = [student.firstName, student.lastName].filter(Boolean).join(" ").trim();
   const counsellor = users.find((user) => user.id === student.assignedTo)?.name ?? "";
+  const [editOpen, setEditOpen] = useState(false);
   const fromLead = Boolean(student.leadId);
 
   return (
@@ -165,11 +169,31 @@ export function StudentDetailsPage() {
       }}
     >
       <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
+        <EditStudentDialog
+          open={editOpen}
+          student={student}
+          onClose={() => setEditOpen(false)}
+        />
+
         <PageHeader
           subtitle="Students > Details"
           title={fullName || student.email || "Student"}
           actions={
             <Stack direction="row" spacing={1.5}>
+              {/*
+                There was no route from a student to the application form at all, so the
+                journey was: leave the student, open Applications, find them again in a
+                picker of everyone.
+              */}
+              <Button
+                variant="contained"
+                onClick={() => navigate(applicationCreateForStudentPath(student.id))}
+              >
+                New application
+              </Button>
+              <Button variant="outlined" onClick={() => setEditOpen(true)}>
+                Edit
+              </Button>
               <AddTaskForRecordButton
                 entityId={student.id}
                 entityType="STUDENT"

@@ -28,6 +28,11 @@ export type BulkLeadUpdatePayload = {
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
+  /** The student this lead became, once it has been enrolled. */
+  studentId?: string | null;
+  /** How far the resulting application has got — the lead's stage stops at Enrolled. */
+  downstreamStage?: string | null;
+  applicationCount?: number;
   consultancyId: string;
   firstName: string;
   lastName: string;

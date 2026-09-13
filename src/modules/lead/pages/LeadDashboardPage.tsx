@@ -41,7 +41,7 @@ import {
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
 import { joinPhoneNumber } from "@/shared/utils/phone";
-import { LeadChangeCommentDialog } from "@/modules/lead/components/LeadChangeCommentDialog";
+import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -138,6 +138,8 @@ function mapBackendLeadToRow(lead: BackendLead): LeadRow {
     email: lead.email ?? "",
     phone: joinPhoneNumber(lead.phoneCountryCode, lead.phone),
     stage: fromBackendLeadStage(lead.leadStage),
+    downstreamStage: lead.downstreamStage ?? null,
+    applicationCount: lead.applicationCount ?? 0,
     agent: lead.assignedToName ?? "—",
     source: lead.sourceName ?? "—",
     score: lead.score ?? 0,
@@ -215,17 +217,8 @@ export function LeadDashboardPage() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
-  /**
-   * The change waiting on a comment. Holding the action as a closure keeps the dialog
-   * ignorant of what it is confirming — it collects a remark and calls back.
-   */
-  const [pendingChange, setPendingChange] = useState<{
-    title: string;
-    summary: string;
-    run: (comment: string) => Promise<void>;
-    done: () => void;
-  } | null>(null);
-  const [committingChange, setCommittingChange] = useState(false);
+  // Stage changes are the same decision here as on the lead's own page, dialogs and all.
+  const { requestStageChange, requestComment, dialogs } = useLeadStageChange();
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -397,13 +390,14 @@ export function LeadDashboardPage() {
    */
   const handleAssignLeads = async (ids: string[], agentId: string) => {
     const agentName = agentOptions.find((option) => option.agentId === agentId)?.agentName ?? "";
-    return new Promise<void>((resolve) => {
-      setPendingChange({
-        title: `Reassign to ${agentName}`,
-        summary: ids.length > 1 ? `${ids.length} leads` : "1 lead",
-        run: (comment) => applyAssign(ids, agentId, agentName, comment),
-        done: resolve,
-      });
+    return requestComment({
+      title: `Reassign to ${agentName}`,
+      summary: ids.length > 1 ? `${ids.length} leads` : "1 lead",
+      // Offered for a single lead only: one task covering a bulk hand-over of thirty leads
+      // would be meaningless, and thirty identical tasks worse.
+      offerTask: ids.length === 1,
+      taskTarget: ids.length === 1 ? { leadId: ids[0], assignedToId: agentId } : null,
+      run: (comment) => applyAssign(ids, agentId, agentName, comment),
     });
   };
 
@@ -433,34 +427,12 @@ export function LeadDashboardPage() {
   };
 
   const handleUpdateStage = async (id: string, stage: string) => {
-    return new Promise<void>((resolve) => {
-      setPendingChange({
-        title: `Move to ${stage}`,
-        summary: "1 lead",
-        run: (comment) => applyStage(id, stage, comment),
-        done: resolve,
-      });
+    const lead = leadRows.find((row) => row.id === id);
+    await requestStageChange({
+      leadId: id,
+      leadName: lead?.name ?? "this lead",
+      stage,
     });
-  };
-
-  const applyStage = async (id: string, stage: string, comment: string) => {
-    try {
-      await leadApi.updateLead(id, {
-        leadStage: toBackendLeadStage(stage),
-        comment,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
-      // Enrolling creates the student record server-side, so the application
-      // student picker has to be refetched for it to show up.
-      if (stage === ENROLLED_STAGE) {
-        await queryClient.invalidateQueries({ queryKey: ["students"] });
-        setSnack("Lead enrolled — student record created");
-      } else {
-        setSnack(`Stage updated to ${stage}`);
-      }
-    } catch {
-      setSnack("Failed to update stage");
-    }
   };
 
   return (
@@ -593,48 +565,7 @@ export function LeadDashboardPage() {
           )}
         </Box>
 
-        <LeadChangeCommentDialog
-
-          open={Boolean(pendingChange)}
-
-          saving={committingChange}
-
-          summary={pendingChange?.summary ?? ""}
-
-          title={pendingChange?.title ?? ""}
-
-          onCancel={() => {
-
-            pendingChange?.done();
-
-            setPendingChange(null);
-
-          }}
-
-          onConfirm={async (comment) => {
-
-            if (!pendingChange) return;
-
-            setCommittingChange(true);
-
-            try {
-
-              await pendingChange.run(comment);
-
-            } finally {
-
-              setCommittingChange(false);
-
-              pendingChange.done();
-
-              setPendingChange(null);
-
-            }
-
-          }}
-
-        />
-
+        {dialogs}
 
         <Snackbar
           autoHideDuration={3500}
