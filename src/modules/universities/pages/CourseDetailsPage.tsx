@@ -19,6 +19,7 @@ import { DetailPageHeader } from "@/modules/universities/components/Universities
 import { EligibilityBar } from "@/modules/universities/components/CourseSearchCard";
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
 import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
+import { IntakeChangeBanner } from "@/modules/universities/components/IntakeChangeBanner";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { MOCK_STUDENT } from "@/modules/universities/universitiesMockData";
 import { universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
@@ -173,6 +174,8 @@ export function CourseDetailsPage() {
                   <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Intakes</Typography>
                 </Box>
                 <Box sx={{ p: 2.5 }}>
+                  {/* Above the intakes, because it is the reason they say what they say. */}
+                  <IntakeChangeBanner canManage={canManageCatalogue} courseId={course.id} />
                   <UniversityIntakesCard
                     canManage={canManageCatalogue}
                     ownerId={course.id}

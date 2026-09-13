@@ -75,6 +75,69 @@ export const courseIntakesApi = {
   },
 };
 
+/** One month a calendar save would change on one course. */
+export type IntakeMonthChange = {
+  month: string;
+  year: number;
+  from: string | null;
+  to: string | null;
+  action: "ADDED" | "CHANGED" | "NO_LONGER_IN_CALENDAR";
+};
+
+export type IntakeCourseChange = {
+  courseId: string;
+  courseName: string;
+  custom: boolean;
+  months: IntakeMonthChange[];
+};
+
+/**
+ * The blast radius of a calendar save. coursesUpdated were following and are simply brought
+ * into line; coursesNeedingConfirmation answered a month for themselves and will be asked.
+ */
+export type IntakeChangePreview = {
+  coursesUpdated: number;
+  coursesNeedingConfirmation: number;
+  changes: IntakeCourseChange[];
+};
+
+export type IntakeChangeNotice = {
+  id: string;
+  scopeLabel: string | null;
+  changedAt: string;
+  summary: { months?: IntakeMonthChange[] };
+};
+
+export const intakeNoticesApi = {
+  preview: async (
+    universityId: string,
+    intakes: UniversityIntakeInput[],
+  ): Promise<IntakeChangePreview> => {
+    const response = await httpClient.post<IntakeChangePreview>(
+      `/universities/${universityId}/intakes/preview`,
+      { intakes, applyToExistingCourses: false },
+    );
+    return response.data;
+  },
+
+  forCourse: async (courseId: string): Promise<IntakeChangeNotice[]> => {
+    const response = await httpClient.get<IntakeChangeNotice[]>(
+      `/courses/${courseId}/intake-notices`,
+    );
+    return response.data;
+  },
+
+  /** Take the university's calendar for this course. */
+  apply: async (noticeId: string): Promise<void> => {
+    await httpClient.post(`/intake-notices/${noticeId}/apply`);
+  },
+
+  /** Stay as we are — recorded, so the same change is not asked twice. */
+  keepOwn: async (noticeId: string): Promise<void> => {
+    await httpClient.post(`/intake-notices/${noticeId}/keep-own`);
+  },
+};
+
 export const INTAKE_STATUS_LABELS: Record<IntakeStatus, string> = {
   OPEN: "Open",
   CLOSED: "Closed",

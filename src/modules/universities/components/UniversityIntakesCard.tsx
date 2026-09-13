@@ -18,11 +18,14 @@ import {
   INTAKE_MONTHS,
   INTAKE_STATUS_LABELS,
   courseIntakesApi,
+  intakeNoticesApi,
   universityIntakesApi,
+  type IntakeChangePreview,
   type IntakeStatus,
   type UniversityIntake,
   type UniversityIntakeInput,
 } from "@/modules/universities/universityIntakesApi";
+import { IntakeChangePreviewDialog } from "@/modules/universities/components/IntakeChangePreviewDialog";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type UniversityIntakesCardProps = {
@@ -34,6 +37,8 @@ type UniversityIntakesCardProps = {
   scope: "university" | "course";
   /** University id for scope "university", course id for scope "course". */
   ownerId: string;
+  /** The university's name, for the preview dialog. Only used at university scope. */
+  universityName?: string;
   /** Whether the viewer may change them; the server enforces it regardless. */
   canManage: boolean;
 };
@@ -69,10 +74,18 @@ const toDraft = (intakes: UniversityIntake[]): DraftIntake[] =>
  * missing a month — it never overwrites one a course already has, since that row is the
  * course's own answer for this cycle.
  */
-export function UniversityIntakesCard({ scope, ownerId, canManage }: UniversityIntakesCardProps) {
+export function UniversityIntakesCard({
+  scope,
+  ownerId,
+  universityName = "this university",
+  canManage,
+}: UniversityIntakesCardProps) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<DraftIntake[]>([]);
   const [editing, setEditing] = useState(false);
+  const [preview, setPreview] = useState<IntakeChangePreview | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const isUniversity = scope === "university";
 
   const intakesQuery = useQuery({
@@ -105,11 +118,42 @@ export function UniversityIntakesCard({ scope, ownerId, canManage }: UniversityI
         : courseIntakesApi.save(ownerId, payload);
     },
     onSuccess: async () => {
+      setPreviewOpen(false);
       setEditing(false);
       await queryClient.invalidateQueries({ queryKey: ["intakes", scope, ownerId] });
       await queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
   });
+
+  const payloadFromDraft = (): UniversityIntakeInput[] =>
+    draft.map((intake) => ({
+      intakeMonth: intake.intakeMonth,
+      intakeYear: intake.intakeYear,
+      status: intake.status,
+      applicationDeadline: intake.applicationDeadline || null,
+    }));
+
+  /**
+   * A course's own intakes affect nothing else, so they save straight away. A university's
+   * calendar reaches every course beneath it, so that one is previewed first.
+   */
+  const requestSave = async () => {
+    if (!isUniversity) {
+      saveMutation.mutate();
+      return;
+    }
+    setPreviewOpen(true);
+    setPreviewLoading(true);
+    setPreview(null);
+    try {
+      setPreview(await intakeNoticesApi.preview(ownerId, payloadFromDraft()));
+    } catch {
+      // A read-only call being unavailable should not stop an admin saving.
+      setPreview(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const update = (key: string, patch: Partial<DraftIntake>) =>
     setDraft((current) =>
@@ -186,7 +230,7 @@ export function UniversityIntakesCard({ scope, ownerId, canManage }: UniversityI
                 size="small"
                 sx={{ textTransform: "none" }}
                 variant="contained"
-                onClick={() => saveMutation.mutate()}
+                onClick={requestSave}
               >
                 {saveMutation.isPending ? "Saving…" : "Save"}
               </Button>
@@ -209,8 +253,8 @@ export function UniversityIntakesCard({ scope, ownerId, canManage }: UniversityI
         <>
           <Alert severity="info" sx={{ mb: 1.5, py: 0.5 }}>
             {isUniversity
-              ? "Saving adds these months to courses that do not have them. A course that has already set its own status for a month keeps it."
-              : "These apply to this course only. The university's calendar is unchanged."}
+              ? "Courses that follow this calendar are brought into line. A course that has set intakes of its own is left alone and asked to confirm."
+              : "These apply to this course only, and it will be asked before the university's calendar changes them again."}
           </Alert>
 
           <Stack spacing={1}>
@@ -336,6 +380,16 @@ export function UniversityIntakesCard({ scope, ownerId, canManage }: UniversityI
           ))}
         </Stack>
       )}
+
+      <IntakeChangePreviewDialog
+        loading={previewLoading}
+        open={previewOpen}
+        preview={preview}
+        saving={saveMutation.isPending}
+        universityName={universityName}
+        onCancel={() => setPreviewOpen(false)}
+        onConfirm={() => saveMutation.mutate()}
+      />
     </>
   );
 }

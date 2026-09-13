@@ -282,6 +282,7 @@ export function UniversityDetailsPage() {
                 canManage={canAddCourse}
                 ownerId={university.id}
                 scope="university"
+                universityName={university.name}
               />
             </SectionCard>
 
