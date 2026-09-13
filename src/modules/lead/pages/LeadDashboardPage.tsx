@@ -41,6 +41,7 @@ import {
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { LeadChangeCommentDialog } from "@/modules/lead/components/LeadChangeCommentDialog";
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -214,6 +215,17 @@ export function LeadDashboardPage() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
+  /**
+   * The change waiting on a comment. Holding the action as a closure keeps the dialog
+   * ignorant of what it is confirming — it collects a remark and calls back.
+   */
+  const [pendingChange, setPendingChange] = useState<{
+    title: string;
+    summary: string;
+    run: (comment: string) => Promise<void>;
+    done: () => void;
+  } | null>(null);
+  const [committingChange, setCommittingChange] = useState(false);
   const [leadSearchQuery, setLeadSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -379,15 +391,35 @@ export function LeadDashboardPage() {
     [usersQuery.data],
   );
 
+  /**
+   * Both of these go through a comment prompt first. The change itself is unchanged — the
+   * dialog only collects an optional remark and hands it to the same call.
+   */
   const handleAssignLeads = async (ids: string[], agentId: string) => {
     const agentName = agentOptions.find((option) => option.agentId === agentId)?.agentName ?? "";
+    return new Promise<void>((resolve) => {
+      setPendingChange({
+        title: `Reassign to ${agentName}`,
+        summary: ids.length > 1 ? `${ids.length} leads` : "1 lead",
+        run: (comment) => applyAssign(ids, agentId, agentName, comment),
+        done: resolve,
+      });
+    });
+  };
+
+  const applyAssign = async (
+    ids: string[],
+    agentId: string,
+    agentName: string,
+    comment: string,
+  ) => {
     try {
       // The bulk endpoint takes the entity field name (assignedTo), unlike the
       // single-lead PATCH payload (assignedToId).
       if (ids.length > 1) {
-        await leadApi.bulkUpdateLeads(ids, { assignedTo: agentId });
+        await leadApi.bulkUpdateLeads(ids, { assignedTo: agentId }, comment);
       } else {
-        await leadApi.updateLead(ids[0], { assignedToId: agentId });
+        await leadApi.updateLead(ids[0], { assignedToId: agentId, comment });
       }
       await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       setSnack(
@@ -401,9 +433,21 @@ export function LeadDashboardPage() {
   };
 
   const handleUpdateStage = async (id: string, stage: string) => {
+    return new Promise<void>((resolve) => {
+      setPendingChange({
+        title: `Move to ${stage}`,
+        summary: "1 lead",
+        run: (comment) => applyStage(id, stage, comment),
+        done: resolve,
+      });
+    });
+  };
+
+  const applyStage = async (id: string, stage: string, comment: string) => {
     try {
       await leadApi.updateLead(id, {
         leadStage: toBackendLeadStage(stage),
+        comment,
       });
       await queryClient.invalidateQueries({ queryKey: ["leads", "paginated"] });
       // Enrolling creates the student record server-side, so the application
@@ -548,6 +592,49 @@ export function LeadDashboardPage() {
             </>
           )}
         </Box>
+
+        <LeadChangeCommentDialog
+
+          open={Boolean(pendingChange)}
+
+          saving={committingChange}
+
+          summary={pendingChange?.summary ?? ""}
+
+          title={pendingChange?.title ?? ""}
+
+          onCancel={() => {
+
+            pendingChange?.done();
+
+            setPendingChange(null);
+
+          }}
+
+          onConfirm={async (comment) => {
+
+            if (!pendingChange) return;
+
+            setCommittingChange(true);
+
+            try {
+
+              await pendingChange.run(comment);
+
+            } finally {
+
+              setCommittingChange(false);
+
+              pendingChange.done();
+
+              setPendingChange(null);
+
+            }
+
+          }}
+
+        />
+
 
         <Snackbar
           autoHideDuration={3500}

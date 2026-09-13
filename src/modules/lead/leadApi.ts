@@ -1,11 +1,17 @@
 import { httpClient } from "@/shared/services/http/client";
 import { API_CONFIG } from "@/config/api/config";
+import type { TimelineItem } from "@/modules/applications/applicationsApi";
 import type { CreateLeadPayload } from "@/modules/lead/leadForm.types";
 
 export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
   leadStage?: string;
   assignedToId?: string;
   assignedToName?: string;
+  /**
+   * Why this change was made. Not stored on the lead — the server turns it into an entry
+   * on the lead's timeline alongside what actually changed.
+   */
+  comment?: string;
 };
 
 /**
@@ -306,10 +312,14 @@ export const leadApi = {
   bulkUpdateLeads: async (
     leadIds: string[],
     updates: BulkLeadUpdatePayload,
+    // A sibling of `updates`, not a key inside it: that object binds onto the Lead entity,
+    // which has no comment field.
+    comment?: string,
   ): Promise<BackendLead[]> => {
     const response = await httpClient.post<BackendLead[]>(`${API_CONFIG.leads}/bulk`, {
       leadIds,
       updates,
+      comment,
     });
     return response.data;
   },
@@ -355,5 +365,20 @@ export const leadApi = {
       { headers: { "Content-Type": "multipart/form-data" } },
     );
     return response.data;
+  },
+
+  /**
+   * Tasks and activities against this lead, as one story.
+   *
+   * Lives under /api/activities rather than /api/leads because the server builds it by
+   * unioning the two tables — the endpoint is named for where the query lives, not for
+   * what it returns. Same shape the application page reads, so the panel is shared.
+   */
+  timeline: async (leadId: string, size = 50): Promise<TimelineItem[]> => {
+    const response = await httpClient.get<{ items?: TimelineItem[] }>(
+      `${API_CONFIG.activities}/lead/${leadId}`,
+      { params: { page: 0, size } },
+    );
+    return response.data?.items ?? [];
   },
 };

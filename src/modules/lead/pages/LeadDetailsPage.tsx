@@ -24,6 +24,8 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { LeadActivityTimeline } from "@/modules/lead/components/LeadActivityTimeline";
+import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
 const stageColor: Record<string, { backgroundColor: string; color: string }> = {
   New: { backgroundColor: "#DEF1F0", color: "#0B6B6B" },
@@ -178,6 +180,30 @@ export function LeadDetailsPage() {
               <Typography color={lead.notes ? "text.primary" : "text.disabled"} sx={{ fontSize: 13.5, whiteSpace: "pre-wrap" }}>
                 {lead.notes || "No notes for this lead."}
               </Typography>
+            </CardContent>
+          </Card>
+
+          {/*
+            Under the notes, because they answer the same question from two directions:
+            the note is what someone wrote about this lead, this is what has been done to
+            it. The students and applications pages carry the same pairing.
+          */}
+          <Card variant="outlined" sx={{ borderRadius: "12px" }}>
+            <CardContent>
+              <Stack
+                direction="row"
+                sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5 }}
+              >
+                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
+                  Tasks &amp; Activity
+                </Typography>
+                <AddTaskForRecordButton
+                  entityId={lead.id}
+                  entityType="LEAD"
+                  label={`${lead.firstName ?? ""} ${lead.lastName ?? ""}`.trim() || "This lead"}
+                />
+              </Stack>
+              <LeadActivityTimeline leadId={lead.id} />
             </CardContent>
           </Card>
         </Stack>
