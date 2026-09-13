@@ -30,6 +30,7 @@ import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
 import { CatalogDeleteDialog } from "@/modules/universities/components/CatalogDeleteDialog";
+import { UniversityStagesCard } from "@/modules/universities/components/UniversityStagesCard";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { UniversityDefaultsDialog } from "@/modules/universities/components/UniversityDefaultsDialog";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
@@ -83,6 +84,10 @@ export function UniversityDetailsPage() {
   } = useUniversityMutations();
   const { hasPermissions } = useAuth();
   const canAddCourse = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
+  // Changing a sequence reconciles applications already in flight, which is why the server
+  // gates it on SETTINGS_MANAGE rather than on managing the catalogue. Matched here so the
+  // controls are not offered to somebody who would only get a 403.
+  const canManageStages = hasPermissions([PERMISSIONS.SETTINGS_TENANT]);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [coursePendingDelete, setCoursePendingDelete] = useState<Course | null>(null);
@@ -249,6 +254,20 @@ export function UniversityDetailsPage() {
               <Typography color="text.secondary" sx={{ fontSize: 14, lineHeight: 1.65 }}>
                 {university.about}
               </Typography>
+            </SectionCard>
+
+            {/*
+              The stage sequence lives with the university rather than in Settings: this is
+              where somebody is already looking when they wonder what applications here go
+              through.
+            */}
+            <SectionCard title="Application Stages">
+              <UniversityStagesCard
+                canManage={canManageStages}
+                countryCode={university.countryCode}
+                universityId={university.id}
+                universityName={university.name}
+              />
             </SectionCard>
 
             <SectionCard title="General Entry Requirements">

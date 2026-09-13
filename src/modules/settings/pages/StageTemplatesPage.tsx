@@ -19,8 +19,6 @@ import {
   Paper,
   Stack,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -35,7 +33,7 @@ import {
   type StageTemplate,
   type StageChangePreview,
 } from "@/modules/settings/stageTemplatesApi";
-import { useCountries, useAllUniversities } from "@/modules/universities/useUniversitiesCatalog";
+import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
 import { StageChangePreviewDialog } from "@/modules/settings/components/StageChangePreviewDialog";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
@@ -73,10 +71,6 @@ export function StageTemplatesPage() {
   const [draft, setDraft] = useState<DraftStage[]>([]);
   const [addingCountry, setAddingCountry] = useState(false);
 
-  // Country or university scope. The editor below is identical either way - only what is
-  // being edited changes - so this is a scope switch rather than a second screen.
-  const [scope, setScope] = useState<"country" | "university">("country");
-  const [selectedUniversityId, setSelectedUniversityId] = useState<string>("");
 
   // Save goes through a preview whenever applications in flight would be touched, so the
   // confirmation can name a number instead of warning about change in general.
@@ -91,29 +85,12 @@ export function StageTemplatesPage() {
 
   // Only to offer countries that have no sequence yet; the page works without it.
   const { data: countries = [] } = useCountries();
-  // Only fetched once the university scope is actually open — the catalogue is a large
-  // list and an admin editing country sequences never needs it.
-  const { data: universities = [] } = useAllUniversities(scope === "university");
 
-  const universityTemplateQuery = useQuery({
-    enabled: scope === "university" && Boolean(selectedUniversityId),
-    queryKey: ["settings", "stage-templates", "university", selectedUniversityId],
-    queryFn: () =>
-      stageTemplatesApi.getForUniversity(
-        selectedUniversityId,
-        universities.find((u) => u.id === selectedUniversityId)?.countryCode,
-      ),
-  });
 
   const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
-  const universityCountry = universities.find((u) => u.id === selectedUniversityId)?.countryCode;
-
   const selected = useMemo(
-    () =>
-      scope === "university"
-        ? universityTemplateQuery.data
-        : templates.find((template) => template.countryCode === selectedCode),
-    [scope, universityTemplateQuery.data, templates, selectedCode],
+    () => templates.find((template) => template.countryCode === selectedCode),
+    [templates, selectedCode],
   );
 
   /*
@@ -123,7 +100,7 @@ export function StageTemplatesPage() {
     discard edits in progress.
   */
   const selectedSignature = selected
-    ? `${scope}:${selectedUniversityId}:${selected.countryCode}:${selected.source}:${selected.stages
+    ? `${selected.countryCode}:${selected.source}:${selected.stages
         .map((stage) => `${stage.name}:${stage.active}`)
         .join("|")}`
     : "";
@@ -136,9 +113,6 @@ export function StageTemplatesPage() {
 
   const refreshTemplates = async () => {
     await queryClient.invalidateQueries({ queryKey: stageTemplatesQueryKey });
-    await queryClient.invalidateQueries({
-      queryKey: ["settings", "stage-templates", "university"],
-    });
     // Saving reconciles applications in flight, so anything showing them is now stale.
     await queryClient.invalidateQueries({ queryKey: ["applications"] });
   };
@@ -148,13 +122,7 @@ export function StageTemplatesPage() {
 
   const saveMutation = useMutation({
     mutationFn: (stages: DraftStage[]) =>
-      scope === "university"
-        ? stageTemplatesApi.saveForUniversity(
-            selectedUniversityId,
-            stagesPayload(stages),
-            universityCountry,
-          )
-        : stageTemplatesApi.save(selectedCode, stagesPayload(stages)),
+      stageTemplatesApi.save(selectedCode, stagesPayload(stages)),
     onSuccess: async () => {
       setPreviewOpen(false);
       await refreshTemplates();
@@ -162,10 +130,7 @@ export function StageTemplatesPage() {
   });
 
   const resetMutation = useMutation({
-    mutationFn: () =>
-      scope === "university"
-        ? stageTemplatesApi.resetForUniversity(selectedUniversityId, universityCountry)
-        : stageTemplatesApi.reset(selectedCode),
+    mutationFn: () => stageTemplatesApi.reset(selectedCode),
     onSuccess: refreshTemplates,
   });
 
@@ -179,11 +144,7 @@ export function StageTemplatesPage() {
     setPreviewLoading(true);
     setPreview(null);
     try {
-      const result =
-        scope === "university"
-          ? await stageTemplatesApi.previewUniversity(selectedUniversityId, stagesPayload(draft))
-          : await stageTemplatesApi.previewCountry(selectedCode, stagesPayload(draft));
-      setPreview(result);
+      setPreview(await stageTemplatesApi.previewCountry(selectedCode, stagesPayload(draft)));
     } catch {
       setPreview(null);
     } finally {
@@ -238,7 +199,7 @@ export function StageTemplatesPage() {
         eyebrow="Settings · Applications"
         title="Application Stages"
         actions={
-          canManage && !addingCountry && scope === "country" ? (
+          canManage && !addingCountry ? (
             <Button
               size="small"
               startIcon={<AddRounded />}
@@ -252,30 +213,11 @@ export function StageTemplatesPage() {
         }
       />
 
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={scope}
-        onChange={(_event, next) => {
-          if (!next) return;
-          setScope(next);
-          // The draft belongs to whatever was being edited. Carrying it across scopes
-          // showed a country's stages under a university heading.
-          setDraft([]);
-        }}
-      >
-        <ToggleButton sx={{ textTransform: "none", px: 2 }} value="country">
-          By country
-        </ToggleButton>
-        <ToggleButton sx={{ textTransform: "none", px: 2 }} value="university">
-          By university
-        </ToggleButton>
-      </ToggleButtonGroup>
-
       <Typography color="text.secondary" variant="body2">
-        The stages an application moves through. A university can have its own sequence; a
-        country without one uses the default below it. Saving updates applications already
-        in progress as well — stages they have already been through are kept, and their
+        The stages an application moves through, per destination country. A country without
+        its own sequence uses the default below it, and a university can depart from its
+        country on the university&rsquo;s own page. Saving updates applications already in
+        progress as well — stages they have already been through are kept, and their
         counsellor is asked about anything that needs confirming.
       </Typography>
 
@@ -345,29 +287,7 @@ export function StageTemplatesPage() {
             sx={{ border: "1px solid", borderColor: "#e9eff5", borderRadius: "12px", overflow: "hidden" }}
           >
             <List disablePadding sx={{ maxHeight: 520, overflowY: "auto" }}>
-              {scope === "university"
-                ? universities.map((university) => {
-                    const isSelected = university.id === selectedUniversityId;
-                    return (
-                      <ListItemButton
-                        key={university.id}
-                        selected={isSelected}
-                        sx={{ alignItems: "flex-start", py: 1.25 }}
-                        onClick={() => setSelectedUniversityId(university.id)}
-                      >
-                        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                          <Typography noWrap sx={{ fontSize: 13, fontWeight: isSelected ? 700 : 600 }}>
-                            {university.name}
-                          </Typography>
-                          <Typography color="text.disabled" sx={{ fontSize: 11 }}>
-                            {university.countryCode}
-                          </Typography>
-                        </Stack>
-                      </ListItemButton>
-                    );
-                  })
-                : null}
-              {scope === "country" ? templates.map((template) => {
+              {templates.map((template) => {
                 const isSelected = template.countryCode === selectedCode;
                 const wildcard = template.countryCode === ANY_COUNTRY;
                 return (
@@ -390,8 +310,8 @@ export function StageTemplatesPage() {
                     </Stack>
                   </ListItemButton>
                 );
-              }) : null}
-              {scope === "country" && selected === undefined && selectedCode !== ANY_COUNTRY ? (
+              })}
+              {selected === undefined && selectedCode !== ANY_COUNTRY ? (
                 <ListItemButton selected sx={{ py: 1.25 }}>
                   <Stack spacing={0.25}>
                     <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{selectedCode}</Typography>
@@ -400,13 +320,6 @@ export function StageTemplatesPage() {
                     </Typography>
                   </Stack>
                 </ListItemButton>
-              ) : null}
-              {scope === "university" && universities.length === 0 ? (
-                <Box sx={{ px: 2, py: 2.5 }}>
-                  <Typography color="text.secondary" sx={{ fontSize: 12.5 }}>
-                    No universities in your catalogue yet.
-                  </Typography>
-                </Box>
               ) : null}
             </List>
           </Paper>
@@ -423,10 +336,7 @@ export function StageTemplatesPage() {
             >
               <Stack spacing={0.5}>
                 <Typography sx={{ fontSize: 15, fontWeight: 700 }}>
-                  {scope === "university"
-                    ? universities.find((u) => u.id === selectedUniversityId)?.name ??
-                      "Select a university"
-                    : selected?.countryName ?? selectedCode}
+                  {selected?.countryName ?? selectedCode}
                 </Typography>
                 {selected ? (
                   <Chip
@@ -451,7 +361,7 @@ export function StageTemplatesPage() {
                       sx={{ textTransform: "none" }}
                       onClick={() => resetMutation.mutate()}
                     >
-                      {scope === "university" ? "Use the country sequence" : "Reset to standard"}
+                      Reset to standard
                     </Button>
                   ) : null}
                   <Button
@@ -469,12 +379,7 @@ export function StageTemplatesPage() {
 
             {selected && !isOverride(selected.source) ? (
               <Alert severity="info" sx={{ mb: 2 }}>
-                {scope === "university"
-                  ? `${
-                      universities.find((u) => u.id === selectedUniversityId)?.name ??
-                      "This university"
-                    } is following ${selected.countryName}'s sequence. Saving creates one just for this university, and later changes to ${selected.countryName} will not reach it.`
-                  : selected.countryCode === ANY_COUNTRY
+                {selected.countryCode === ANY_COUNTRY
                     ? "This is the sequence every country without one of its own uses. Saving creates your own version of it."
                     : `${selected.countryName} is using the ${sourceLabel(selected.source).toLowerCase()}. Saving creates a sequence just for this country.`}
               </Alert>
@@ -482,14 +387,9 @@ export function StageTemplatesPage() {
 
             <Divider sx={{ mb: 1.5 }} />
 
-            {scope === "university" && !selectedUniversityId ? (
-              <Typography color="text.secondary" sx={{ py: 3, textAlign: "center" }} variant="body2">
-                Choose a university on the left to see the stages its applications get.
-              </Typography>
-            ) : null}
 
             <Stack spacing={1}>
-              {scope === "university" && !selectedUniversityId ? null : draft.map((stage, index) => (
+              {draft.map((stage, index) => (
                 <Stack
                   key={stage.key}
                   direction="row"
@@ -552,7 +452,7 @@ export function StageTemplatesPage() {
               ))}
             </Stack>
 
-            {canManage && !(scope === "university" && !selectedUniversityId) ? (
+            {canManage ? (
               <Button
                 size="small"
                 startIcon={<AddRounded />}
@@ -581,11 +481,7 @@ export function StageTemplatesPage() {
         open={previewOpen}
         preview={preview}
         saving={saveMutation.isPending}
-        scopeLabel={
-          scope === "university"
-            ? universities.find((u) => u.id === selectedUniversityId)?.name ?? "university"
-            : selected?.countryName ?? selectedCode
-        }
+        scopeLabel={selected?.countryName ?? selectedCode}
         onCancel={() => setPreviewOpen(false)}
         onConfirm={() => saveMutation.mutate(draft)}
       />
