@@ -181,8 +181,15 @@ type StageSequenceFlowProps = {
  * appear. Even weight throughout is the point — picking one out would imply a position
  * this has no business claiming.
  *
- * Numbered because it genuinely is an ordered sequence, and wrapping rather than scrolling
- * because a plan is read whole rather than followed along.
+ * Vertical, and connected. Laid out as wrapping pills it read as a row of tags, with the
+ * numbers doing all the work of showing order; a rail threading through says "sequence"
+ * without being read. Horizontal would have meant either scrolling or connectors left
+ * dangling at the end of every wrapped row, and it would have looked like the application
+ * journey, which is exactly the thing this is not.
+ *
+ * The last stage gets a ring rather than a number. These sequences all end somewhere
+ * definite — a visa, an enrolment — and marking the destination is structural, not a claim
+ * about state.
  */
 export function StageSequenceFlow({ stages }: StageSequenceFlowProps) {
   if (stages.length === 0) {
@@ -194,46 +201,70 @@ export function StageSequenceFlow({ stages }: StageSequenceFlowProps) {
   }
 
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }} aria-label="Stage sequence">
-      {stages.map((stage, index) => (
-        <Stack
-          key={`${stage.name}-${index}`}
-          direction="row"
-          spacing={0.875}
-          sx={{
-            alignItems: "center",
-            border: "1px solid",
-            borderColor: RAIL,
-            borderRadius: "999px",
-            pl: 0.75,
-            pr: 1.5,
-            py: 0.5,
-            bgcolor: "#FFFFFF",
-          }}
-        >
-          <Box
-            sx={{
-              width: 18,
-              height: 18,
-              borderRadius: "50%",
-              bgcolor: "#EEF3F7",
-              color: INK,
-              fontSize: 10.5,
-              fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
+    <Box aria-label="Stage sequence">
+      {stages.map((stage, index) => {
+        const isLast = index === stages.length - 1;
+        return (
+          <Stack
+            key={`${stage.name}-${index}`}
+            direction="row"
+            spacing={1.5}
+            // Stretch, so the marker column is as tall as its row and the rail can span
+            // the whole gap. Left to its content height it drew 6px stubs instead of a line.
+            sx={{ alignItems: "stretch", position: "relative" }}
           >
-            {index + 1}
-          </Box>
-          <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: INK, whiteSpace: "nowrap" }}>
-            {stage.name}
-          </Typography>
-        </Stack>
-      ))}
+            <Box sx={{ position: "relative", flexShrink: 0, width: 22 }}>
+              {/* The rail runs between markers, so it stops at the destination. */}
+              {!isLast ? (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: "10px",
+                    top: "22px",
+                    bottom: 0,
+                    // "1px", not 1: MUI reads a number of 1 or less as a percentage for
+                    // width, so 1 drew a block the full width of the column.
+                    width: "1px",
+                    bgcolor: RAIL,
+                  }}
+                />
+              ) : null}
+              <Box
+                sx={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                  bgcolor: isLast ? "#FFFFFF" : "#EEF3F7",
+                  color: isLast ? DONE : INK,
+                  border: isLast ? `2px solid ${DONE}` : "none",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                {isLast ? "" : index + 1}
+              </Box>
+            </Box>
+
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: isLast ? 600 : 500,
+                color: INK,
+                pb: isLast ? 0 : 1.5,
+                pt: "2px",
+              }}
+            >
+              {stage.name}
+            </Typography>
+          </Stack>
+        );
+      })}
     </Box>
   );
 }
