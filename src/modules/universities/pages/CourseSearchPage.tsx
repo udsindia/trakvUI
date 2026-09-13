@@ -129,6 +129,7 @@ type SearchFiltersApiResponse = {
   intakeAvailableOnly?: boolean;
   courseLevels?: string[];
   disciplines?: string[];
+  durationMonths?: number[];
   postStudyWorkPermit?: boolean;
 };
 
@@ -222,12 +223,21 @@ function mapSearchFiltersToDynamicOptions(response?: SearchFiltersApiResponse) {
     .sort((left, right) => left.localeCompare(right))
     .map((value) => ({ label: value, value }));
 
+  // The Course Duration dropdown had no options at all — it was on screen and could not
+  // be opened to anything. These are the course lengths the tenant actually has, labelled
+  // the way the cards label them, and each one filters to exactly that length.
+  const duration = Array.from(new Set(response?.durationMonths ?? []))
+    .filter((months) => typeof months === "number" && months > 0)
+    .sort((left, right) => left - right)
+    .map((months) => ({ label: formatDuration(months), value: String(months) }));
+
   return {
     country,
     level,
     intake,
     city,
     institution,
+    duration,
     discipline: discipline.length > 0 ? discipline : [
       { label: "Computer Science", value: "computer-science" },
       { label: "Data Science", value: "data-science" },
@@ -321,7 +331,6 @@ function buildCourseSearchApiPayload(
     intakeStatuses: [],
     courseLevels: [],
     disciplines: [],
-    durations: [],
     deliveryModes: [],
     postStudyWorkPermit: null as any,
     nationality: null as any,
@@ -396,10 +405,6 @@ function buildCourseSearchApiPayload(
     payload.disciplines = [asString(filterValues[filterKeys.discipline.key])];
   }
 
-  if (asString(filterValues[filterKeys.duration.key])) {
-    payload.durations = [asString(filterValues[filterKeys.duration.key])];
-  }
-
   if (asString(filterValues[filterKeys.delivery.key])) {
     payload.deliveryModes = [asString(filterValues[filterKeys.delivery.key])];
   }
@@ -408,12 +413,15 @@ function buildCourseSearchApiPayload(
     payload.postStudyWorkPermit = asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes";
   }
 
+  // The option's value is a month count, so the filter is exact. It used to strip digits
+  // out of the label and search a six-month window either side, which turned "1 year"
+  // into "between 1 and 7 months" — every course except the one you picked.
   const durationValue = asString(filterValues[filterKeys.duration.key]);
   if (durationValue) {
-    const numeric = Number.parseInt(durationValue.replace(/[^0-9]/g, ""), 10);
-    if (!Number.isNaN(numeric)) {
-      payload.minDurationMonths = Math.max(1, numeric - 6);
-      payload.maxDurationMonths = numeric + 6;
+    const months = Number.parseInt(durationValue, 10);
+    if (!Number.isNaN(months)) {
+      payload.minDurationMonths = months;
+      payload.maxDurationMonths = months;
     }
   }
 
@@ -550,6 +558,11 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
         generalRequirements: [],
       },
       alreadyShortlisted: raw.alreadyShortlisted === true,
+      // Whether the university has ever recorded a backlog / education-gap limit. A course
+      // with nothing on record still matches those filters, so the card has to be able to
+      // say that it is an unknown rather than a confirmed fit.
+      backlogsLimitStated: raw.backlogsLimitStated === true,
+      educationGapLimitStated: raw.educationGapLimitStated === true,
       pendingApplications: 0,
     } as unknown as CourseSearchResult;
   });
@@ -570,6 +583,9 @@ export function CourseSearchPage() {
   // What the server matched, which is not what is on screen: the API returns one page of
   // 20. The counter used to read "20 courses found" whether there were 20 matches or 200.
   const [courseResultTotal, setCourseResultTotal] = useState(0);
+  // Whether the last search asked about backlogs or education gap — the cards qualify a
+  // match only when it was one of those the counsellor filtered on.
+  const [academicFilterApplied, setAcademicFilterApplied] = useState(false);
   const [courseSearchError, setCourseSearchError] = useState<string | null>(null);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
@@ -820,6 +836,7 @@ export function CourseSearchPage() {
 
       try {
         const payload = buildCourseSearchApiPayload(values, query, sortValue, studentId);
+        setAcademicFilterApplied(Boolean(payload.backlogs) || Boolean(payload.educationGap));
         const response = await leadApi.searchCourses(payload);
         setCourseResults(normalizeCourseSearchApiResults(response));
         setCourseResultTotal(
@@ -1071,6 +1088,7 @@ export function CourseSearchPage() {
                   {filteredResults.map((result) => (
                     <CourseSearchCard
                       key={result.id}
+                      academicFilterApplied={academicFilterApplied}
                       isShortlisted={shortlistIds.includes(result.id)}
                       result={result}
                       shortlistDisabled={!studentId}

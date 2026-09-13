@@ -356,7 +356,29 @@ export function RequirementsEditor({
             })
           }
         />
+        <TextField
+          fullWidth
+          helperText="Years since study"
+          label="Max education gap"
+          size="small"
+          type="number"
+          inputProps={{ min: 0, step: 1 }}
+          value={value.academic.maxEducationGapYears ?? ""}
+          onChange={(event) =>
+            onChange({
+              ...value,
+              academic: {
+                ...value.academic,
+                maxEducationGapYears: numberOrUndefined(event.target.value),
+              },
+            })
+          }
+        />
       </Stack>
+      <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+        Left blank, the course finder still offers this university to a student with
+        backlogs or a gap — marked as a possible match rather than a confirmed one.
+      </Typography>
     </Stack>
   );
 }

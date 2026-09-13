@@ -117,6 +117,13 @@ export interface Course {
   eligibilityWarning?: string;
   eligibilityHint?: string;
   alreadyShortlisted?: boolean;
+  /**
+   * Whether the university has recorded a backlog / education-gap limit at all. Courses
+   * with nothing on record still match those filters, so the card distinguishes a
+   * confirmed fit from an unknown one rather than implying the first.
+   */
+  backlogsLimitStated?: boolean;
+  educationGapLimitStated?: boolean;
   pendingApplications?: number;
   curriculum: {
     semester1: string[];

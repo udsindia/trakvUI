@@ -13,9 +13,12 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { useAuth } from "@/app/auth/authHooks";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
 import { EligibilityBar } from "@/modules/universities/components/CourseSearchCard";
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
+import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { MOCK_STUDENT } from "@/modules/universities/universitiesMockData";
 import { universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
@@ -36,6 +39,10 @@ export function CourseDetailsPage() {
   const { data: university, isLoading: universityLoading } = useUniversity(universityId);
   const { data: courses = [], isLoading: coursesLoading } = useUniversityCourses(universityId);
   const course = courses.find((entry) => entry.id === courseId);
+  const { hasPermissions } = useAuth();
+  // Matched to what the server checks, so the controls are not offered to somebody who
+  // would only get a 403.
+  const canManageCatalogue = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
 
   if (universityLoading || coursesLoading) {
     return <LoadingScreen />;
@@ -152,6 +159,26 @@ export function CourseDetailsPage() {
                     <StatTile accent label="Deadline" value={course.deadline} />
                   </Grid>
                 </Grid>
+              </CardContent>
+            </Card>
+
+            {/*
+              This course's own intakes, seeded from the university's calendar. Edited here
+              because the answer changes per course once a cycle is under way — one course
+              closing early says nothing about the rest of the catalogue.
+            */}
+            <Card sx={sectionCardSx}>
+              <CardContent sx={{ p: 0 }}>
+                <Box sx={sectionCardHeaderSx}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Intakes</Typography>
+                </Box>
+                <Box sx={{ p: 2.5 }}>
+                  <UniversityIntakesCard
+                    canManage={canManageCatalogue}
+                    ownerId={course.id}
+                    scope="course"
+                  />
+                </Box>
               </CardContent>
             </Card>
 

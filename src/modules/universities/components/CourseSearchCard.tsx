@@ -56,6 +56,8 @@ type CourseSearchCardProps = {
   isShortlisted: boolean;
   shortlistDisabled?: boolean;
   shortlistDisabledReason?: string;
+  /** Set when the search filtered on backlogs or education gap, so the card can qualify a match. */
+  academicFilterApplied?: boolean;
 };
 
 export function CourseSearchCard({
@@ -67,9 +69,16 @@ export function CourseSearchCard({
   isShortlisted,
   shortlistDisabled = false,
   shortlistDisabledReason,
+  academicFilterApplied = false,
 }: CourseSearchCardProps) {
   const showEligibility = Boolean(studentName);
   const isNotEligible = showEligibility && result.eligibilityStatus === "not-eligible";
+  // Shown only when the counsellor actually filtered on backlogs or gap — otherwise it is
+  // a caveat about a question nobody asked.
+  const limitUnstated =
+    academicFilterApplied &&
+    !result.backlogsLimitStated &&
+    !result.educationGapLimitStated;
 
   return (
     <Box
@@ -168,6 +177,21 @@ export function CourseSearchCard({
         ) : null}
         {result.ieltsLabel ? (
           <Chip label={result.ieltsLabel} size="small" sx={tagChipSx} />
+        ) : null}
+        {limitUnstated ? (
+          <Tooltip title="This university has not recorded a backlog or education-gap limit, so this course is shown as a possible match rather than a confirmed one.">
+            <Chip
+              label="Entry limits not recorded"
+              size="small"
+              sx={{
+                backgroundColor: "#FFF4E5",
+                color: "#8A5300",
+                fontSize: 11,
+                fontWeight: 600,
+                height: 22,
+              }}
+            />
+          </Tooltip>
         ) : null}
         {showEligibility && result.eligibilityWarning ? (
           <Chip

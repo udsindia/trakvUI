@@ -31,6 +31,7 @@ import { PERMISSIONS } from "@/config/permissions/permissions";
 import { CourseFormDrawer } from "@/modules/universities/components/CourseFormDrawer";
 import { CatalogDeleteDialog } from "@/modules/universities/components/CatalogDeleteDialog";
 import { UniversityStagesCard } from "@/modules/universities/components/UniversityStagesCard";
+import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
 import { UniversityDefaultsDialog } from "@/modules/universities/components/UniversityDefaultsDialog";
 import { DetailPageHeader } from "@/modules/universities/components/UniversitiesBreadcrumb";
@@ -267,6 +268,20 @@ export function UniversityDetailsPage() {
                 countryCode={university.countryCode}
                 universityId={university.id}
                 universityName={university.name}
+              />
+            </SectionCard>
+
+            {/*
+              Intakes sit with the university because that is where they are decided: one
+              admissions calendar, copied onto the courses beneath it. Gated on managing
+              the catalogue rather than on settings — this is catalogue data, and the
+              server checks UNIVERSITY_MANAGE.
+            */}
+            <SectionCard title="Intake Calendar">
+              <UniversityIntakesCard
+                canManage={canAddCourse}
+                ownerId={university.id}
+                scope="university"
               />
             </SectionCard>
 

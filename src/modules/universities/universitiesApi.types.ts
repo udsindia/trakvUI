@@ -79,6 +79,7 @@ export interface UniversityRequirementDto {
   gpaScale?: string | null;
   minPercentage?: number | null;
   maxBacklogs?: number | null;
+  maxEducationGapYears?: number | null;
   documentName?: string | null;
   isMandatory?: boolean;
   isTenantOverride?: boolean;
@@ -222,6 +223,7 @@ export interface CreateRequirementPayload {
   gpaScale?: string;
   minPercentage?: number;
   maxBacklogs?: number;
+  maxEducationGapYears?: number;
   isMandatory?: boolean;
 }
 
@@ -266,6 +268,7 @@ export interface UpdateRequirementPayload {
   gpaScale?: string;
   minPercentage?: number;
   maxBacklogs?: number;
+  maxEducationGapYears?: number;
   isMandatory?: boolean;
   notes?: string;
 }

@@ -58,6 +58,8 @@ export type CourseAcademicRequirement = {
   minGpa?: number;
   gpaScale?: string;
   maxBacklogs?: number;
+  /** Longest break between study and application accepted, in years. */
+  maxEducationGapYears?: number;
 };
 
 /** Everything the requirements editor produces, for a course or a university default. */
@@ -78,7 +80,8 @@ export function requirementSetIsEmpty(set: RequirementSet): boolean {
     set.languageTests.length === 0 &&
     set.aptitudeTests.length === 0 &&
     set.academic.minGpa == null &&
-    set.academic.maxBacklogs == null
+    set.academic.maxBacklogs == null &&
+    set.academic.maxEducationGapYears == null
   );
 }
 
@@ -114,13 +117,18 @@ export function toRequirementPayloads(
   }
 
   // The backend rejects an ACADEMIC row with nothing set, so only send a populated one.
-  if (set.academic.minGpa != null || set.academic.maxBacklogs != null) {
+  if (
+    set.academic.minGpa != null ||
+    set.academic.maxBacklogs != null ||
+    set.academic.maxEducationGapYears != null
+  ) {
     payloads.push({
       courseId,
       requirementType: "ACADEMIC",
       minGpa: set.academic.minGpa,
       gpaScale: set.academic.gpaScale,
       maxBacklogs: set.academic.maxBacklogs,
+      maxEducationGapYears: set.academic.maxEducationGapYears,
       isMandatory: true,
     });
   }
@@ -154,6 +162,7 @@ export function fromRequirementDtos(
         minGpa: requirement.minGpa ?? undefined,
         gpaScale: requirement.gpaScale ?? undefined,
         maxBacklogs: requirement.maxBacklogs ?? undefined,
+        maxEducationGapYears: requirement.maxEducationGapYears ?? undefined,
       };
     }
   }
@@ -335,6 +344,7 @@ export const universitiesCatalogService = {
               gpaScale: payload.gpaScale,
               minPercentage: payload.minPercentage,
               maxBacklogs: payload.maxBacklogs,
+              maxEducationGapYears: payload.maxEducationGapYears,
             },
           });
         } else {
