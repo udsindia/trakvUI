@@ -26,7 +26,7 @@ import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { StageChangeBanner } from "@/modules/applications/components/StageChangeBanner";
-import { ApplicationStageFlow } from "@/shared/components/StageFlow";
+import { ApplicationStageChevrons } from "@/shared/components/StageFlow";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
@@ -245,7 +245,7 @@ export function ApplicationDetailsPage() {
                     size="small"
                   />
                 </Stack>
-                <ApplicationStageFlow
+                <ApplicationStageChevrons
                   closed={isClosed}
                   currentStageId={application.currentStageId}
                   stages={stages}

@@ -44,23 +44,27 @@ const dwellLabel = (days: number) =>
 type ApplicationStageFlowProps = {
   stages: FlowStage[];
   currentStageId?: string | null;
-  /** A closed application has no "now" — the rail is history all the way through. */
+  /** A closed application has no "now" — every stage is history. */
   closed?: boolean;
 };
 
 /**
- * Where one application has actually got to.
+ * Progress drawn as an interlocking chevron path.
  *
- * The rail is solid behind the current stage and dashed ahead of it. That is the whole
- * idea: what has happened is known, what is coming is not, and saying so with the line
- * itself means the distinction survives greyscale, colour-blindness and a printout — it
- * does not rest on green-versus-grey.
+ * Sized to the container rather than to its content: every stage takes an equal share of
+ * the width and its name wraps, so nine stages fit a card without scrolling. Laid out to
+ * fit the text instead, it ran off the side and had to be dragged.
  *
- * Cleared stages carry the date they cleared. The current one carries how long it has sat
- * there, which is the number nobody could read off the old stepper and the one that
- * actually prompts a phone call.
+ * Wrapping buys a second line, which is where the dates and the dwell time go — the
+ * information this shape is usually accused of losing. "6 days here" on the stage in play
+ * is the number worth the space; it is what turns a picture of progress into a prompt to
+ * chase something.
  */
-export function ApplicationStageFlow({ stages, currentStageId, closed }: ApplicationStageFlowProps) {
+export function ApplicationStageChevrons({
+  stages,
+  currentStageId,
+  closed,
+}: ApplicationStageFlowProps) {
   if (stages.length === 0) {
     return (
       <Typography color="text.secondary" variant="body2">
@@ -69,104 +73,82 @@ export function ApplicationStageFlow({ stages, currentStageId, closed }: Applica
     );
   }
 
-  const currentIndex = stages.findIndex((stage) => stage.id && stage.id === currentStageId);
+  const currentIndex = stages.findIndex((stage) => stage.id === currentStageId);
+  const NOTCH = 11;
 
   return (
-    <Box
+    <Stack
+      direction="row"
       aria-label="Application progress"
-      // Nine or ten stages will not fit a narrow screen, and squeezing them would cost the
-      // labels. Scrolls in its own track so the page itself never moves sideways.
-      sx={{ overflowX: "auto", pb: 1, "&::-webkit-scrollbar": { height: 6 } }}
+      // A floor per stage so a very narrow window scrolls rather than crushing the names
+      // into single letters; above that they simply share the width.
+      sx={{ width: "100%", overflowX: "auto" }}
     >
-      <Stack direction="row" sx={{ minWidth: "min-content", pt: 0.5 }}>
-        {stages.map((stage, index) => {
-          const cleared = Boolean(stage.exitedAt) || (closed && Boolean(stage.enteredAt));
-          const isCurrent = !closed && index === currentIndex;
-          const ahead = !cleared && !isCurrent;
-          const dwell = isCurrent ? daysSince(stage.enteredAt) : null;
-          const cleared_on = shortDate(stage.exitedAt ?? stage.enteredAt);
+      {stages.map((stage, index) => {
+        const cleared = Boolean(stage.exitedAt) || (closed && Boolean(stage.enteredAt));
+        const isCurrent = !closed && index === currentIndex;
+        const dwell = isCurrent ? daysSince(stage.enteredAt) : null;
+        const clearedOn = shortDate(stage.exitedAt ?? stage.enteredAt);
+        const meta =
+          isCurrent && dwell !== null ? dwellLabel(dwell) : cleared && clearedOn ? clearedOn : "";
 
-          return (
-            <Box
-              key={stage.id}
-              // Fixed width rather than content width: a rail with uneven gaps stops
-              // reading as a measured journey, and it gives two-word labels room to wrap
-              // instead of colliding with their neighbours.
-              sx={{ flex: "0 0 116px", position: "relative" }}
+        return (
+          <Box
+            key={stage.id}
+            sx={{
+              flex: "1 1 0",
+              minWidth: 82,
+              bgcolor: cleared ? DONE : isCurrent ? NOW : "#EEF3F7",
+              color: cleared || isCurrent ? "#FFFFFF" : AHEAD,
+              minHeight: 54,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              pl: index === 0 ? "10px" : `${NOTCH + 8}px`,
+              pr: "10px",
+              py: 0.75,
+              ml: index === 0 ? 0 : `-${NOTCH}px`,
+              // A point on the right and a matching bite on the left, so the pieces
+              // interlock instead of overlapping.
+              clipPath:
+                index === 0
+                  ? `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%)`
+                  : index === stages.length - 1
+                    ? `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${NOTCH}px 50%)`
+                    : `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%, ${NOTCH}px 50%)`,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 10.5,
+                fontWeight: isCurrent ? 700 : 600,
+                lineHeight: 1.2,
+                overflowWrap: "break-word",
+                hyphens: "auto",
+              }}
             >
-              {/*
-                The connector belongs to the gap before this node, so the switch from solid
-                to dashed lands exactly at the current position.
-              */}
-              {index > 0 ? (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 9,
-                    right: "50%",
-                    width: "100%",
-                    borderTop: index <= currentIndex || (closed && index <= stages.length - 1)
-                      ? `2px solid ${DONE}`
-                      : `2px dashed ${RAIL}`,
-                  }}
-                />
-              ) : null}
-
-              <Stack spacing={0.75} sx={{ alignItems: "center", position: "relative" }}>
-                <Tooltip title={stage.stageName}>
-                  <Box
-                    sx={{
-                      width: isCurrent ? 20 : 14,
-                      height: isCurrent ? 20 : 14,
-                      borderRadius: "50%",
-                      bgcolor: cleared ? DONE : isCurrent ? NOW : "#FFFFFF",
-                      border: ahead ? `2px solid ${RAIL}` : "none",
-                      // The ring is what makes "you are here" readable at a glance without
-                      // relying on the colour alone.
-                      boxShadow: isCurrent ? `0 0 0 4px rgba(179,90,0,.16)` : "none",
-                      mt: isCurrent ? "-3px" : 0,
-                      zIndex: 1,
-                    }}
-                  />
-                </Tooltip>
-
-                <Typography
-                  sx={{
-                    fontSize: 11.5,
-                    fontWeight: isCurrent ? 700 : cleared ? 600 : 500,
-                    color: isCurrent ? NOW : cleared ? INK : AHEAD,
-                    textAlign: "center",
-                    lineHeight: 1.3,
-                    px: 0.75,
-                    // Two lines is the most any of these names needs; a third would push
-                    // the dates out of alignment across the rail.
-                    minHeight: 30,
-                  }}
-                >
-                  {stage.stageName}
-                </Typography>
-
-                <Typography
-                  sx={{
-                    fontSize: 10.5,
-                    fontVariantNumeric: "tabular-nums",
-                    color: isCurrent ? NOW : "#93A7B4",
-                    fontWeight: isCurrent ? 600 : 400,
-                    minHeight: 14,
-                  }}
-                >
-                  {isCurrent && dwell !== null
-                    ? dwellLabel(dwell)
-                    : cleared && cleared_on
-                      ? cleared_on
-                      : ""}
-                </Typography>
-              </Stack>
-            </Box>
-          );
-        })}
-      </Stack>
-    </Box>
+              {stage.stageName}
+            </Typography>
+            {meta ? (
+              <Typography
+                sx={{
+                  fontSize: 9.5,
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.2,
+                  mt: 0.25,
+                  // Quieter than the name: it is supporting detail, not the label.
+                  opacity: cleared || isCurrent ? 0.82 : 1,
+                }}
+              >
+                {meta}
+              </Typography>
+            ) : null}
+          </Box>
+        );
+      })}
+    </Stack>
   );
 }
 
