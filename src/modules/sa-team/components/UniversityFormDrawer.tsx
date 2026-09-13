@@ -1,12 +1,29 @@
 import {
+  Alert,
+  Box,
   Button,
   Divider,
   Drawer,
+  FormControlLabel,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense } from "react";
+import type { DraftStage } from "@/modules/settings/components/StageSequenceEditor";
+
+/*
+  Loaded on demand. This drawer is shared with the super-admin portal and the university
+  detail page, so a static import put the settings module's stage code into the chunk
+  every page loads — 92kB on first paint for a panel most people never open.
+*/
+const UniversityStagesSection = lazy(() =>
+  import("@/modules/universities/components/UniversityStagesSection").then((module) => ({
+    default: module.UniversityStagesSection,
+  })),
+);
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import type { University } from "@/modules/universities/universities.types";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
@@ -37,9 +54,22 @@ const emptyUniversity = (): UniversityInput => ({
 
 type UniversityFormDrawerProps = {
   onClose: () => void;
-  onSave: (input: UniversityInput) => void;
+  /**
+   * Called with the university, and the stage sequence when one was customised.
+   *
+   * Stages are handed back rather than saved here because they cannot be saved until the
+   * university exists and has an id. The caller creates it, then saves these against it.
+   */
+  onSave: (input: UniversityInput, stages?: { name: string; active: boolean }[]) => void;
   open: boolean;
   university?: University | null;
+  /**
+   * Whether to offer the application stage sequence.
+   *
+   * Off by default because this drawer also serves the super-admin portal, where stage
+   * templates are a tenant concept that does not apply.
+   */
+  showStages?: boolean;
 };
 
 export function UniversityFormDrawer({
@@ -47,8 +77,23 @@ export function UniversityFormDrawer({
   onSave,
   open,
   university,
+  showStages = false,
 }: UniversityFormDrawerProps) {
   const [form, setForm] = useState<UniversityInput>(emptyUniversity());
+
+  // Stage sequence. Off until somebody asks for it: most universities follow their
+  // country, and a form that opens with nine editable rows suggests otherwise.
+  const [customiseStages, setCustomiseStages] = useState(false);
+  const [stageDraft, setStageDraft] = useState<DraftStage[]>([]);
+
+  // The same rules the editor and the server apply. Repeated rather than imported so the
+  // drawer keeps no static dependency on the settings module.
+  const stageNames = stageDraft.map((stage) => stage.name.trim());
+  const stagesAreValid =
+    stageDraft.length > 0 &&
+    stageNames.every((name) => name.length > 0) &&
+    new Set(stageNames.map((name) => name.toLowerCase())).size === stageNames.length;
+
 
   // Website and internal notes only exist on the detail response — a university picked from
   // a list is summary-shaped and carries neither. Without this the fields would open blank
@@ -63,7 +108,10 @@ export function UniversityFormDrawer({
       setForm(emptyUniversity());
     }
     appliedDetailIdRef.current = null;
+    setCustomiseStages(false);
+    setStageDraft([]);
   }, [university, open]);
+
 
   useEffect(() => {
     if (!open || !detail || detail.id !== university?.id) {
@@ -190,12 +238,51 @@ export function UniversityFormDrawer({
           }
         />
 
+        {showStages ? (
+          <>
+            <Divider />
+            <Typography color="text.secondary" variant="subtitle2">
+              Application stages
+            </Typography>
+
+            <Suspense
+              fallback={
+                <Typography color="text.secondary" variant="body2">
+                  Loading stages…
+                </Typography>
+              }
+            >
+              <UniversityStagesSection
+                countryCode={form.countryCode}
+                customise={customiseStages}
+                stages={stageDraft}
+                onCustomiseChange={setCustomiseStages}
+                onStagesChange={setStageDraft}
+              />
+            </Suspense>
+          </>
+        ) : null}
+
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           <Button onClick={onClose}>Cancel</Button>
           <Button
             variant="contained"
-            onClick={() => onSave({ ...form, id: university?.id })}
-            disabled={!form.name.trim() || !form.countryCode.trim()}
+            onClick={() =>
+              onSave(
+                { ...form, id: university?.id },
+                customiseStages
+                  ? stageDraft.map((stage) => ({
+                      name: stage.name.trim(),
+                      active: stage.active,
+                    }))
+                  : undefined,
+              )
+            }
+            disabled={
+              !form.name.trim() ||
+              !form.countryCode.trim() ||
+              (customiseStages && !stagesAreValid)
+            }
           >
             Save university
           </Button>

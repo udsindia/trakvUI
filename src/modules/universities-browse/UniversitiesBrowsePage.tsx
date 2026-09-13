@@ -31,6 +31,7 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { CourseImportDialog } from "@/modules/universities/components/CourseImportDialog";
 import { UniversityImportDialog } from "@/modules/universities/components/UniversityImportDialog";
 import { UniversityFormDrawer } from "@/modules/sa-team/components/UniversityFormDrawer";
+import { stageTemplatesApi } from "@/modules/settings/stageTemplatesApi";
 import {
   useCountries,
   useUniversitiesCatalog,
@@ -153,23 +154,52 @@ export function UniversitiesBrowsePage() {
   const [universityImportDialogOpen, setUniversityImportDialogOpen] = useState(false);
   const { hasPermissions } = useAuth();
   const canImportCourses = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
-  const [snack, setSnack] = useState<{ message: string; severity: "success" | "error" } | null>(null);
+  const [snack, setSnack] = useState<
+    { message: string; severity: "success" | "error" | "warning" } | null
+  >(null);
 
   const { saveUniversityMutation } = useUniversityMutations();
   const { width: listWidth, isDragging, resizeHandleProps } = useResizableColumn();
 
-  const handleSaveUniversity = async (input: UniversityInput) => {
+  const handleSaveUniversity = async (
+    input: UniversityInput,
+    stages?: { name: string; active: boolean }[],
+  ) => {
     const isEdit = Boolean(editingUniversity);
     try {
-      await saveUniversityMutation.mutateAsync({
+      const saved = await saveUniversityMutation.mutateAsync({
         ...input,
         id: editingUniversity?.id,
       });
+
+      /*
+        Stages are saved second because they need the university's id, which only exists
+        once it has been created. If this fails the university still exists and keeps its
+        country's sequence — so the message says so rather than implying the whole thing
+        failed and inviting somebody to create it again.
+      */
+      let stageWarning: string | null = null;
+      const universityId = editingUniversity?.id ?? saved?.id;
+      if (stages?.length && universityId) {
+        try {
+          await stageTemplatesApi.saveForUniversity(universityId, stages, input.countryCode);
+        } catch (error) {
+          stageWarning = getApiErrorMessage(
+            error,
+            "but its own stages could not be saved — it will follow the country sequence",
+          );
+        }
+      }
+
       setAddDrawerOpen(false);
       setEditingUniversity(null);
       setSnack({
-        message: isEdit ? "University updated" : "University added",
-        severity: "success",
+        message: stageWarning
+          ? `${isEdit ? "University updated" : "University added"}, ${stageWarning}`
+          : isEdit
+            ? "University updated"
+            : "University added",
+        severity: stageWarning ? "warning" : "success",
       });
     } catch (error) {
       setSnack({
@@ -832,6 +862,7 @@ export function UniversitiesBrowsePage() {
       </Box>
 
       <UniversityFormDrawer
+        showStages
         open={addDrawerOpen}
         university={editingUniversity}
         onClose={() => {
