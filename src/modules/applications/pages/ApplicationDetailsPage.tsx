@@ -234,11 +234,11 @@ export function ApplicationDetailsPage() {
               />
             ) : null}
 
-            {/* Lifecycle pipeline */}
+            {/* Progress */}
             <Card>
               <CardContent>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" mb={3}>
-                  <Typography variant="h6">Lifecycle Pipeline</Typography>
+                  <Typography variant="h6">Progress</Typography>
                   <Chip
                     label={humanize(application.outcome)}
                     color={outcomeColor[application.outcome] ?? "default"}
