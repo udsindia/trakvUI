@@ -163,8 +163,12 @@ export function CourseSearchCard({
         {result.intakes.map((intake) => (
           <Chip key={intake} label={intake} size="small" sx={tagChipSx} />
         ))}
-        <Chip label={result.duration} size="small" sx={tagChipSx} />
-        <Chip label={result.ieltsLabel} size="small" sx={tagChipSx} />
+        {result.duration && result.duration !== "—" ? (
+          <Chip label={result.duration} size="small" sx={tagChipSx} />
+        ) : null}
+        {result.ieltsLabel ? (
+          <Chip label={result.ieltsLabel} size="small" sx={tagChipSx} />
+        ) : null}
         {showEligibility && result.eligibilityWarning ? (
           <Chip
             label={result.eligibilityWarning}

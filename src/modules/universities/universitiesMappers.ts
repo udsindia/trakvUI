@@ -153,7 +153,7 @@ function deriveShortName(name: string) {
     .toUpperCase();
 }
 
-function tuitionToLakhs(amount?: number, currency = "GBP") {
+export function tuitionToLakhs(amount?: number, currency = "GBP") {
   if (!amount) {
     return 0;
   }
@@ -213,7 +213,7 @@ function formatPgwpEligible(pgwpEligible?: boolean | null) {
   return "N/A";
 }
 
-function formatDuration(durationMonths?: number) {
+export function formatDuration(durationMonths?: number) {
   if (!durationMonths) {
     return "—";
   }

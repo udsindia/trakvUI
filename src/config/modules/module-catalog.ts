@@ -99,11 +99,14 @@ export const moduleCatalog: ModuleDefinition[] = [
   },
   {
     key: MODULE_KEYS.UNIVERSITIES,
-    title: "Courses",
-    navLabel: "Courses",
+    // "Courses" sat directly above "Universities" and read as the catalogue's course list.
+    // This screen is the finder: filters first, then matching courses across every
+    // university. The path stays /courses so existing links keep working.
+    title: "Course Finder",
+    navLabel: "Course Finder",
     path: "courses",
     icon: MODULE_ICON_KEYS.UNIVERSITIES,
-    description: "Search universities and courses, review eligibility, and build shortlists.",
+    description: "Find courses across universities by destination, level, discipline, intake and fees.",
     order: 6,
     allowedRoles: [
       ROLES.SUPER_ADMIN,

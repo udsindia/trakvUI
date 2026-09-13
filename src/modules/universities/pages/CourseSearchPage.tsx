@@ -74,7 +74,10 @@ import {
   universitiesCatalogQueryKey,
 } from "@/modules/universities/universitiesCatalogService";
 import {
+  countryDisplayName,
+  formatDuration,
   toAlpha2CountryCode,
+  tuitionToLakhs,
 } from "@/modules/universities/universitiesMappers";
 import {
   useCountries,
@@ -457,11 +460,15 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
       : typeof raw.city === "string"
         ? raw.city
         : "City";
+    // The API returns countryCode; destination/country are older shapes that never arrive
+    // from /courses/search. Reading only those left every card reading "Country".
     const country = typeof raw.destination === "string"
       ? raw.destination
       : typeof raw.country === "string"
         ? raw.country
-        : "Country";
+        : typeof raw.countryCode === "string"
+          ? countryDisplayName(raw.countryCode)
+          : "—";
     const levelValue = String(raw.level ?? raw.studyLevel ?? "masters").toLowerCase();
     const normalizedLevel = ["undergraduate", "masters", "phd", "diploma"].includes(levelValue)
       ? (levelValue as CourseLevel)
@@ -476,10 +483,25 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
       intakes: Array.isArray(raw.intakes)
         ? raw.intakes.filter((value): value is string => typeof value === "string")
         : [],
-      duration: String(raw.duration ?? raw.durationLabel ?? "1 year"),
-      tuitionLakhs: Number(raw.tuitionLakhs ?? raw.tuitionAmount ?? 0),
+      // durationMonths / tuitionAmount + tuitionCurrency are what the API sends. The
+      // placeholders below them used to win every time: every course showed "1 year", and
+      // a £45,000 fee was printed as "₹45000.0L" because the raw amount went straight into
+      // a formatter that appends lakhs. tuitionToLakhs converts first, with the same rate
+      // table the university pages already use.
+      duration: formatDuration(
+        typeof raw.durationMonths === "number" ? raw.durationMonths : undefined,
+      ),
+      tuitionLakhs: Number(
+        raw.tuitionLakhs ??
+          tuitionToLakhs(
+            typeof raw.tuitionAmount === "number" ? raw.tuitionAmount : Number(raw.tuitionAmount),
+            typeof raw.tuitionCurrency === "string" ? raw.tuitionCurrency : undefined,
+          ),
+      ),
       ieltsMin: Number(raw.ieltsMin ?? raw.ielts ?? 0),
-      ieltsLabel: String(raw.ieltsLabel ?? `IELTS ${raw.ielts ?? 0}`),
+      // Search returns no IELTS figure, and "IELTS 0" read as a real requirement of zero.
+      // Empty, and the card drops the chip.
+      ieltsLabel: typeof raw.ieltsLabel === "string" ? raw.ieltsLabel : "",
       applicationFee: String(raw.applicationFee ?? "₹0"),
       deadline: String(raw.deadline ?? "Rolling"),
       eligibilityStatus: "eligible",
@@ -527,7 +549,7 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
         internalNotes: "",
         generalRequirements: [],
       },
-      alreadyShortlisted: false,
+      alreadyShortlisted: raw.alreadyShortlisted === true,
       pendingApplications: 0,
     } as unknown as CourseSearchResult;
   });
@@ -545,6 +567,9 @@ export function CourseSearchPage() {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
   const [courseResults, setCourseResults] = useState<CourseSearchResult[]>([]);
+  // What the server matched, which is not what is on screen: the API returns one page of
+  // 20. The counter used to read "20 courses found" whether there were 20 matches or 200.
+  const [courseResultTotal, setCourseResultTotal] = useState(0);
   const [courseSearchError, setCourseSearchError] = useState<string | null>(null);
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
 
@@ -772,6 +797,7 @@ export function CourseSearchPage() {
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
     setCourseResults([]);
+    setCourseResultTotal(0);
     setCourseSearchError(null);
     setHasAppliedFilters(false);
   };
@@ -790,10 +816,16 @@ export function CourseSearchPage() {
         const payload = buildCourseSearchApiPayload(values, query, sortValue, studentId);
         const response = await leadApi.searchCourses(payload);
         setCourseResults(normalizeCourseSearchApiResults(response));
+        setCourseResultTotal(
+          typeof response?.totalElements === "number"
+            ? response.totalElements
+            : normalizeCourseSearchApiResults(response).length,
+        );
         setHasAppliedFilters(true);
         return true;
       } catch (error) {
         setCourseResults([]);
+        setCourseResultTotal(0);
         setHasAppliedFilters(false);
         setCourseSearchError(
           error instanceof Error ? error.message : "Unable to load courses. Please try again.",
@@ -1006,9 +1038,12 @@ export function CourseSearchPage() {
                 >
                   <Typography color="text.secondary" sx={{ fontSize: 13 }}>
                     <Box component="span" sx={{ color: "text.primary", fontWeight: 700 }}>
-                      {filteredResults.length}
+                      {courseResultTotal || filteredResults.length}
                     </Box>{" "}
                     courses found
+                    {courseResultTotal > filteredResults.length
+                      ? ` · showing the first ${filteredResults.length}`
+                      : ""}
                   </Typography>
                   <Chip
                     clickable
