@@ -55,10 +55,10 @@ type ApplicationStageFlowProps = {
  * the width and its name wraps, so nine stages fit a card without scrolling. Laid out to
  * fit the text instead, it ran off the side and had to be dragged.
  *
- * Wrapping buys a second line, which is where the dates and the dwell time go — the
- * information this shape is usually accused of losing. "6 days here" on the stage in play
- * is the number worth the space; it is what turns a picture of progress into a prompt to
- * chase something.
+ * Dates and dwell time sit beneath the shapes rather than inside them. Inside, they
+ * competed with the stage name for one small space and made both harder to read; below,
+ * they share a baseline across the row and can be scanned on their own. "6 days here" on
+ * the stage in play is what turns a picture of progress into a prompt to chase something.
  */
 export function ApplicationStageChevrons({
   stages,
@@ -92,59 +92,72 @@ export function ApplicationStageChevrons({
         const meta =
           isCurrent && dwell !== null ? dwellLabel(dwell) : cleared && clearedOn ? clearedOn : "";
 
+        // The whole column carries the interlock, so the date below stays centred under
+        // the shape it belongs to rather than drifting out of step with it.
+        const padLeft = index === 0 ? "10px" : `${NOTCH + 8}px`;
+
         return (
           <Box
             key={stage.id}
             sx={{
               flex: "1 1 0",
               minWidth: 82,
-              bgcolor: cleared ? DONE : isCurrent ? NOW : "#EEF3F7",
-              color: cleared || isCurrent ? "#FFFFFF" : AHEAD,
-              minHeight: 54,
+              ml: index === 0 ? 0 : `-${NOTCH}px`,
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              pl: index === 0 ? "10px" : `${NOTCH + 8}px`,
-              pr: "10px",
-              py: 0.75,
-              ml: index === 0 ? 0 : `-${NOTCH}px`,
-              // A point on the right and a matching bite on the left, so the pieces
-              // interlock instead of overlapping.
-              clipPath:
-                index === 0
-                  ? `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%)`
-                  : index === stages.length - 1
-                    ? `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${NOTCH}px 50%)`
-                    : `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%, ${NOTCH}px 50%)`,
             }}
           >
-            <Typography
+            <Box
               sx={{
-                fontSize: 10.5,
-                fontWeight: isCurrent ? 700 : 600,
-                lineHeight: 1.2,
-                overflowWrap: "break-word",
-                hyphens: "auto",
+                bgcolor: cleared ? DONE : isCurrent ? NOW : "#EEF3F7",
+                color: cleared || isCurrent ? "#FFFFFF" : AHEAD,
+                minHeight: 44,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                pl: padLeft,
+                pr: "10px",
+                py: 0.75,
+                // A point on the right and a matching bite on the left, so the pieces
+                // interlock instead of overlapping.
+                clipPath:
+                  index === 0
+                    ? `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%)`
+                    : index === stages.length - 1
+                      ? `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${NOTCH}px 50%)`
+                      : `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%, ${NOTCH}px 50%)`,
               }}
             >
-              {stage.stageName}
-            </Typography>
-            {meta ? (
               <Typography
                 sx={{
-                  fontSize: 9.5,
-                  fontVariantNumeric: "tabular-nums",
+                  fontSize: 10.5,
+                  fontWeight: isCurrent ? 700 : 600,
                   lineHeight: 1.2,
-                  mt: 0.25,
-                  // Quieter than the name: it is supporting detail, not the label.
-                  opacity: cleared || isCurrent ? 0.82 : 1,
+                  overflowWrap: "break-word",
+                  hyphens: "auto",
                 }}
               >
-                {meta}
+                {stage.stageName}
               </Typography>
-            ) : null}
+            </Box>
+
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontVariantNumeric: "tabular-nums",
+                textAlign: "center",
+                color: isCurrent ? NOW : "#93A7B4",
+                fontWeight: isCurrent ? 600 : 400,
+                pl: padLeft,
+                pr: "10px",
+                pt: 0.625,
+                // Held even when empty so every date sits on one baseline across the row.
+                minHeight: 14,
+              }}
+            >
+              {meta}
+            </Typography>
           </Box>
         );
       })}
