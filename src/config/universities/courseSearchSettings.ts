@@ -128,7 +128,7 @@ export const courseSearchSettings = {
       options: [],
     } satisfies CourseSearchDropdownFilterSetting,
     institution: {
-      enabled: true,
+      enabled: false,
       key: "institution",
       label: "Institutions",
       section: "institution-details",
@@ -136,7 +136,7 @@ export const courseSearchSettings = {
       options: [],
     } satisfies CourseSearchDropdownFilterSetting,
     nationality: {
-      enabled: true,
+      enabled: false,
       key: "nationality",
       label: "Nationality",
       section: "student-details",
@@ -150,7 +150,7 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     regionState: {
-      enabled: true,
+      enabled: false,
       key: "regionState",
       label: "Region",
       section: "student-details",
@@ -247,7 +247,7 @@ export const courseSearchSettings = {
     discipline: {
       enabled: true,
       key: "discipline",
-      label: "Disciplines",
+      label: "Field of Study",
       section: "course-details",
       placeholder: "Select",
       options: [],
@@ -261,7 +261,7 @@ export const courseSearchSettings = {
       options: [],
     } satisfies CourseSearchDropdownFilterSetting,
     delivery: {
-      enabled: true,
+      enabled: false,
       key: "delivery",
       label: "Course Delivery",
       section: "course-details",

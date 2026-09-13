@@ -792,14 +792,20 @@ export function CourseSearchPage() {
     shortlistMutation.mutate({ courseId, add });
   };
 
+  /**
+   * Clearing the filters shows every course, not an empty page.
+   *
+   * Nothing on this screen is required — the API applies a clause only for a filter that
+   * was actually set — so "no filters" is a perfectly good search and should return the
+   * whole catalogue. This used to drop back to the blank filter panel instead, which read
+   * as though clearing the filters had also cleared the results.
+   */
   const handleClearFilters = () => {
     setFilterValues(defaultFilterValues);
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
-    setCourseResults([]);
-    setCourseResultTotal(0);
     setCourseSearchError(null);
-    setHasAppliedFilters(false);
+    void runCourseSearch(defaultFilterValues, "", defaultSearchSettings.sort);
   };
 
   /**
