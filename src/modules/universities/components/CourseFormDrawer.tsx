@@ -197,6 +197,10 @@ export function CourseFormDrawer({
             fullWidth
             label="Level"
             select
+            // A native select always paints its selected option's text, so the label has
+            // to sit above the box. Left to shrink on its own it stays inside while the
+            // value is empty, printing the label straight over "Select …".
+            InputLabelProps={{ shrink: true }}
             SelectProps={{ native: true }}
             size="small"
             value={form.level}
