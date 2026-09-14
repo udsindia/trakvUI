@@ -141,7 +141,17 @@ export function UniversityFormDrawer({
   };
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: "100%", sm: 520 }, p: 3 } }}>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      // 520px was set when this held a name, a country and a few numbers. It now also
+      // carries the stage sequence, whose rows need room for a drag handle, a name field
+      // and three buttons — at the old width those rows were squeezed to nothing.
+      // Capped at 92vw so it never fills the screen entirely: seeing the list behind is
+      // what makes a drawer worth using instead of a page.
+      PaperProps={{ sx: { width: { xs: "100%", sm: "min(780px, 92vw)" }, p: 3 } }}
+    >
       <Stack spacing={2.5}>
         <Typography variant="h6">{university ? "Edit University" : "Add University"}</Typography>
         <Divider />
