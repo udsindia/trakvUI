@@ -79,6 +79,7 @@ export const courseSearchSettings = {
         { label: "Australia", value: "AU" },
         { label: "Canada", value: "CA" },
         { label: "New Zealand", value: "NZ" },
+        { label: "USA", value: "US" },
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     level: {
