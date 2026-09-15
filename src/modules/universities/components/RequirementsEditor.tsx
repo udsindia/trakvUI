@@ -344,6 +344,44 @@ export function RequirementsEditor({
         </TextField>
         <TextField
           fullWidth
+          helperText="3-year degree"
+          label="Min GPA (3-year)"
+          size="small"
+          type="number"
+          inputProps={{ min: 0, step: 0.1 }}
+          value={value.academic.minGpa3Year ?? ""}
+          onChange={(event) =>
+            onChange({
+              ...value,
+              academic: {
+                ...value.academic,
+                minGpa3Year: numberOrUndefined(event.target.value),
+              },
+            })
+          }
+        />
+        <TextField
+          fullWidth
+          helperText="4-year degree"
+          label="Min GPA (4-year)"
+          size="small"
+          type="number"
+          inputProps={{ min: 0, step: 0.1 }}
+          value={value.academic.minGpa4Year ?? ""}
+          onChange={(event) =>
+            onChange({
+              ...value,
+              academic: {
+                ...value.academic,
+                minGpa4Year: numberOrUndefined(event.target.value),
+              },
+            })
+          }
+        />
+      </Stack>
+      <Stack direction="row" spacing={1.5}>
+        <TextField
+          fullWidth
           label="Max backlogs"
           size="small"
           type="number"
@@ -378,6 +416,11 @@ export function RequirementsEditor({
       <Typography color="text.secondary" sx={{ fontSize: 12 }}>
         Left blank, the course finder still offers this university to a student with
         backlogs or a gap — marked as a possible match rather than a confirmed one.
+      </Typography>
+      <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+        Set a per-length GPA only where the university asks a different bar of a
+        three-year and a four-year bachelor&apos;s. Left blank, both are judged on
+        Minimum GPA.
       </Typography>
     </Stack>
   );

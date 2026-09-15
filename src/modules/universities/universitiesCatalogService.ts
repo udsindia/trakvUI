@@ -57,6 +57,13 @@ export type CourseAptitudeTest = {
 export type CourseAcademicRequirement = {
   minGpa?: number;
   gpaScale?: string;
+  /**
+   * GPA bars that apply only to a bachelor's of that length. Left undefined, the
+   * applicant is judged on minGpa — so a university that treats both alike still
+   * needs only the one field.
+   */
+  minGpa3Year?: number;
+  minGpa4Year?: number;
   maxBacklogs?: number;
   /** Longest break between study and application accepted, in years. */
   maxEducationGapYears?: number;
@@ -80,6 +87,8 @@ export function requirementSetIsEmpty(set: RequirementSet): boolean {
     set.languageTests.length === 0 &&
     set.aptitudeTests.length === 0 &&
     set.academic.minGpa == null &&
+    set.academic.minGpa3Year == null &&
+    set.academic.minGpa4Year == null &&
     set.academic.maxBacklogs == null &&
     set.academic.maxEducationGapYears == null
   );
@@ -119,6 +128,8 @@ export function toRequirementPayloads(
   // The backend rejects an ACADEMIC row with nothing set, so only send a populated one.
   if (
     set.academic.minGpa != null ||
+    set.academic.minGpa3Year != null ||
+    set.academic.minGpa4Year != null ||
     set.academic.maxBacklogs != null ||
     set.academic.maxEducationGapYears != null
   ) {
@@ -127,6 +138,8 @@ export function toRequirementPayloads(
       requirementType: "ACADEMIC",
       minGpa: set.academic.minGpa,
       gpaScale: set.academic.gpaScale,
+      minGpa3Year: set.academic.minGpa3Year,
+      minGpa4Year: set.academic.minGpa4Year,
       maxBacklogs: set.academic.maxBacklogs,
       maxEducationGapYears: set.academic.maxEducationGapYears,
       isMandatory: true,
@@ -161,6 +174,8 @@ export function fromRequirementDtos(
       set.academic = {
         minGpa: requirement.minGpa ?? undefined,
         gpaScale: requirement.gpaScale ?? undefined,
+        minGpa3Year: requirement.minGpa3Year ?? undefined,
+        minGpa4Year: requirement.minGpa4Year ?? undefined,
         maxBacklogs: requirement.maxBacklogs ?? undefined,
         maxEducationGapYears: requirement.maxEducationGapYears ?? undefined,
       };

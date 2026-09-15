@@ -26,6 +26,15 @@ export const ENGLISH_TEST_OPTIONS: Array<{
   { value: "DUOLINGO", label: "Duolingo", max: 160, step: 5, hasBands: false },
   { value: "MOI_LETTER", label: "MOI (Medium of Instruction)", max: 0, step: 1, hasBands: false },
   { value: "INTER_ENGLISH", label: "Inter / Class 12 English", max: 100, step: 1, hasBands: false },
+  // Distinct from the row above: the two-year average is a different bar from Class 12
+  // alone, so a university asking for one is not asking for the other.
+  {
+    value: "INTER_ENGLISH_AVG",
+    label: "11th & 12th English average",
+    max: 100,
+    step: 1,
+    hasBands: false,
+  },
   { value: "CAMBRIDGE_C1", label: "Cambridge C1 Advanced", max: 210, step: 1, hasBands: false },
   { value: "CAMBRIDGE_C2", label: "Cambridge C2 Proficiency", max: 230, step: 1, hasBands: false },
 ];

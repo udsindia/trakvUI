@@ -31,6 +31,7 @@ export type TestType =
   | "DUOLINGO"
   | "MOI_LETTER"
   | "INTER_ENGLISH"
+  | "INTER_ENGLISH_AVG"
   | "CAMBRIDGE_C1"
   | "CAMBRIDGE_C2";
 
@@ -77,6 +78,8 @@ export interface UniversityRequirementDto {
   minSpeaking?: number | null;
   minGpa?: number | null;
   gpaScale?: string | null;
+  minGpa3Year?: number | null;
+  minGpa4Year?: number | null;
   minPercentage?: number | null;
   maxBacklogs?: number | null;
   maxEducationGapYears?: number | null;
@@ -221,6 +224,8 @@ export interface CreateRequirementPayload {
   minSpeaking?: number;
   minGpa?: number;
   gpaScale?: string;
+  minGpa3Year?: number;
+  minGpa4Year?: number;
   minPercentage?: number;
   maxBacklogs?: number;
   maxEducationGapYears?: number;
@@ -266,6 +271,8 @@ export interface UpdateRequirementPayload {
   minSpeaking?: number;
   minGpa?: number;
   gpaScale?: string;
+  minGpa3Year?: number;
+  minGpa4Year?: number;
   minPercentage?: number;
   maxBacklogs?: number;
   maxEducationGapYears?: number;
