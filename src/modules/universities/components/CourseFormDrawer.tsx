@@ -319,13 +319,6 @@ export function CourseFormDrawer({
               }))
             }
           />
-          <TextField
-            fullWidth
-            label="Application deadline"
-            size="small"
-            value={form.deadline}
-            onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))}
-          />
         </Stack>
         <TextField
           fullWidth
@@ -356,48 +349,7 @@ export function CourseFormDrawer({
         />
         <Divider />
 
-        <Typography color="text.secondary" variant="subtitle2">
-          Key dates
-        </Typography>
         <Stack direction="row" spacing={1.5}>
-          <TextField
-            fullWidth
-            label="Application deadline"
-            size="small"
-            value={form.keyDates.applicationDeadline}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                keyDates: { ...current.keyDates, applicationDeadline: event.target.value },
-              }))
-            }
-          />
-          <TextField
-            fullWidth
-            label="Course start"
-            size="small"
-            value={form.keyDates.courseStart}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                keyDates: { ...current.keyDates, courseStart: event.target.value },
-              }))
-            }
-          />
-        </Stack>
-        <Stack direction="row" spacing={1.5}>
-          <TextField
-            fullWidth
-            label="Course end"
-            size="small"
-            value={form.keyDates.courseEnd}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                keyDates: { ...current.keyDates, courseEnd: event.target.value },
-              }))
-            }
-          />
           <TextField
             fullWidth
             label="PGWP eligible"

@@ -126,8 +126,8 @@ export interface CourseDto {
   applicationFeeAmount?: number;
   livingCostCurrency?: string;
   livingCostAmount?: number;
-  courseStartDate?: string;
-  courseEndDate?: string;
+  /** Months this course runs, from course_intakes. */
+  intakeMonths?: string[];
   pgwpEligible?: boolean | null;
   scholarshipNote?: string;
   studentsSent?: number;
@@ -311,8 +311,6 @@ export interface CourseImportFields {
   courseUrl: string | null;
   applicationFeeCurrency: string | null;
   applicationFeeAmount: number | null;
-  courseStartDate: string | null; // yyyy-MM-dd
-  courseEndDate: string | null;   // yyyy-MM-dd
   pgwpEligible: boolean | null;
   scholarshipNote: string | null;
   intakeMonth: string | null;

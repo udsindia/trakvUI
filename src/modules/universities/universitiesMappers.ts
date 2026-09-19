@@ -183,19 +183,6 @@ function formatDate(dateStr?: string) {
   });
 }
 
-function deriveIntakeLabel(courseStartDate?: string) {
-  if (!courseStartDate) {
-    return "";
-  }
-
-  const parsedDate = new Date(courseStartDate);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "";
-  }
-
-  return `${parsedDate.toLocaleString("en-US", { month: "short" })} ${parsedDate.getFullYear()}`;
-}
-
 function formatAvgCommission(amount?: number | null, currency?: string | null) {
   if (!amount) {
     return "₹0";
@@ -369,7 +356,6 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
 
   const applicationFee = formatMoney(course.applicationFeeAmount, course.applicationFeeCurrency);
   const deadline = course.applicationDeadline ? formatDate(course.applicationDeadline) : "";
-  const intakeLabel = deriveIntakeLabel(course.courseStartDate);
 
   return {
     id: course.id,
@@ -377,7 +363,7 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     name: course.name,
     level,
     levelLabel: label,
-    intakes: intakeLabel ? [intakeLabel] : [],
+    intakes: course.intakeMonths ?? [],
     duration: formatDuration(course.durationMonths),
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),
     ieltsMin,
@@ -391,8 +377,8 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     keyDates: {
       applicationDeadline: deadline,
       rollingAdmissions: !course.applicationDeadline,
-      courseStart: formatDate(course.courseStartDate),
-      courseEnd: formatDate(course.courseEndDate),
+      courseStart: "",
+      courseEnd: "",
       pgwpEligible: formatPgwpEligible(course.pgwpEligible),
     },
     fees: {
