@@ -33,7 +33,26 @@ export type SaveUniversityPartnerAgency = {
 
 const base = (universityId: string) => `/universities/${universityId}/partner-agencies`;
 
+/** One agency across the whole tenant — what the name field suggests from. */
+export type PartnerAgencySummary = {
+  id: string;
+  name: string;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  universityCount: number;
+  lowestCommission?: number | null;
+  highestCommission?: number | null;
+  bestGrade?: string | null;
+};
+
 export const partnerAgenciesApi = {
+  /** Every agency the tenant already works with, for suggesting an existing one. */
+  forTenant: async (): Promise<PartnerAgencySummary[]> => {
+    const response = await httpClient.get<PartnerAgencySummary[]>("/partner-agencies");
+    return response.data ?? [];
+  },
+
   forUniversity: async (universityId: string): Promise<UniversityPartnerAgency[]> => {
     const response = await httpClient.get<UniversityPartnerAgency[]>(base(universityId));
     return response.data ?? [];

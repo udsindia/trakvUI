@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -17,6 +18,7 @@ import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import {
   GRADE_STYLES,
   partnerAgenciesApi,
+  type PartnerAgencySummary,
   type SaveUniversityPartnerAgency,
 } from "@/modules/universities/partnerAgenciesApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
@@ -53,6 +55,23 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
     queryKey: ["partner-agencies", universityId],
     queryFn: () => partnerAgenciesApi.forUniversity(universityId),
   });
+
+  // Loaded only while the add form is open — the list is for suggesting, and there is no
+  // reason to fetch every agency in the tenant just to render this card.
+  const tenantAgencies = useQuery({
+    enabled: adding,
+    queryKey: ["partner-agencies", "tenant"],
+    queryFn: () => partnerAgenciesApi.forTenant(),
+  });
+
+  /** Agencies already on this university — offering them again would only ever 409. */
+  const alreadyLinked = new Set(
+    (agenciesQuery.data ?? []).map((agency) => agency.partnerAgencyId),
+  );
+
+  const agencyOptions: PartnerAgencySummary[] = (tenantAgencies.data ?? []).filter(
+    (agency) => !alreadyLinked.has(agency.id),
+  );
 
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ["partner-agencies", universityId] });
@@ -121,14 +140,59 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
           }}
         >
           <Stack spacing={1.5}>
-            <TextField
-              autoFocus
-              fullWidth
-              helperText="An agency you already work with is reused, not duplicated."
-              label="Agency name"
-              size="small"
-              value={draft.agencyName ?? ""}
-              onChange={(event) => setDraft({ ...draft, agencyName: event.target.value })}
+            <Autocomplete
+              freeSolo
+              autoHighlight
+              disabled={agencyOptions.length === 0 && tenantAgencies.isLoading}
+              options={agencyOptions}
+              getOptionLabel={(option) =>
+                typeof option === "string" ? option : option.name
+              }
+              inputValue={draft.agencyName ?? ""}
+              // Typing is the same act as choosing: the name is kept either way, and the
+              // id is only set when a suggestion was actually taken. That is what tells
+              // the server to reuse an agency rather than find-or-create by name.
+              onInputChange={(_event, value, reason) =>
+                setDraft((current) => ({
+                  ...current,
+                  agencyName: value,
+                  partnerAgencyId: reason === "reset" ? current.partnerAgencyId : null,
+                }))
+              }
+              onChange={(_event, value) =>
+                setDraft((current) => ({
+                  ...current,
+                  agencyName: typeof value === "string" ? value : value?.name ?? "",
+                  partnerAgencyId: typeof value === "string" || !value ? null : value.id,
+                }))
+              }
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Stack>
+                    <Typography sx={{ fontSize: 13 }}>{option.name}</Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: 11 }}>
+                      {option.universityCount === 1
+                        ? "1 university"
+                        : `${option.universityCount} universities`}
+                      {option.bestGrade ? ` · best grade ${option.bestGrade}` : ""}
+                    </Typography>
+                  </Stack>
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  autoFocus
+                  fullWidth
+                  helperText={
+                    alreadyLinked.size > 0
+                      ? "Start typing — agencies already on this university are not offered again."
+                      : "Start typing. An agency you already work with is reused, not duplicated."
+                  }
+                  label="Agency name"
+                  size="small"
+                />
+              )}
             />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <TextField
