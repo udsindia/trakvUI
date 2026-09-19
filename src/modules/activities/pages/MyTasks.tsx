@@ -19,6 +19,7 @@ import { ACTIVITY_ALL_AGENTS_OPTION_ID, activityService } from "@/modules/activi
 import { TeamTaskSummary } from "@/modules/activities/components/TeamTaskSummary";
 import { CreateTaskModal } from "@/modules/activities/components/CreateTaskModal";
 import { TaskBoardColumn } from "@/modules/activities/components/TaskBoardColumn";
+import { TaskTable } from "@/modules/activities/components/TaskTable";
 import { TaskDetailsSidebar } from "@/modules/activities/components/TaskDetailsSidebar";
 import { useTaskBoard } from "@/modules/activities/hooks/useTaskBoard";
 import { taskColumnDefinitions } from "@/modules/activities/mock/mockData";
@@ -48,6 +49,8 @@ export function MyTasks() {
    * one they act on, and the team view is a step out of it rather than the resting state.
    */
   const [scope, setScope] = useState<"mine" | "team">("mine");
+  /** List by default: a board reads well at five tasks and not at fifty. */
+  const [taskView, setTaskView] = useState<"table" | "board">("table");
   const {
     availableAgents,
     cancelTask,
@@ -271,27 +274,55 @@ export function MyTasks() {
               </Typography>
             </Stack>
           ) : (
-            <Box
-              sx={{
-                display: "grid",
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  md: "repeat(2, minmax(0, 1fr))",
-                  lg: "repeat(3, minmax(0, 1fr))",
-                },
-              }}
-            >
-              {columns.map((column) => (
-                <TaskBoardColumn
-                  key={column.key}
-                  count={column.tasks.length}
-                  tasks={column.tasks}
-                  title={column.title}
-                  onAddTask={canCreateTask ? () => setCreateTaskOpen(true) : undefined}
-                  onTaskClick={openTask}
-                />
-              ))}
+            <Box>
+              <Stack
+                direction="row"
+                sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5 }}
+              >
+                <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+                  {tasks.length === 1 ? "1 task" : `${tasks.length} tasks`}
+                </Typography>
+                <ToggleButtonGroup
+                  exclusive
+                  size="small"
+                  value={taskView}
+                  onChange={(_event, next) => next && setTaskView(next)}
+                >
+                  <ToggleButton sx={{ px: 1.5, textTransform: "none" }} value="table">
+                    List
+                  </ToggleButton>
+                  <ToggleButton sx={{ px: 1.5, textTransform: "none" }} value="board">
+                    Board
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+
+              {taskView === "table" ? (
+                <TaskTable showAssignee={scope !== "mine"} tasks={tasks} onTaskClick={openTask} />
+              ) : (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 2,
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      md: "repeat(2, minmax(0, 1fr))",
+                      lg: "repeat(3, minmax(0, 1fr))",
+                    },
+                  }}
+                >
+                  {columns.map((column) => (
+                    <TaskBoardColumn
+                      key={column.key}
+                      count={column.tasks.length}
+                      tasks={column.tasks}
+                      title={column.title}
+                      onAddTask={canCreateTask ? () => setCreateTaskOpen(true) : undefined}
+                      onTaskClick={openTask}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
         </Box>
