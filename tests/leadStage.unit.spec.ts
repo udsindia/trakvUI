@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { describe, expect, test } from "vitest";
 import {
   ENROLLED_STAGE,
   fromBackendLeadStage,
@@ -6,7 +6,7 @@ import {
 } from "../src/modules/lead/leadStageMappers";
 import { LEAD_STAGES } from "../src/modules/lead/components/LeadTableContainer";
 
-test.describe("lead stage mapping", () => {
+describe("lead stage mapping", () => {
   test("offers the agreed pipeline in order", () => {
     expect([...LEAD_STAGES]).toEqual([
       "New",
@@ -14,6 +14,9 @@ test.describe("lead stage mapping", () => {
       "Qualified",
       "Prospective",
       "Enrolled",
+      // Added in a8179b9 alongside the notification work; this expectation was not
+      // updated with it, so the suite has been failing since.
+      "Dead",
     ]);
   });
 

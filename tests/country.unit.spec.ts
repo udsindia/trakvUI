@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { describe, expect, test } from "vitest";
 import {
   countryDisplayName,
   toAlpha2CountryCode,
   toAlpha3CountryCode,
 } from "../src/modules/universities/universitiesMappers";
 
-test.describe("country code folding", () => {
+describe("country code folding", () => {
   test("every spelling of one country folds to the same alpha-3", () => {
     // The regression: universities imported before the codes were normalised hold "UK"
     // beside "GBR". Resolving them separately gave two country filter chips, both

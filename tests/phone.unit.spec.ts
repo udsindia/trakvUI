@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { describe, expect, test } from "vitest";
 import { joinPhoneNumber, splitPhoneNumber } from "../src/shared/utils/phone";
 
-test.describe("splitPhoneNumber", () => {
+describe("splitPhoneNumber", () => {
   test("keeps the whole local number for an Indian mobile", () => {
     // The regression: /^(\+\d{1,3})(.+)$/ took "+918" and left "012380123".
     expect(splitPhoneNumber("+918012380123")).toEqual({
@@ -52,7 +52,7 @@ test.describe("splitPhoneNumber", () => {
   });
 });
 
-test.describe("joinPhoneNumber", () => {
+describe("joinPhoneNumber", () => {
   test("joins a dial code onto a local number", () => {
     expect(joinPhoneNumber("+91", "8012380123")).toBe("+91 8012380123");
   });

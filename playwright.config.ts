@@ -36,12 +36,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
+  // Unit specs moved to Vitest, which can report coverage; Playwright drives the browser.
   projects: [
-    {
-      name: "unit",
-      testMatch: /.*\.unit\.spec\.ts/,
-      use: {},
-    },
     {
       name: "e2e",
       testMatch: /.*\.e2e\.spec\.ts/,

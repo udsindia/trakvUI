@@ -21,3 +21,6 @@ playwright-report/
 # Local env overrides — these point at a chosen backend and must not ship
 .env.local
 .env.*.local
+
+# Vitest coverage output
+coverage/

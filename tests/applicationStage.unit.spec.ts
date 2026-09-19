@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { describe, expect, test } from "vitest";
 import { applicationStageLabel, mapOutcomeToStage } from "../src/modules/applications/applicationStage";
 
-test.describe("applicationStageLabel", () => {
+describe("applicationStageLabel", () => {
   test("shows the stage the application has actually reached", () => {
     // The regression: outcome is IN_PROGRESS from creation until the application closes,
     // so deriving the label from it alone showed "Processing" for every open application
@@ -26,7 +26,7 @@ test.describe("applicationStageLabel", () => {
   });
 });
 
-test.describe("mapOutcomeToStage", () => {
+describe("mapOutcomeToStage", () => {
   test("covers every value of the server's ApplicationOutcome enum", () => {
     // These five used to fall through to "Draft", so a withdrawn or rejected application
     // was indistinguishable from one nobody had started.

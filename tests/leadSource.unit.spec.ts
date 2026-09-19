@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { describe, expect, test } from "vitest";
 import {
   MAX_SOURCE_LENGTH,
   OTHER_SOURCE,
@@ -8,7 +8,7 @@ import { leadFormOptions } from "../src/modules/lead/leadForm.options";
 
 const OPTIONS = leadFormOptions.sourceOptions;
 
-test.describe("validateCustomSource", () => {
+describe("validateCustomSource", () => {
   test("accepts ordinary source names", () => {
     for (const value of ["Instagram", "Education Fair 2026", "Agent Partner"]) {
       expect(validateCustomSource(value, OPTIONS), value).toBeNull();
