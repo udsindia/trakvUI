@@ -107,7 +107,7 @@ export function UniversityIntakesCard({
     mutationFn: () => {
       const payload: UniversityIntakeInput[] = draft.map((intake) => ({
         intakeMonth: intake.intakeMonth,
-            status: intake.status,
+      status: intake.status,
         applicationDeadline: intake.applicationDeadline || null,
       }));
       return isUniversity
@@ -125,7 +125,7 @@ export function UniversityIntakesCard({
   const payloadFromDraft = (): UniversityIntakeInput[] =>
     draft.map((intake) => ({
       intakeMonth: intake.intakeMonth,
-        status: intake.status,
+      status: intake.status,
       applicationDeadline: intake.applicationDeadline || null,
     }));
 
@@ -273,26 +273,11 @@ export function UniversityIntakesCard({
                     ))}
                   </TextField>
                   <TextField
-                    select
-                    label="Status"
-                    size="small"
-                    sx={{ width: 128 }}
-                    value={intake.status}
-                    onChange={(event) =>
-                      update(intake.key, { status: event.target.value as IntakeStatus })
-                    }
-                  >
-                    {(Object.keys(INTAKE_STATUS_LABELS) as IntakeStatus[]).map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {INTAKE_STATUS_LABELS[status]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
                     InputLabelProps={{ shrink: true }}
+                    helperText="Optional — blank means rolling"
                     label="Deadline"
                     size="small"
-                    sx={{ flex: 1, minWidth: 150 }}
+                    sx={{ flex: 1, minWidth: 170 }}
                     type="date"
                     value={intake.applicationDeadline}
                     onChange={(event) =>
