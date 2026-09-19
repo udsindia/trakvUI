@@ -8,6 +8,14 @@ export type UniversityIntake = {
   intakeMonth: string;
   status: IntakeStatus;
   applicationDeadline?: string | null;
+  /**
+   * When the deadline was last confirmed, ISO-8601, or null if never.
+   *
+   * Deadlines move — universities extend or shorten them as enrolment fills, and word
+   * reaches a counsellor by WhatsApp or through an agency rather than through us. The
+   * age of the claim is what says whether to trust it.
+   */
+  deadlineConfirmedAt?: string | null;
   notes?: string | null;
 };
 

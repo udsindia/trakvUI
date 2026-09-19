@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import AddRounded from "@mui/icons-material/AddRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import { assessDeadline } from "@/modules/universities/deadlineFreshness";
 import {
   INTAKE_MONTHS,
   INTAKE_STATUS_LABELS,
@@ -340,11 +341,36 @@ export function UniversityIntakesCard({
                 size="small"
                 sx={{ ...STATUS_CHIP_SX[intake.status], fontSize: 11, height: 20, mt: 0.5 }}
               />
-              {intake.applicationDeadline ? (
-                <Typography color="text.secondary" sx={{ fontSize: 11, mt: 0.5 }}>
-                  Apply by {intake.applicationDeadline}
-                </Typography>
-              ) : null}
+              {(() => {
+                const verdict = assessDeadline(
+                  intake.applicationDeadline,
+                  intake.deadlineConfirmedAt,
+                );
+                if (verdict.tone === "none") {
+                  return null;
+                }
+                // A passed or long-unchecked deadline is muted and qualified rather than
+                // stated plainly, so it never reads as "you have until then".
+                const muted = verdict.tone === "passed" || verdict.tone === "stale";
+                return (
+                  <>
+                    <Typography
+                      color={muted ? "warning.main" : "text.secondary"}
+                      sx={{ fontSize: 11, mt: 0.5 }}
+                    >
+                      {verdict.label}
+                    </Typography>
+                    {verdict.note ? (
+                      <Typography
+                        color="text.disabled"
+                        sx={{ fontSize: 10, lineHeight: 1.3, mt: 0.25 }}
+                      >
+                        {verdict.note}
+                      </Typography>
+                    ) : null}
+                  </>
+                );
+              })()}
             </Box>
           ))}
         </Stack>
