@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Divider,
@@ -16,6 +17,7 @@ import { RequirementsEditor } from "@/modules/universities/components/Requiremen
 import {
   emptyRequirementSet,
   requirementSetIsEmpty,
+  validateRequirementSet,
   type CourseInput,
   type RequirementSet,
 } from "@/modules/universities/universitiesCatalogService";
@@ -125,9 +127,11 @@ export function CourseFormDrawer({
 
   useEffect(() => {
     if (course) {
-      // Deliberately empty on edit: the course's stored requirements are not loaded
-      // (mapCourseToUi drops them), so anything left here would be re-posted as a
-      // duplicate. The editor's hint says so.
+      // Deliberately empty on edit. The course's requirements ARE loaded now
+      // (mapCourseToUi maps them, and course.requirements holds them), but the save path
+      // still appends rather than upserts — so prefilling here would re-post every row as
+      // a duplicate. Prefill only once saving upserts on the dedupe key, the way
+      // saveUniversityDefaults already does. The editor's hint says so meanwhile.
       setForm({ ...course, requirementSet: emptyRequirementSet() });
       setIntakesText(course.intakes.join(", "));
       setSemester1Text(arrayToLines(course.curriculum.semester1));
@@ -146,6 +150,17 @@ export function CourseFormDrawer({
     }
   }, [course, open, universityId, universityDefaults]);
 
+  const [attemptedSave, setAttemptedSave] = useState(false);
+  // Named by their on-screen labels so the error names what the counsellor is looking at.
+  const missingRequired = [!form.name.trim() ? "Course name" : null].filter(
+    (entry): entry is string => entry !== null,
+  );
+  const showMissing = attemptedSave && missingRequired.length > 0;
+
+  const requirementErrors = validateRequirementSet(
+    form.requirementSet ?? emptyRequirementSet(),
+  );
+
   const handleLevelChange = (level: CourseLevel) => {
     setForm((current) => ({
       ...current,
@@ -155,6 +170,18 @@ export function CourseFormDrawer({
   };
 
   const handleSave = () => {
+    setAttemptedSave(true);
+    // A missing required field reveals the message rather than saving. The drawer stays
+    // open either way — a dead button never says which field is at fault.
+    if (missingRequired.length > 0) {
+      return;
+    }
+    // Belt as well as braces: the button is disabled too, but a keyboard submit or a
+    // stale render must not slip a contradictory set past. Returning without calling
+    // onSave leaves the drawer open, with the editor's inline errors still showing.
+    if (requirementErrors.length > 0) {
+      return;
+    }
     onSave({
       ...form,
       id: course?.id,
@@ -187,6 +214,7 @@ export function CourseFormDrawer({
         </Typography>
         <TextField
           fullWidth
+          required
           label="Course name"
           size="small"
           value={form.name}
@@ -465,9 +493,20 @@ export function CourseFormDrawer({
           />
         </Stack>
 
+        {showMissing ? (
+
+          <Alert severity="error">{missingRequired[0]} is required.</Alert>
+
+        ) : null}
+
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={!form.name.trim()}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            // Not disabled for a missing name — handleSave names it instead.
+            disabled={requirementErrors.length > 0}
+          >
             Save course
           </Button>
         </Stack>

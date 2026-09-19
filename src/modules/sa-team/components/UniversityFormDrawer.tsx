@@ -129,6 +129,24 @@ export function UniversityFormDrawer({
     }));
   }, [detail, open, university?.id]);
 
+  // Named by their on-screen labels so the error names what the counsellor is looking at.
+  const missingRequired = [
+    !form.name.trim() ? "University name" : null,
+    !form.countryCode.trim() ? "Country code" : null,
+  ].filter((entry): entry is string => entry !== null);
+
+  const [attemptedSave, setAttemptedSave] = useState(false);
+  const showMissing = attemptedSave && missingRequired.length > 0;
+
+  /** Reveals what is missing instead of saving; the drawer stays open either way. */
+  const handleSaveClick = (save: () => void) => {
+    setAttemptedSave(true);
+    if (missingRequired.length > 0) {
+      return;
+    }
+    save();
+  };
+
   const handleCountryChange = (countryCode: string) => {
     const option = courseSearchSettings.filters.country.options.find(
       (entry) => entry.value === countryCode,
@@ -161,6 +179,7 @@ export function UniversityFormDrawer({
         </Typography>
         <TextField
           fullWidth
+          required
           label="University name"
           size="small"
           value={form.name}
@@ -205,6 +224,7 @@ export function UniversityFormDrawer({
         <Stack direction="row" spacing={1.5}>
           <TextField
             fullWidth
+            required
             label="Country code"
             select
             // A native select always paints its selected option's text, so the label has
@@ -281,26 +301,35 @@ export function UniversityFormDrawer({
           </>
         ) : null}
 
+        {showMissing ? (
+          <Alert severity="error">
+            {missingRequired.length === 1
+              ? `${missingRequired[0]} is required.`
+              : `These are required: ${missingRequired.join(", ")}.`}
+          </Alert>
+        ) : null}
+
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           <Button onClick={onClose}>Cancel</Button>
           <Button
             variant="contained"
             onClick={() =>
-              onSave(
-                { ...form, id: university?.id },
-                customiseStages
-                  ? stageDraft.map((stage) => ({
-                      name: stage.name.trim(),
-                      active: stage.active,
-                    }))
-                  : undefined,
+              handleSaveClick(() =>
+                onSave(
+                  { ...form, id: university?.id },
+                  customiseStages
+                    ? stageDraft.map((stage) => ({
+                        name: stage.name.trim(),
+                        active: stage.active,
+                      }))
+                    : undefined,
+                ),
               )
             }
-            disabled={
-              !form.name.trim() ||
-              !form.countryCode.trim() ||
-              (customiseStages && !stagesAreValid)
-            }
+            // Deliberately NOT disabled for a missing required field: a dead button
+            // never says which one. Only the stage editor still blocks, since it shows
+            // its own inline errors.
+            disabled={customiseStages && !stagesAreValid}
           >
             Save university
           </Button>
