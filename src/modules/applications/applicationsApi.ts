@@ -22,6 +22,7 @@ export interface BackendApplication {
   destinationCountryCode?: string;
   intakeMonth?: string;
   intakeYear?: number;
+  partnerAgencyName?: string | null;
   currentStageName?: string | null;
   /** Third party processing the application; absent or empty means in-house. */
   processedBy?: string | null;
@@ -56,6 +57,8 @@ export interface ApplicationDetail {
   destinationCountryCode?: string;
   intakeMonth?: string;
   intakeYear?: number;
+  partnerAgencyId?: string | null;
+  partnerAgencyName?: string | null;
   tuitionFeeInr?: number | null;
   applicationFeeInr?: number | null;
   currentStageId?: string | null;

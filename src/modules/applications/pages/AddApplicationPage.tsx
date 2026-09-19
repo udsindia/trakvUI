@@ -10,6 +10,7 @@ export function AddApplicationPage() {
     countries,
     universities,
     courses,
+    partnerAgencies,
     countriesLoading,
     universitiesLoading,
     coursesLoading,
@@ -71,6 +72,7 @@ export function AddApplicationPage() {
             countries={countries}
             universities={universities}
             courses={courses}
+            partnerAgencies={partnerAgencies}
             countriesLoading={countriesLoading}
             universitiesLoading={universitiesLoading}
             coursesLoading={coursesLoading}

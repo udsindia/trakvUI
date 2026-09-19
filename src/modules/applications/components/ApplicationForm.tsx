@@ -24,6 +24,7 @@ import {
   type ApplicationFormValues,
 } from "@/modules/applications/applicationForm.types";
 import type { StudentOption } from "@/modules/applications/studentsApi";
+import type { UniversityPartnerAgency } from "@/modules/universities/partnerAgenciesApi";
 import type {
   CountryDto,
   CourseDto,
@@ -59,6 +60,7 @@ type ApplicationFormProps = {
   countries: CountryDto[];
   universities: UniversitySummaryDto[];
   courses: CourseDto[];
+  partnerAgencies: UniversityPartnerAgency[];
   countriesLoading?: boolean;
   universitiesLoading?: boolean;
   coursesLoading?: boolean;
@@ -90,6 +92,7 @@ export function ApplicationForm({
   countries,
   universities,
   courses,
+  partnerAgencies,
   countriesLoading = false,
   universitiesLoading = false,
   coursesLoading = false,
@@ -667,6 +670,40 @@ export function ApplicationForm({
                       )}
                     />
                   </Stack>
+
+                  <Controller
+                    control={control}
+                    name="partnerAgencyId"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        select
+                        disabled={!universityId}
+                        helperText={
+                          !universityId
+                            ? "Pick a university first — agencies are listed per university."
+                            : partnerAgencies.length === 0
+                              ? "No agencies are linked to this university yet."
+                              : "Leave empty for a direct application."
+                        }
+                        id={field.name}
+                        label="Partner Agency"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      >
+                        <MenuItem value="">Direct (no agency)</MenuItem>
+                        {partnerAgencies.map((agency) => (
+                          <MenuItem key={agency.partnerAgencyId} value={agency.partnerAgencyId}>
+                            {agency.agencyName}
+                            {agency.commissionPercentage != null
+                              ? ` — ${agency.commissionPercentage}% commission`
+                              : ""}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  />
 
                   <Controller
                     control={control}

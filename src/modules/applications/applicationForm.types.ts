@@ -49,6 +49,11 @@ export type ApplicationFormValues = {
   tuitionFeeInr: string; // text input; converted to number on submit
   applicationFeeInr: string; // text input; converted to number on submit
   notes: string;
+  /**
+   * Partner agency that brought this application. Empty means direct — the common case.
+   * Scoped to the chosen university's agencies, so it only fills once one is selected.
+   */
+  partnerAgencyId: string;
   /** Third party handling the application; empty means in-house. */
   processedBy: string;
   studentName: string | "";
@@ -84,6 +89,8 @@ export type UpdateApplicationPayload = {
   notes?: string;
   /** Editable after the application advances, unlike every other field here. */
   processedBy?: string;
+  /** Optional — omitted means a direct application. */
+  partnerAgencyId?: string;
 };
 
 export type CreateApplicationPayload = {
@@ -104,6 +111,8 @@ export type CreateApplicationPayload = {
   targetUniversity?: string;
   course?: string;
   leadId?: string;
+  /** Optional — omitted means a direct application. */
+  partnerAgencyId?: string;
 };
 
 export type UpdateVisaPayload = VisaFormValues;

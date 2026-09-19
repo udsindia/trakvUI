@@ -21,6 +21,7 @@ export function EditApplicationPage() {
     countries,
     universities,
     courses,
+    partnerAgencies,
     countriesLoading,
     universitiesLoading,
     coursesLoading,
@@ -73,6 +74,7 @@ export function EditApplicationPage() {
             countries={countries}
             universities={universities}
             courses={courses}
+            partnerAgencies={partnerAgencies}
             countriesLoading={countriesLoading}
             universitiesLoading={universitiesLoading}
             coursesLoading={coursesLoading}

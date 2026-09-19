@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { partnerAgenciesApi } from "@/modules/universities/partnerAgenciesApi";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
@@ -43,6 +44,7 @@ const defaultApplicationFormValues: ApplicationFormValues = {
   tuitionFeeInr: "",
   applicationFeeInr: "",
   notes: "",
+  partnerAgencyId: "",
   processedBy: "",
 };
 
@@ -77,6 +79,8 @@ export function buildCreateApplicationPayload(
     tuitionFeeInr: toOptionalNumber(values.tuitionFeeInr),
     applicationFeeInr: toOptionalNumber(values.applicationFeeInr),
     notes: values.notes.trim() || undefined,
+    // Empty means direct — send undefined rather than "" so the server stores null.
+    partnerAgencyId: values.partnerAgencyId || undefined,
     processedBy: values.processedBy.trim() || undefined,
   };
 }
@@ -110,6 +114,7 @@ function buildUpdateApplicationPayload(
     notes: values.notes.trim() || undefined,
     // Sent even when empty, unlike the fields above: the backend reads null as "no change",
     // so an emptied box has to arrive as "" for clearing the third party to stick.
+    partnerAgencyId: values.partnerAgencyId || undefined,
     processedBy: values.processedBy.trim(),
   };
 }
@@ -193,6 +198,17 @@ export function useApplicationFormController(
     isError: coursesError,
   } = useUniversityCourseOptions(universityId || undefined);
 
+  /**
+   * Agencies with an arrangement with the chosen university, not every agency in the
+   * tenant. That keeps the list short and means an agency cannot be attached to a
+   * university it has no arrangement with. Empty until a university is picked.
+   */
+  const { data: partnerAgencies = [] } = useQuery({
+    enabled: Boolean(universityId),
+    queryKey: ["universities", universityId, "partner-agencies"],
+    queryFn: () => partnerAgenciesApi.forUniversity(universityId),
+  });
+
   useEffect(() => {
     if (selectedStudentId && students) {
       const student = students.find((s) => s.id === selectedStudentId);
@@ -255,6 +271,7 @@ export function useApplicationFormController(
           ? String(editingApplication.applicationFeeInr)
           : "",
       notes: editingApplication.notes ?? "",
+      partnerAgencyId: editingApplication.partnerAgencyId ?? "",
       processedBy: editingApplication.processedBy ?? "",
     });
   }, [editingApplication, countries, universities, students, form]);
@@ -488,6 +505,7 @@ export function useApplicationFormController(
     countries,
     universities: universityOptions,
     courses,
+    partnerAgencies,
     countriesLoading,
     universitiesLoading: universitiesLoading || allUniversitiesLoading,
     coursesLoading,
