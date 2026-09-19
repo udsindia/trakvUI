@@ -135,6 +135,12 @@ export interface CourseDto {
   visaApproved?: number;
   avgCommission?: number | null;
   commissionCurrency?: string | null;
+  /**
+   * The course's own requirement rows. Empty means nothing is recorded for this course —
+   * course requirements are copied from the university defaults at creation, not inherited
+   * at read time, so an empty list is not a silent fallback to the defaults.
+   */
+  requirements?: UniversityRequirementDto[];
 }
 
 export interface UniversityCoursesPageResponse {
@@ -159,7 +165,6 @@ export interface ListUniversityCoursesParams {
   studyLevel?: StudyLevel;
   subjectArea?: string;
   intakeMonth?: string;
-  intakeYear?: number;
   availableOnly?: boolean;
   page?: number;
   size?: number;
@@ -311,7 +316,6 @@ export interface CourseImportFields {
   pgwpEligible: boolean | null;
   scholarshipNote: string | null;
   intakeMonth: string | null;
-  intakeYear: number | null;
   intakeAvailable: boolean | null;
   applicationDeadline: string | null; // yyyy-MM-dd
   // ── Eligibility. null means the test is not accepted. ──

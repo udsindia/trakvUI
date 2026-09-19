@@ -9,6 +9,7 @@ import type {
 import type {
   Course,
   CourseLevel,
+  CourseRequirement,
   University,
   UniversityRequirement,
 } from "@/modules/universities/universities.types";
@@ -307,10 +308,64 @@ export function mapUniversityDetailToUi(detail: UniversityDetailDto): University
   };
 }
 
+/**
+ * IELTS fields read off the course's stored requirements.
+ *
+ * Until now these were invented from the study level — 6.0 for undergraduate, 6.5 for
+ * everything else — and rendered as fact on the course card. Worse, studentEligibility
+ * judges a student against ieltsMin, so a made-up bar was deciding real matches.
+ *
+ * With nothing on record we return 0 and say so, matching deriveIeltsFields in
+ * CourseFormDrawer. Zero means "no bar recorded", so eligibility stops rejecting students
+ * against a requirement the university never stated.
+ */
+/**
+ * A stored requirement row as the course detail page renders it.
+ *
+ * Separate from mapRequirement, which produces the University shape: the two differ in
+ * the fields they carry (studentNote vs statusLabel), so sharing one mapper silently
+ * produced the wrong type.
+ */
+function mapCourseRequirement(
+  requirement: UniversityRequirementDto,
+  index: number,
+): CourseRequirement {
+  const base = mapRequirement(requirement, index);
+  return {
+    id: base.id,
+    label: base.label,
+    detail: base.detail ?? "",
+    status: base.status,
+    statusLabel: requirement.isMandatory === false ? "Optional" : "Required",
+  };
+}
+
+function deriveIeltsFromRequirements(requirements: UniversityRequirementDto[]) {
+  const ielts = requirements.find(
+    (requirement) =>
+      requirement.requirementType === "LANGUAGE_TEST" &&
+      (requirement.testType === "IELTS_ACADEMIC" || requirement.testType === "IELTS_GENERAL"),
+  );
+
+  if (!ielts) {
+    return { ieltsMin: 0, ieltsPerBand: undefined, ieltsLabel: "No IELTS requirement" };
+  }
+
+  const bands = [ielts.minListening, ielts.minReading, ielts.minWriting, ielts.minSpeaking].filter(
+    (band): band is number => typeof band === "number" && band > 0,
+  );
+
+  return {
+    ieltsMin: ielts.minOverallScore ?? 0,
+    ieltsPerBand: bands.length > 0 ? Math.min(...bands) : undefined,
+    ieltsLabel: `IELTS ${ielts.minOverallScore ?? 0}+`,
+  };
+}
+
 export function mapCourseToUi(course: CourseDto, universityId: string): Course {
   const { level, label } = toUiStudyLevel(course.studyLevel);
-  const ieltsMin =
-    course.studyLevel === "UNDERGRADUATE" || course.studyLevel === "DIPLOMA" ? 6.0 : 6.5;
+  const requirements = course.requirements ?? [];
+  const { ieltsMin, ieltsPerBand, ieltsLabel } = deriveIeltsFromRequirements(requirements);
 
   const applicationFee = formatMoney(course.applicationFeeAmount, course.applicationFeeCurrency);
   const deadline = course.applicationDeadline ? formatDate(course.applicationDeadline) : "";
@@ -326,12 +381,13 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     duration: formatDuration(course.durationMonths),
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),
     ieltsMin,
-    ieltsLabel: `IELTS ${ieltsMin}+`,
+    ieltsPerBand,
+    ieltsLabel,
     applicationFee,
     deadline,
     eligibilityStatus: "eligible",
     curriculum: { semester1: [], semester2: [] },
-    requirements: [],
+    requirements: requirements.map(mapCourseRequirement),
     keyDates: {
       applicationDeadline: deadline,
       rollingAdmissions: !course.applicationDeadline,
