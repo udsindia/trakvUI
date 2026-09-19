@@ -55,7 +55,9 @@ export type CourseAptitudeTest = {
  * master's applicant. Saved as a single ACADEMIC requirement row.
  */
 export type CourseAcademicRequirement = {
+  /** Always out of 10. The scale picker was removed; see toRequirementPayloads. */
   minGpa?: number;
+  /** @deprecated Always "10.0" on write. Kept so stored rows still round-trip. */
   gpaScale?: string;
   /**
    * GPA bars that apply only to a bachelor's of that length. Left undefined, the
@@ -92,6 +94,48 @@ export function requirementSetIsEmpty(set: RequirementSet): boolean {
     set.academic.maxBacklogs == null &&
     set.academic.maxEducationGapYears == null
   );
+}
+
+/**
+ * Combinations a requirement set must not contain.
+ *
+ * Both are cases where two fields describe the *same* bar in two different ways, so
+ * storing both leaves the eligibility check with no defensible answer about which one
+ * a student is judged against. Note what is deliberately NOT here: a 3-year and a
+ * 4-year GPA together are fine and expected — they describe different applicants, and
+ * a student brings only one degree length to the match.
+ */
+export type RequirementSetError = {
+  /** Which control to mark. */
+  field: "minGpa" | "languageTests";
+  message: string;
+};
+
+export function validateRequirementSet(set: RequirementSet): RequirementSetError[] {
+  const errors: RequirementSetError[] = [];
+
+  const hasPerLengthGpa =
+    set.academic.minGpa3Year != null || set.academic.minGpa4Year != null;
+  if (set.academic.minGpa != null && hasPerLengthGpa) {
+    errors.push({
+      field: "minGpa",
+      message:
+        "Use either one Minimum GPA for every applicant, or the per-length bars — not both. " +
+        "With both set, there is no saying which one a three-year applicant is held to.",
+    });
+  }
+
+  const testTypes = new Set(set.languageTests.map((test) => test.testType));
+  if (testTypes.has("INTER_ENGLISH") && testTypes.has("INTER_ENGLISH_AVG")) {
+    errors.push({
+      field: "languageTests",
+      message:
+        "Class 12 English and the 11th & 12th average are two ways of measuring the same " +
+        "marks. Keep whichever this university actually asks for, and remove the other.",
+    });
+  }
+
+  return errors;
 }
 
 /** Flattens the editor's shape into the requirement rows the API expects. */
@@ -137,7 +181,10 @@ export function toRequirementPayloads(
       courseId,
       requirementType: "ACADEMIC",
       minGpa: set.academic.minGpa,
-      gpaScale: set.academic.gpaScale,
+      // Every GPA is entered out of 10 now — the scale picker is gone and stored rows
+      // were converted by migration-requirement-gpa-normalise-to-ten.sql. Sent explicitly
+      // rather than omitted so a row's scale is never ambiguous on read.
+      gpaScale: "10.0",
       minGpa3Year: set.academic.minGpa3Year,
       minGpa4Year: set.academic.minGpa4Year,
       maxBacklogs: set.academic.maxBacklogs,

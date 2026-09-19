@@ -1,5 +1,6 @@
 import { AddRounded, DeleteOutlineRounded } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   IconButton,
@@ -11,14 +12,14 @@ import {
 import {
   APTITUDE_TEST_OPTIONS,
   ENGLISH_TEST_OPTIONS,
-  GPA_SCALES,
   getAptitudeTestOption,
   getEnglishTestOption,
 } from "@/config/universities/requirementOptions";
-import type {
-  CourseAptitudeTest,
-  CourseLanguageTest,
-  RequirementSet,
+import {
+  validateRequirementSet,
+  type CourseAptitudeTest,
+  type CourseLanguageTest,
+  type RequirementSet,
 } from "@/modules/universities/universitiesCatalogService";
 import type {
   AptitudeTestType,
@@ -59,6 +60,12 @@ export function RequirementsEditor({
   lockedKeys = [],
 }: RequirementsEditorProps) {
   const locked = new Set(lockedKeys);
+  // Recomputed each render so the message clears the moment the conflict is resolved.
+  const errors = validateRequirementSet(value);
+  const errorFor = (field: "minGpa" | "languageTests") =>
+    errors.find((entry) => entry.field === field);
+  const gpaError = errorFor("minGpa");
+  const englishError = errorFor("languageTests");
   const updateEnglish = (index: number, patch: Partial<CourseLanguageTest>) => {
     onChange({
       ...value,
@@ -215,6 +222,11 @@ export function RequirementsEditor({
           </Box>
         );
       })}
+      {englishError ? (
+        <Alert severity="error" sx={{ fontSize: 13 }}>
+          {englishError.message}
+        </Alert>
+      ) : null}
       <Button
         disabled={value.languageTests.length >= ENGLISH_TEST_OPTIONS.length}
         size="small"
@@ -310,10 +322,12 @@ export function RequirementsEditor({
       <Stack direction="row" spacing={1.5}>
         <TextField
           fullWidth
-          label="Minimum GPA"
+          error={Boolean(gpaError)}
+          helperText={gpaError ? "Conflicts with the per-length bars" : "Applies to everyone"}
+          label="Minimum GPA (out of 10)"
           size="small"
           type="number"
-          inputProps={{ min: 0, step: 0.1 }}
+          inputProps={{ min: 0, max: 10, step: 0.1 }}
           value={value.academic.minGpa ?? ""}
           onChange={(event) =>
             onChange({
@@ -324,31 +338,12 @@ export function RequirementsEditor({
         />
         <TextField
           fullWidth
-          select
-          label="GPA scale"
-          size="small"
-          value={value.academic.gpaScale ?? ""}
-          onChange={(event) =>
-            onChange({
-              ...value,
-              academic: { ...value.academic, gpaScale: event.target.value || undefined },
-            })
-          }
-        >
-          <MenuItem value="">Not specified</MenuItem>
-          {GPA_SCALES.map((scale) => (
-            <MenuItem key={scale} value={scale}>
-              out of {scale}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          fullWidth
+          error={Boolean(gpaError)}
           helperText="3-year degree"
-          label="Min GPA (3-year)"
+          label="Min GPA 3-year (out of 10)"
           size="small"
           type="number"
-          inputProps={{ min: 0, step: 0.1 }}
+          inputProps={{ min: 0, max: 10, step: 0.1 }}
           value={value.academic.minGpa3Year ?? ""}
           onChange={(event) =>
             onChange({
@@ -362,11 +357,12 @@ export function RequirementsEditor({
         />
         <TextField
           fullWidth
+          error={Boolean(gpaError)}
           helperText="4-year degree"
-          label="Min GPA (4-year)"
+          label="Min GPA 4-year (out of 10)"
           size="small"
           type="number"
-          inputProps={{ min: 0, step: 0.1 }}
+          inputProps={{ min: 0, max: 10, step: 0.1 }}
           value={value.academic.minGpa4Year ?? ""}
           onChange={(event) =>
             onChange({
@@ -417,10 +413,16 @@ export function RequirementsEditor({
         Left blank, the course finder still offers this university to a student with
         backlogs or a gap — marked as a possible match rather than a confirmed one.
       </Typography>
+      {gpaError ? (
+        <Alert severity="error" sx={{ fontSize: 13 }}>
+          {gpaError.message}
+        </Alert>
+      ) : null}
       <Typography color="text.secondary" sx={{ fontSize: 12 }}>
         Set a per-length GPA only where the university asks a different bar of a
-        three-year and a four-year bachelor&apos;s. Left blank, both are judged on
-        Minimum GPA.
+        three-year and a four-year bachelor&apos;s — both may be set together, and a
+        student is matched on whichever their own degree is. Left blank, both are
+        judged on Minimum GPA.
       </Typography>
     </Stack>
   );

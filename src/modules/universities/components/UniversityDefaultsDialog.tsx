@@ -19,6 +19,7 @@ import {
 import {
   emptyRequirementSet,
   requirementSetIsEmpty,
+  validateRequirementSet,
   type RequirementSet,
 } from "@/modules/universities/universitiesCatalogService";
 
@@ -67,7 +68,14 @@ export function UniversityDefaultsDialog({
     ...(initial?.aptitudeTests ?? []).map((test) => aptitudeKey(test.testType)),
   ];
 
+  const requirementErrors = validateRequirementSet(set);
+
   const handleSave = async () => {
+    // Returning before onSave means onClose is never reached, so the dialog stays
+    // open with the editor's inline errors visible.
+    if (requirementErrors.length > 0) {
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -127,7 +135,7 @@ export function UniversityDefaultsDialog({
           Cancel
         </Button>
         <Button
-          disabled={saving || requirementSetIsEmpty(set)}
+          disabled={saving || requirementSetIsEmpty(set) || requirementErrors.length > 0}
           sx={{ textTransform: "none" }}
           variant="contained"
           onClick={handleSave}
