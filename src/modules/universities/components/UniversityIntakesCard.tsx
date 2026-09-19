@@ -46,7 +46,6 @@ type UniversityIntakesCardProps = {
 type DraftIntake = {
   key: string;
   intakeMonth: string;
-  intakeYear: number;
   status: IntakeStatus;
   applicationDeadline: string;
 };
@@ -61,7 +60,6 @@ const toDraft = (intakes: UniversityIntake[]): DraftIntake[] =>
   intakes.map((intake, index) => ({
     key: `${intake.id ?? index}`,
     intakeMonth: intake.intakeMonth,
-    intakeYear: intake.intakeYear,
     status: intake.status,
     applicationDeadline: intake.applicationDeadline ?? "",
   }));
@@ -96,7 +94,7 @@ export function UniversityIntakesCard({
   });
 
   const signature = (intakesQuery.data ?? [])
-    .map((intake) => `${intake.intakeMonth}${intake.intakeYear}${intake.status}${intake.applicationDeadline ?? ""}`)
+    .map((intake) => `${intake.intakeMonth}${intake.status}${intake.applicationDeadline ?? ""}`)
     .join("|");
 
   // Reseeded whenever the saved calendar changes, so cancelling or saving leaves the
@@ -109,8 +107,7 @@ export function UniversityIntakesCard({
     mutationFn: () => {
       const payload: UniversityIntakeInput[] = draft.map((intake) => ({
         intakeMonth: intake.intakeMonth,
-        intakeYear: intake.intakeYear,
-        status: intake.status,
+            status: intake.status,
         applicationDeadline: intake.applicationDeadline || null,
       }));
       return isUniversity
@@ -128,8 +125,7 @@ export function UniversityIntakesCard({
   const payloadFromDraft = (): UniversityIntakeInput[] =>
     draft.map((intake) => ({
       intakeMonth: intake.intakeMonth,
-      intakeYear: intake.intakeYear,
-      status: intake.status,
+        status: intake.status,
       applicationDeadline: intake.applicationDeadline || null,
     }));
 
@@ -166,7 +162,6 @@ export function UniversityIntakesCard({
       {
         key: `new-${Date.now()}-${current.length}`,
         intakeMonth: "Sep",
-        intakeYear: new Date().getFullYear() + 1,
         status: "OPEN",
         applicationDeadline: "",
       },
@@ -194,7 +189,7 @@ export function UniversityIntakesCard({
   // rejected by the server after the counsellor had finished typing.
   const duplicates = new Set(
     draft
-      .map((intake) => `${intake.intakeMonth}|${intake.intakeYear}`)
+      .map((intake) => intake.intakeMonth.trim().toLowerCase())
       .filter((key, index, all) => all.indexOf(key) !== index),
   );
 
@@ -259,7 +254,7 @@ export function UniversityIntakesCard({
 
           <Stack spacing={1}>
             {draft.map((intake) => {
-              const isDuplicate = duplicates.has(`${intake.intakeMonth}|${intake.intakeYear}`);
+              const isDuplicate = duplicates.has(intake.intakeMonth.trim().toLowerCase());
               return (
                 <Stack key={intake.key} direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <TextField
@@ -277,17 +272,6 @@ export function UniversityIntakesCard({
                       </MenuItem>
                     ))}
                   </TextField>
-                  <TextField
-                    error={isDuplicate}
-                    label="Year"
-                    size="small"
-                    sx={{ width: 96 }}
-                    type="number"
-                    value={intake.intakeYear}
-                    onChange={(event) =>
-                      update(intake.key, { intakeYear: Number(event.target.value) || 0 })
-                    }
-                  />
                   <TextField
                     select
                     label="Status"
@@ -316,7 +300,7 @@ export function UniversityIntakesCard({
                     }
                   />
                   <IconButton
-                    aria-label={`Remove ${intake.intakeMonth} ${intake.intakeYear}`}
+                    aria-label={`Remove ${intake.intakeMonth}`}
                     size="small"
                     onClick={() =>
                       setDraft((current) => current.filter((row) => row.key !== intake.key))
@@ -364,7 +348,7 @@ export function UniversityIntakesCard({
               }}
             >
               <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-                {intake.intakeMonth} {intake.intakeYear}
+                {intake.intakeMonth}
               </Typography>
               <Chip
                 label={INTAKE_STATUS_LABELS[intake.status]}

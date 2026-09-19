@@ -125,7 +125,6 @@ type SearchFiltersApiResponse = {
   institutions?: SearchFiltersApiInstitution[];
   nearestCity?: string[];
   intakeMonths?: string[];
-  intakeYears?: number[];
   intakeAvailableOnly?: boolean;
   courseLevels?: string[];
   disciplines?: string[];
@@ -326,7 +325,6 @@ function buildCourseSearchApiPayload(
     institutions: [],
     nearestCity: null as any,
     intakeMonths: [],
-    intakeYears: [],
     intakeAvailableOnly: false,
     intakeStatuses: [],
     courseLevels: [],

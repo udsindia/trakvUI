@@ -1,2 +1,3 @@
-university_name,country_code,course_name,course_code,study_level,subject_area,duration_months,tuition_currency,tuition_amount,application_fee_currency,application_fee_amount,course_start_date,course_end_date,scholarship_note
-Example University,GB,Computer Science BSc,CS101,B.Tech,Computer Science,48,GBP,18000,GBP,500,2025-09-01,2029-08-31,Merit scholarship available
+university_name,country_code,course_name,course_code,study_level,subject_area,duration_months,tuition_currency,tuition_amount,course_url,application_fee_currency,application_fee_amount,living_cost_currency,living_cost_amount,course_start_date,course_end_date,pgwp_eligible,scholarship_note,intake_month,intake_available,application_deadline
+Example University,GB,Computer Science BSc,CS101,UNDERGRADUATE,Computer Science,48,GBP,18000,https://example.ac.uk/cs-bsc,GBP,500,GBP,12000,2025-09-01,2029-08-31,true,Merit scholarship available,September,true,2025-06-30
+Example University,GB,MSc Data Science,DS-MSC,POSTGRADUATE_TAUGHT,Data Science,12,GBP,26000,,,,,,,,,,January,true,

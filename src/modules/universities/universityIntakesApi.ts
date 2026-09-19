@@ -6,7 +6,6 @@ export type IntakeStatus = "OPEN" | "CLOSED" | "WAITLIST";
 export type UniversityIntake = {
   id: string;
   intakeMonth: string;
-  intakeYear: number;
   status: IntakeStatus;
   applicationDeadline?: string | null;
   notes?: string | null;
@@ -14,7 +13,6 @@ export type UniversityIntake = {
 
 export type UniversityIntakeInput = {
   intakeMonth: string;
-  intakeYear: number;
   status: IntakeStatus;
   applicationDeadline?: string | null;
   notes?: string | null;

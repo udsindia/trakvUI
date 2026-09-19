@@ -27,7 +27,6 @@ const HEADER_ALIASES: Record<string, string[]> = {
   tuition_amount: ["tuition", "fee", "tuitionfee", "fees", "annualfee"],
   tuition_currency: ["currency", "feecurrency"],
   intake_month: ["intake", "intakemonth", "month"],
-  intake_year: ["year", "intakeyear"],
 };
 
 /**
