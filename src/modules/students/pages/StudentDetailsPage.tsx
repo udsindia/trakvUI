@@ -133,6 +133,11 @@ export function StudentDetailsPage() {
     queryFn: () => usersService.getUsers(tenant?.tenantId ?? ""),
   });
 
+  // Must sit above the early returns below: a hook called after them runs on some
+  // renders and not others, and React tears the tree down when the count changes —
+  // which showed up as the page going blank the moment the student loaded.
+  const [editOpen, setEditOpen] = useState(false);
+
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
@@ -151,7 +156,6 @@ export function StudentDetailsPage() {
 
   const fullName = [student.firstName, student.lastName].filter(Boolean).join(" ").trim();
   const counsellor = users.find((user) => user.id === student.assignedTo)?.name ?? "";
-  const [editOpen, setEditOpen] = useState(false);
   const fromLead = Boolean(student.leadId);
 
   return (
