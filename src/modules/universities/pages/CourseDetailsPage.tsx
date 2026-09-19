@@ -21,7 +21,6 @@ import { RequirementRow } from "@/modules/universities/components/RequirementRow
 import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
 import { IntakeChangeBanner } from "@/modules/universities/components/IntakeChangeBanner";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
-import { MOCK_STUDENT } from "@/modules/universities/universitiesMockData";
 import { universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { useUniversity, useUniversityCourses } from "@/modules/universities/useUniversitiesCatalog";
 import {
@@ -201,7 +200,7 @@ export function CourseDetailsPage() {
                     ]}
                   >
                     <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
-                      Eligibility Check — {MOCK_STUDENT.name}
+                      Entry requirements
                     </Typography>
                     <Chip
                       label={eligibilityLabel}
@@ -302,9 +301,6 @@ export function CourseDetailsPage() {
               <SidebarRow label="Avg commission" value={course.ourData.avgCommission} />
             </SidebarCard>
 
-            <Button fullWidth sx={{ textTransform: "none" }} variant="contained">
-              {`Add to ${MOCK_STUDENT.name.split(" ")[0]}'s Shortlist`}
-            </Button>
           </Stack>
         </Box>
       </Box>
