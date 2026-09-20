@@ -1105,7 +1105,7 @@ export function CourseSearchPage() {
                     <Box component="span" sx={{ color: "text.primary", fontWeight: 700 }}>
                       {courseResultTotal || filteredResults.length}
                     </Box>{" "}
-                    courses found
+                    {(courseResultTotal || filteredResults.length) === 1 ? "course" : "courses"} found
                     {courseResultTotal > filteredResults.length
                       ? ` · showing the first ${filteredResults.length}`
                       : ""}

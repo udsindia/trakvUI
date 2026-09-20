@@ -49,4 +49,28 @@ describe("country code folding", () => {
     expect(toAlpha2CountryCode("GBR")).toBe("GB");
     expect(toAlpha2CountryCode("GB")).toBe("GB");
   });
+
+  test("a display name folds like any other spelling", () => {
+    // The course finder builds its destination dropdown from /courses/search/filters,
+    // which returns display names rather than codes, and posts back whatever this
+    // returns. "UK" worked only because it is also a legacy alias; "Germany" came back
+    // as "GERMANY", which is not a country code anywhere, and matched nothing.
+    expect(toAlpha2CountryCode("Germany")).toBe("DE");
+    expect(toAlpha3CountryCode("Germany")).toBe("DEU");
+    expect(toAlpha2CountryCode("New Zealand")).toBe("NZ");
+    expect(toAlpha2CountryCode("ireland")).toBe("IE");
+  });
+
+  test("every name the filters endpoint can return survives the round trip", () => {
+    const names = [
+      "UK", "Ireland", "Australia", "Canada", "New Zealand", "USA", "Singapore",
+      "Switzerland", "Germany", "France", "Japan", "Netherlands", "Sweden",
+    ];
+
+    for (const name of names) {
+      expect(countryDisplayName(toAlpha3CountryCode(name)), name).toBe(name);
+      // Two letters, because that is what the destination filter posts.
+      expect(toAlpha2CountryCode(name), name).toHaveLength(2);
+    }
+  });
 });

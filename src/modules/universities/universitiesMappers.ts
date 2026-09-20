@@ -48,11 +48,29 @@ const LEGACY_CODE_ALIASES: Record<string, string> = {
   UAE: "ARE",
 };
 
+/**
+ * Display name -> alpha-3, so a country can be named as well as coded.
+ *
+ * The course finder needs this: /courses/search/filters returns display names, not codes,
+ * and the destination dropdown turns each one back into the value it posts. Only "UK"
+ * survived that round trip, because it happens to be a legacy alias above — "Germany"
+ * canonicalised to "GERMANY", which is not a country code anywhere, so the filter was sent
+ * as a string nothing could match and the search returned an empty list.
+ */
+const NAME_TO_ALPHA3: Record<string, string> = Object.fromEntries(
+  Object.entries(COUNTRY_ALPHA3_TO_UI).map(([alpha3, value]) => [value.name.toUpperCase(), alpha3]),
+);
+
 /** Any accepted spelling of a country code -> the alpha-3 the rest of the app compares on. */
 function toCanonicalAlpha3(countryCode: string): string {
   const normalized = countryCode.trim().toUpperCase();
   if (COUNTRY_ALPHA3_TO_UI[normalized]) return normalized;
-  return LEGACY_CODE_ALIASES[normalized] ?? ALPHA2_TO_ALPHA3[normalized] ?? normalized;
+  return (
+    LEGACY_CODE_ALIASES[normalized] ??
+    ALPHA2_TO_ALPHA3[normalized] ??
+    NAME_TO_ALPHA3[normalized] ??
+    normalized
+  );
 }
 
 const STUDY_LEVEL_TO_UI: Record<StudyLevel, { level: CourseLevel; label: string }> = {
