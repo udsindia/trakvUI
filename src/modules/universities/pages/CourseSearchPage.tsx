@@ -314,7 +314,9 @@ function asString(value: FilterPanelValue | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-function buildCourseSearchApiPayload(
+// Exported for tests: this is the boundary where the screen's state becomes the
+// request, and it is the only place a filter can be lost without anything erroring.
+export function buildCourseSearchApiPayload(
   filterValues: FilterPanelValues,
   query: string,
   sort: CourseSortOption,
