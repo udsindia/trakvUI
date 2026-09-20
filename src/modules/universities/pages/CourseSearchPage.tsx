@@ -94,7 +94,7 @@ import type {
   CourseLevel,
   CourseSearchResult,
   CourseSortOption,
-} from "@/modules/universities/universities.types";
+  EligibilityStatus,} from "@/modules/universities/universities.types";
 import {
   useAuth,
 } from "@/app/auth/useAuth";
@@ -339,7 +339,10 @@ function buildCourseSearchApiPayload(
     gradingSystem: null as any,
     backlogs: null as any,
     educationGap: null as any,
-    // studentId: studentId ?? null,
+    // Sent, so the server can work out whether this student actually qualifies. While
+    // this was commented out the backend received no student, returned null eligibility,
+    // and the mapping below invented "eligible, 100%" for every course on the page.
+    studentId: studentId ?? undefined,
     // Free text over course name + university name — this is what the header search box drives.
     query: query.trim() || undefined,
     sort: sort || null,
@@ -510,8 +513,7 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
       ieltsLabel: typeof raw.ieltsLabel === "string" ? raw.ieltsLabel : "",
       applicationFee: String(raw.applicationFee ?? "₹0"),
       deadline: String(raw.deadline ?? "Rolling"),
-      eligibilityStatus: "eligible",
-      eligibilityPercent: 100,
+      ...mapEligibility(raw.eligibility),
       curriculum: { semester1: [], semester2: [] },
       requirements: [],
       keyDates: {
@@ -564,6 +566,46 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
       pendingApplications: 0,
     } as unknown as CourseSearchResult;
   });
+}
+
+/**
+ * The server's eligibility verdict, or an honest absence of one.
+ *
+ * Every card used to claim "eligible, 100%" no matter the student or the course — a
+ * green tick with nothing behind it, which is worse than no answer because a counsellor
+ * acts on it. The server returns null when it has no student to judge against, and that
+ * has to stay null here rather than being rounded up to a pass.
+ */
+function mapEligibility(raw: unknown): {
+  eligibilityStatus: EligibilityStatus;
+  eligibilityPercent?: number;
+  eligibilityHint?: string;
+} {
+  if (!raw || typeof raw !== "object") {
+    // No student selected, or nothing on record. The card hides the badge entirely when
+    // there is no student, so this only shows when we genuinely cannot say.
+    return { eligibilityStatus: "partial", eligibilityHint: "Not assessed" };
+  }
+
+  const value = raw as { status?: string; met?: string[]; gaps?: string[] };
+  const met = value.met?.length ?? 0;
+  const gaps = value.gaps?.length ?? 0;
+  const total = met + gaps;
+
+  const status: EligibilityStatus =
+    value.status === "ELIGIBLE"
+      ? "eligible"
+      : value.status === "NOT_ELIGIBLE"
+        ? "not-eligible"
+        : "partial";
+
+  return {
+    eligibilityStatus: status,
+    // Out of the requirements actually recorded. A course with none on file reports no
+    // percentage rather than a perfect score for having asked nothing.
+    eligibilityPercent: total > 0 ? Math.round((met / total) * 100) : undefined,
+    eligibilityHint: gaps > 0 ? (value.gaps ?? []).join("; ") : undefined,
+  };
 }
 
 export function CourseSearchPage() {
