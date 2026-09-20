@@ -27,3 +27,11 @@ coverage/
 
 # Vitest HTML test report
 .vitest/
+
+# Screenshots and scratch files dropped in the repo root.
+#
+# Two of these were a credentials screenshot and a named person's passport scan.
+# Git history is permanent: once either is committed and pushed, deleting the file
+# later does not remove it. Ignored here so a careless `git add -A` cannot take them.
+/*.png
+/interaktWHatsappAPIs.txt
