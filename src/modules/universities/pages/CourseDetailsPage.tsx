@@ -1,5 +1,7 @@
+import { useState } from "react";
 import SchoolRounded from "@mui/icons-material/SchoolRounded";
 import {
+  Snackbar,
   Avatar,
   Box,
   Button,
@@ -20,6 +22,10 @@ import { EligibilityBar } from "@/modules/universities/components/CourseSearchCa
 import { RequirementRow } from "@/modules/universities/components/RequirementRow";
 import { UniversityIntakesCard } from "@/modules/universities/components/UniversityIntakesCard";
 import { IntakeChangeBanner } from "@/modules/universities/components/IntakeChangeBanner";
+import { PickStudentDialog } from "@/modules/universities/components/PickStudentDialog";
+import { shortlistApi } from "@/modules/universities/shortlistApi";
+import type { StudentOption } from "@/modules/applications/studentsApi";
+import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { universityDetailsPath } from "@/modules/universities/universitiesRoutePaths";
 import { useUniversity, useUniversityCourses } from "@/modules/universities/useUniversitiesCatalog";
@@ -43,6 +49,35 @@ export function CourseDetailsPage() {
   // Matched to what the server checks, so the controls are not offered to somebody who
   // would only get a 403.
   const canManageCatalogue = hasPermissions([PERMISSIONS.UNIVERSITIES_MANAGE]);
+
+  // Above the early returns: a hook below one runs on some renders and not others, and
+  // React tears the tree down when the count changes.
+  const [studentAction, setStudentAction] = useState<"shortlist" | "share" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const runStudentAction = async (student: StudentOption) => {
+    if (!courseId) return;
+    setActionBusy(true);
+    setActionError(null);
+    try {
+      if (studentAction === "shortlist") {
+        await shortlistApi.addToShortlist(student.id, courseId);
+        setToast(`Added to ${student.name}'s shortlist.`);
+      } else {
+        // Sharing has no backend of its own yet, so it shortlists and says so rather
+        // than pretending a message was sent.
+        await shortlistApi.addToShortlist(student.id, courseId);
+        setToast(`Saved to ${student.name}'s shortlist — sharing by email is not built yet.`);
+      }
+      setStudentAction(null);
+    } catch (error) {
+      setActionError(getApiErrorMessage(error, "Could not save that. Try again."));
+    } finally {
+      setActionBusy(false);
+    }
+  };
 
   if (universityLoading || coursesLoading) {
     return <LoadingScreen />;
@@ -76,10 +111,20 @@ export function CourseDetailsPage() {
       <DetailPageHeader
         actions={
           <>
-            <Button size="small" sx={{ textTransform: "none" }} variant="outlined">
+            <Button
+              size="small"
+              sx={{ textTransform: "none" }}
+              variant="outlined"
+              onClick={() => setStudentAction("share")}
+            >
               Share with Student
             </Button>
-            <Button size="small" sx={{ textTransform: "none" }} variant="contained">
+            <Button
+              size="small"
+              sx={{ textTransform: "none" }}
+              variant="contained"
+              onClick={() => setStudentAction("shortlist")}
+            >
               Add to Shortlist
             </Button>
           </>
@@ -304,6 +349,30 @@ export function CourseDetailsPage() {
           </Stack>
         </Box>
       </Box>
+      <PickStudentDialog
+        busy={actionBusy}
+        confirmLabel={studentAction === "share" ? "Share" : "Add to shortlist"}
+        error={actionError}
+        open={studentAction !== null}
+        title={
+          studentAction === "share"
+            ? `Share ${course.name} with a student`
+            : `Add ${course.name} to a shortlist`
+        }
+        onClose={() => {
+          setStudentAction(null);
+          setActionError(null);
+        }}
+        onConfirm={runStudentAction}
+      />
+
+      <Snackbar
+        autoHideDuration={4000}
+        message={toast ?? ""}
+        open={Boolean(toast)}
+        onClose={() => setToast(null)}
+      />
+
     </Paper>
   );
 }

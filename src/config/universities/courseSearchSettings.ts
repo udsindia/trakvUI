@@ -102,14 +102,28 @@ export const courseSearchSettings = {
       label: "Intake",
       placeholder: "Select intake",
       options: [
-        { label: "Sep 2025", value: "Sep 2025" },
-        { label: "Jan 2026", value: "Jan 2026" },
-        { label: "Feb 2026", value: "Feb 2026" },
-        { label: "May 2026", value: "May 2026" },
+        // Months, not months-and-years: an intake recurs, so the catalogue records
+        // "September" and a year here would match nothing.
+        { label: "January", value: "January" },
+        { label: "February", value: "February" },
+        { label: "March", value: "March" },
+        { label: "April", value: "April" },
+        { label: "May", value: "May" },
+        { label: "June", value: "June" },
+        { label: "July", value: "July" },
+        { label: "August", value: "August" },
+        { label: "September", value: "September" },
+        { label: "October", value: "October" },
+        { label: "November", value: "November" },
+        { label: "December", value: "December" },
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     intakeStatus: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "intakeStatus",
       label: "Intake Status",
       section: "destinations-intakes",
@@ -165,14 +179,22 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     onshore: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "onshore",
       label: "The student is onshore",
       section: "student-details",
       options: [{ label: "The student is onshore", value: "onshore" }],
     } satisfies CourseSearchCheckboxFilterSetting,
     highestEducationLevel: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "highestEducationLevel",
       label: "Highest Education Level",
       section: "student-details",
@@ -185,7 +207,11 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     countryOfEducation: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "countryOfEducation",
       label: "Country of Education",
       section: "student-details",
@@ -199,7 +225,11 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     gradingSystem: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "gradingSystem",
       label: "Grading System",
       section: "student-details",
@@ -211,7 +241,11 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     backlogs: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "backlogs",
       label: "Backlogs",
       section: "student-details",
@@ -224,7 +258,11 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     educationGap: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "educationGap",
       label: "Education Gap",
       section: "student-details",
@@ -237,7 +275,11 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     turnaround: {
-      enabled: true,
+      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
+      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
+      // missing one, because it makes the finder look broken. Set true once the
+      // backend actually filters on it.
+      enabled: false,
       key: "turnaround",
       label: "Reported Turnaround Time",
       section: "institution-details",

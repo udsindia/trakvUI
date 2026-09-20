@@ -64,7 +64,6 @@ export function RequirementsEditor({
   const errors = validateRequirementSet(value);
   const errorFor = (field: "minGpa" | "languageTests") =>
     errors.find((entry) => entry.field === field);
-  const gpaError = errorFor("minGpa");
   const englishError = errorFor("languageTests");
   const updateEnglish = (index: number, patch: Partial<CourseLanguageTest>) => {
     onChange({
@@ -322,23 +321,6 @@ export function RequirementsEditor({
       <Stack direction="row" spacing={1.5}>
         <TextField
           fullWidth
-          error={Boolean(gpaError)}
-          helperText={gpaError ? "Conflicts with the per-length bars" : "Applies to everyone"}
-          label="Minimum GPA (out of 10)"
-          size="small"
-          type="number"
-          inputProps={{ min: 0, max: 10, step: 0.1 }}
-          value={value.academic.minGpa ?? ""}
-          onChange={(event) =>
-            onChange({
-              ...value,
-              academic: { ...value.academic, minGpa: numberOrUndefined(event.target.value) },
-            })
-          }
-        />
-        <TextField
-          fullWidth
-          error={Boolean(gpaError)}
           helperText="3-year degree"
           label="Min GPA 3-year (out of 10)"
           size="small"
@@ -357,7 +339,6 @@ export function RequirementsEditor({
         />
         <TextField
           fullWidth
-          error={Boolean(gpaError)}
           helperText="4-year degree"
           label="Min GPA 4-year (out of 10)"
           size="small"
@@ -413,16 +394,10 @@ export function RequirementsEditor({
         Left blank, the course finder still offers this university to a student with
         backlogs or a gap — marked as a possible match rather than a confirmed one.
       </Typography>
-      {gpaError ? (
-        <Alert severity="error" sx={{ fontSize: 13 }}>
-          {gpaError.message}
-        </Alert>
-      ) : null}
       <Typography color="text.secondary" sx={{ fontSize: 12 }}>
-        Set a per-length GPA only where the university asks a different bar of a
-        three-year and a four-year bachelor&apos;s — both may be set together, and a
-        student is matched on whichever their own degree is. Left blank, both are
-        judged on Minimum GPA.
+        A three-year and a four-year bachelor&apos;s are held to different bars by many
+        universities, so each has its own. Both may be set, and a student is matched on
+        whichever their own degree is. Left blank, GPA is not checked at all.
       </Typography>
     </Stack>
   );
