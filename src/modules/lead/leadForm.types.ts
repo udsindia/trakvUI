@@ -37,7 +37,7 @@ export const MAX_SOURCE_LENGTH = 60;
  * \p{M} matters as much as \p{L} here: Indic vowel signs are combining marks, so
  * without it a Devanagari name like मेला is rejected while Cyrillic passes.
  */
-const SOURCE_ALLOWED = /^[\p{L}\p{M}\p{N} .,&'()\/-]+$/u;
+const SOURCE_ALLOWED = /^[\p{L}\p{M}\p{N} .,&'()/-]+$/u;
 
 /**
  * Validates a custom lead source. Returns an error message, or null when valid.
