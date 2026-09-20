@@ -24,3 +24,6 @@ playwright-report/
 
 # Vitest coverage output
 coverage/
+
+# Vitest HTML test report
+.vitest/

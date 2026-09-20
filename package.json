@@ -13,7 +13,8 @@
     "test:e2e": "playwright test --project=e2e",
     "test:all": "vitest run && playwright test --project=e2e",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:report": "vitest run --coverage"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -38,6 +39,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
     "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/ui": "^5.0.1",
     "typescript": "5.9.3",
     "vite": "^8.2.1",
     "vitest": "^5.0.1"

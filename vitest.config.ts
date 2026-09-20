@@ -16,6 +16,9 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.unit.spec.ts"],
     environment: "node",
+    // A readable pass/fail page alongside the console output, written to
+    // .vitest/index.html. Open it directly, or `npx vite preview --outDir .vitest`.
+    reporters: process.env.CI ? ["default"] : ["default", "html"],
     coverage: {
       provider: "v8",
       reporter: ["text-summary", "html", "lcov"],
