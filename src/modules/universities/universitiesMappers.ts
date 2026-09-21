@@ -172,6 +172,39 @@ function deriveShortName(name: string) {
     .toUpperCase();
 }
 
+/**
+ * A fee in the currency it is actually quoted in, e.g. "£23,700".
+ *
+ * The card used to print every fee as "₹{amount}L" regardless of currency, so a £23,700
+ * course read as ₹23,700 lakh — a rupee sign and a lakh suffix on a number that was
+ * neither. The figure a university publishes is in its own currency, so that is what is
+ * shown, unconverted.
+ *
+ * The locale is pinned to the currency rather than left to the viewer's. Digit grouping
+ * differs between them: this machine's en-IN default groups in lakhs, which rendered
+ * £22,571,429 as "£2,25,71,429". Rupees genuinely do group that way, so INR gets en-IN
+ * and everything else the thousands grouping its own readers expect.
+ *
+ * An unrecognised ISO code makes Intl throw, so it falls back to the code alongside the
+ * number — unambiguous, if less pretty, and never a wrong symbol.
+ */
+export function formatTuition(amount?: number | null, currency?: string | null): string {
+  if (!amount) return "";
+
+  const code = (currency ?? "GBP").toUpperCase();
+  const locale = code === "INR" ? "en-IN" : "en-US";
+
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: code,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${code} ${amount.toLocaleString(locale)}`;
+  }
+}
+
 export function tuitionToLakhs(amount?: number, currency = "GBP") {
   if (!amount) {
     return 0;
@@ -384,6 +417,8 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     intakes: course.intakeMonths ?? [],
     duration: formatDuration(course.durationMonths),
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),
+    tuitionAmount: course.tuitionAmount,
+    tuitionCurrency: course.tuitionCurrency,
     ieltsMin,
     ieltsPerBand,
     ieltsLabel,
@@ -400,9 +435,7 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
       pgwpEligible: formatPgwpEligible(course.pgwpEligible),
     },
     fees: {
-      tuitionPerYear: course.tuitionAmount
-        ? `${course.tuitionCurrency ?? ""} ${course.tuitionAmount.toLocaleString()}`.trim()
-        : "",
+      tuitionPerYear: formatTuition(course.tuitionAmount, course.tuitionCurrency),
       applicationFee,
       livingCosts: formatMoney(course.livingCostAmount, course.livingCostCurrency),
       scholarshipNote: course.scholarshipNote,
@@ -428,11 +461,6 @@ export function parseDurationMonths(duration: string): number {
   }
 
   return 12;
-}
-
-export function lakhsToTuitionAmount(tuitionLakhs: number, currency = "GBP"): number {
-  const rate = CURRENCY_TO_INR_RATE[currency.toUpperCase()] ?? 80;
-  return Math.round((tuitionLakhs * 100_000) / rate);
 }
 
 export function defaultUniversityType(): UniversityType {

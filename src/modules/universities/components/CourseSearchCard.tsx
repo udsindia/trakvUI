@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { CourseSearchResult } from "@/modules/universities/universities.types";
-import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
+import { formatTuition } from "@/modules/universities/universitiesMappers";
 import { getEligibilityChipSx, tagChipSx } from "@/modules/universities/universitiesStyles";
 
 type EligibilityBarProps = {
@@ -144,7 +144,7 @@ export function CourseSearchCard({
               fontWeight: 700,
             }}
           >
-            {formatTuitionLakhs(result.tuitionLakhs)}
+            {formatTuition(result.tuitionAmount, result.tuitionCurrency) || "Fee not listed"}
           </Typography>
           <Typography color="text.secondary" sx={{ fontSize: 11 }}>
             per year

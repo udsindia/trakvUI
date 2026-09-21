@@ -509,6 +509,11 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
             typeof raw.tuitionCurrency === "string" ? raw.tuitionCurrency : undefined,
           ),
       ),
+      // Carried through unconverted, because the card shows the fee in the currency the
+      // university quotes it in. tuitionLakhs above stays for the budget slider and sort.
+      tuitionAmount:
+        typeof raw.tuitionAmount === "number" ? raw.tuitionAmount : Number(raw.tuitionAmount) || undefined,
+      tuitionCurrency: typeof raw.tuitionCurrency === "string" ? raw.tuitionCurrency : undefined,
       ieltsMin: Number(raw.ieltsMin ?? raw.ielts ?? 0),
       // Search returns no IELTS figure, and "IELTS 0" read as a real requirement of zero.
       // Empty, and the card drops the chip.

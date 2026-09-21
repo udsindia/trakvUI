@@ -1,7 +1,6 @@
 import { universitiesApi } from "@/modules/universities/universitiesApi";
 import {
   defaultUniversityType,
-  lakhsToTuitionAmount,
   mapCourseToUi,
   mapUniversityDetailToUi,
   mapUniversitySummaryToUi,
@@ -240,7 +239,7 @@ export type CourseInput = Omit<
   code?: string;
   subjectArea?: string;
   courseUrl?: string;
-  /** ISO code the tuition figure is quoted in. Drives the ₹-Lakh conversion. */
+  /** ISO code the tuition figure is quoted in. Drives the ₹-Lakh conversion for display. */
   tuitionCurrency?: string;
   /**
    * Requirement rows to create alongside the course. Named distinctly from
@@ -445,7 +444,10 @@ export const universitiesCatalogService = {
       subjectArea: input.subjectArea ?? "General",
       durationMonths: parseDurationMonths(input.duration),
       tuitionCurrency: currency,
-      tuitionAmount: lakhsToTuitionAmount(input.tuitionLakhs, currency),
+      // Stored in the course's own currency, which is what tuition_currency says it is
+      // and what the backend's tuition filter assumes. This used to run the typed figure
+      // through a rupee-lakh conversion, so £23,700 was stored as £22,571,429.
+      tuitionAmount: input.tuitionAmount ?? 0,
       courseUrl: input.courseUrl,
     };
 

@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import type { Course, CourseLevel } from "@/modules/universities/universities.types";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
+import { formatTuition, tuitionToLakhs } from "@/modules/universities/universitiesMappers";
 import { RequirementsEditor } from "@/modules/universities/components/RequirementsEditor";
 import {
   emptyRequirementSet,
@@ -71,6 +72,7 @@ function emptyCourse(universityId: string): CourseInput {
     intakes: [],
     duration: "1 year",
     tuitionLakhs: 0,
+    tuitionAmount: 0,
     ieltsMin: 6.5,
     ieltsLabel: "IELTS 6.5+",
     applicationFee: "",
@@ -197,7 +199,7 @@ export function CourseFormDrawer({
       fees: {
         ...form.fees,
         // Derived, never typed: the label and the number cannot drift apart.
-        tuitionPerYear: formatTuitionLakhs(form.tuitionLakhs),
+        tuitionPerYear: formatTuition(form.tuitionAmount, form.tuitionCurrency),
         applicationFee: form.fees.applicationFee || form.applicationFee,
       },
     });
@@ -263,14 +265,19 @@ export function CourseFormDrawer({
         <Stack direction="row" spacing={1.5}>
           <TextField
             fullWidth
-            label="Annual tuition (₹ Lakh)"
+            helperText={
+              form.tuitionAmount
+                ? `≈ ${formatTuitionLakhs(tuitionToLakhs(form.tuitionAmount, form.tuitionCurrency ?? "GBP"))} per year`
+                : "The fee as the university publishes it."
+            }
+            label={`Annual tuition (${(form.tuitionCurrency ?? "GBP").toUpperCase()})`}
             size="small"
             type="number"
-            value={form.tuitionLakhs}
+            value={form.tuitionAmount ?? 0}
             onChange={(event) =>
               setForm((current) => ({
                 ...current,
-                tuitionLakhs: Number(event.target.value) || 0,
+                tuitionAmount: Number(event.target.value) || 0,
               }))
             }
           />

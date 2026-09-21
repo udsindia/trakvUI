@@ -106,7 +106,11 @@ export interface Course {
   levelLabel: string;
   intakes: string[];
   duration: string;
+  /** Converted to rupee lakhs for the budget slider and sorting. Derived, never typed. */
   tuitionLakhs: number;
+  /** The fee as the university quotes it, in tuitionCurrency. This is what gets stored. */
+  tuitionAmount?: number;
+  tuitionCurrency?: string;
   ieltsMin: number;
   ieltsPerBand?: number;
   ieltsLabel: string;
