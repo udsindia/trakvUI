@@ -1,4 +1,4 @@
-import { ENGLISH_TEST_OPTIONS } from "@/config/universities/requirementOptions";
+import { APTITUDE_TEST_OPTIONS, ENGLISH_TEST_OPTIONS } from "@/config/universities/requirementOptions";
 import type { CourseSortOption } from "@/modules/universities/universities.types";
 
 export type CourseSearchOptionSetting = {
@@ -28,6 +28,11 @@ export type CourseSearchCheckboxFilterSetting = CourseSearchBaseFilterSetting & 
 export type CourseSearchDropdownFilterSetting = CourseSearchBaseFilterSetting & {
   options: CourseSearchOptionSetting[];
   placeholder?: string;
+};
+
+export type CourseSearchNumberFilterSetting = CourseSearchBaseFilterSetting & {
+  placeholder?: string;
+  helperText?: string;
 };
 
 export type CourseSearchSliderFilterSetting = CourseSearchBaseFilterSetting & {
@@ -298,7 +303,19 @@ export const courseSearchSettings = {
       label: "Course Duration",
       section: "course-details",
       placeholder: "Select",
-      options: [],
+      // Ranges, always offered. The options used to be the exact lengths already in the
+      // catalogue — with a small catalogue that was two choices, and an 18-month course
+      // appeared only if one happened to exist. A range reads the way a counsellor asks
+      // ("something under two years") and never offers a choice that means nothing.
+      // Values are "min-max" in months; an empty max means no upper limit.
+      options: [
+        { label: "Up to 1 year", value: "0-12" },
+        { label: "1 – 1.5 years", value: "13-18" },
+        { label: "1.5 – 2 years", value: "19-24" },
+        { label: "2 – 3 years", value: "25-36" },
+        { label: "3 – 4 years", value: "37-48" },
+        { label: "More than 4 years", value: "49-" },
+      ],
     } satisfies CourseSearchDropdownFilterSetting,
     delivery: {
       enabled: false,
@@ -369,11 +386,11 @@ export const courseSearchSettings = {
       key: "englishScore",
       label: "Their score",
       section: "student-details",
-      placeholder: "Select score",
-      // Filled from the chosen test. Empty until one is picked, and stays empty for MOI,
-      // which is held or not held rather than scored.
-      options: [] as CourseSearchOptionSetting[],
-    } satisfies CourseSearchDropdownFilterSetting,
+      // Typed, because it is copied off a certificate: a dropdown meant scrolling past
+      // every possible value to reach the one in front of you. The range and step follow
+      // the chosen test at runtime, and the box is disabled for MOI, which has no score.
+      placeholder: "e.g. 6.5",
+    } satisfies CourseSearchNumberFilterSetting,
     englishUnstated: {
       enabled: true,
       key: "englishUnstated",
@@ -389,15 +406,28 @@ export const courseSearchSettings = {
     aptitudeTest: {
       enabled: true,
       key: "aptitudeTest",
-      label: "Aptitude test",
+      label: "Aptitude test the student holds",
       section: "student-details",
+      placeholder: "Select test",
       // Not a country rule. GRE and GMAT are usual for the USA and unusual for the UK,
       // but that already shows up in the requirement rows, so filtering the data stays
-      // right when a UK course does want a GMAT.
+      // right when a UK course does want a GMAT. "None" is for a student who has not sat
+      // one: it drops the courses that would require it.
       options: [
-        { label: "Exclude courses requiring GRE / GMAT / SAT", value: "exclude" },
+        { label: "None — hide courses that require one", value: "NONE" },
+        ...APTITUDE_TEST_OPTIONS.map((option) => ({
+          label: option.label,
+          value: option.value as string,
+        })),
       ],
-    } satisfies CourseSearchCheckboxFilterSetting,
+    } satisfies CourseSearchDropdownFilterSetting,
+    aptitudeScore: {
+      enabled: true,
+      key: "aptitudeScore",
+      label: "Their aptitude score",
+      section: "student-details",
+      placeholder: "e.g. 320",
+    } satisfies CourseSearchNumberFilterSetting,
     eligibility: {
       enabled: false,
       key: "eligibility",
@@ -433,7 +463,8 @@ export const courseSearchSettings = {
     englishTest: "",
     englishScore: "",
     englishUnstated: [] as string[],
-    aptitudeTest: [] as string[],
+    aptitudeTest: "",
+    aptitudeScore: "",
     matchStudent: false,
     eligibleOnly: false,
     sort: "best-match" as CourseSortOption,

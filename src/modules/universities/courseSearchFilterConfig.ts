@@ -13,10 +13,7 @@ import {
 type BuildFilterConfigContext = {
   dynamicOptions?: Partial<
     Record<
-      | "country" | "level" | "intake" | "city" | "institution" | "discipline" | "duration"
-      // Scores for the English test currently chosen — the scales are per test, so this
-      // one changes as the test dropdown changes rather than being fixed up front.
-      | "englishScore",
+      | "country" | "level" | "intake" | "city" | "institution" | "discipline" | "duration",
       CourseSearchOptionSetting[]
     >
   >;
@@ -240,29 +237,43 @@ export function buildCourseSearchFilterConfig({
   }
 
   if (filterSettings.englishScore.enabled) {
-    pushDropdownFilter(filters, {
+    // Range, step and whether it is usable at all depend on the chosen test, so the page
+    // fills those in; this only places the box.
+    filters.push({
+      type: "number",
       key: filterSettings.englishScore.key,
       label: filterSettings.englishScore.label,
-      options: dynamicOptions?.englishScore ?? [],
       placeholder: filterSettings.englishScore.placeholder,
     });
   }
 
+  if (filterSettings.aptitudeTest.enabled) {
+    pushDropdownFilter(filters, {
+      key: filterSettings.aptitudeTest.key,
+      label: filterSettings.aptitudeTest.label,
+      options: filterSettings.aptitudeTest.options,
+      placeholder: filterSettings.aptitudeTest.placeholder,
+    });
+  }
+
+  if (filterSettings.aptitudeScore.enabled) {
+    filters.push({
+      type: "number",
+      key: filterSettings.aptitudeScore.key,
+      label: filterSettings.aptitudeScore.label,
+      placeholder: filterSettings.aptitudeScore.placeholder,
+    });
+  }
+
+  // After the aptitude pair, not between the English pair and it: the panel is a
+  // two-column grid, and in between it pushed "Aptitude test" and its score onto
+  // different rows.
   if (filterSettings.englishUnstated.enabled) {
     filters.push({
       type: "checkbox-group",
       key: filterSettings.englishUnstated.key,
       label: filterSettings.englishUnstated.label,
       options: filterSettings.englishUnstated.options,
-    });
-  }
-
-  if (filterSettings.aptitudeTest.enabled) {
-    filters.push({
-      type: "checkbox-group",
-      key: filterSettings.aptitudeTest.key,
-      label: filterSettings.aptitudeTest.label,
-      options: filterSettings.aptitudeTest.options,
     });
   }
 
@@ -279,7 +290,7 @@ export function buildCourseSearchFilterConfig({
     pushDropdownFilter(filters, {
       key: filterSettings.duration.key,
       label: filterSettings.duration.label,
-      options: getDropdownOptions(filterSettings.duration.options, dynamicOptions?.duration),
+      options: filterSettings.duration.options,
       placeholder: filterSettings.duration.placeholder,
     });
   }

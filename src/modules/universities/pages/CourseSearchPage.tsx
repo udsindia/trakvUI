@@ -52,6 +52,7 @@ import {
   courseSearchSettings,
 } from "@/config/universities/courseSearchSettings";
 import {
+  getAptitudeTestOption,
   getEnglishTestOption,
 } from "@/config/universities/requirementOptions";
 import {
@@ -266,6 +267,8 @@ function countActiveFilters(
     switch (filter.type) {
       case "checkbox-group":
         return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "number":
+        return count + (typeof value === "string" && value.trim() !== "" ? 1 : 0);
       case "dropdown": {
         if (typeof value === "string") {
           const defaultValue = defaults[filter.key];
@@ -419,16 +422,15 @@ export function buildCourseSearchApiPayload(
     payload.postStudyWorkPermit = asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes";
   }
 
-  // The option's value is a month count, so the filter is exact. It used to strip digits
-  // out of the label and search a six-month window either side, which turned "1 year"
-  // into "between 1 and 7 months" — every course except the one you picked.
-  const durationValue = asString(filterValues[filterKeys.duration.key]);
-  if (durationValue) {
-    const months = Number.parseInt(durationValue, 10);
-    if (!Number.isNaN(months)) {
-      payload.minDurationMonths = months;
-      payload.maxDurationMonths = months;
-    }
+  // The option's value is a range in months, "13-18", with an empty upper end meaning no
+  // limit. Parsed from the value, never the label: an older version stripped digits out of
+  // the label and searched a window around them, which turned "1 year" into "between 1 and
+  // 7 months".
+  const durationRange = /^(\d+)-(\d*)$/.exec(asString(filterValues[filterKeys.duration.key]));
+  if (durationRange) {
+    const min = Number(durationRange[1]);
+    if (min > 0) payload.minDurationMonths = min;
+    if (durationRange[2]) payload.maxDurationMonths = Number(durationRange[2]);
   }
 
   const turnaroundRange = asNumberRange(
@@ -470,10 +472,17 @@ export function buildCourseSearchApiPayload(
     }
   }
 
-  // Tri-state on the wire: false excludes courses that require one, and the box being
-  // unticked sends nothing at all rather than true, which would show only those courses.
-  if (asStringArray(filterValues[filterKeys.aptitudeTest.key]).includes("exclude")) {
+  // Aptitude, asked like English: the test sat and the score. "None" is a student who has
+  // not sat one, so courses that require one are dropped. Nothing chosen filters nothing.
+  const aptitudeTest = asString(filterValues[filterKeys.aptitudeTest.key]);
+  if (aptitudeTest === "NONE") {
     payload.aptitudeTestRequired = false;
+  } else if (aptitudeTest) {
+    payload.aptitudeTestType = aptitudeTest;
+    const aptitudeScore = Number(asString(filterValues[filterKeys.aptitudeScore.key]));
+    if (Number.isFinite(aptitudeScore) && aptitudeScore > 0) {
+      payload.aptitudeScore = aptitudeScore;
+    }
   }
 
   return payload;
@@ -857,30 +866,34 @@ export function CourseSearchPage() {
     };
   }, [filterOptionsResponse]);
 
-  // The score scale follows the chosen test: IELTS runs to 9 in half points, PTE to 90,
-  // Duolingo to 160 in fives, Class 12 English is a percentage. MOI has max 0 — it is held
-  // or not held — so it yields no options and the score dropdown stays empty.
-  const englishScoreOptions = useMemo(() => {
-    const selected = asString(filterValues[filterKeys.englishTest.key]);
-    if (!selected) return [];
+  // The score box takes its range and step from the chosen test: IELTS runs to 9 in half
+  // points, PTE to 90, Duolingo to 160, Class 12 English is a percentage. MOI has max 0 —
+  // held or not held — so the box is disabled for it rather than inviting a number that
+  // would mean nothing. The same goes for aptitude until a real test is picked.
+  const scoreBoxes = useMemo(() => {
+    const english = getEnglishTestOption(asString(filterValues[filterKeys.englishTest.key]) as never);
+    const aptitudeValue = asString(filterValues[filterKeys.aptitudeTest.key]);
+    const aptitude =
+      aptitudeValue && aptitudeValue !== "NONE" ? getAptitudeTestOption(aptitudeValue as never) : undefined;
 
-    const option = getEnglishTestOption(selected as never);
-    if (!option || option.max <= 0) return [];
-
-    // A 1-point step over 160 would be an unusable dropdown, so long scales are coarsened.
-    // The bar a university sets is never that precise anyway.
-    const step = option.max > 50 ? Math.max(option.step, 5) : option.step;
-    const values: string[] = [];
-    for (let score = option.max; score >= step; score -= step) {
-      values.push(String(Number(score.toFixed(1))));
-    }
-    return values.map((value) => ({ label: value, value }));
+    return {
+      [filterKeys.englishScore.key]: !english
+        ? { disabled: true, helperText: "Choose a test first." }
+        : english.max <= 0
+          ? { disabled: true, helperText: "No score for this one — holding it is the requirement." }
+          : { min: 0, max: english.max, step: english.step, helperText: `Out of ${english.max}.` },
+      [filterKeys.aptitudeScore.key]: aptitude
+        ? { min: 0, max: aptitude.max, step: aptitude.step, helperText: `Out of ${aptitude.max}.` }
+        : { disabled: true, helperText: aptitudeValue === "NONE" ? "Not needed." : "Choose a test first." },
+    } as Record<string, { disabled?: boolean; helperText?: string; min?: number; max?: number; step?: number }>;
   }, [filterValues]);
 
   const filterConfig = useMemo(() => {
-    const config = buildCourseSearchFilterConfig({
-      dynamicOptions: { ...dynamicOptions, englishScore: englishScoreOptions },
-    });
+    const config = buildCourseSearchFilterConfig({ dynamicOptions }).map((filter) =>
+      filter.type === "number" && scoreBoxes[filter.key]
+        ? { ...filter, ...scoreBoxes[filter.key] }
+        : filter,
+    );
     return config.map((filter) => {
       if (filter.type !== "dropdown" || filter.key !== filterKeys.country.key) {
         return {
@@ -896,7 +909,7 @@ export function CourseSearchPage() {
         options: dynamicOptions.country.length > 0 ? dynamicOptions.country : countryFilterOptions,
       };
     });
-  }, [countryFilterOptions, dynamicOptions, englishScoreOptions]);
+  }, [countryFilterOptions, dynamicOptions, scoreBoxes]);
 
   const defaultFilterValues = useMemo(
     () => getCourseSearchDefaultFilterValues(filterConfig),

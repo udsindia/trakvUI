@@ -53,11 +53,27 @@ export type DateRangeFilterConfig = BaseFilterConfig & {
   type: "date-range";
 };
 
+/**
+ * A single typed number, e.g. a student's test score.
+ *
+ * A dropdown of scores made the counsellor scroll through every possible value to find
+ * the one on the student's certificate. The value is kept as the string typed, so an
+ * empty box means "not set" rather than zero.
+ */
+export type NumberFilterConfig = BaseFilterConfig & {
+  type: "number";
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
+};
+
 export type FilterConfig =
   | DropdownFilterConfig
   | SliderFilterConfig
   | CheckboxGroupFilterConfig
-  | DateRangeFilterConfig;
+  | DateRangeFilterConfig
+  | NumberFilterConfig;
 
 export type FilterPanelValue = DateRangeFilterValue | [number, number] | string | string[];
 
@@ -97,6 +113,7 @@ function createDefaultValue(config: FilterConfig): FilterPanelValue {
         endDate: "",
       };
     case "dropdown":
+    case "number":
       return "";
     case "slider":
       return [config.min, config.max];
@@ -371,6 +388,27 @@ export function FilterPanel({
                     })}
                   </Select>
                 </FormControl>
+              ) : null}
+
+              {filterConfig.type === "number" ? (
+                <TextField
+                  disabled={filterConfig.disabled}
+                  fullWidth
+                  placeholder={filterConfig.placeholder}
+                  size="small"
+                  slotProps={{
+                    htmlInput: {
+                      inputMode: "decimal",
+                      max: filterConfig.max,
+                      min: filterConfig.min,
+                      step: filterConfig.step ?? "any",
+                    },
+                  }}
+                  sx={controlSx}
+                  type="number"
+                  value={typeof currentValue === "string" ? currentValue : ""}
+                  onChange={(event) => updateFilterValue(filterConfig.key, event.target.value)}
+                />
               ) : null}
 
               {filterConfig.type === "slider" ? (

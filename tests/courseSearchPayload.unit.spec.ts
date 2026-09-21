@@ -154,19 +154,91 @@ describe("course search payload", () => {
     expect(payload.includeUnstatedEnglish).toBeUndefined();
   });
 
-  test("the aptitude box excludes, and leaving it alone filters nothing", () => {
-    // Unticked must send nothing rather than true, which would show ONLY courses
-    // requiring a GRE — the opposite of what the box says.
-    const off = buildCourseSearchApiPayload(values() as never, "", defaults.sort as never, null);
-    expect(off.aptitudeTestRequired).toBeUndefined();
-
-    const on = buildCourseSearchApiPayload(
-      values({ aptitudeTest: ["exclude"] }) as never,
+  test("an aptitude test and a typed score are sent as the student's", () => {
+    const payload = buildCourseSearchApiPayload(
+      values({ aptitudeTest: "GRE", aptitudeScore: "318" }) as never,
       "",
       defaults.sort as never,
       null,
     );
-    expect(on.aptitudeTestRequired).toBe(false);
+
+    expect(payload.aptitudeTestType).toBe("GRE");
+    expect(payload.aptitudeScore).toBe(318);
+    expect(payload.aptitudeTestRequired).toBeUndefined();
+  });
+
+  test("'None' drops courses requiring an aptitude test, and sends no test", () => {
+    const payload = buildCourseSearchApiPayload(
+      values({ aptitudeTest: "NONE", aptitudeScore: "318" }) as never,
+      "",
+      defaults.sort as never,
+      null,
+    );
+
+    expect(payload.aptitudeTestRequired).toBe(false);
+    expect(payload.aptitudeTestType).toBeUndefined();
+    expect(payload.aptitudeScore).toBeUndefined();
+  });
+
+  test("leaving aptitude alone filters nothing", () => {
+    // Nothing chosen must send nothing, not true — true would show ONLY courses that
+    // require a test.
+    const payload = buildCourseSearchApiPayload(values() as never, "", defaults.sort as never, null);
+
+    expect(payload.aptitudeTestRequired).toBeUndefined();
+    expect(payload.aptitudeTestType).toBeUndefined();
+  });
+
+  test("a typed English score arrives as a number, and a blank box as nothing", () => {
+    const typed = buildCourseSearchApiPayload(
+      values({ englishTest: "IELTS_ACADEMIC", englishScore: "6.5" }) as never,
+      "",
+      defaults.sort as never,
+      null,
+    );
+    expect(typed.englishScore).toBe(6.5);
+
+    const blank = buildCourseSearchApiPayload(
+      values({ englishTest: "IELTS_ACADEMIC", englishScore: "" }) as never,
+      "",
+      defaults.sort as never,
+      null,
+    );
+    expect(blank.englishScore).toBeUndefined();
+  });
+
+  test("a duration range sends its bounds in months", () => {
+    const send = (duration: string) =>
+      buildCourseSearchApiPayload(values({ duration }) as never, "", defaults.sort as never, null);
+
+    expect(send("13-18")).toMatchObject({ minDurationMonths: 13, maxDurationMonths: 18 });
+
+    // "Up to 1 year" has no lower bound worth sending.
+    const upToOne = send("0-12");
+    expect(upToOne.minDurationMonths).toBeUndefined();
+    expect(upToOne.maxDurationMonths).toBe(12);
+
+    // "More than 4 years" has no upper bound.
+    const long = send("49-");
+    expect(long.minDurationMonths).toBe(49);
+    expect(long.maxDurationMonths).toBeUndefined();
+  });
+
+  test("every duration option is a range the payload understands", () => {
+    // Guards the option list and the parser against drifting apart: an option whose value
+    // does not parse would be sent as no filter at all.
+    for (const option of courseSearchSettings.filters.duration.options) {
+      const payload = buildCourseSearchApiPayload(
+        values({ duration: option.value }) as never,
+        "",
+        defaults.sort as never,
+        null,
+      );
+      expect(
+        payload.minDurationMonths !== undefined || payload.maxDurationMonths !== undefined,
+        option.label,
+      ).toBe(true);
+    }
   });
 
   test("the retired IELTS slider is no longer sent", () => {

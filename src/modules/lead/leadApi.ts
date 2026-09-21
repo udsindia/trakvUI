@@ -92,6 +92,9 @@ export type CourseSearchRequest = {
   includeUnstatedEnglish?: boolean;
   /** false excludes courses requiring GRE/GMAT/SAT; omit to not filter on it. */
   aptitudeTestRequired?: boolean;
+  /** The aptitude test the student sat (GRE, GMAT, SAT, DMAT) and their score. */
+  aptitudeTestType?: string;
+  aptitudeScore?: number;
   minTurnaroundDays?: number;
   maxTurnaroundDays?: number;
   nationality?: string;
