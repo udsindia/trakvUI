@@ -186,7 +186,9 @@ export function UniversityDetailsPage() {
       // saveCourse throws with a specific message when the course saved but its English
       // test requirements did not — surface that rather than a blanket failure.
       setSnack({
-        message: error instanceof Error ? error.message : "Failed to save course",
+        // Not error.message: for an HTTP failure that is axios's "Request failed with
+        // status code 400", which tells the counsellor nothing about what to fix.
+        message: getApiErrorMessage(error, "Failed to save course"),
         severity: "error",
       });
     }

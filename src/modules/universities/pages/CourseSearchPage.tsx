@@ -613,15 +613,28 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
  * acts on it. The server returns null when it has no student to judge against, and that
  * has to stay null here rather than being rounded up to a pass.
  */
-function mapEligibility(raw: unknown): {
+/**
+ * The server's eligibility verdict, in the card's terms.
+ *
+ * Exported for tests. This compared against "NOT_ELIGIBLE", which the server never sends —
+ * its enum says INELIGIBLE — so a course a student could not get into fell through to
+ * "partial" and the card read "Eligible with notes". Combined with a server check that
+ * failed every student on every course listing an MOI letter, the finder showed a column of
+ * reassuring badges over a verdict that was uniformly "no".
+ *
+ * UNKNOWN means nothing mandatory was stated, so nothing was checked. It keeps the neutral
+ * styling but says so, instead of claiming an eligibility nobody assessed.
+ */
+export function mapEligibility(raw: unknown): {
   eligibilityStatus: EligibilityStatus;
+  eligibilityLabel?: string;
   eligibilityPercent?: number;
   eligibilityHint?: string;
 } {
   if (!raw || typeof raw !== "object") {
     // No student selected, or nothing on record. The card hides the badge entirely when
     // there is no student, so this only shows when we genuinely cannot say.
-    return { eligibilityStatus: "partial", eligibilityHint: "Not assessed" };
+    return { eligibilityStatus: "partial", eligibilityLabel: "Not assessed" };
   }
 
   const value = raw as { status?: string; met?: string[]; gaps?: string[] };
@@ -632,12 +645,13 @@ function mapEligibility(raw: unknown): {
   const status: EligibilityStatus =
     value.status === "ELIGIBLE"
       ? "eligible"
-      : value.status === "NOT_ELIGIBLE"
+      : value.status === "INELIGIBLE" || value.status === "NOT_ELIGIBLE"
         ? "not-eligible"
         : "partial";
 
   return {
     eligibilityStatus: status,
+    eligibilityLabel: value.status === "UNKNOWN" ? "Not assessed" : undefined,
     // Out of the requirements actually recorded. A course with none on file reports no
     // percentage rather than a perfect score for having asked nothing.
     eligibilityPercent: total > 0 ? Math.round((met / total) * 100) : undefined,

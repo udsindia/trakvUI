@@ -447,7 +447,11 @@ export const universitiesCatalogService = {
       // Stored in the course's own currency, which is what tuition_currency says it is
       // and what the backend's tuition filter assumes. This used to run the typed figure
       // through a rupee-lakh conversion, so £23,700 was stored as £22,571,429.
-      tuitionAmount: input.tuitionAmount ?? 0,
+      // Omitted when blank. It used to go as 0, and CreateCourseRequest has @Positive on
+      // it, so any course saved without a fee was refused outright — the fee is optional,
+      // the zero was not.
+      tuitionAmount:
+        input.tuitionAmount && input.tuitionAmount > 0 ? input.tuitionAmount : undefined,
       courseUrl: input.courseUrl,
     };
 

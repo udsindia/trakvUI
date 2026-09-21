@@ -159,11 +159,12 @@ export function CourseSearchCard({
         {showEligibility ? (
           <Chip
             label={
-              result.eligibilityStatus === "not-eligible"
+              result.eligibilityLabel ??
+              (result.eligibilityStatus === "not-eligible"
                 ? "Not eligible"
                 : result.eligibilityStatus === "partial"
                   ? "Eligible with notes"
-                  : "Eligible"
+                  : "Eligible")
             }
             size="small"
             sx={getEligibilityChipSx(result.eligibilityStatus)}

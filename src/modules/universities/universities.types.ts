@@ -118,6 +118,8 @@ export interface Course {
   deadline: string;
   eligibilityStatus: EligibilityStatus;
   eligibilityPercent?: number;
+  /** Overrides the badge text, e.g. "Not assessed" when no requirement was stated. */
+  eligibilityLabel?: string;
   eligibilityWarning?: string;
   eligibilityHint?: string;
   alreadyShortlisted?: boolean;
