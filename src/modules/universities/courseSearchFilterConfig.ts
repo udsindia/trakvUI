@@ -12,7 +12,13 @@ import {
 
 type BuildFilterConfigContext = {
   dynamicOptions?: Partial<
-    Record<"country" | "level" | "intake" | "city" | "institution" | "discipline" | "duration", CourseSearchOptionSetting[]>
+    Record<
+      | "country" | "level" | "intake" | "city" | "institution" | "discipline" | "duration"
+      // Scores for the English test currently chosen — the scales are per test, so this
+      // one changes as the test dropdown changes rather than being fixed up front.
+      | "englishScore",
+      CourseSearchOptionSetting[]
+    >
   >;
   settings?: CourseSearchSettings;
 };
@@ -221,6 +227,42 @@ export function buildCourseSearchFilterConfig({
       max: filterSettings.ielts.max,
       step: filterSettings.ielts.step,
       helperText: filterSettings.ielts.helperText,
+    });
+  }
+
+  if (filterSettings.englishTest.enabled) {
+    pushDropdownFilter(filters, {
+      key: filterSettings.englishTest.key,
+      label: filterSettings.englishTest.label,
+      options: filterSettings.englishTest.options,
+      placeholder: filterSettings.englishTest.placeholder,
+    });
+  }
+
+  if (filterSettings.englishScore.enabled) {
+    pushDropdownFilter(filters, {
+      key: filterSettings.englishScore.key,
+      label: filterSettings.englishScore.label,
+      options: dynamicOptions?.englishScore ?? [],
+      placeholder: filterSettings.englishScore.placeholder,
+    });
+  }
+
+  if (filterSettings.englishUnstated.enabled) {
+    filters.push({
+      type: "checkbox-group",
+      key: filterSettings.englishUnstated.key,
+      label: filterSettings.englishUnstated.label,
+      options: filterSettings.englishUnstated.options,
+    });
+  }
+
+  if (filterSettings.aptitudeTest.enabled) {
+    filters.push({
+      type: "checkbox-group",
+      key: filterSettings.aptitudeTest.key,
+      label: filterSettings.aptitudeTest.label,
+      options: filterSettings.aptitudeTest.options,
     });
   }
 

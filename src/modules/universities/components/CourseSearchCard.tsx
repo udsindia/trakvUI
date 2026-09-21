@@ -175,6 +175,14 @@ export function CourseSearchCard({
         {result.duration && result.duration !== "—" ? (
           <Chip label={result.duration} size="small" sx={tagChipSx} />
         ) : null}
+        {result.ieltsPerBand ? (
+          <Chip
+            label={`${result.ieltsPerBand} in each band`}
+            size="small"
+            sx={tagChipSx}
+            title="Clearing the overall score is not enough on its own — this course also sets a minimum for each skill."
+          />
+        ) : null}
         {result.ieltsLabel ? (
           <Chip label={result.ieltsLabel} size="small" sx={tagChipSx} />
         ) : null}

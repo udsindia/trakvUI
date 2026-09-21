@@ -52,6 +52,9 @@ import {
   courseSearchSettings,
 } from "@/config/universities/courseSearchSettings";
 import {
+  getEnglishTestOption,
+} from "@/config/universities/requirementOptions";
+import {
   PageHeader,
 } from "@/modules/lead/components/PageHeader";
 import {
@@ -446,10 +449,31 @@ export function buildCourseSearchApiPayload(
     payload.maxTuitionLakhs = tuitionRange[1];
   }
 
-  const ieltsRange = asNumberRange(filterValues[filterKeys.ielts.key], sliderFallbacks.ielts);
-  if (ieltsRange[0] !== sliderFallbacks.ielts[0] || ieltsRange[1] !== sliderFallbacks.ielts[1]) {
-    payload.minIelts = ieltsRange[0];
-    payload.maxIelts = ieltsRange[1];
+  // English is asked from the student's side: the test they hold and their score, so the
+  // server matches courses whose bar for that test they clear. MOI carries no score —
+  // holding the letter is the requirement — so the score is left off deliberately rather
+  // than defaulted to zero, which would read as a bar of zero.
+  const englishTest = asString(filterValues[filterKeys.englishTest.key]);
+  if (englishTest) {
+    payload.englishTestType = englishTest;
+
+    const score = Number(asString(filterValues[filterKeys.englishScore.key]));
+    if (Number.isFinite(score) && score > 0) {
+      payload.englishScore = score;
+    }
+
+    // Sent only when the counsellor opts into the strict reading. Left off, the server
+    // keeps courses that record no language requirement — which is most of them, so the
+    // default has to narrow the list rather than empty it.
+    if (asStringArray(filterValues[filterKeys.englishUnstated.key]).includes("onlyStated")) {
+      payload.includeUnstatedEnglish = false;
+    }
+  }
+
+  // Tri-state on the wire: false excludes courses that require one, and the box being
+  // unticked sends nothing at all rather than true, which would show only those courses.
+  if (asStringArray(filterValues[filterKeys.aptitudeTest.key]).includes("exclude")) {
+    payload.aptitudeTestRequired = false;
   }
 
   return payload;
@@ -514,6 +538,12 @@ function normalizeCourseSearchApiResults(response: CourseSearchResponse | undefi
       tuitionAmount:
         typeof raw.tuitionAmount === "number" ? raw.tuitionAmount : Number(raw.tuitionAmount) || undefined,
       tuitionCurrency: typeof raw.tuitionCurrency === "string" ? raw.tuitionCurrency : undefined,
+      // What the overall score does not cover: a course wanting 6.0 in every band still
+      // turns away 6.5-overall-with-5.5-writing, and the filter cannot see that.
+      ieltsPerBand:
+        typeof raw.englishPerBandMin === "number"
+          ? raw.englishPerBandMin
+          : Number(raw.englishPerBandMin) || undefined,
       ieltsMin: Number(raw.ieltsMin ?? raw.ielts ?? 0),
       // Search returns no IELTS figure, and "IELTS 0" read as a real requirement of zero.
       // Empty, and the card drops the chip.
@@ -813,8 +843,30 @@ export function CourseSearchPage() {
     };
   }, [filterOptionsResponse]);
 
+  // The score scale follows the chosen test: IELTS runs to 9 in half points, PTE to 90,
+  // Duolingo to 160 in fives, Class 12 English is a percentage. MOI has max 0 — it is held
+  // or not held — so it yields no options and the score dropdown stays empty.
+  const englishScoreOptions = useMemo(() => {
+    const selected = asString(filterValues[filterKeys.englishTest.key]);
+    if (!selected) return [];
+
+    const option = getEnglishTestOption(selected as never);
+    if (!option || option.max <= 0) return [];
+
+    // A 1-point step over 160 would be an unusable dropdown, so long scales are coarsened.
+    // The bar a university sets is never that precise anyway.
+    const step = option.max > 50 ? Math.max(option.step, 5) : option.step;
+    const values: string[] = [];
+    for (let score = option.max; score >= step; score -= step) {
+      values.push(String(Number(score.toFixed(1))));
+    }
+    return values.map((value) => ({ label: value, value }));
+  }, [filterValues]);
+
   const filterConfig = useMemo(() => {
-    const config = buildCourseSearchFilterConfig({ dynamicOptions });
+    const config = buildCourseSearchFilterConfig({
+      dynamicOptions: { ...dynamicOptions, englishScore: englishScoreOptions },
+    });
     return config.map((filter) => {
       if (filter.type !== "dropdown" || filter.key !== filterKeys.country.key) {
         return {
@@ -830,7 +882,7 @@ export function CourseSearchPage() {
         options: dynamicOptions.country.length > 0 ? dynamicOptions.country : countryFilterOptions,
       };
     });
-  }, [countryFilterOptions, dynamicOptions]);
+  }, [countryFilterOptions, dynamicOptions, englishScoreOptions]);
 
   const defaultFilterValues = useMemo(
     () => getCourseSearchDefaultFilterValues(filterConfig),

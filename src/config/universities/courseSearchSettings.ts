@@ -1,3 +1,4 @@
+import { ENGLISH_TEST_OPTIONS } from "@/config/universities/requirementOptions";
 import type { CourseSortOption } from "@/modules/universities/universities.types";
 
 export type CourseSearchOptionSetting = {
@@ -119,10 +120,8 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     intakeStatus: {
-      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
-      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
-      // missing one, because it makes the finder look broken. Set true once the
-      // backend actually filters on it.
+      // Hidden deliberately: the backend does filter on it, but a counsellor picks a
+      // month, not a status, and the status belongs on the card instead.
       enabled: false,
       key: "intakeStatus",
       label: "Intake Status",
@@ -143,7 +142,7 @@ export const courseSearchSettings = {
       options: [],
     } satisfies CourseSearchDropdownFilterSetting,
     institution: {
-      enabled: false,
+      enabled: true,
       key: "institution",
       label: "Institutions",
       section: "institution-details",
@@ -241,11 +240,10 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     backlogs: {
-      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
-      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
-      // missing one, because it makes the finder look broken. Set true once the
-      // backend actually filters on it.
-      enabled: false,
+      // The backend does filter on this: searchAdvanced reads it and applies a
+      // threshold clause. A course with no limit recorded still matches, because
+      // most of the catalogue has none and a strict reading would return nothing.
+      enabled: true,
       key: "backlogs",
       label: "Backlogs",
       section: "student-details",
@@ -258,11 +256,10 @@ export const courseSearchSettings = {
       ],
     } satisfies CourseSearchDropdownFilterSetting,
     educationGap: {
-      // Hidden: the API accepts this and ignores it — AdvancedCourseSearchRequest
-      // marks it NOT YET FILTERED. A filter that changes nothing is worse than a
-      // missing one, because it makes the finder look broken. Set true once the
-      // backend actually filters on it.
-      enabled: false,
+      // The backend does filter on this: searchAdvanced reads it and applies a
+      // threshold clause. A course with no limit recorded still matches, because
+      // most of the catalogue has none and a strict reading would return nothing.
+      enabled: true,
       key: "educationGap",
       label: "Education Gap",
       section: "student-details",
@@ -336,7 +333,11 @@ export const courseSearchSettings = {
       helperText: "₹5L – ₹60L per year",
     } satisfies CourseSearchSliderFilterSetting,
     ielts: {
-      enabled: true,
+      // Replaced by englishTest + englishScore. This asked "which courses want IELTS
+      // between 5.5 and 8", but a counsellor has a student with a score already, so the
+      // useful question is which courses that score opens. It also covered only IELTS,
+      // while the catalogue records PTE, TOEFL, Duolingo, Class 12 English and MOI.
+      enabled: false,
       key: "ielts",
       label: "IELTS Requirement",
       section: "student-details",
@@ -345,6 +346,58 @@ export const courseSearchSettings = {
       step: 0.5,
       helperText: "Filter by course IELTS requirement",
     } satisfies CourseSearchSliderFilterSetting,
+    // ── English proficiency, asked from the student's side ─────────────────────
+    // The test is chosen first and the score scale follows from it, because the scales
+    // are not comparable: IELTS runs to 9, PTE to 90, Duolingo to 160, Class 12 English
+    // is a percentage, and MOI has no score at all. The score options are filled in at
+    // runtime from ENGLISH_TEST_OPTIONS for whichever test is selected.
+    englishTest: {
+      enabled: true,
+      key: "englishTest",
+      label: "English test the student holds",
+      section: "student-details",
+      placeholder: "Select test",
+      // Exactly the tests a course can state a requirement in, named the way the
+      // requirements editor names them, so one vocabulary covers both screens.
+      options: ENGLISH_TEST_OPTIONS.map((option) => ({
+        label: option.label,
+        value: option.value as string,
+      })),
+    } satisfies CourseSearchDropdownFilterSetting,
+    englishScore: {
+      enabled: true,
+      key: "englishScore",
+      label: "Their score",
+      section: "student-details",
+      placeholder: "Select score",
+      // Filled from the chosen test. Empty until one is picked, and stays empty for MOI,
+      // which is held or not held rather than scored.
+      options: [] as CourseSearchOptionSetting[],
+    } satisfies CourseSearchDropdownFilterSetting,
+    englishUnstated: {
+      enabled: true,
+      key: "englishUnstated",
+      label: "English requirement",
+      section: "student-details",
+      // Phrased as an opt-in to the strict reading, so the default — an empty box — is the
+      // safe one. Most of the catalogue records no language requirement, and excluding
+      // those empties the list rather than narrowing it.
+      options: [
+        { label: "Only courses with a stated requirement I clear", value: "onlyStated" },
+      ],
+    } satisfies CourseSearchCheckboxFilterSetting,
+    aptitudeTest: {
+      enabled: true,
+      key: "aptitudeTest",
+      label: "Aptitude test",
+      section: "student-details",
+      // Not a country rule. GRE and GMAT are usual for the USA and unusual for the UK,
+      // but that already shows up in the requirement rows, so filtering the data stays
+      // right when a UK course does want a GMAT.
+      options: [
+        { label: "Exclude courses requiring GRE / GMAT / SAT", value: "exclude" },
+      ],
+    } satisfies CourseSearchCheckboxFilterSetting,
     eligibility: {
       enabled: false,
       key: "eligibility",
@@ -377,6 +430,10 @@ export const courseSearchSettings = {
     postStudyWorkPermit: "" as string,
     tuition: [5, 60] as [number, number],
     ielts: [5.5, 8] as [number, number],
+    englishTest: "",
+    englishScore: "",
+    englishUnstated: [] as string[],
+    aptitudeTest: [] as string[],
     matchStudent: false,
     eligibleOnly: false,
     sort: "best-match" as CourseSortOption,

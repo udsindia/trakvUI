@@ -77,6 +77,21 @@ export type CourseSearchRequest = {
   maxTuitionLakhs?: number;
   minIelts?: number;
   maxIelts?: number;
+  /**
+   * English asked from the student's side: the TestType they hold and their score, so the
+   * server matches courses whose bar for that test they clear. minIelts/maxIelts above ask
+   * the opposite question — which courses want a score in a range — and are kept only for
+   * older callers.
+   *
+   * MOI_LETTER carries no score: holding the letter is the requirement, so englishScore is
+   * omitted rather than sent as zero.
+   */
+  englishTestType?: string;
+  englishScore?: number;
+  /** Keep courses that record no language requirement at all. Defaults to true server-side. */
+  includeUnstatedEnglish?: boolean;
+  /** false excludes courses requiring GRE/GMAT/SAT; omit to not filter on it. */
+  aptitudeTestRequired?: boolean;
   minTurnaroundDays?: number;
   maxTurnaroundDays?: number;
   nationality?: string;
