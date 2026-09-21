@@ -414,6 +414,7 @@ export function mapCourseToUi(course: CourseDto, universityId: string): Course {
     name: course.name,
     level,
     levelLabel: label,
+    subjectArea: course.subjectArea ?? undefined,
     intakes: course.intakeMonths ?? [],
     duration: formatDuration(course.durationMonths),
     tuitionLakhs: tuitionToLakhs(course.tuitionAmount, course.tuitionCurrency),

@@ -1,5 +1,6 @@
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Divider,
@@ -9,8 +10,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
+import { mergeFieldsOfStudy } from "@/config/universities/fieldsOfStudy";
+import { leadApi } from "@/modules/lead/leadApi";
 import type { Course, CourseLevel } from "@/modules/universities/universities.types";
 import { formatTuitionLakhs } from "@/modules/universities/courseSearchUtils";
 import { formatTuition, tuitionToLakhs } from "@/modules/universities/universitiesMappers";
@@ -127,6 +131,20 @@ export function CourseFormDrawer({
   const [semester1Text, setSemester1Text] = useState("");
   const [semester2Text, setSemester2Text] = useState("");
 
+  // The subjects already on the tenant's courses — the same list the finder's Field of
+  // Study filter shows, and the same cache entry, so suggesting one keeps both in step.
+  // Without it (no access, or no courses yet) the standard list still suggests.
+  const { data: filterOptions } = useQuery({
+    queryKey: ["courses", "search", "filter-options"],
+    queryFn: () => leadApi.courseFilters(),
+    enabled: open,
+    retry: false,
+  });
+  const fieldOfStudyOptions = useMemo(
+    () => mergeFieldsOfStudy((filterOptions as { disciplines?: string[] } | undefined)?.disciplines),
+    [filterOptions],
+  );
+
   useEffect(() => {
     if (course) {
       // Deliberately empty on edit. The course's requirements ARE loaded now
@@ -221,6 +239,28 @@ export function CourseFormDrawer({
           size="small"
           value={form.name}
           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+        />
+        <Autocomplete
+          freeSolo
+          autoSelect
+          options={fieldOfStudyOptions}
+          value={form.subjectArea ?? ""}
+          onChange={(_, value) =>
+            setForm((current) => ({ ...current, subjectArea: value ?? "" }))
+          }
+          onInputChange={(_, value, reason) => {
+            // Typing a new subject counts without picking it from the list.
+            if (reason === "input") setForm((current) => ({ ...current, subjectArea: value }));
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              fullWidth
+              helperText="Pick one or type your own. Counsellors filter the course finder on this."
+              label="Field of study"
+              size="small"
+            />
+          )}
         />
         <Stack direction="row" spacing={1.5}>
           <TextField

@@ -431,7 +431,8 @@ export function useApplicationFormController(
         studyLevel: values.studyLevel || "POSTGRADUATE_TAUGHT",
         // Same slug the course drawer generates, so inline-added courses look like the rest.
         code: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32),
-        subjectArea: "General",
+        // No subject: this form does not ask for one, and "General" would add a
+        // meaningless option to the finder. It can be set later from the course form.
       });
       return { courseId: created.id, courseName: created.name };
     } catch (error) {

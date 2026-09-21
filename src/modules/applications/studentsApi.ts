@@ -8,6 +8,8 @@ export interface StudentOption {
   name: string;
   email: string;
   phone: string;
+  /** Free text from the lead form. The course finder pre-selects it when a course matches. */
+  fieldOfStudy?: string;
 }
 
 /** Backend StudentSummaryDTO (only the fields we need). */
@@ -18,6 +20,7 @@ interface BackendStudentSummary {
   email?: string;
   phoneCountryCode?: string;
   phone?: string;
+  fieldOfStudy?: string | null;
 }
 
 /** The list endpoint returns a Spring Page ({ content: [...] }); older builds returned a raw array. */
@@ -45,6 +48,7 @@ export const studentsApi = {
       name: `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim() || s.email || s.id,
       email: s.email ?? "",
       phone: joinPhoneNumber(s.phoneCountryCode, s.phone),
+      fieldOfStudy: s.fieldOfStudy ?? undefined,
     }));
   },
 };

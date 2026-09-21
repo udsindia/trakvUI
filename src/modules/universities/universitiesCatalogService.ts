@@ -237,7 +237,6 @@ export type CourseInput = Omit<
 > & {
   id?: string;
   code?: string;
-  subjectArea?: string;
   courseUrl?: string;
   /** ISO code the tuition figure is quoted in. Drives the ₹-Lakh conversion for display. */
   tuitionCurrency?: string;
@@ -441,7 +440,10 @@ export const universitiesCatalogService = {
       name: input.name,
       code: input.code ?? input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32),
       studyLevel: toApiStudyLevel(input.level),
-      subjectArea: input.subjectArea ?? "General",
+      // Blank is left out, never defaulted. Sending "General" for a blank meant every
+      // course was "General" and the finder's Field of Study filter had one option — and
+      // on edit it overwrote the subject a spreadsheet import had set.
+      subjectArea: input.subjectArea?.trim() || undefined,
       durationMonths: parseDurationMonths(input.duration),
       tuitionCurrency: currency,
       // Stored in the course's own currency, which is what tuition_currency says it is

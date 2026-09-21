@@ -104,6 +104,8 @@ export interface Course {
   name: string;
   level: CourseLevel;
   levelLabel: string;
+  /** Field of study, e.g. "Computer Science" — what the finder's Field of Study filter lists. */
+  subjectArea?: string;
   intakes: string[];
   duration: string;
   /** Converted to rupee lakhs for the budget slider and sorting. Derived, never typed. */

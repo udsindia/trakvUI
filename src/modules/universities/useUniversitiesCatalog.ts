@@ -166,6 +166,9 @@ export function useUniversityMutations() {
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: universitiesCatalogQueryKey });
     queryClient.invalidateQueries({ queryKey: ["universities"] });
+    // The finder's dropdowns (fields of study, durations, cities) are drawn from courses,
+    // so a new subject should be offered without a page reload.
+    queryClient.invalidateQueries({ queryKey: ["courses", "search", "filter-options"] });
   };
 
   const saveUniversityMutation = useMutation({

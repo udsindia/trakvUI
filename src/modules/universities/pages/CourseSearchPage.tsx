@@ -74,6 +74,7 @@ import {
   getCourseSearchDefaultFilterValues,
   getCourseSearchSliderFallbacks,
 } from "@/modules/universities/courseSearchFilterConfig";
+import { matchFieldOfStudy } from "@/config/universities/fieldsOfStudy";
 import {
   universitiesCatalogQueryKey,
 } from "@/modules/universities/universitiesCatalogService";
@@ -241,12 +242,10 @@ function mapSearchFiltersToDynamicOptions(response?: SearchFiltersApiResponse) {
     city,
     institution,
     duration,
-    discipline: discipline.length > 0 ? discipline : [
-      { label: "Computer Science", value: "computer-science" },
-      { label: "Data Science", value: "data-science" },
-      { label: "Business", value: "business" },
-      { label: "General", value: "general" },
-    ],
+    // Only subjects some course actually has. The placeholders that used to stand in here
+    // were slugs ("computer-science") that no stored subject contains, so picking one
+    // always returned nothing.
+    discipline,
   };
 }
 
@@ -857,12 +856,7 @@ export function CourseSearchPage() {
       city,
       institution,
       duration,
-      discipline: discipline.length > 0 ? discipline : [
-        { label: "Computer Science", value: "computer-science" },
-        { label: "Data Science", value: "data-science" },
-        { label: "Business", value: "business" },
-        { label: "General", value: "general" },
-      ],
+      discipline,
     };
   }, [filterOptionsResponse]);
 
@@ -915,6 +909,18 @@ export function CourseSearchPage() {
     () => getCourseSearchDefaultFilterValues(filterConfig),
     [filterConfig],
   );
+
+  // Picking a student fills in their field of study, when a course offers exactly that
+  // subject. Only into an empty filter: a subject the counsellor chose is not replaced,
+  // and nothing is searched until they apply.
+  const disciplineKey = courseSearchSettings.filters.discipline.key;
+  useEffect(() => {
+    const match = matchFieldOfStudy(selectedStudent?.fieldOfStudy, dynamicOptions.discipline);
+    if (!match) return;
+    setFilterValues((current) =>
+      current[disciplineKey] ? current : { ...current, [disciplineKey]: match.value },
+    );
+  }, [selectedStudent, dynamicOptions.discipline, disciplineKey]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig, defaultFilterValues);
 
   const filteredResults = useMemo(() => courseResults, [courseResults]);
