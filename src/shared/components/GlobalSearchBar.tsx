@@ -31,6 +31,11 @@ export function GlobalSearchBar({
   const [inputValue, setInputValue] = useState(value ?? "");
   const hasMountedRef = useRef(false);
   const isSyncingFromValueRef = useRef(false);
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   useEffect(() => {
     if (value === undefined) {
@@ -59,13 +64,13 @@ export function GlobalSearchBar({
     }
 
     const timeoutId = window.setTimeout(() => {
-      onSearch(inputValue);
+      onSearchRef.current(inputValue);
     }, debounceTime);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [debounceTime, inputValue, onSearch]);
+  }, [debounceTime, inputValue]);
 
   return (
     <TextField
@@ -79,7 +84,7 @@ export function GlobalSearchBar({
           width: { xs: "100%", md: 300 },
           "& .MuiOutlinedInput-root": {
             bgcolor: "background.paper",
-            borderRadius: 3.5,
+            borderRadius: "9px",
             boxShadow: "0 10px 24px rgba(15, 23, 42, 0.05)",
             height: 42,
             transition: "box-shadow 0.2s ease, border-color 0.2s ease",

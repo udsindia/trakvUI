@@ -1,19 +1,25 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { AuthenticatedUser } from "@/app/auth/auth.types";
+import { AccountInactivePage } from "@/app/auth/AccountInactivePage";
+import { ForgotPasswordPage } from "@/app/auth/ForgotPasswordPage";
 import { LoginPage } from "@/app/auth/LoginPage";
 import { RegisterPage } from "@/app/auth/RegisterPage";
+import { SetPasswordPage } from "@/app/auth/SetPasswordPage";
 import { MainLayout } from "@/app/layout/MainLayout";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { AuthGuard, ModuleGuard } from "@/app/router/guards";
 import { ROLE_LABELS, type RoleKey } from "@/config/roles/roles";
 import { FeedbackState } from "@/shared/components/FeedbackState";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
+
+const SaTeamModule = lazy(() => import("@/modules/sa-team/SaTeamModule"));
 
 type AppRouterProps = {
   defaultModulePath: string;
   modules: ResolvedModule[];
   navigationModules: ResolvedModule[];
-  notificationsCount: number;
-  roles: RoleKey[];
+  roles: string[];
   tenantName: string;
   user: AuthenticatedUser | null;
   onLogout: () => void;
@@ -23,26 +29,29 @@ export function AppRouter({
   defaultModulePath,
   modules,
   navigationModules,
-  notificationsCount,
   roles,
   tenantName,
   user,
   onLogout,
 }: AppRouterProps) {
   const userName = user?.name ?? "Guest User";
-  const userRoles = roles.map((role) => ROLE_LABELS[role]);
+  const userRoles = roles.map((role) => ROLE_LABELS[role as RoleKey] ?? role);
 
   return (
     <Routes>
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
+      <Route element={<AccountInactivePage />} path="/account-inactive" />
+      <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+      {/* Both onboarding set-password and forgot-password reset links land here */}
+      <Route element={<SetPasswordPage />} path="/set-password" />
+      <Route element={<SetPasswordPage />} path="/reset-password" />
 
       <Route element={<AuthGuard />}>
         <Route
           element={
             <MainLayout
               modules={navigationModules}
-              notificationsCount={notificationsCount}
               tenantName={tenantName}
               userName={userName}
               userRoles={userRoles}
@@ -81,6 +90,15 @@ export function AppRouter({
           />
         </Route>
       </Route>
+
+      <Route
+        path="/sa/*"
+        element={
+          <Suspense fallback={<LoadingScreen />}>
+            <SaTeamModule />
+          </Suspense>
+        }
+      />
 
       <Route element={<Navigate replace to="/login" />} path="*" />
     </Routes>

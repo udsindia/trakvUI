@@ -1,0 +1,501 @@
+import { universitiesApi } from "@/modules/universities/universitiesApi";
+import {
+  defaultUniversityType,
+  mapCourseToUi,
+  mapUniversityDetailToUi,
+  mapUniversitySummaryToUi,
+  normalizeWebsiteUrl,
+  parseDurationMonths,
+  toAlpha3CountryCode,
+  toApiStudyLevel,
+} from "@/modules/universities/universitiesMappers";
+import type { Course, University } from "@/modules/universities/universities.types";
+import type {
+  AptitudeTestType,
+  CreateRequirementPayload,
+  TestType,
+  UpdateRequirementPayload,
+  UniversityRequirementDto,
+} from "@/modules/universities/universitiesApi.types";
+
+export type UniversitiesCatalog = {
+  courses: Course[];
+  universities: University[];
+};
+
+export type UniversityInput = Omit<University, "id" | "generalRequirements"> & {
+  id?: string;
+  generalRequirements?: University["generalRequirements"];
+  universityType?: "PUBLIC" | "PRIVATE" | "RESEARCH_INTENSIVE";
+};
+
+/**
+ * One accepted English-proficiency test for a course. A course may list several —
+ * they are stored as separate LANGUAGE_TEST rows in the requirements table, which has
+ * always supported many per course.
+ */
+export type CourseLanguageTest = {
+  testType: TestType;
+  minOverallScore?: number;
+  minListening?: number;
+  minReading?: number;
+  minWriting?: number;
+  minSpeaking?: number;
+};
+
+/** One accepted aptitude / entrance test and its cut-off score. */
+export type CourseAptitudeTest = {
+  testType: AptitudeTestType;
+  minOverallScore?: number;
+};
+
+/**
+ * Academic thresholds on the applicant's highest degree — a bachelor's, for a
+ * master's applicant. Saved as a single ACADEMIC requirement row.
+ */
+export type CourseAcademicRequirement = {
+  /** Always out of 10. The scale picker was removed; see toRequirementPayloads. */
+  minGpa?: number;
+  /** @deprecated Always "10.0" on write. Kept so stored rows still round-trip. */
+  gpaScale?: string;
+  /**
+   * GPA bars that apply only to a bachelor's of that length. Left undefined, the
+   * applicant is judged on minGpa — so a university that treats both alike still
+   * needs only the one field.
+   */
+  minGpa3Year?: number;
+  minGpa4Year?: number;
+  maxBacklogs?: number;
+  /** Longest break between study and application accepted, in years. */
+  maxEducationGapYears?: number;
+};
+
+/** Everything the requirements editor produces, for a course or a university default. */
+export type RequirementSet = {
+  languageTests: CourseLanguageTest[];
+  aptitudeTests: CourseAptitudeTest[];
+  academic: CourseAcademicRequirement;
+};
+
+export const emptyRequirementSet = (): RequirementSet => ({
+  languageTests: [],
+  aptitudeTests: [],
+  academic: {},
+});
+
+export function requirementSetIsEmpty(set: RequirementSet): boolean {
+  return (
+    set.languageTests.length === 0 &&
+    set.aptitudeTests.length === 0 &&
+    set.academic.minGpa == null &&
+    set.academic.minGpa3Year == null &&
+    set.academic.minGpa4Year == null &&
+    set.academic.maxBacklogs == null &&
+    set.academic.maxEducationGapYears == null
+  );
+}
+
+/**
+ * Combinations a requirement set must not contain.
+ *
+ * Both are cases where two fields describe the *same* bar in two different ways, so
+ * storing both leaves the eligibility check with no defensible answer about which one
+ * a student is judged against. Note what is deliberately NOT here: a 3-year and a
+ * 4-year GPA together are fine and expected — they describe different applicants, and
+ * a student brings only one degree length to the match.
+ */
+export type RequirementSetError = {
+  /** Which control to mark. */
+  field: "minGpa" | "languageTests";
+  message: string;
+};
+
+export function validateRequirementSet(set: RequirementSet): RequirementSetError[] {
+  const errors: RequirementSetError[] = [];
+
+  const hasPerLengthGpa =
+    set.academic.minGpa3Year != null || set.academic.minGpa4Year != null;
+  if (set.academic.minGpa != null && hasPerLengthGpa) {
+    errors.push({
+      field: "minGpa",
+      message:
+        "Use either one Minimum GPA for every applicant, or the per-length bars — not both. " +
+        "With both set, there is no saying which one a three-year applicant is held to.",
+    });
+  }
+
+  const testTypes = new Set(set.languageTests.map((test) => test.testType));
+  if (testTypes.has("INTER_ENGLISH") && testTypes.has("INTER_ENGLISH_AVG")) {
+    errors.push({
+      field: "languageTests",
+      message:
+        "Class 12 English and the 11th & 12th average are two ways of measuring the same " +
+        "marks. Keep whichever this university actually asks for, and remove the other.",
+    });
+  }
+
+  return errors;
+}
+
+/** Flattens the editor's shape into the requirement rows the API expects. */
+export function toRequirementPayloads(
+  set: RequirementSet,
+  courseId: string | null,
+): CreateRequirementPayload[] {
+  const payloads: CreateRequirementPayload[] = [];
+
+  for (const test of set.languageTests) {
+    payloads.push({
+      courseId,
+      requirementType: "LANGUAGE_TEST",
+      testType: test.testType,
+      minOverallScore: test.minOverallScore,
+      minListening: test.minListening,
+      minReading: test.minReading,
+      minWriting: test.minWriting,
+      minSpeaking: test.minSpeaking,
+      isMandatory: true,
+    });
+  }
+
+  for (const test of set.aptitudeTests) {
+    payloads.push({
+      courseId,
+      requirementType: "APTITUDE_TEST",
+      aptitudeTestType: test.testType,
+      minOverallScore: test.minOverallScore,
+      isMandatory: true,
+    });
+  }
+
+  // The backend rejects an ACADEMIC row with nothing set, so only send a populated one.
+  if (
+    set.academic.minGpa != null ||
+    set.academic.minGpa3Year != null ||
+    set.academic.minGpa4Year != null ||
+    set.academic.maxBacklogs != null ||
+    set.academic.maxEducationGapYears != null
+  ) {
+    payloads.push({
+      courseId,
+      requirementType: "ACADEMIC",
+      minGpa: set.academic.minGpa,
+      // Every GPA is entered out of 10 now — the scale picker is gone and stored rows
+      // were converted by migration-requirement-gpa-normalise-to-ten.sql. Sent explicitly
+      // rather than omitted so a row's scale is never ambiguous on read.
+      gpaScale: "10.0",
+      minGpa3Year: set.academic.minGpa3Year,
+      minGpa4Year: set.academic.minGpa4Year,
+      maxBacklogs: set.academic.maxBacklogs,
+      maxEducationGapYears: set.academic.maxEducationGapYears,
+      isMandatory: true,
+    });
+  }
+
+  return payloads;
+}
+
+/** Rebuilds the editor shape from stored rows — used to prefill from university defaults. */
+export function fromRequirementDtos(
+  requirements: UniversityRequirementDto[],
+): RequirementSet {
+  const set = emptyRequirementSet();
+
+  for (const requirement of requirements) {
+    if (requirement.requirementType === "LANGUAGE_TEST" && requirement.testType) {
+      set.languageTests.push({
+        testType: requirement.testType,
+        minOverallScore: requirement.minOverallScore ?? undefined,
+        minListening: requirement.minListening ?? undefined,
+        minReading: requirement.minReading ?? undefined,
+        minWriting: requirement.minWriting ?? undefined,
+        minSpeaking: requirement.minSpeaking ?? undefined,
+      });
+    } else if (requirement.requirementType === "APTITUDE_TEST" && requirement.aptitudeTestType) {
+      set.aptitudeTests.push({
+        testType: requirement.aptitudeTestType,
+        minOverallScore: requirement.minOverallScore ?? undefined,
+      });
+    } else if (requirement.requirementType === "ACADEMIC") {
+      set.academic = {
+        minGpa: requirement.minGpa ?? undefined,
+        gpaScale: requirement.gpaScale ?? undefined,
+        minGpa3Year: requirement.minGpa3Year ?? undefined,
+        minGpa4Year: requirement.minGpa4Year ?? undefined,
+        maxBacklogs: requirement.maxBacklogs ?? undefined,
+        maxEducationGapYears: requirement.maxEducationGapYears ?? undefined,
+      };
+    }
+  }
+
+  return set;
+}
+
+export type CourseInput = Omit<
+  Course,
+  "id" | "eligibilityStatus" | "eligibilityPercent" | "eligibilityWarning" | "eligibilityHint"
+> & {
+  id?: string;
+  code?: string;
+  courseUrl?: string;
+  /** ISO code the tuition figure is quoted in. Drives the ₹-Lakh conversion for display. */
+  tuitionCurrency?: string;
+  /**
+   * Requirement rows to create alongside the course. Named distinctly from
+   * Course.requirements, which is a flattened display-only list.
+   */
+  requirementSet?: RequirementSet;
+};
+
+/**
+ * The one cache entry holding every university the tenant has.
+ *
+ * Named for the catalogue but keyed under "universities" because the catalogue, the
+ * application form's picker and the per-country lookup are all the same list, and used to
+ * be three separate cache entries that each walked every page of /api/universities. Opening
+ * the application form re-downloaded what the browse page had just fetched. They now share
+ * this key and differ only in how they `select` from it.
+ */
+export const universitiesCatalogQueryKey = ["universities", "all"] as const;
+export const universityQueryKey = (universityId: string) =>
+  ["universities", universityId] as const;
+export const universityCoursesQueryKey = (universityId: string) =>
+  ["universities", universityId, "courses"] as const;
+
+/**
+ * Universities only — deliberately without their courses.
+ *
+ * This used to fetch every university's courses up front, one request per university. At
+ * 160 universities that was ~164 requests per page load, all in parallel; the server
+ * authenticates each one against the database, so the connection pool starved, requests
+ * timed out, and the resulting 500s came back as bare 401s that logged the user out.
+ *
+ * Course counts come from `UniversitySummaryDto.courseCount` (maintained on every add,
+ * import and archive), and the pages load the courses of the *selected* university on
+ * demand through useUniversityCourses.
+ */
+async function fetchCatalog(): Promise<UniversitiesCatalog> {
+  const summaries = await universitiesApi.listAllUniversities();
+
+  return {
+    universities: summaries.map((summary) => mapUniversitySummaryToUi(summary)),
+    courses: [],
+  };
+}
+
+export const universitiesCatalogService = {
+  getCatalog: fetchCatalog,
+
+  getUniversities: async (): Promise<University[]> => {
+    const summaries = await universitiesApi.listAllUniversities();
+    return summaries.map((summary) => mapUniversitySummaryToUi(summary));
+  },
+
+  getUniversityById: async (id: string): Promise<University | undefined> => {
+    try {
+      const detail = await universitiesApi.getUniversity(id);
+      return mapUniversityDetailToUi(detail);
+    } catch {
+      return undefined;
+    }
+  },
+
+  getCoursesByUniversityId: async (universityId: string): Promise<Course[]> => {
+    const courses = await universitiesApi.listAllUniversityCourses(universityId);
+    return courses.map((course) => mapCourseToUi(course, universityId));
+  },
+
+  getCourseById: async (universityId: string, courseId: string): Promise<Course | undefined> => {
+    const courses = await universitiesCatalogService.getCoursesByUniversityId(universityId);
+    return courses.find((course) => course.id === courseId);
+  },
+
+  saveUniversity: async (input: UniversityInput): Promise<University> => {
+    if (input.id) {
+      const updated = await universitiesApi.updateUniversity(input.id, {
+        name: input.name,
+        countryCode: toAlpha3CountryCode(input.countryCode),
+        city: input.city,
+        website: normalizeWebsiteUrl(input.website),
+        universityType: input.universityType ?? defaultUniversityType(),
+        qsRanking: input.qsRank,
+        // Always sent, so clearing the field in the drawer actually clears the stored note.
+        partnerNotes: input.internalNotes ?? "",
+      });
+      return mapUniversityDetailToUi(updated);
+    }
+
+    const created = await universitiesApi.createUniversity({
+      name: input.name,
+      countryCode: toAlpha3CountryCode(input.countryCode),
+      city: input.city,
+      website: normalizeWebsiteUrl(input.website),
+      universityType: input.universityType ?? defaultUniversityType(),
+      qsRanking: input.qsRank,
+    });
+
+    return mapUniversityDetailToUi({
+      ...created,
+      requirements: [],
+    });
+  },
+
+  /**
+   * Writes a university-level default set (course_id = NULL), and optionally pushes the
+   * same values onto existing courses.
+   *
+   * Upserts rather than appends: each entry is matched against the rows already stored
+   * for the same scope, and an existing row is PATCHed instead of a second one being
+   * created. That is what stops "apply to existing courses" — or simply re-saving the
+   * defaults — from leaving a course requiring IELTS twice.
+   *
+   * Caveat inherited from PATCH: null means "no change", so a value can be overwritten
+   * but not cleared. Emptying a band score in the editor leaves the stored one alone.
+   */
+  saveUniversityDefaults: async (
+    universityId: string,
+    set: RequirementSet,
+    applyToCourseIds: string[] = [],
+    existing: UniversityRequirementDto[] = [],
+  ): Promise<{ created: number; updated: number; failed: number }> => {
+    const scopes: Array<string | null> = [null, ...applyToCourseIds];
+
+    // Key on scope + type + which test it is: that tuple is what "the same requirement"
+    // means here. ACADEMIC has no test, so one row per scope.
+    const keyOf = (
+      courseId: string | null,
+      requirementType: string,
+      testType?: string | null,
+      aptitudeTestType?: string | null,
+    ) => [courseId ?? "UNI", requirementType, testType ?? aptitudeTestType ?? ""].join("|");
+
+    const existingByKey = new Map(
+      existing
+        .filter((requirement) => requirement.id)
+        .map((requirement) => [
+          keyOf(
+            requirement.courseId ?? null,
+            requirement.requirementType,
+            requirement.testType,
+            requirement.aptitudeTestType,
+          ),
+          requirement,
+        ]),
+    );
+
+    const creates: CreateRequirementPayload[] = [];
+    const updates: Array<{ id: string; payload: UpdateRequirementPayload }> = [];
+
+    for (const scope of scopes) {
+      for (const payload of toRequirementPayloads(set, scope)) {
+        const match = existingByKey.get(
+          keyOf(scope, payload.requirementType, payload.testType, payload.aptitudeTestType),
+        );
+        if (match?.id) {
+          updates.push({
+            id: match.id,
+            payload: {
+              minOverallScore: payload.minOverallScore,
+              minListening: payload.minListening,
+              minReading: payload.minReading,
+              minWriting: payload.minWriting,
+              minSpeaking: payload.minSpeaking,
+              minGpa: payload.minGpa,
+              gpaScale: payload.gpaScale,
+              minPercentage: payload.minPercentage,
+              maxBacklogs: payload.maxBacklogs,
+              maxEducationGapYears: payload.maxEducationGapYears,
+            },
+          });
+        } else {
+          creates.push(payload);
+        }
+      }
+    }
+
+    const outcomes = await Promise.allSettled([
+      ...creates.map((payload) => universitiesApi.createRequirement(universityId, payload)),
+      ...updates.map(({ id, payload }) => universitiesApi.updateRequirement(id, payload)),
+    ]);
+
+    const failed = outcomes.filter((outcome) => outcome.status === "rejected").length;
+    const createdOk = outcomes
+      .slice(0, creates.length)
+      .filter((outcome) => outcome.status === "fulfilled").length;
+    const updatedOk = outcomes
+      .slice(creates.length)
+      .filter((outcome) => outcome.status === "fulfilled").length;
+
+    return { created: createdOk, updated: updatedOk, failed };
+  },
+
+  /** Archives a course by default; `purge` removes it permanently when nothing links to it. */
+  deleteCourse: async (courseId: string, purge = false): Promise<void> => {
+    await universitiesApi.deleteCourse(courseId, { purge });
+  },
+
+  saveCourse: async (input: CourseInput): Promise<Course> => {
+    const currency = (input.tuitionCurrency ?? "GBP").toUpperCase();
+    const fields = {
+      name: input.name,
+      code: input.code ?? input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 32),
+      studyLevel: toApiStudyLevel(input.level),
+      // Blank is left out, never defaulted. Sending "General" for a blank meant every
+      // course was "General" and the finder's Field of Study filter had one option — and
+      // on edit it overwrote the subject a spreadsheet import had set.
+      subjectArea: input.subjectArea?.trim() || undefined,
+      durationMonths: parseDurationMonths(input.duration),
+      tuitionCurrency: currency,
+      // Stored in the course's own currency, which is what tuition_currency says it is
+      // and what the backend's tuition filter assumes. This used to run the typed figure
+      // through a rupee-lakh conversion, so £23,700 was stored as £22,571,429.
+      // Omitted when blank. It used to go as 0, and CreateCourseRequest has @Positive on
+      // it, so any course saved without a fee was refused outright — the fee is optional,
+      // the zero was not.
+      tuitionAmount:
+        input.tuitionAmount && input.tuitionAmount > 0 ? input.tuitionAmount : undefined,
+      courseUrl: input.courseUrl,
+    };
+
+    // An existing id means the drawer was opened on a course — PATCH it. Without this
+    // branch every "edit" inserted a second copy of the course.
+    const saved = input.id
+      ? await universitiesApi.updateCourse(input.id, fields)
+      : await universitiesApi.createCourse(input.universityId, fields);
+    // PATCH returns a narrower body than POST (no universityId/studyLevel), so the mapper
+    // is fed from the values we just sent rather than from the response.
+    const created = {
+      id: saved.id,
+      name: saved.name,
+      universityId: input.universityId,
+      studyLevel: fields.studyLevel,
+      isActive: saved.isActive,
+    };
+
+    // Requirements are separate rows, so they can only be written once the course has an
+    // id. The course itself is already saved by this point — a failure here must not read
+    // as "the course was not saved", hence the explicit partial message.
+    //
+    // Rows are only ever appended: on an edit the drawer starts with an empty set so an
+    // untouched save cannot re-post, and therefore duplicate, what is already stored.
+    const payloads = toRequirementPayloads(
+      input.requirementSet ?? emptyRequirementSet(),
+      created.id,
+    );
+    if (payloads.length > 0) {
+      const outcomes = await Promise.allSettled(
+        payloads.map((payload) =>
+          universitiesApi.createRequirement(input.universityId, payload),
+        ),
+      );
+      const failed = outcomes.filter((outcome) => outcome.status === "rejected").length;
+      if (failed > 0) {
+        throw new Error(
+          `Course "${created.name}" was ${input.id ? "updated" : "created"}, but ${failed} of ${payloads.length} requirement(s) could not be saved. Add them again from this course.`,
+        );
+      }
+    }
+
+    return mapCourseToUi(created, input.universityId);
+  },
+};

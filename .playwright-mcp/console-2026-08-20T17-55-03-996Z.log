@@ -1,0 +1,2 @@
+[     113ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom_client.js?v=626fecb9:14337
+[     710ms] [LOG] usersService.getUsers {tenantId: b26bcc88-31d2-48d5-b9dd-a22a1d0074bf, users: Array(16)} @ http://localhost:3001/src/modules/settings/usersService.ts:50

@@ -1,0 +1,233 @@
+import { ROLES, ROLE_LABELS, type RoleKey } from "@/config/roles/roles";
+import type {
+  DashboardKpiDto,
+  DashboardQuickAction,
+  DashboardWidgetVisibility,
+} from "@/modules/dashboard/dashboard.types";
+import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
+import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+
+const DASHBOARD_ROLE_PRIORITY: RoleKey[] = [
+  ROLES.SUPER_ADMIN,
+  ROLES.AGENCY_ADMIN,
+  ROLES.APPLICATION_MANAGER,
+  ROLES.ACTIVITY_MANAGER,
+  ROLES.ANALYST,
+  ROLES.COUNSELLOR,
+];
+
+export function resolveDashboardRole(roles: string[]): RoleKey {
+  for (const role of DASHBOARD_ROLE_PRIORITY) {
+    if (roles.includes(role)) {
+      return role;
+    }
+  }
+
+  return ROLES.COUNSELLOR;
+}
+
+export function getDashboardRoleLabel(role: RoleKey): string {
+  return ROLE_LABELS[role];
+}
+
+export function getDashboardGreeting(userName: string): string {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return `Good morning, ${userName}`;
+  }
+
+  if (hour < 17) {
+    return `Good afternoon, ${userName}`;
+  }
+
+  return `Good evening, ${userName}`;
+}
+
+type RoleDashboardConfig = {
+  attentionItems: DashboardAttentionItem[];
+  kpis: DashboardKpiDto[];
+  leadsScope: string;
+  quickActions: DashboardQuickAction[];
+  scopeNote: string;
+  sectionTabs: DashboardSectionTab[];
+  showUnassigned: boolean;
+  subtitle: string;
+  widgets: DashboardWidgetVisibility;
+};
+
+export type DashboardAttentionItem = {
+  action: string;
+  message: string;
+  tone?: "danger" | "info" | "warning";
+};
+
+export type DashboardSectionTab = {
+  badge?: string;
+  id: string;
+  label: string;
+};
+
+const ROLE_DASHBOARD_CONFIG: Record<RoleKey, RoleDashboardConfig> = {
+  [ROLES.SUPER_ADMIN]: {
+    subtitle: "Platform overview across all consultancies.",
+    leadsScope: "All leads",
+    scopeNote: 'Showing <strong style="color:#007A87">all</strong> data',
+    showUnassigned: true,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "leads", label: "Leads" },
+      { id: "applications", label: "Applications" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "Add Lead", href: leadRoutePaths.create },
+      { icon: "💰", label: "View Commission", href: "#" },
+      { icon: "✉️", label: "Invite Team", href: "/settings" },
+      { icon: "📊", label: "View Reports", href: "#" },
+    ],
+    widgets: {
+      applicationPipeline: true,
+      leadPipeline: true,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: true,
+    },
+  },
+  [ROLES.AGENCY_ADMIN]: {
+    subtitle: "Here's your business overview for today.",
+    leadsScope: "All team leads",
+    scopeNote: 'Showing <strong style="color:#007A87">team-wide</strong> data',
+    showUnassigned: true,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "leads", label: "Leads" },
+      { id: "applications", label: "Applications" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "Add Lead", href: leadRoutePaths.create },
+      { icon: "💰", label: "View Commission", href: "#" },
+      { icon: "📊", label: "View Reports", href: "#" },
+      { icon: "✉️", label: "Invite Team", href: "/settings" },
+    ],
+    widgets: {
+      applicationPipeline: true,
+      leadPipeline: true,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: true,
+    },
+  },
+  [ROLES.APPLICATION_MANAGER]: {
+    subtitle: "Track application progress from document check to enrolment.",
+    leadsScope: "My applications",
+    scopeNote: 'Showing <strong style="color:#007A87">application</strong> pipeline data',
+    showUnassigned: false,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "applications", label: "Applications" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "New Application", href: applicationsRoutePaths.create },
+      { icon: "📄", label: "Doc Check Queue", href: applicationsRoutePaths.dashboard },
+      { icon: "🛂", label: "Visa Tracker", href: applicationsRoutePaths.dashboard },
+      { icon: "📊", label: "View Reports", href: "#" },
+    ],
+    widgets: {
+      applicationPipeline: true,
+      leadPipeline: false,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: false,
+    },
+  },
+  [ROLES.ACTIVITY_MANAGER]: {
+    subtitle: "Lead pipeline and qualification overview.",
+    leadsScope: "All leads",
+    scopeNote: 'Showing <strong style="color:#007A87">all</strong> leads',
+    showUnassigned: true,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "leads", label: "Leads" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "Add Lead", href: leadRoutePaths.create },
+      { icon: "🔁", label: "Assign Lead", href: leadRoutePaths.dashboard },
+      { icon: "📝", label: "Log Activity", href: "/activities/feed" },
+      { icon: "📥", label: "Import Leads", href: leadRoutePaths.dashboard },
+    ],
+    widgets: {
+      applicationPipeline: false,
+      leadPipeline: true,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: true,
+    },
+  },
+  [ROLES.ANALYST]: {
+    subtitle: "Team overview and pipeline health.",
+    leadsScope: "All team leads",
+    scopeNote: 'Showing <strong style="color:#007A87">team-wide</strong> data',
+    showUnassigned: true,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "leads", label: "Leads" },
+      { id: "applications", label: "Applications" },
+      { id: "team", label: "Team" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "Add Lead", href: leadRoutePaths.create },
+      { icon: "🔁", label: "Assign Lead", href: leadRoutePaths.dashboard },
+      { icon: "📊", label: "View Reports", href: "#" },
+      { icon: "👥", label: "View Team", href: "/settings" },
+    ],
+    widgets: {
+      applicationPipeline: true,
+      leadPipeline: true,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: true,
+    },
+  },
+  [ROLES.COUNSELLOR]: {
+    subtitle: "Your leads and tasks for today.",
+    leadsScope: "My assigned leads",
+    scopeNote: 'Showing <strong style="color:#007A87">my assigned</strong> leads only',
+    showUnassigned: false,
+    attentionItems: [],
+    sectionTabs: [
+      { id: "leads", label: "My Leads" },
+      { id: "applications", label: "My Applications" },
+      { id: "activity", label: "Activity" },
+    ],
+    kpis: [],
+    quickActions: [
+      { icon: "➕", label: "Add Lead", href: leadRoutePaths.create },
+      { icon: "📝", label: "Log Activity", href: "/activities/feed" },
+      { icon: "🎓", label: "Add Application", href: applicationsRoutePaths.create },
+      { icon: "📞", label: "Schedule Call", href: "/activities/tasks" },
+    ],
+    widgets: {
+      applicationPipeline: true,
+      leadPipeline: true,
+      performance: true,
+      recentActivities: true,
+      weeklyActivity: true,
+    },
+  },
+};
+
+export function getRoleDashboardConfig(role: RoleKey): RoleDashboardConfig {
+  return ROLE_DASHBOARD_CONFIG[role];
+}

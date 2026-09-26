@@ -5,8 +5,12 @@ import type { ModuleKey } from "@/config/modules/modules";
 export const MODULE_ICON_KEYS = {
   DASHBOARD: "dashboard",
   LEADS: "leads",
+  STUDENTS: "students",
   APPLICATIONS: "applications",
   ACTIVITIES: "activities",
+  UNIVERSITIES: "universities",
+  UNIVERSITIES_BROWSE: "universities-browse",
+  SETTINGS: "settings",
 } as const;
 
 export type ModuleIconKey =
@@ -19,6 +23,10 @@ export interface ModuleNavigationItemDefinition {
   description?: string;
   icon?: ModuleIconKey;
   children?: ModuleNavigationItemDefinition[];
+  /** Child-level gating: user must have every permission in this list to see this item. */
+  requiredPermissions?: PermissionKey[];
+  /** Child-level gating: user must have at least one permission in this list to see this item. */
+  anyOfPermissions?: PermissionKey[];
 }
 
 export interface ModuleDefinition extends ModuleNavigationItemDefinition {
@@ -28,5 +36,8 @@ export interface ModuleDefinition extends ModuleNavigationItemDefinition {
   icon: ModuleIconKey;
   order: number;
   allowedRoles: RoleKey[];
-  requiredPermissions: PermissionKey[];
+  /** User must have every permission in this list to access the module. */
+  requiredPermissions?: PermissionKey[];
+  /** User must have at least one permission in this list to access the module. */
+  anyOfPermissions?: PermissionKey[];
 }

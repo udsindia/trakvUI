@@ -1,0 +1,2 @@
+[     150ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom_client.js?v=626fecb9:14337
+[    8015ms] [LOG] [PageLoad] Dashboard loaded in 345ms @ http://localhost:3001/src/modules/dashboard/DashboardModule.tsx:44

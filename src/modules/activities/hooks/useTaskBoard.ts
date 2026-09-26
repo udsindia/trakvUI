@@ -18,6 +18,8 @@ type SaveTaskUpdatesInput = {
 
 type MarkTaskCompleteInput = {
   completionNote: string;
+  /** Raised after the task closes, on the same record. */
+  followUp?: { title: string; dueDate: string } | null;
   taskId: string;
 };
 
@@ -35,23 +37,34 @@ type RescheduleTaskInput = {
 
 type UseTaskBoardOptions = {
   selectedAgentId?: string;
+  /**
+   * Whose tasks the board shows. "team" is everyone inside the caller's visibility scope,
+   * which the server decides — a counsellor asking for the team simply gets themselves.
+   */
+  scope?: "mine" | "team";
   selectedPriority?: TaskPriority;
 };
 
 export function useTaskBoard({
   selectedAgentId = ACTIVITY_ALL_AGENTS_OPTION_ID,
+  scope = "mine",
   selectedPriority,
 }: UseTaskBoardOptions) {
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const taskBoardQuery = useQuery({
-    queryKey: ["activities", "tasks", selectedAgentId, selectedPriority ?? "all"],
+    queryKey: ["activities", "tasks", scope, selectedAgentId, selectedPriority ?? "all"],
     queryFn: () =>
-      activityService.getTaskBoard({
-        agentId: selectedAgentId,
-        priority: selectedPriority,
-      }),
+      scope === "team"
+        ? activityService.getTeamTaskBoard({
+            agentId: selectedAgentId,
+            priority: selectedPriority,
+          })
+        : activityService.getTaskBoard({
+            agentId: selectedAgentId,
+            priority: selectedPriority,
+          }),
   });
 
   const tasks = useMemo(
@@ -174,14 +187,34 @@ export function useTaskBoard({
   );
 
   const markTaskComplete = useCallback(
-    async ({ completionNote, taskId }: MarkTaskCompleteInput) => {
+    async ({ completionNote, followUp, taskId }: MarkTaskCompleteInput) => {
       try {
+        // Read before the completion, because closing the task clears the selection the
+        // follow-up needs to know what it is about.
+        const finished = tasks.find((task) => task.id === taskId);
+
         await markTaskCompleteMutation.mutateAsync({ completionNote, taskId });
+
+        if (followUp) {
+          // Deliberately after, and separately: the task is finished either way. A
+          // follow-up that fails to save is worth an error, not an un-completed task.
+          await createTaskMutation.mutateAsync({
+            applicationId: finished?.applicationId ?? null,
+            assignedToId: finished?.assignedToId ?? null,
+            description: `Follow-up to: ${finished?.title ?? "a completed task"}`,
+            dueDate: followUp.dueDate,
+            entityType: finished?.entityType ?? "GENERAL",
+            leadId: finished?.leadId ?? null,
+            priority: finished?.priority ?? "MEDIUM",
+            studentId: finished?.studentId ?? null,
+            title: followUp.title,
+          });
+        }
       } catch {
-        // error surfaced via markTaskCompleteMutation.error → taskMutationError
+        // error surfaced via the mutation's error → taskMutationError
       }
     },
-    [markTaskCompleteMutation],
+    [createTaskMutation, markTaskCompleteMutation, tasks],
   );
 
   const cancelTask = useCallback(

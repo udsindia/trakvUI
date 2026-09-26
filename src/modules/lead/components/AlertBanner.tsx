@@ -17,7 +17,7 @@ export function AlertBanner({
       variant="outlined"
       sx={{
         alignItems: "flex-start",
-        borderRadius: 3,
+        borderRadius: "12px",
         "& .MuiAlert-message": {
           width: "100%",
         },

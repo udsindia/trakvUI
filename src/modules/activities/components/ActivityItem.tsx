@@ -107,7 +107,7 @@ function ActivityItemComponent({ activity }: ActivityItemProps) {
       sx={{
         border: "1px solid",
         borderColor: alpha("#0f172a", 0.08),
-        borderRadius: 3,
+        borderRadius: "12px",
         p: { xs: 2, sm: 2.5 },
         transition: (theme) =>
           theme.transitions.create(["box-shadow", "transform"], {

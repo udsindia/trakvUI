@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trakv — Education CRM Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ── Reset & Base ──────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f4f7fb; color: #1e293b; display: flex; min-height: 100vh; font-size: 14px; }
+
+/* ── Sidebar ───────────────────────────────────────────── */
+.sidebar { width: 240px; background: #1e293b; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.sidebar-logo { padding: 20px 18px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.logo-badge { display: inline-flex; align-items: center; gap: 10px; }
+.logo-icon { width: 34px; height: 34px; background: linear-gradient(135deg, #0f5ad4, #5c7cfa); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+.logo-text { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+.logo-sub { font-size: 10px; color: #64748b; margin-top: 2px; font-weight: 400; }
+.sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-section { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1.2px; padding: 14px 18px 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: #94a3b8; border-left: 3px solid transparent; transition: all 0.15s; user-select: none; }
+.nav-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+.nav-item.active { background: rgba(15,90,212,0.18); color: #fff; border-left-color: #0f5ad4; }
+.nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-sub { display: flex; align-items: center; gap: 10px; padding: 8px 18px 8px 44px; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; border-left: 3px solid transparent; transition: all 0.15s; }
+.nav-sub:hover { color: #cbd5e1; }
+.nav-sub.active { color: #7dd3fc; }
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #0f5ad4, #5c7cfa); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.user-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+.user-role { font-size: 11px; color: #64748b; }
+
+/* ── Main area ─────────────────────────────────────────── */
+.main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.page-title { font-size: 16px; font-weight: 600; color: #1e293b; }
+.breadcrumb { font-size: 12px; color: #94a3b8; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.role-chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #eef2ff; color: #4f46e5; cursor: default; }
+.notif-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; }
+.notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid #fff; }
+.top-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0f5ad4, #5c7cfa); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; }
+.role-switcher { display: flex; align-items: center; gap: 6px; background: #f4f7fb; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.role-switcher select { border: none; background: transparent; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; }
+
+/* ── Pages ─────────────────────────────────────────────── */
+.page { display: none; flex: 1; overflow-y: auto; }
+.page.active { display: block; }
+.page-content { padding: 24px 28px; }
+
+/* ── Cards & Grids ─────────────────────────────────────── */
+.card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; }
+.card-pad { padding: 20px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-size: 14px; font-weight: 600; }
+.card-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 20px; }
+
+/* ── KPI Cards ─────────────────────────────────────────── */
+.kpi-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kc-blue::before  { background: #0f5ad4; }
+.kc-green::before { background: #10b981; }
+.kc-red::before   { background: #ef4444; }
+.kc-orange::before { background: #f59e0b; }
+.kc-purple::before { background: #7c3aed; }
+.kpi-icon-wrap { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
+.kpi-label { font-size: 11.5px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-size: 30px; font-weight: 700; margin: 5px 0 6px; }
+.kpi-delta { font-size: 12px; font-weight: 500; }
+.delta-up { color: #10b981; }
+.delta-down { color: #ef4444; }
+.delta-flat { color: #94a3b8; }
+
+/* ── Pipeline ──────────────────────────────────────────── */
+.pipeline-track { display: flex; gap: 0; border-radius: 10px; overflow: hidden; height: 52px; }
+.pipe-seg { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; padding: 4px; }
+.pipe-count { font-size: 16px; font-weight: 700; }
+.pipe-label { font-size: 10px; opacity: 0.82; }
+
+/* ── Tables ────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; background: #f8fafc; }
+tbody td { font-size: 13px; padding: 12px 16px; color: #374151; border-top: 1px solid #f1f5f9; }
+tbody tr:hover td { background: #fafbff; }
+
+/* ── Pills & Badges ────────────────────────────────────── */
+.pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.pill-blue   { background: #dbeafe; color: #1d4ed8; }
+.pill-green  { background: #dcfce7; color: #16a34a; }
+.pill-orange { background: #fef3c7; color: #d97706; }
+.pill-red    { background: #fee2e2; color: #dc2626; }
+.pill-purple { background: #ede9fe; color: #7c3aed; }
+.pill-gray   { background: #f1f5f9; color: #64748b; }
+.pill-teal   { background: #ccfbf1; color: #0d9488; }
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn { padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary { background: #0f5ad4; color: #fff; }
+.btn-primary:hover { background: #0e50bc; }
+.btn-outline { background: #fff; color: #374151; border: 1.5px solid #e2e8f0; }
+.btn-outline:hover { border-color: #0f5ad4; color: #0f5ad4; }
+.btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; }
+.btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+/* ── Search & Filters ──────────────────────────────────── */
+.filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.search-input { flex: 1; max-width: 300px; padding: 9px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; background: #fff; transition: border 0.15s; }
+.search-input:focus { border-color: #0f5ad4; }
+.filter-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; transition: all 0.15s; }
+.filter-chip.active { border-color: #0f5ad4; background: #eef2ff; color: #0f5ad4; }
+
+/* ── Avatar ────────────────────────────────────────────── */
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; vertical-align: middle; margin-right: 8px; flex-shrink: 0; }
+
+/* ── Progress bars ─────────────────────────────────────── */
+.progress-wrap { background: #f1f5f9; border-radius: 4px; height: 7px; overflow: hidden; flex: 1; }
+.progress-fill { height: 100%; border-radius: 4px; }
+
+/* ── Task board ────────────────────────────────────────── */
+.task-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.task-col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 600; font-size: 13px; }
+.task-col-count { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.task-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: box-shadow 0.15s; }
+.task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.task-card-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.task-card-meta { font-size: 12px; color: #94a3b8; }
+.task-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+
+/* ── Forms ─────────────────────────────────────────────── */
+.form-section { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 16px; }
+.form-section-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 600; color: #374151; }
+.form-input { padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; font-family: inherit; transition: border 0.15s; }
+.form-input:focus { border-color: #0f5ad4; }
+.form-select { padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; font-family: inherit; background: #fff; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #f1f5f9; margin-top: 8px; }
+
+/* ── Settings tabs ─────────────────────────────────────── */
+.settings-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+.settings-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.settings-tab.active { color: #0f5ad4; border-bottom-color: #0f5ad4; }
+
+/* ── Misc ──────────────────────────────────────────────── */
+.section-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.section-sub { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+.divider { border: none; border-top: 1px solid #f1f5f9; margin: 16px 0; }
+.quick-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.qa-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; border: 1.5px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; transition: all 0.15s; }
+.qa-btn:hover { border-color: #0f5ad4; color: #0f5ad4; background: #eef2ff; }
+.qa-icon { font-size: 14px; }
+.empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+.empty-state .es-icon { font-size: 32px; margin-bottom: 10px; }
+.empty-state .es-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 4px; }
+.permission-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f8fafc; gap: 12px; }
+.permission-name { flex: 1; font-size: 13px; }
+.toggle { width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer; position: relative; transition: background 0.2s; }
+.toggle.on { background: #0f5ad4; }
+.toggle.off { background: #cbd5e1; }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 3px; transition: left 0.2s; }
+.toggle.on::after { left: 19px; }
+.toggle.off::after { left: 3px; }
+.notif-feed { display: flex; flex-direction: column; gap: 0; }
+.notif-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f8fafc; align-items: flex-start; }
+.notif-dot-badge { width: 8px; height: 8px; border-radius: 50%; background: #0f5ad4; flex-shrink: 0; margin-top: 6px; }
+.notif-icon-box { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.notif-body { flex: 1; }
+.notif-title { font-size: 13px; font-weight: 600; }
+.notif-msg { font-size: 12px; color: #64748b; margin-top: 2px; }
+.notif-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon">T</div>
+      <div>
+        <div class="logo-text">TRAKV</div>
+        <div class="logo-sub">Education CRM</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
+      Dashboard
+    </div>
+
+    <div class="nav-section">Modules</div>
+    <div class="nav-item" onclick="navigate('leads')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Leads
+    </div>
+    <div class="nav-item" onclick="navigate('applications')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Applications
+    </div>
+    <div class="nav-item" onclick="navigate('activities')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      Activities
+    </div>
+    <div class="nav-sub active" onclick="navigate('activities')" style="display:none" id="sub-feed">Activity Feed</div>
+    <div class="nav-sub" onclick="navigate('tasks')" style="display:none" id="sub-tasks">My Tasks</div>
+
+    <div class="nav-section">Admin</div>
+    <div class="nav-item" onclick="navigate('settings')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+      Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar" id="sidebarAvatar">RS</div>
+    <div>
+      <div class="user-name" id="sidebarName">Rahul Sharma</div>
+      <div class="user-role" id="sidebarRole">Agency Admin · ABC Education</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ MAIN ══════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="breadcrumb" id="pageBreadcrumb">Overview · June 2026</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="role-switcher">
+        <span>Role:</span>
+        <select id="roleSelect" onchange="switchRole(this.value)">
+          <option value="AGENCY_ADMIN">Agency Admin</option>
+          <option value="MANAGER">Manager</option>
+          <option value="COUNSELLOR">Counsellor</option>
+          <option value="LEAD_MANAGER">Lead Manager</option>
+          <option value="SA_ADMIN">SA Admin</option>
+        </select>
+      </div>
+      <div class="notif-btn" onclick="navigate('notifications')">
+        🔔
+        <div class="notif-dot"></div>
+      </div>
+      <div class="top-avatar" id="topAvatar">RS</div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: DASHBOARD ───────── -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-content">
+
+      <!-- Greeting -->
+      <div style="margin-bottom:20px;">
+        <div class="section-title" id="dashGreeting">Good morning, Rahul Sharma 👋</div>
+        <div class="section-sub" id="dashSub">Here's what's happening at ABC Education today.</div>
+        <div class="quick-actions" id="quickActions">
+          <button class="qa-btn"><span class="qa-icon">➕</span> Add Lead</button>
+          <button class="qa-btn"><span class="qa-icon">💰</span> View Commission</button>
+          <button class="qa-btn"><span class="qa-icon">📊</span> View Reports</button>
+          <button class="qa-btn"><span class="qa-icon">✉️</span> Invite Team</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards → GET /api/dashboard/kpi -->
+      <div class="grid-4" id="kpiRow">
+        <div class="kpi-card kc-purple">
+          <div class="kpi-icon-wrap" style="background:#f3f0ff;">💰</div>
+          <div class="kpi-label">Revenue (MTD)</div>
+          <div class="kpi-value">₹4.85L</div>
+          <div class="kpi-delta delta-up">↑ 12% vs last month</div>
+        </div>
+        <div class="kpi-card kc-blue">
+          <div class="kpi-icon-wrap" style="background:#eff6ff;">👤</div>
+          <div class="kpi-label">New Leads Today</div>
+          <div class="kpi-value">23</div>
+          <div class="kpi-delta delta-up">↑ 8 from Meta Ads</div>
+        </div>
+        <div class="kpi-card kc-red">
+          <div class="kpi-icon-wrap" style="background:#fef2f2;">⚠️</div>
+          <div class="kpi-label">Overdue Tasks</div>
+          <div class="kpi-value">5</div>
+          <div class="kpi-delta delta-down">Needs attention</div>
+        </div>
+        <div class="kpi-card kc-green">
+          <div class="kpi-icon-wrap" style="background:#f0fdf4;">📈</div>
+          <div class="kpi-label">Conversion Rate</div>
+          <div class="kpi-value">18.4%</div>
+          <div class="kpi-delta delta-up">↑ 2.1% this month</div>
+        </div>
+      </div>
+
+      <!-- Pipelines → GET /api/dashboard/pipeline/leads + /applications -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Lead Pipeline</div><div class="card-sub">GET /api/dashboard/pipeline/leads</div></div>
+            <span class="pill pill-blue">120 total</span>
+          </div>
+          <div class="card-pad">
+            <div class="pipeline-track" style="margin-bottom:10px;">
+              <div class="pipe-seg" style="flex:120;background:#4f46e5;"><div class="pipe-count">120</div><div class="pipe-label">New</div></div>
+              <div class="pipe-seg" style="flex:95;background:#7c3aed;"><div class="pipe-count">95</div><div class="pipe-label">Contacted</div></div>
+              <div class="pipe-seg" style="flex:62;background:#ec4899;"><div class="pipe-count">62</div><div class="pipe-label">Qualified</div></div>
+              <div class="pipe-seg" style="flex:38;background:#ef4444;"><div class="pipe-count">38</div><div class="pipe-label">Applied</div></div>
+              <div class="pipe-seg" style="flex:22;background:#10b981;"><div class="pipe-count">22</div><div class="pipe-label">Enrolled</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;"><span>100%</span><span>79%</span><span>52%</span><span>32%</span><span>18%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Application Pipeline</div><div class="card-sub">GET /api/dashboard/pipeline/applications</div></div>
+            <span class="pill pill-purple">58 active</span>
+          </div>
+          <div class="card-pad" style="height:130px;"><canvas id="appPipeChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Activity Chart + Performance → GET /api/dashboard/activity-chart + /performance -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Weekly Activity</div><div class="card-sub">GET /api/dashboard/activity-chart</div></div>
+          </div>
+          <div class="card-pad" style="height:160px;"><canvas id="activityChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Performance</div><div class="card-sub">GET /api/dashboard/performance</div></div>
+          </div>
+          <div class="card-pad">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:13px;flex:1;">Leads Contacted</span>
+              <div class="progress-wrap"><div class="progress-fill" style="width:82%;background:#0f5ad4;"></div></div>
+              <span style="font-size:13px;font-weight:700;width:35px;text-align:right;">82%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:13px;flex:1;">Tasks Completed</span>
+              <div class="progress-wrap"><div class="progress-fill" style="width:75%;background:#10b981;"></div></div>
+              <span style="font-size:13px;font-weight:700;width:35px;text-align:right;">75%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:13px;flex:1;">Follow-up Rate</span>
+              <div class="progress-wrap"><div class="progress-fill" style="width:68%;background:#f59e0b;"></div></div>
+              <span style="font-size:13px;font-weight:700;width:35px;text-align:right;">68%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;flex:1;">WA Reply Rate</span>
+              <div class="progress-wrap"><div class="progress-fill" style="width:58%;background:#7c3aed;"></div></div>
+              <span style="font-size:13px;font-weight:700;width:35px;text-align:right;">58%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activities → GET /api/dashboard/recent-activities [PLANNED] -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div><div class="card-title">Recent Activities</div><div class="card-sub">GET /api/dashboard/recent-activities · <span style="color:#d97706;font-weight:600;">Planned</span></div></div>
+          <button class="btn btn-outline btn-sm" onclick="navigate('activities')">View All</button>
+        </div>
+        <div class="card-pad">
+          <div class="notif-feed">
+            <div class="notif-row">
+              <div class="notif-icon-box" style="background:#ede9fe;">📞</div>
+              <div class="notif-body"><div class="notif-title">Anjali Singh called <span style="color:#0f5ad4;">Priya Sharma</span></div><div class="notif-msg">Discussed UK university options — interested in Masters in Data Science</div><div class="notif-time">10 minutes ago</div></div>
+              <span class="pill pill-purple">CALL</span>
+            </div>
+            <div class="notif-row">
+              <div class="notif-icon-box" style="background:#dcfce7;">✅</div>
+              <div class="notif-body"><div class="notif-title">Ravi Kumar moved <span style="color:#0f5ad4;">Manish Gupta</span> to Qualified</div><div class="notif-msg">Stage changed: Contacted → Qualified</div><div class="notif-time">25 minutes ago</div></div>
+              <span class="pill pill-green">STAGE</span>
+            </div>
+            <div class="notif-row">
+              <div class="notif-icon-box" style="background:#d1fae5;">💬</div>
+              <div class="notif-body"><div class="notif-title">Meena Joshi sent WhatsApp to <span style="color:#0f5ad4;">Ananya Rao</span></div><div class="notif-msg">Sent university brochure via welcome template</div><div class="notif-time">1 hour ago</div></div>
+              <span class="pill pill-teal">WHATSAPP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: LEADS ───────── -->
+  <div id="page-leads" class="page">
+    <div class="page-content">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div class="section-title">Leads</div>
+          <div class="section-sub" style="margin-bottom:0;">Manage and track all incoming leads across your consultancy.</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline">↑ Import</button>
+          <button class="btn btn-primary">+ Add Lead</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input class="search-input" placeholder="🔍  Search by name, phone, email..." />
+        <button class="filter-chip active">All (337)</button>
+        <button class="filter-chip">New (120)</button>
+        <button class="filter-chip">Contacted (95)</button>
+        <button class="filter-chip">Qualified (62)</button>
+        <button class="filter-chip">Applied (38)</button>
+        <button class="filter-chip">Enrolled (22)</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox"></th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Interest</th>
+              <th>Source</th>
+              <th>Stage</th>
+              <th>Assigned To</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Priya Sharma</strong><div style="font-size:11px;color:#94a3b8;">priya@email.com</div></td>
+              <td>+91 98765 11111</td>
+              <td>UK · Masters</td>
+              <td><span class="pill pill-blue">Meta Ads</span></td>
+              <td><span class="pill pill-orange">Contacted</span></td>
+              <td><span class="avatar" style="background:#4f46e5;">AS</span>Anjali Singh</td>
+              <td>Today, 9:45</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Manish Gupta</strong><div style="font-size:11px;color:#94a3b8;">manish@email.com</div></td>
+              <td>+91 98765 22222</td>
+              <td>Canada · Bachelors</td>
+              <td><span class="pill pill-green">Referral</span></td>
+              <td><span class="pill pill-green">Qualified</span></td>
+              <td><span class="avatar" style="background:#10b981;">RK</span>Ravi Kumar</td>
+              <td>Today, 9:20</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Ananya Rao</strong><div style="font-size:11px;color:#94a3b8;">ananya@email.com</div></td>
+              <td>+91 98765 33333</td>
+              <td>Australia · MBA</td>
+              <td><span class="pill pill-blue">Meta Ads</span></td>
+              <td><span class="pill pill-blue">New</span></td>
+              <td><span class="avatar" style="background:#f59e0b;">MJ</span>Meena Joshi</td>
+              <td>Today, 8:55</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Sanjay Verma</strong><div style="font-size:11px;color:#94a3b8;">sanjay@email.com</div></td>
+              <td>+91 98765 44444</td>
+              <td>USA · PhD</td>
+              <td><span class="pill pill-orange">Google Ads</span></td>
+              <td><span class="pill pill-purple">Applied</span></td>
+              <td><span class="avatar" style="background:#ef4444;">AN</span>Arjun Nair</td>
+              <td>Yesterday</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Kavya Reddy</strong><div style="font-size:11px;color:#94a3b8;">kavya@email.com</div></td>
+              <td>+91 98765 55555</td>
+              <td>Germany · Engineering</td>
+              <td><span class="pill pill-blue">Meta Ads</span></td>
+              <td><span class="pill pill-teal">Enrolled</span></td>
+              <td><span class="avatar" style="background:#8b5cf6;">PV</span>Pooja Verma</td>
+              <td>2 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td><strong>Rohan Patel</strong><div style="font-size:11px;color:#94a3b8;">rohan@email.com</div></td>
+              <td>+91 98765 66666</td>
+              <td>UK · Bachelors</td>
+              <td><span class="pill pill-gray">Walk-in</span></td>
+              <td><span class="pill pill-blue">New</span></td>
+              <td style="color:#94a3b8;font-style:italic;">Unassigned</td>
+              <td>3 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:13px;color:#64748b;">
+          <span>Showing 1–6 of 337 leads</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm">← Prev</button>
+            <button class="btn btn-outline btn-sm" style="background:#eef2ff;border-color:#0f5ad4;color:#0f5ad4;">1</button>
+            <button class="btn btn-outline btn-sm">2</button>
+            <button class="btn btn-outline btn-sm">3</button>
+            <button class="btn btn-outline btn-sm">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: APPLICATIONS ───────── -->
+  <div id="page-applications" class="page">
+    <div class="page-content">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div class="section-title">Applications</div>
+          <div class="section-sub" style="margin-bottom:0;">Track student university applications from document check to enrolment.</div>
+        </div>
+        <button class="btn btn-primary">+ New Application</button>
+      </div>
+
+      <div class="filter-bar">
+        <input class="search-input" placeholder="🔍  Search by student name or university..." />
+        <button class="filter-chip active">All (58)</button>
+        <button class="filter-chip">Doc Check (22)</button>
+        <button class="filter-chip">Applied (15)</button>
+        <button class="filter-chip">Offer (10)</button>
+        <button class="filter-chip">Visa (7)</button>
+        <button class="filter-chip">Enrolled (4)</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>University</th>
+              <th>Course</th>
+              <th>Country</th>
+              <th>Stage</th>
+              <th>Counsellor</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Kavya Reddy</strong></td>
+              <td>University of Melbourne</td>
+              <td>MSc Computer Science</td>
+              <td>🇦🇺 Australia</td>
+              <td><span class="pill pill-teal">Enrolled</span></td>
+              <td><span class="avatar" style="background:#4f46e5;">AS</span>Anjali</td>
+              <td>Today</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Sanjay Verma</strong></td>
+              <td>Stanford University</td>
+              <td>PhD Machine Learning</td>
+              <td>🇺🇸 USA</td>
+              <td><span class="pill pill-orange">Visa Applied</span></td>
+              <td><span class="avatar" style="background:#ef4444;">AN</span>Arjun</td>
+              <td>2 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Priya Sharma</strong></td>
+              <td>University of Edinburgh</td>
+              <td>MSc Data Science</td>
+              <td>🇬🇧 UK</td>
+              <td><span class="pill pill-green">Offer Received</span></td>
+              <td><span class="avatar" style="background:#4f46e5;">AS</span>Anjali</td>
+              <td>3 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Manish Gupta</strong></td>
+              <td>University of Toronto</td>
+              <td>BEng Software Eng</td>
+              <td>🇨🇦 Canada</td>
+              <td><span class="pill pill-blue">Applied</span></td>
+              <td><span class="avatar" style="background:#10b981;">RK</span>Ravi</td>
+              <td>4 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Rohan Patel</strong></td>
+              <td>King's College London</td>
+              <td>LLB Law</td>
+              <td>🇬🇧 UK</td>
+              <td><span class="pill pill-gray">Doc Check</span></td>
+              <td><span class="avatar" style="background:#f59e0b;">MJ</span>Meena</td>
+              <td>5 days ago</td>
+              <td><button class="btn btn-outline btn-sm">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:12px 16px;border-top:1px solid #f1f5f9;font-size:13px;color:#64748b;">Showing 1–5 of 58 applications</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: ACTIVITIES ───────── -->
+  <div id="page-activities" class="page">
+    <div class="page-content">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div class="section-title">Activities & Tasks</div>
+          <div class="section-sub" style="margin-bottom:0;">Track all interactions and manage your task board.</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline">Log Activity</button>
+          <button class="btn btn-primary">+ Create Task</button>
+        </div>
+      </div>
+
+      <div class="settings-tabs">
+        <div class="settings-tab active" onclick="switchTab(this,'act-feed')">Activity Feed</div>
+        <div class="settings-tab" onclick="switchTab(this,'act-tasks')">Task Board</div>
+      </div>
+
+      <div id="act-feed">
+        <div class="card">
+          <div class="card-pad">
+            <div class="notif-feed">
+              <div class="notif-row"><div class="notif-icon-box" style="background:#ede9fe;">📞</div><div class="notif-body"><div class="notif-title">Anjali Singh called <span style="color:#0f5ad4;">Priya Sharma</span></div><div class="notif-msg">Discussed UK universities — interested in Masters in Data Science. Follow-up set for next week.</div><div class="notif-time">Today, 09:45</div></div><span class="pill pill-purple">CALL</span></div>
+              <div class="notif-row"><div class="notif-icon-box" style="background:#dcfce7;">✅</div><div class="notif-body"><div class="notif-title">Ravi Kumar completed task — <span style="color:#0f5ad4;">Manish Gupta</span></div><div class="notif-msg">Task: Send IELTS prep resources — marked complete</div><div class="notif-time">Today, 09:20</div></div><span class="pill pill-green">TASK DONE</span></div>
+              <div class="notif-row"><div class="notif-icon-box" style="background:#d1fae5;">💬</div><div class="notif-body"><div class="notif-title">Meena Joshi sent WhatsApp to <span style="color:#0f5ad4;">Ananya Rao</span></div><div class="notif-msg">Sent university brochure via welcome template</div><div class="notif-time">Today, 09:00</div></div><span class="pill pill-teal">WHATSAPP</span></div>
+              <div class="notif-row"><div class="notif-icon-box" style="background:#fef3c7;">✉️</div><div class="notif-body"><div class="notif-title">Arjun Nair emailed <span style="color:#0f5ad4;">Sanjay Verma</span></div><div class="notif-msg">Sent offer letter from Stanford University</div><div class="notif-time">Yesterday, 18:30</div></div><span class="pill pill-orange">EMAIL</span></div>
+              <div class="notif-row"><div class="notif-icon-box" style="background:#ede9fe;">📝</div><div class="notif-body"><div class="notif-title">Pooja Verma added note on <span style="color:#0f5ad4;">Kavya Reddy</span></div><div class="notif-msg">Lead prefers evening calls. Interested in Australia only — University of Melbourne first choice.</div><div class="notif-time">Yesterday, 16:00</div></div><span class="pill pill-gray">NOTE</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="act-tasks" style="display:none;">
+        <div class="task-board">
+          <div>
+            <div class="task-col-header"><span>📋 To Do</span><span class="task-col-count" style="background:#dbeafe;color:#1d4ed8;">8</span></div>
+            <div class="task-card">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-red">HIGH</span><span style="font-size:11px;color:#ef4444;">Overdue</span></div>
+              <div class="task-card-title" style="margin-top:8px;">Follow up call — discuss IELTS results</div>
+              <div class="task-card-meta">Lead: Priya Sharma</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#4f46e5;width:24px;height:24px;font-size:10px;">AS</span><span style="font-size:11px;color:#94a3b8;">Due: Jun 12</span></div>
+            </div>
+            <div class="task-card">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-orange">MED</span><span style="font-size:11px;color:#d97706;">Due Today</span></div>
+              <div class="task-card-title" style="margin-top:8px;">Send university shortlist — Australia options</div>
+              <div class="task-card-meta">Lead: Ananya Rao</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#f59e0b;width:24px;height:24px;font-size:10px;">MJ</span><span style="font-size:11px;color:#94a3b8;">Due: Jun 14</span></div>
+            </div>
+            <div class="task-card">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-blue">LOW</span><span style="font-size:11px;color:#94a3b8;">Jun 16</span></div>
+              <div class="task-card-title" style="margin-top:8px;">WhatsApp follow-up — no response 3 days</div>
+              <div class="task-card-meta">Lead: Rohan Patel</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#10b981;width:24px;height:24px;font-size:10px;">RK</span><span style="font-size:11px;color:#94a3b8;">Due: Jun 16</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-header"><span>🔄 In Progress</span><span class="task-col-count" style="background:#fef3c7;color:#d97706;">3</span></div>
+            <div class="task-card">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-red">HIGH</span><span style="font-size:11px;color:#94a3b8;">Jun 14</span></div>
+              <div class="task-card-title" style="margin-top:8px;">Prepare visa documentation checklist</div>
+              <div class="task-card-meta">Student: Kavya Reddy</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#8b5cf6;width:24px;height:24px;font-size:10px;">PV</span><span style="font-size:11px;color:#94a3b8;">Due: Jun 14</span></div>
+            </div>
+            <div class="task-card">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-orange">MED</span><span style="font-size:11px;color:#94a3b8;">Jun 15</span></div>
+              <div class="task-card-title" style="margin-top:8px;">Update CAS application — King's College</div>
+              <div class="task-card-meta">Student: Rohan Patel</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#ef4444;width:24px;height:24px;font-size:10px;">AN</span><span style="font-size:11px;color:#94a3b8;">Due: Jun 15</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="task-col-header"><span>✅ Done</span><span class="task-col-count" style="background:#dcfce7;color:#16a34a;">5</span></div>
+            <div class="task-card" style="opacity:0.65;">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-green">LOW</span><span style="font-size:11px;color:#10b981;">Completed</span></div>
+              <div class="task-card-title" style="margin-top:8px;text-decoration:line-through;">Send IELTS prep resources</div>
+              <div class="task-card-meta">Lead: Manish Gupta</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#10b981;width:24px;height:24px;font-size:10px;">RK</span><span style="font-size:11px;color:#10b981;">Done Jun 14</span></div>
+            </div>
+            <div class="task-card" style="opacity:0.65;">
+              <div style="display:flex;justify-content:space-between;"><span class="pill pill-green">MED</span><span style="font-size:11px;color:#10b981;">Completed</span></div>
+              <div class="task-card-title" style="margin-top:8px;text-decoration:line-through;">Send offer letter — Stanford</div>
+              <div class="task-card-meta">Student: Sanjay Verma</div>
+              <div class="task-card-footer"><span class="avatar" style="background:#ef4444;width:24px;height:24px;font-size:10px;">AN</span><span style="font-size:11px;color:#10b981;">Done Jun 13</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: SETTINGS ───────── -->
+  <div id="page-settings" class="page">
+    <div class="page-content">
+      <div class="section-title" style="margin-bottom:4px;">Settings</div>
+      <div class="section-sub">Manage your team, roles, permissions and integrations.</div>
+
+      <div class="settings-tabs">
+        <div class="settings-tab active" onclick="switchTab(this,'set-team')">Team</div>
+        <div class="settings-tab" onclick="switchTab(this,'set-roles')">Roles & Permissions</div>
+        <div class="settings-tab" onclick="switchTab(this,'set-integrations')">Integrations</div>
+      </div>
+
+      <div id="set-team">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+          <button class="btn btn-primary">+ Invite Member</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Member</th><th>Email</th><th>Role</th><th>Status</th><th>Last Active</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><span class="avatar" style="background:#4f46e5;">AS</span><strong>Anjali Singh</strong></td><td>anjali@abcconsultancy.com</td><td><span class="pill pill-purple">Counsellor</span></td><td><span class="pill pill-green">Active</span></td><td>Now</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td><span class="avatar" style="background:#10b981;">RK</span><strong>Ravi Kumar</strong></td><td>ravi@abcconsultancy.com</td><td><span class="pill pill-purple">Counsellor</span></td><td><span class="pill pill-green">Active</span></td><td>5 mins ago</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td><span class="avatar" style="background:#f59e0b;">MJ</span><strong>Meena Joshi</strong></td><td>meena@abcconsultancy.com</td><td><span class="pill pill-purple">Counsellor</span></td><td><span class="pill pill-green">Active</span></td><td>20 mins ago</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td><span class="avatar" style="background:#ef4444;">AN</span><strong>Arjun Nair</strong></td><td>arjun@abcconsultancy.com</td><td><span class="pill pill-blue">Manager</span></td><td><span class="pill pill-green">Active</span></td><td>1 hr ago</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td><span class="avatar" style="background:#94a3b8;">VS</span><strong>Vikram Sethi</strong></td><td>vikram@abcconsultancy.com</td><td><span class="pill pill-orange">Lead Manager</span></td><td><span class="pill pill-gray">Invited</span></td><td>—</td><td><button class="btn btn-outline btn-sm">Resend</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="set-roles" style="display:none;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px;"><button class="btn btn-primary">+ Create Role</button></div>
+        <div class="card card-pad">
+          <div style="font-size:13px;color:#64748b;margin-bottom:16px;">Select a role to view and edit its permissions.</div>
+          <div style="display:flex;gap:16px;">
+            <div style="width:200px;flex-shrink:0;">
+              <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Roles</div>
+              <div style="background:#eef2ff;border-left:3px solid #0f5ad4;padding:8px 12px;border-radius:0 8px 8px 0;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:4px;">Agency Admin</div>
+              <div style="padding:8px 12px;border-left:3px solid transparent;font-size:13px;cursor:pointer;color:#64748b;margin-bottom:4px;" class="role-list-item">Manager</div>
+              <div style="padding:8px 12px;border-left:3px solid transparent;font-size:13px;cursor:pointer;color:#64748b;margin-bottom:4px;" class="role-list-item">Counsellor</div>
+              <div style="padding:8px 12px;border-left:3px solid transparent;font-size:13px;cursor:pointer;color:#64748b;margin-bottom:4px;" class="role-list-item">Lead Manager</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Agency Admin — Permissions</div>
+              <div class="permission-row"><span style="font-size:16px;">👁</span><span class="permission-name">View Leads</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">✏️</span><span class="permission-name">Create / Edit Leads</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">🗑</span><span class="permission-name">Delete Leads</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">👥</span><span class="permission-name">Manage Team</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">💰</span><span class="permission-name">View Financials</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">📊</span><span class="permission-name">View Reports</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">⚙️</span><span class="permission-name">Manage Settings</span><button class="toggle on"></button></div>
+              <div class="permission-row"><span style="font-size:16px;">📡</span><span class="permission-name">Configure Integrations</span><button class="toggle on"></button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="set-integrations" style="display:none;">
+        <div class="grid-2">
+          <div class="card card-pad">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div><div class="card-title">Meta Ads (Facebook)</div><div class="card-sub">Lead gen form integration</div></div>
+              <span class="pill pill-green">Connected</span>
+            </div>
+            <div style="font-size:13px;color:#374151;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Page ID</span><span>123456789</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Form ID</span><span>98765432101234</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Webhook</span><span class="pill pill-green">Active</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Last Lead</span><span>10 mins ago</span></div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:14px;">Reconfigure</button>
+          </div>
+          <div class="card card-pad">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div><div class="card-title">WhatsApp Business</div><div class="card-sub">Automated messaging</div></div>
+              <span class="pill pill-green">Connected</span>
+            </div>
+            <div style="font-size:13px;color:#374151;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Phone Number</span><span>+91 99999 00000</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Templates</span><span>4 approved</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">LEAD_CREATED</span><span class="pill pill-green">Active</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Messages sent</span><span>312 this month</span></div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:14px;">Manage Templates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── PAGE: NOTIFICATIONS ───────── -->
+  <div id="page-notifications" class="page">
+    <div class="page-content">
+      <div class="section-title" style="margin-bottom:4px;">Notifications</div>
+      <div class="section-sub">GET /api/dashboard/notifications · <span style="color:#d97706;font-weight:600;">Planned</span></div>
+      <div class="card card-pad">
+        <div class="notif-feed">
+          <div class="notif-row"><div class="notif-dot-badge"></div><div class="notif-icon-box" style="background:#fee2e2;">⚠️</div><div class="notif-body"><div class="notif-title">5 tasks overdue <span class="pill pill-red" style="font-size:10px;">HIGH</span></div><div class="notif-msg">You have 5 tasks past their due date. Oldest: "Send university shortlist" (2 days overdue).</div><div class="notif-time">1 hour ago</div></div><button class="btn btn-outline btn-sm">View Tasks</button></div>
+          <div class="notif-row"><div class="notif-dot-badge"></div><div class="notif-icon-box" style="background:#fef3c7;">👤</div><div class="notif-body"><div class="notif-title">12 leads unassigned <span class="pill pill-orange" style="font-size:10px;">MED</span></div><div class="notif-msg">12 new leads from Meta Ads have no counsellor assigned.</div><div class="notif-time">2 hours ago</div></div><button class="btn btn-outline btn-sm">Assign Now</button></div>
+          <div class="notif-row"><div class="notif-dot-badge"></div><div class="notif-icon-box" style="background:#ede9fe;">📡</div><div class="notif-body"><div class="notif-title">Meta webhook reconnection needed <span class="pill pill-red" style="font-size:10px;">HIGH</span></div><div class="notif-msg">No Meta webhook events in 6 hours. Check ngrok URL or page subscription.</div><div class="notif-time">6 hours ago</div></div><button class="btn btn-outline btn-sm">Check Config</button></div>
+          <div class="notif-row"><div style="width:8px;flex-shrink:0;"></div><div class="notif-icon-box" style="background:#f1f5f9;opacity:0.6;">💬</div><div class="notif-body" style="opacity:0.6;"><div class="notif-title">WhatsApp template approved</div><div class="notif-msg">Template "lead_welcome" is now active for LEAD_CREATED trigger.</div><div class="notif-time">2 days ago · Read</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── Page Navigation ──
+const pages = { dashboard: 'Dashboard', leads: 'Leads', applications: 'Applications', activities: 'Activities & Tasks', settings: 'Settings', notifications: 'Notifications' };
+const breadcrumbs = { dashboard: 'Overview · June 2026', leads: 'Leads · 337 total', applications: 'Applications · 58 active', activities: 'Activities & Tasks', settings: 'Settings & Admin', notifications: 'GET /api/dashboard/notifications' };
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .nav-sub').forEach(n => n.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  document.getElementById('pageTitle').textContent = pages[page] || page;
+  document.getElementById('pageBreadcrumb').textContent = breadcrumbs[page] || '';
+  // Highlight nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+page+"'")) n.classList.add('active');
+    if ((page === 'activities' || page === 'tasks') && n.getAttribute('onclick') && n.getAttribute('onclick').includes("activities")) n.classList.add('active');
+    if (page === 'notifications' && n.getAttribute('onclick') && n.getAttribute('onclick').includes("settings")) return;
+  });
+}
+
+function switchTab(btn, id) {
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  // Find siblings content
+  const contentArea = parent.nextElementSibling;
+  const children = contentArea ? contentArea.parentElement.children : [];
+  // Hide all content divs
+  const tabContents = document.querySelectorAll('#' + id.split('-')[0] + '-' + id.split('-')[1] + ', [id^="' + id.split('-')[0] + '-"]');
+  // Simpler approach: hide/show direct children of content area after tabs
+  let sibling = parent.nextElementSibling;
+  while (sibling) { sibling.style.display = 'none'; sibling = sibling.nextElementSibling; }
+  const target = document.getElementById(id);
+  if (target) target.style.display = '';
+}
+
+// ── Role switcher ──
+const ROLES = {
+  AGENCY_ADMIN: {
+    name: 'Rahul Sharma', initials: 'RS', sub: 'Agency Admin · ABC Education',
+    greeting: 'Good morning, Rahul Sharma 👋',
+    kpi: [
+      { icon: '💰', bg: '#f3f0ff', label: 'Revenue (MTD)', value: '₹4.85L', delta: '↑ 12% vs last month', cls: 'kc-purple delta-up' },
+      { icon: '👤', bg: '#eff6ff', label: 'New Leads Today', value: '23', delta: '↑ 8 from Meta Ads', cls: 'kc-blue delta-up' },
+      { icon: '⚠️', bg: '#fef2f2', label: 'Overdue Tasks', value: '5', delta: 'Needs attention', cls: 'kc-red delta-down' },
+      { icon: '📈', bg: '#f0fdf4', label: 'Conversion Rate', value: '18.4%', delta: '↑ 2.1% this month', cls: 'kc-green delta-up' }
+    ],
+    actions: ['➕ Add Lead', '💰 View Commission', '📊 View Reports', '✉️ Invite Team']
+  },
+  MANAGER: {
+    name: 'Arjun Nair', initials: 'AN', sub: 'Manager · ABC Education',
+    greeting: 'Good afternoon, Arjun Nair 👋',
+    kpi: [
+      { icon: '👤', bg: '#eff6ff', label: 'New Leads Today', value: '23', delta: '↑ 8 from Meta Ads', cls: 'kc-blue delta-up' },
+      { icon: '🎓', bg: '#f0fdf4', label: 'Active Students', value: '142', delta: '(M4 — coming soon)', cls: 'kc-green delta-flat' },
+      { icon: '⚠️', bg: '#fef2f2', label: 'Overdue Tasks', value: '5', delta: 'Across team', cls: 'kc-red delta-down' },
+      { icon: '📈', bg: '#fffbeb', label: 'Conversion Rate', value: '18.4%', delta: '↑ 2.1% this month', cls: 'kc-orange delta-up' }
+    ],
+    actions: ['➕ Add Lead', '🔁 Assign Lead', '📊 View Reports', '👥 View Team']
+  },
+  COUNSELLOR: {
+    name: 'Anjali Singh', initials: 'AS', sub: 'Counsellor · ABC Education',
+    greeting: 'Good morning, Anjali Singh 👋',
+    kpi: [
+      { icon: '📋', bg: '#fffbeb', label: 'Tasks Due Today', value: '8', delta: '3 high priority', cls: 'kc-orange delta-down' },
+      { icon: '👤', bg: '#eff6ff', label: 'New Leads Today', value: '6', delta: 'Assigned to me', cls: 'kc-blue delta-up' },
+      { icon: '🎓', bg: '#f0fdf4', label: 'Active Students', value: '24', delta: 'My portfolio', cls: 'kc-green delta-up' },
+      { icon: '⚠️', bg: '#fef2f2', label: 'Overdue Tasks', value: '2', delta: 'Action needed', cls: 'kc-red delta-down' }
+    ],
+    actions: ['➕ Add Lead', '📝 Log Activity', '🎓 Add Student', '📞 Schedule Call']
+  },
+  LEAD_MANAGER: {
+    name: 'Vikram Sethi', initials: 'VS', sub: 'Lead Manager · ABC Education',
+    greeting: 'Good morning, Vikram Sethi 👋',
+    kpi: [
+      { icon: '📋', bg: '#fffbeb', label: 'Tasks Due Today', value: '8', delta: '3 high priority', cls: 'kc-orange delta-down' },
+      { icon: '👤', bg: '#eff6ff', label: 'New Leads Today', value: '23', delta: '↑ 8 from Meta Ads', cls: 'kc-blue delta-up' },
+      { icon: '✅', bg: '#f0fdf4', label: 'Qualified This Week', value: '34', delta: '↑ 6 vs last week', cls: 'kc-green delta-up' },
+      { icon: '⚠️', bg: '#fef2f2', label: 'Overdue Tasks', value: '5', delta: 'Needs attention', cls: 'kc-red delta-down' }
+    ],
+    actions: ['➕ Add Lead', '🔁 Assign Lead', '📝 Log Activity', '📥 Import Leads']
+  },
+  SA_ADMIN: {
+    name: 'Priya Nair', initials: 'PN', sub: 'SA Admin · Trakv Platform',
+    greeting: 'Good morning, Priya Nair 👋',
+    kpi: [
+      { icon: '👤', bg: '#eff6ff', label: 'New Leads Today', value: '23', delta: '↑ 8 from Meta Ads', cls: 'kc-blue delta-up' },
+      { icon: '🎓', bg: '#f0fdf4', label: 'Active Students', value: '142', cls: 'kc-green delta-flat', delta: '(M4 — coming soon)' },
+      { icon: '⚠️', bg: '#fef2f2', label: 'Overdue Tasks', value: '5', delta: 'Needs attention', cls: 'kc-red delta-down' },
+      { icon: '💸', bg: '#fffbeb', label: 'Commission Pending', value: '₹32K', delta: '(M4 — coming soon)', cls: 'kc-orange delta-flat' }
+    ],
+    actions: ['➕ Add Lead', '💰 View Commission', '✉️ Invite Team', '📊 View Reports']
+  }
+};
+
+function switchRole(role) {
+  const r = ROLES[role];
+  if (!r) return;
+  document.getElementById('sidebarAvatar').textContent = r.initials;
+  document.getElementById('topAvatar').textContent = r.initials;
+  document.getElementById('sidebarName').textContent = r.name;
+  document.getElementById('sidebarRole').textContent = r.sub;
+  document.getElementById('dashGreeting').textContent = r.greeting;
+  document.getElementById('dashSub').textContent = 'Here\'s what\'s happening at ABC Education today.';
+  // KPI
+  const kpiRow = document.getElementById('kpiRow');
+  kpiRow.innerHTML = r.kpi.map(k => {
+    const [cardCls, deltaCls] = k.cls.split(' ');
+    return `<div class="kpi-card ${cardCls}">
+      <div class="kpi-icon-wrap" style="background:${k.bg};">${k.icon}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-delta ${deltaCls}">${k.delta}</div>
+    </div>`;
+  }).join('');
+  // Quick actions
+  const qa = document.getElementById('quickActions');
+  qa.innerHTML = r.actions.map(a => `<button class="qa-btn"><span class="qa-icon">${a.split(' ')[0]}</span> ${a.split(' ').slice(1).join(' ')}</button>`).join('');
+}
+
+// ── Charts ──
+new Chart(document.getElementById('appPipeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Doc Check','Applied','Offer','Visa','Enrolled'],
+    datasets: [{ data: [22,15,10,7,4], backgroundColor: ['#818cf8','#6366f1','#4f46e5','#4338ca','#10b981'], borderWidth:0 }]
+  },
+  options: { cutout:'62%', plugins: { legend: { position:'bottom', labels: { font:{size:10}, padding:6 } } } }
+});
+
+new Chart(document.getElementById('activityChart'), {
+  type: 'line',
+  data: {
+    labels: ['May W3','May W4','Jun W1','Jun W2'],
+    datasets: [
+      { label:'Calls', data:[42,58,51,63], borderColor:'#0f5ad4', backgroundColor:'rgba(15,90,212,0.05)', tension:0.4, fill:true, pointRadius:3 },
+      { label:'WhatsApp', data:[35,47,53,61], borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.05)', tension:0.4, fill:true, pointRadius:3 }
+    ]
+  },
+  options: {
+    plugins: { legend: { position:'bottom', labels: { font:{size:10}, padding:10 } } },
+    scales: { y: { beginAtZero:true, grid:{color:'#f1f5f9'}, ticks:{font:{size:10}} }, x: { grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+</script>
+</body>
+</html>

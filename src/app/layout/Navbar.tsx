@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
   AppBar,
-  Badge,
   Box,
   IconButton,
   Stack,
@@ -11,19 +10,19 @@ import {
   useTheme,
 } from "@mui/material";
 import MenuRounded from "@mui/icons-material/MenuRounded";
-import NotificationsNoneRounded from "@mui/icons-material/NotificationsNoneRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import { DesktopNav } from "@/app/layout/navbar/DesktopNav";
 import { MobileNav } from "@/app/layout/navbar/MobileNav";
 import { UserMenu } from "@/app/layout/navbar/UserMenu";
+import { TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 import { getNavigationItems } from "@/app/layout/navbar/navigation";
+import { NotificationBell } from "@/shared/components/NotificationBell";
 
-export const NAVBAR_HEIGHT = 72;
+export { NAVBAR_HEIGHT, TOPBAR_HEIGHT } from "@/app/layout/layoutConstants";
 
 type NavbarProps = {
   modules: ResolvedModule[];
   mobileNavigationOpen: boolean;
-  notificationsCount: number;
   tenantName: string;
   userName: string;
   userRoles: string[];
@@ -35,7 +34,6 @@ type NavbarProps = {
 export function Navbar({
   modules,
   mobileNavigationOpen,
-  notificationsCount,
   tenantName,
   userName,
   userRoles,
@@ -70,7 +68,7 @@ export function Navbar({
           sx={{
             gap: 2,
             justifyContent: "space-between",
-            minHeight: `${NAVBAR_HEIGHT}px !important`,
+            minHeight: `${TOPBAR_HEIGHT}px !important`,
             px: { xs: 2, md: 3 },
           }}
         >
@@ -93,7 +91,7 @@ export function Navbar({
                   alignItems: "center",
                   background:
                     "linear-gradient(135deg, rgba(15,90,212,1) 0%, rgba(0,137,123,1) 100%)",
-                  borderRadius: 2.5,
+                  borderRadius: "9px",
                   color: "common.white",
                   display: "grid",
                   height: 42,
@@ -106,7 +104,7 @@ export function Navbar({
 
               <Stack sx={{ minWidth: 0 }} spacing={0.25}>
                 <Typography noWrap variant="subtitle1">
-                  EduTrack
+                  VUTrak
                 </Typography>
                 <Typography color="text.secondary" noWrap variant="body2">
                   {tenantName}
@@ -120,11 +118,7 @@ export function Navbar({
           </Stack>
 
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexShrink: 0 }}>
-            <IconButton aria-label="notifications">
-              <Badge badgeContent={notificationsCount} color="primary">
-                <NotificationsNoneRounded />
-              </Badge>
-            </IconButton>
+            <NotificationBell />
 
             <UserMenu userName={userName} userRoles={userRoles} onLogout={onLogout} />
           </Stack>
@@ -135,7 +129,7 @@ export function Navbar({
         items={navigationItems}
         open={mobileNavigationOpen}
         tenantName={tenantName}
-        topOffset={NAVBAR_HEIGHT}
+        topOffset={TOPBAR_HEIGHT}
         onClose={onCloseMobileNavigation}
       />
     </>

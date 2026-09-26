@@ -1,11 +1,33 @@
 import { Box, Paper } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { ApplicationForm } from "@/modules/applications/components/ApplicationForm";
-import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { useApplicationFormController } from "@/modules/applications/useApplicationFormController";
 
 export function AddApplicationPage() {
-  const { form, leads, handleCancel, handleFormSubmit } = useApplicationFormController();
+  const {
+    form,
+    students,
+    countries,
+    universities,
+    courses,
+    partnerAgencies,
+    countriesLoading,
+    universitiesLoading,
+    coursesLoading,
+    countriesError,
+    universitiesError,
+    coursesError,
+    handleCountryChange,
+    handleUniversityChange,
+    handleUniversityNameChange,
+    handleCustomUniversityToggle,
+    handleCancelCustomCourse,
+    handleCourseChange,
+    handleCourseNameChange,
+    canManageCourses,
+    handleCancel,
+    handleFormSubmit,
+  } = useApplicationFormController();
 
   return (
     <Paper
@@ -14,7 +36,7 @@ export function AddApplicationPage() {
         bgcolor: "background.paper",
         border: "1px solid",
         borderColor: "#e9eff5",
-        borderRadius: 1,
+        borderRadius: "12px",
         display: "flex",
         flexDirection: "column",
         minHeight: {
@@ -23,9 +45,9 @@ export function AddApplicationPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
+      {/* <Box sx={{ borderBottom: "1px solid", borderColor: "#edf2f7" }}>
         <PageHeader subtitle="Applications > New Application" title="Add New Application" />
-      </Box>
+      </Box> */}
 
       <Box
         sx={{
@@ -46,7 +68,25 @@ export function AddApplicationPage() {
         >
           <ApplicationForm
             form={form}
-            leads={leads}
+            students={students}
+            countries={countries}
+            universities={universities}
+            courses={courses}
+            partnerAgencies={partnerAgencies}
+            countriesLoading={countriesLoading}
+            universitiesLoading={universitiesLoading}
+            coursesLoading={coursesLoading}
+            countriesError={countriesError}
+            universitiesError={universitiesError}
+            coursesError={coursesError}
+            onCountryChange={handleCountryChange}
+            onUniversityChange={handleUniversityChange}
+            onUniversityNameChange={handleUniversityNameChange}
+            onCustomUniversityToggle={handleCustomUniversityToggle}
+            canManageCourses={canManageCourses}
+            onCancelCustomCourse={handleCancelCustomCourse}
+            onCourseChange={handleCourseChange}
+            onCourseNameChange={handleCourseNameChange}
             onCancel={handleCancel}
             onSubmit={handleFormSubmit}
           />

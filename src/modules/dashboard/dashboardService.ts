@@ -1,47 +1,22 @@
+import { dashboardApi } from "@/modules/dashboard/dashboardApi";
+import { mapDashboardResponse, type DashboardViewModel } from "@/modules/dashboard/dashboardMappers";
+import type { DashboardServiceResponse } from "@/modules/dashboard/dashboard.types";
 import {
-  getMockDashboardActivities,
-  getMockDashboardApplications,
-  getMockDashboardLeads,
-  getMockDashboardTaskSummary,
-  getMockDashboardTasks,
-} from "@/modules/dashboard/dashboardMockData";
-import type {
-  DashboardActivityDto,
-  DashboardApplicationDto,
-  DashboardLeadDto,
-  DashboardServiceResponse,
-  DashboardTaskDto,
-  DashboardTaskSummaryDto,
-} from "@/modules/dashboard/dashboard.types";
-
-function mockResponse<TData>(data: TData): DashboardServiceResponse<TData> {
-  return {
-    data,
-    generatedAt: new Date().toISOString(),
-    source: "mock",
-  };
-}
+  getDashboardDateRange,
+  type DashboardPeriod,
+} from "@/modules/dashboard/dashboardDateRange";
 
 export const dashboardService = {
-  async getLeads(): Promise<DashboardServiceResponse<DashboardLeadDto[]>> {
-    return mockResponse(getMockDashboardLeads());
-  },
+  async getDashboard(
+    period: DashboardPeriod,
+  ): Promise<DashboardServiceResponse<DashboardViewModel>> {
+    const dateRange = getDashboardDateRange(period);
+    const response = await dashboardApi.getDashboard(dateRange);
 
-  async getApplications(): Promise<DashboardServiceResponse<DashboardApplicationDto[]>> {
-    return mockResponse(getMockDashboardApplications());
-  },
-
-  async getTasks(): Promise<DashboardServiceResponse<DashboardTaskDto[]>> {
-    return mockResponse(getMockDashboardTasks());
-  },
-
-  async getTaskSummary(): Promise<DashboardServiceResponse<DashboardTaskSummaryDto>> {
-    const tasks = getMockDashboardTasks();
-    return mockResponse(getMockDashboardTaskSummary(tasks));
-  },
-
-  async getActivityFeed(): Promise<DashboardServiceResponse<DashboardActivityDto[]>> {
-    return mockResponse(getMockDashboardActivities());
+    return {
+      data: mapDashboardResponse(response),
+      generatedAt: response.generatedAt,
+      source: "live",
+    };
   },
 };
-

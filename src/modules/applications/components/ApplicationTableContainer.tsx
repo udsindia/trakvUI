@@ -1,25 +1,11 @@
 import { useState, type MouseEvent } from "react";
-import MoreVertRounded from "@mui/icons-material/MoreVertRounded";
-import {
-  Avatar,
-  Box,
-  Chip,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Pagination,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import { Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { applicationStageStyles } from "@/modules/applications/applicationStage";
+import { applicationEditPath } from "@/modules/applications/applicationsRoutePaths";
 
 export type ApplicationRow = {
   id: string;
@@ -34,137 +20,171 @@ export type ApplicationRow = {
 
 type ApplicationTableContainerProps = {
   applications: ApplicationRow[];
+  onDeleteApplication?: (id: string) => Promise<void>;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   page: number;
+  pageSize: number;
+  pageSizeOptions: number[];
   pageCount: number;
   paginationLabel: string;
 };
 
-const stageStyles: Record<string, { backgroundColor: string; color: string }> = {
-  Draft: { backgroundColor: "rgba(15, 90, 212, 0.12)", color: "#0f5ad4" },
-  Submitted: { backgroundColor: "rgba(15, 90, 212, 0.12)", color: "#0f5ad4" },
-  Processing: { backgroundColor: "rgba(237, 108, 2, 0.14)", color: "#b35a00" },
-  "Visa Applied": { backgroundColor: "rgba(123, 31, 162, 0.14)", color: "#7b1fa2" },
-  "Visa Approved": { backgroundColor: "rgba(0, 137, 123, 0.14)", color: "#00796b" },
-  "Visa Rejected": { backgroundColor: "rgba(211, 47, 47, 0.14)", color: "#d32f2f" },
-  Completed: { backgroundColor: "rgba(0, 137, 123, 0.14)", color: "#00796b" },
-};
+/** Plain text cell matching the Leads table styling, with an em-dash fallback. */
+function TextCell({ value }: { value?: string }) {
+  return (
+    <Typography noWrap sx={{ fontSize: 12.5 }} variant="body2">
+      {value || "—"}
+    </Typography>
+  );
+}
 
-function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+function formatCreatedDate(value?: string) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
 }
 
 export function ApplicationTableContainer({
   applications,
+  onDeleteApplication,
+  onPageChange,
+  onPageSizeChange,
   page,
+  pageSize,
+  pageSizeOptions,
   pageCount,
   paginationLabel,
 }: ApplicationTableContainerProps) {
-  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
-  const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleOpenRowMenu = (event: MouseEvent<HTMLElement>, id: string) => {
-    setActiveAppId(id);
-    setMenuAnchorEl(event.currentTarget);
+  // Row actions sit inside a row that navigates on click, so each one has to stop the
+  // event itself. Without this, cancelling the delete confirm still opened the
+  // application, and confirming it deleted the row and then navigated to it.
+  const stopRowClick = (event: MouseEvent) => {
+    event.stopPropagation();
   };
 
-  const handleCloseRowMenu = () => {
-    setActiveAppId(null);
-    setMenuAnchorEl(null);
+  const handleRowEdit = (event: MouseEvent, app: ApplicationRow) => {
+    stopRowClick(event);
+    navigate(applicationEditPath(app.id));
   };
+
+  const handleRowDelete = async (event: MouseEvent, app: ApplicationRow) => {
+    stopRowClick(event);
+    if (!onDeleteApplication) return;
+    if (!window.confirm(`Delete the application for "${app.studentName}"? It will be archived and hidden from the list.`)) {
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await onDeleteApplication(app.id);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const columns: DataTableColumn<ApplicationRow>[] = [
+    {
+      id: "student",
+      header: "Student",
+      minWidth: 270,
+      render: (app) => (
+        <Stack spacing={0.125}>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 600 }} variant="body2">
+            {app.studentName}
+          </Typography>
+          <Typography color="text.disabled" sx={{ fontSize: 10.5 }} variant="caption">
+            {app.email}
+          </Typography>
+        </Stack>
+      ),
+    },
+    { id: "country", header: "Country", minWidth: 100, render: (a) => <TextCell value={a.targetCountry} /> },
+    { id: "university", header: "University", minWidth: 120, render: (a) => <TextCell value={a.targetUniversity} /> },
+    { id: "course", header: "Course", minWidth: 120, render: (a) => <TextCell value={a.course} /> },
+    {
+      id: "stage",
+      header: "Stage",
+      minWidth: 120,
+      render: (a) => <Chip label={a.stage} size="small" sx={{ ...(applicationStageStyles[a.stage] || {}) }} />,
+    },
+    {
+      id: "created",
+      header: "Created Date",
+      minWidth: 120,
+      render: (a) => (
+        <Typography color="text.disabled" noWrap sx={{ fontSize: 11.5 }} variant="body2">
+          {formatCreatedDate(a.createdAt)}
+        </Typography>
+      ),
+    },
+    {
+      id: "action",
+      header: "Action",
+      align: "right",
+      render: (app) => (
+        <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
+          <Tooltip title="Edit application">
+            <IconButton
+              aria-label={`Edit the application for ${app.studentName}`}
+              disabled={actionLoading}
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "7px",
+                color: "text.secondary",
+                height: 28,
+                width: 28,
+                "&:hover": { borderColor: "primary.main", color: "primary.main" },
+              }}
+              onClick={(event) => handleRowEdit(event, app)}
+            >
+              <EditOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Delete application">
+            <IconButton
+              aria-label={`Delete the application for ${app.studentName}`}
+              disabled={actionLoading || !onDeleteApplication}
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "7px",
+                color: "error.main",
+                height: 28,
+                width: 28,
+                "&:hover": { borderColor: "error.main", bgcolor: "error.50" },
+              }}
+              onClick={(event) => handleRowDelete(event, app)}
+            >
+              <DeleteOutlineRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
 
   return (
-    <Box sx={{ display: "flex", flex: 1, flexDirection: "column", gap: 2, minHeight: 0 }}>
-      <Paper
-        elevation={0}
-        sx={{
-          border: "1px solid",
-          borderColor: "#edf2f7",
-          borderRadius: 1,
-          display: "flex",
-          flex: 1,
-          flexDirection: "column",
-          minHeight: 0,
-          overflow: "auto",
-        }}
-      >
-        <TableContainer sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          <Table stickyHeader sx={{ minWidth: 920 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Student</TableCell>
-                <TableCell>Country</TableCell>
-                <TableCell>University</TableCell>
-                <TableCell>Course</TableCell>
-                <TableCell>Stage</TableCell>
-                <TableCell>Created Date</TableCell>
-                <TableCell align="right">Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {applications.map((app) => (
-                <TableRow hover key={app.id}>
-                  <TableCell sx={{ minWidth: 270 }}>
-                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Avatar sx={{ bgcolor: "#dbeaf6", color: "#2f6f94", fontSize: 13, fontWeight: 700, width: 38, height: 38 }}>
-                        {getInitials(app.studentName)}
-                      </Avatar>
-                      <Stack spacing={0.2}>
-                        <Typography fontWeight={700} sx={{ fontSize: 14 }} variant="body2">
-                          <RouterLink to={`/applications/${app.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                            {app.studentName}
-                          </RouterLink>
-                        </Typography>
-                        <Typography color="text.secondary" sx={{ fontSize: 12 }} variant="caption">
-                          {app.email}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  </TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>{app.targetCountry}</TableCell>
-                  <TableCell sx={{ minWidth: 150 }}>{app.targetUniversity}</TableCell>
-                  <TableCell sx={{ minWidth: 150 }}>{app.course}</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>
-                    <Chip
-                      label={app.stage}
-                      size="small"
-                      sx={{
-                        ...(stageStyles[app.stage] || {}),
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      sx={{ border: "1px solid #e4edf5", borderRadius: 2.5 }}
-                      onClick={(event) => handleOpenRowMenu(event, app.id)}
-                    >
-                      <MoreVertRounded fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Divider />
-
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ p: 2.25, justifyContent: "space-between" }}>
-          <Typography color="text.secondary" sx={{ fontSize: 12 }}>{paginationLabel}</Typography>
-          <Pagination count={pageCount} page={page} shape="rounded" />
-        </Stack>
-      </Paper>
-
-      <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleCloseRowMenu}>
-        <MenuItem component={RouterLink} to={`/applications/${activeAppId}`} onClick={handleCloseRowMenu}>
-          View Details
-        </MenuItem>
-        <MenuItem onClick={handleCloseRowMenu}>Delete</MenuItem>
-      </Menu>
-    </Box>
+    <DataTable
+      columns={columns}
+      rows={applications}
+      getRowKey={(a) => a.id}
+      page={page}
+      pageCount={pageCount}
+      paginationLabel={paginationLabel}
+      onPageChange={onPageChange}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
+      emptyMessage="No applications found."
+      minWidth={820}
+      onRowClick={(app) => navigate(`/applications/${app.id}`)}
+    />
   );
 }

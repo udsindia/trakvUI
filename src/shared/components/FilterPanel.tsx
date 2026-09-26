@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -22,6 +23,7 @@ type BaseFilterConfig = {
   helperText?: string;
   key: string;
   label: string;
+  sectionTitle?: string;
 };
 
 export type DropdownFilterConfig = BaseFilterConfig & {
@@ -51,11 +53,27 @@ export type DateRangeFilterConfig = BaseFilterConfig & {
   type: "date-range";
 };
 
+/**
+ * A single typed number, e.g. a student's test score.
+ *
+ * A dropdown of scores made the counsellor scroll through every possible value to find
+ * the one on the student's certificate. The value is kept as the string typed, so an
+ * empty box means "not set" rather than zero.
+ */
+export type NumberFilterConfig = BaseFilterConfig & {
+  type: "number";
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
+};
+
 export type FilterConfig =
   | DropdownFilterConfig
   | SliderFilterConfig
   | CheckboxGroupFilterConfig
-  | DateRangeFilterConfig;
+  | DateRangeFilterConfig
+  | NumberFilterConfig;
 
 export type FilterPanelValue = DateRangeFilterValue | [number, number] | string | string[];
 
@@ -63,6 +81,7 @@ export type FilterPanelValues = Record<string, FilterPanelValue>;
 
 type FilterPanelProps = {
   applyButtonLabel?: string;
+  contentColumns?: number;
   filtersConfig: FilterConfig[];
   onApplyFilters?: (values: FilterPanelValues) => void;
   onFiltersChange: (nextValues: FilterPanelValues) => void;
@@ -94,6 +113,7 @@ function createDefaultValue(config: FilterConfig): FilterPanelValue {
         endDate: "",
       };
     case "dropdown":
+    case "number":
       return "";
     case "slider":
       return [config.min, config.max];
@@ -118,6 +138,24 @@ function isCheckboxGroupValue(value: FilterPanelValue | undefined): value is str
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 }
 
+function areRangesEqual(left: [number, number] | undefined, right: [number, number] | undefined) {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return left[0] === right[0] && left[1] === right[1];
+}
+
+function resolveSliderRange(
+  draftValues: Record<string, [number, number]>,
+  key: string,
+  currentValue: FilterPanelValue,
+  min: number,
+  max: number,
+): [number, number] {
+  return draftValues[key] ?? (isSliderValue(currentValue) ? currentValue : [min, max]);
+}
+
 export function getDefaultFilterPanelValues(filtersConfig: FilterConfig[]): FilterPanelValues {
   return filtersConfig.reduce<FilterPanelValues>((accumulator, filterConfig) => {
     accumulator[filterConfig.key] = createDefaultValue(filterConfig);
@@ -127,6 +165,7 @@ export function getDefaultFilterPanelValues(filtersConfig: FilterConfig[]): Filt
 
 export function FilterPanel({
   applyButtonLabel = "Apply filters",
+  contentColumns = 1,
   filtersConfig,
   onApplyFilters,
   onFiltersChange,
@@ -136,6 +175,44 @@ export function FilterPanel({
   values,
   width = 320,
 }: FilterPanelProps) {
+  const [sliderDraftValues, setSliderDraftValues] = useState<Record<string, [number, number]>>({});
+
+  useEffect(() => {
+    setSliderDraftValues((previous) => {
+      const next: Record<string, [number, number]> = {};
+
+      for (const filterConfig of filtersConfig) {
+        if (filterConfig.type !== "slider") {
+          continue;
+        }
+
+        const value = values[filterConfig.key];
+        next[filterConfig.key] = isSliderValue(value)
+          ? value
+          : [filterConfig.min, filterConfig.max];
+      }
+
+      const previousKeys = Object.keys(previous);
+      const nextKeys = Object.keys(next);
+
+      if (previousKeys.length === nextKeys.length) {
+        let changed = false;
+        for (const key of nextKeys) {
+          if (!areRangesEqual(previous[key], next[key])) {
+            changed = true;
+            break;
+          }
+        }
+
+        if (!changed) {
+          return previous;
+        }
+      }
+
+      return next;
+    });
+  }, [filtersConfig, values]);
+
   const updateFilterValue = (key: string, value: FilterPanelValue) => {
     onFiltersChange({
       ...values,
@@ -159,10 +236,10 @@ export function FilterPanel({
       borderColor: "#edf2f7",
     },
     "& .MuiOutlinedInput-root": {
-      bgcolor: "#f8fbfe",
-      borderRadius: 3,
-      boxShadow: "0 1px 2px rgba(15, 23, 42, 0.02)",
-      minHeight: 44,
+      bgcolor: "#F7FAFC",
+      borderRadius: "9px",
+      boxShadow: "none",
+      minHeight: 38,
     },
     "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
       borderColor: "#dbe6f0",
@@ -230,6 +307,10 @@ export function FilterPanel({
         sx={{
           flex: 1,
           minHeight: 0,
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns:
+            contentColumns > 1 ? { xs: "1fr", md: `repeat(${contentColumns}, minmax(0, 1fr))` } : "1fr",
           overflowX: "hidden",
           overflowY: "auto",
           px: 2,
@@ -248,225 +329,288 @@ export function FilterPanel({
           },
         }}
       >
-        <Stack spacing={3} sx={{ minWidth: 0 }}>
-          {filtersConfig.map((filterConfig) => {
-            const currentValue = values[filterConfig.key] ?? createDefaultValue(filterConfig);
+        {filtersConfig.map((filterConfig) => {
+          const currentValue = values[filterConfig.key] ?? createDefaultValue(filterConfig);
 
-            return (
-              <Stack key={filterConfig.key} spacing={1.25} sx={{ minWidth: 0 }}>
-                <Stack spacing={0.5}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 700 }} variant="subtitle2">
-                    {filterConfig.label}
+          return (
+            <Stack key={filterConfig.key} spacing={1.25} sx={{ minWidth: 0 }}>
+              {filterConfig.sectionTitle ? (
+                <Typography sx={{ fontSize: 20, fontWeight: 700, pb: 0.25 }} variant="h6">
+                  {filterConfig.sectionTitle}
+                </Typography>
+              ) : null}
+
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontSize: 13, fontWeight: 700 }} variant="subtitle2">
+                  {filterConfig.label}
+                </Typography>
+                {filterConfig.helperText ? (
+                  <Typography color="text.secondary" variant="body2">
+                    {filterConfig.helperText}
                   </Typography>
-                  {filterConfig.helperText ? (
-                    <Typography color="text.secondary" variant="body2">
-                      {filterConfig.helperText}
-                    </Typography>
-                  ) : null}
-                </Stack>
-
-                {filterConfig.type === "dropdown" ? (
-                  <FormControl disabled={filterConfig.disabled} fullWidth size="small" sx={controlSx}>
-                    <Select
-                      displayEmpty
-                      value={typeof currentValue === "string" ? currentValue : ""}
-                      renderValue={(selected) => {
-                        if (!selected) {
-                          return (
-                            <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                              {filterConfig.placeholder ?? `Select ${filterConfig.label}`}
-                            </Typography>
-                          );
-                        }
-
-                        const selectedOption = (filterConfig.options ?? [])
-                          .map(normalizeOption)
-                          .find((option) => option.value === selected);
-
-                        return selectedOption?.label ?? selected;
-                      }}
-                      onChange={(event) => updateFilterValue(filterConfig.key, event.target.value)}
-                    >
-                      <MenuItem value="">
-                        <em>{filterConfig.placeholder ?? `All ${filterConfig.label}`}</em>
-                      </MenuItem>
-
-                      {(filterConfig.options ?? []).map((option) => {
-                        const normalizedOption = normalizeOption(option);
-
-                        return (
-                          <MenuItem key={normalizedOption.value} value={normalizedOption.value}>
-                            {normalizedOption.label}
-                          </MenuItem>
-                        );
-                      })}
-                    </Select>
-                  </FormControl>
-                ) : null}
-
-                {filterConfig.type === "slider" ? (
-                  <Box px={0.5}>
-                    <Slider
-                      disableSwap
-                      disabled={filterConfig.disabled}
-                      max={filterConfig.max}
-                      min={filterConfig.min}
-                      step={filterConfig.step ?? 1}
-                      sx={{
-                        color: "#2f87b7",
-                        px: 0,
-                        "& .MuiSlider-rail": {
-                          bgcolor: "#d9e6f0",
-                          borderRadius: 999,
-                          height: 6,
-                          opacity: 1,
-                        },
-                        "& .MuiSlider-track": {
-                          border: "none",
-                          borderRadius: 999,
-                          height: 6,
-                        },
-                        "& .MuiSlider-thumb": {
-                          bgcolor: "#2f87b7",
-                          boxShadow: "0 0 0 3px rgba(47, 135, 183, 0.12)",
-                          height: 14,
-                          width: 14,
-                        },
-                      }}
-                      value={isSliderValue(currentValue) ? currentValue : [filterConfig.min, filterConfig.max]}
-                      valueLabelDisplay="off"
-                      onChange={(_, value) => {
-                        if (!Array.isArray(value)) {
-                          return;
-                        }
-
-                        updateFilterValue(filterConfig.key, [value[0], value[1]]);
-                      }}
-                    />
-
-                    <Stack direction="row" spacing={1.5} sx={{ justifyContent: "space-between", mt: 0.5 }}>
-                      <Typography color="text.secondary" variant="caption">
-                        {filterConfig.min}
-                      </Typography>
-                      <Typography color="text.secondary" variant="caption">
-                        {isSliderValue(currentValue)
-                          ? Math.round((currentValue[0] + currentValue[1]) / 2)
-                          : Math.round((filterConfig.min + filterConfig.max) / 2)}
-                      </Typography>
-                      <Typography color="text.secondary" variant="caption">
-                        {filterConfig.max}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                ) : null}
-
-                {filterConfig.type === "checkbox-group" ? (
-                  <FormGroup sx={{ gap: 0.25, minWidth: 0, width: "100%" }}>
-                    {filterConfig.options.map((option) => {
-                      const normalizedOption = normalizeOption(option);
-                      const selectedValues = isCheckboxGroupValue(currentValue) ? currentValue : [];
-
-                      return (
-                        <FormControlLabel
-                          key={normalizedOption.value}
-                          control={
-                            <Checkbox
-                              checked={selectedValues.includes(normalizedOption.value)}
-                              disabled={filterConfig.disabled}
-                              size="small"
-                              sx={{
-                                color: "#c8d5e1",
-                                p: 0.5,
-                                "&.Mui-checked": {
-                                  color: "#2f87b7",
-                                },
-                              }}
-                              onChange={(event) => {
-                                const nextValues = event.target.checked
-                                  ? [...selectedValues, normalizedOption.value]
-                                  : selectedValues.filter((value) => value !== normalizedOption.value);
-
-                                updateFilterValue(filterConfig.key, nextValues);
-                              }}
-                            />
-                          }
-                          label={
-                            <Typography
-                              sx={{
-                                color: "text.secondary",
-                                display: "block",
-                                fontSize: 14,
-                                overflowWrap: "anywhere",
-                              }}
-                              variant="body2"
-                            >
-                              {normalizedOption.label}
-                            </Typography>
-                          }
-                          sx={{
-                            alignItems: "flex-start",
-                            m: 0,
-                            minWidth: 0,
-                            width: "100%",
-                            "& .MuiFormControlLabel-label": {
-                              minWidth: 0,
-                            },
-                          }}
-                        />
-                      );
-                    })}
-                  </FormGroup>
-                ) : null}
-
-                {filterConfig.type === "date-range" ? (
-                  <Stack spacing={1.5}>
-                    <TextField
-                      disabled={filterConfig.disabled}
-                      fullWidth
-                      placeholder="mm/dd/yyyy"
-                      size="small"
-                      sx={controlSx}
-                      value={isDateRangeValue(currentValue) ? currentValue.startDate : ""}
-                      onChange={(event) => {
-                        const nextValue = isDateRangeValue(currentValue)
-                          ? currentValue
-                          : { startDate: "", endDate: "" };
-
-                        updateFilterValue(filterConfig.key, {
-                          ...nextValue,
-                          startDate: event.target.value,
-                        });
-                      }}
-                    />
-
-                    <Typography align="center" color="text.secondary" sx={{ fontSize: 12 }} variant="caption">
-                      to
-                    </Typography>
-
-                    <TextField
-                      disabled={filterConfig.disabled}
-                      fullWidth
-                      placeholder="mm/dd/yyyy"
-                      size="small"
-                      sx={controlSx}
-                      value={isDateRangeValue(currentValue) ? currentValue.endDate : ""}
-                      onChange={(event) => {
-                        const nextValue = isDateRangeValue(currentValue)
-                          ? currentValue
-                          : { startDate: "", endDate: "" };
-
-                        updateFilterValue(filterConfig.key, {
-                          ...nextValue,
-                          endDate: event.target.value,
-                        });
-                      }}
-                    />
-                  </Stack>
                 ) : null}
               </Stack>
-            );
-          })}
-        </Stack>
+
+              {filterConfig.type === "dropdown" ? (
+                <FormControl disabled={filterConfig.disabled} fullWidth size="small" sx={controlSx}>
+                  <Select
+                    displayEmpty
+                    value={typeof currentValue === "string" ? currentValue : ""}
+                    renderValue={(selected) => {
+                      if (!selected) {
+                        return (
+                          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
+                            {filterConfig.placeholder ?? `Select ${filterConfig.label}`}
+                          </Typography>
+                        );
+                      }
+
+                      const selectedOption = (filterConfig.options ?? [])
+                        .map(normalizeOption)
+                        .find((option) => option.value === selected);
+
+                      return selectedOption?.label ?? selected;
+                    }}
+                    onChange={(event) => updateFilterValue(filterConfig.key, event.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>{filterConfig.placeholder ?? `All ${filterConfig.label}`}</em>
+                    </MenuItem>
+
+                    {(filterConfig.options ?? []).map((option) => {
+                      const normalizedOption = normalizeOption(option);
+
+                      return (
+                        <MenuItem key={normalizedOption.value} value={normalizedOption.value}>
+                          {normalizedOption.label}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              ) : null}
+
+              {filterConfig.type === "number" ? (
+                <TextField
+                  disabled={filterConfig.disabled}
+                  fullWidth
+                  placeholder={filterConfig.placeholder}
+                  size="small"
+                  slotProps={{
+                    htmlInput: {
+                      inputMode: "decimal",
+                      max: filterConfig.max,
+                      min: filterConfig.min,
+                      step: filterConfig.step ?? "any",
+                    },
+                  }}
+                  sx={controlSx}
+                  type="number"
+                  value={typeof currentValue === "string" ? currentValue : ""}
+                  onChange={(event) => updateFilterValue(filterConfig.key, event.target.value)}
+                />
+              ) : null}
+
+              {filterConfig.type === "slider" ? (
+                <Box px={0.5}>
+                  {(() => {
+                    const sliderValue = resolveSliderRange(
+                      sliderDraftValues,
+                      filterConfig.key,
+                      currentValue,
+                      filterConfig.min,
+                      filterConfig.max,
+                    );
+
+                    return (
+                  <Slider
+                    disableSwap
+                    disabled={filterConfig.disabled}
+                    max={filterConfig.max}
+                    min={filterConfig.min}
+                    step={filterConfig.step ?? 1}
+                    sx={{
+                      color: "#2f87b7",
+                      px: 0,
+                      "& .MuiSlider-rail": {
+                        bgcolor: "#d9e6f0",
+                        borderRadius: 999,
+                        height: 6,
+                        opacity: 1,
+                      },
+                      "& .MuiSlider-track": {
+                        border: "none",
+                        borderRadius: 999,
+                        height: 6,
+                      },
+                      "& .MuiSlider-thumb": {
+                        bgcolor: "#2f87b7",
+                        boxShadow: "0 0 0 3px rgba(47, 135, 183, 0.12)",
+                        height: 14,
+                        width: 14,
+                      },
+                    }}
+                    value={sliderValue}
+                    valueLabelDisplay="off"
+                    onChange={(_, value) => {
+                      if (!Array.isArray(value)) {
+                        return;
+                      }
+
+                      setSliderDraftValues((previous) => ({
+                        ...previous,
+                        [filterConfig.key]: [value[0], value[1]],
+                      }));
+                    }}
+                    onChangeCommitted={(_, value) => {
+                      if (!Array.isArray(value)) {
+                        return;
+                      }
+
+                      updateFilterValue(filterConfig.key, [value[0], value[1]]);
+                    }}
+                  />
+                    );
+                  })()}
+
+                  <Stack direction="row" spacing={1.5} sx={{ justifyContent: "space-between", mt: 0.5 }}>
+                    <Typography color="text.secondary" variant="caption">
+                      {filterConfig.min}
+                    </Typography>
+                    <Typography color="text.secondary" variant="caption">
+                      {Math.round(
+                        (resolveSliderRange(
+                          sliderDraftValues,
+                          filterConfig.key,
+                          currentValue,
+                          filterConfig.min,
+                          filterConfig.max,
+                        )[0] +
+                          resolveSliderRange(
+                            sliderDraftValues,
+                            filterConfig.key,
+                            currentValue,
+                            filterConfig.min,
+                            filterConfig.max,
+                          )[1]) /
+                          2,
+                      )}
+                    </Typography>
+                    <Typography color="text.secondary" variant="caption">
+                      {filterConfig.max}
+                    </Typography>
+                  </Stack>
+                </Box>
+              ) : null}
+
+              {filterConfig.type === "checkbox-group" ? (
+                <FormGroup sx={{ gap: 0.25, minWidth: 0, width: "100%" }}>
+                  {filterConfig.options.map((option) => {
+                    const normalizedOption = normalizeOption(option);
+                    const selectedValues = isCheckboxGroupValue(currentValue) ? currentValue : [];
+
+                    return (
+                      <FormControlLabel
+                        key={normalizedOption.value}
+                        control={
+                          <Checkbox
+                            checked={selectedValues.includes(normalizedOption.value)}
+                            disabled={filterConfig.disabled}
+                            size="small"
+                            sx={{
+                              color: "#c8d5e1",
+                              p: 0.5,
+                              "&.Mui-checked": {
+                                color: "#2f87b7",
+                              },
+                            }}
+                            onChange={(event) => {
+                              const nextValues = event.target.checked
+                                ? [...selectedValues, normalizedOption.value]
+                                : selectedValues.filter((value) => value !== normalizedOption.value);
+
+                              updateFilterValue(filterConfig.key, nextValues);
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            sx={{
+                              color: "text.secondary",
+                              display: "block",
+                              fontSize: 14,
+                              overflowWrap: "anywhere",
+                            }}
+                            variant="body2"
+                          >
+                            {normalizedOption.label}
+                          </Typography>
+                        }
+                        sx={{
+                          alignItems: "flex-start",
+                          m: 0,
+                          minWidth: 0,
+                          width: "100%",
+                          "& .MuiFormControlLabel-label": {
+                            minWidth: 0,
+                          },
+                        }}
+                      />
+                    );
+                  })}
+                </FormGroup>
+              ) : null}
+
+              {filterConfig.type === "date-range" ? (
+                <Stack spacing={1.5}>
+                  <TextField
+                    disabled={filterConfig.disabled}
+                    fullWidth
+                    size="small"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    sx={controlSx}
+                    type="date"
+                    value={isDateRangeValue(currentValue) ? currentValue.startDate : ""}
+                    onChange={(event) => {
+                      const nextValue = isDateRangeValue(currentValue)
+                        ? currentValue
+                        : { startDate: "", endDate: "" };
+
+                      updateFilterValue(filterConfig.key, {
+                        ...nextValue,
+                        startDate: event.target.value,
+                      });
+                    }}
+                  />
+
+                  <Typography align="center" color="text.secondary" sx={{ fontSize: 12 }} variant="caption">
+                    to
+                  </Typography>
+
+                  <TextField
+                    disabled={filterConfig.disabled}
+                    fullWidth
+                    size="small"
+                    slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: isDateRangeValue(currentValue) ? currentValue.startDate : undefined } }}
+                    sx={controlSx}
+                    type="date"
+                    value={isDateRangeValue(currentValue) ? currentValue.endDate : ""}
+                    onChange={(event) => {
+                      const nextValue = isDateRangeValue(currentValue)
+                        ? currentValue
+                        : { startDate: "", endDate: "" };
+
+                      updateFilterValue(filterConfig.key, {
+                        ...nextValue,
+                        endDate: event.target.value,
+                      });
+                    }}
+                  />
+                </Stack>
+              ) : null}
+            </Stack>
+          );
+        })}
       </Box>
 
       <Box
@@ -481,9 +625,9 @@ export function FilterPanel({
         <Button
           fullWidth
           sx={{
-            borderRadius: 2.5,
+            borderRadius: "9px",
             fontWeight: 700,
-            minHeight: 44,
+            minHeight: 38,
             textTransform: "none",
           }}
           variant="contained"

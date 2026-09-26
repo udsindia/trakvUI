@@ -1,0 +1,54 @@
+- generic [ref=f4e3]:
+  - complementary [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e6]:
+        - generic [ref=f4e7]: T
+        - generic [ref=f4e8]:
+          - paragraph [ref=f4e9]: Trakv
+          - paragraph [ref=f4e10]: Education CRM
+        - button [ref=f4e11] [cursor=pointer]
+      - generic [ref=f4e14]:
+        - generic [ref=f4e15]:
+          - paragraph [ref=f4e16]: Main
+          - link "Dashboard" [ref=f4e17] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f4e23] [cursor=pointer]:
+            - /url: /leads
+          - link "Students" [ref=f4e28] [cursor=pointer]:
+            - /url: /students
+          - link "Applications" [ref=f4e33] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f4e38] [cursor=pointer]:
+            - /url: /courses
+          - link "Universities" [ref=f4e43] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f4e48]:
+          - paragraph [ref=f4e49]: Engage
+          - link "Activities" [ref=f4e50] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f4e55] [cursor=pointer]:
+            - /url: /activities/tasks
+      - generic [ref=f4e61] [cursor=pointer]:
+        - generic [ref=f4e62]: MK
+        - generic [ref=f4e63]:
+          - paragraph [ref=f4e64]: Murali Krishna
+          - paragraph [ref=f4e65]: COUNSELLOR
+  - generic [ref=f4e66]:
+    - banner [ref=f4e67]:
+      - generic [ref=f4e68]:
+        - paragraph [ref=f4e69]: Students
+        - paragraph [ref=f4e70]: Thu, 20 Aug 2026 · Murali Krishna
+      - generic [ref=f4e72]:
+        - textbox "Search leads, students, apps…" [ref=f4e76]
+        - group
+      - generic [ref=f4e77]:
+        - button [ref=f4e78] [cursor=pointer]
+        - button [ref=f4e82] [cursor=pointer]
+        - separator [ref=f4e86]
+        - button "notifications" [ref=f4e87] [cursor=pointer]
+        - link "tasks" [ref=f4e91] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f4e94]
+        - button "MK" [ref=f4e97] [cursor=pointer]
+    - main [ref=f4e99]:
+      - progressbar [ref=f4e103]

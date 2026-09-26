@@ -106,12 +106,12 @@ export function BulkActionsBar({
               variant={action.variant ?? "outlined"}
               sx={[
                 {
-                  borderRadius: 2,
+                  borderRadius: "9px",
                   boxShadow: "none",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  minHeight: 34,
-                  px: 1.75,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  minHeight: 32,
+                  px: 1.5,
                   textTransform: "none",
                 },
                 ...(Array.isArray(action.sx) ? action.sx : [action.sx]),

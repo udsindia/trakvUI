@@ -1,13 +1,43 @@
 import { httpClient } from "@/shared/services/http/client";
 import { API_CONFIG } from "@/config/api/config";
+import type { TimelineItem } from "@/modules/applications/applicationsApi";
 import type { CreateLeadPayload } from "@/modules/lead/leadForm.types";
+
+export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
+  leadStage?: string;
+  assignedToId?: string;
+  assignedToName?: string;
+  /**
+   * Why this change was made. Not stored on the lead — the server turns it into an entry
+   * on the lead's timeline alongside what actually changed.
+   */
+  comment?: string;
+};
+
+/**
+ * POST /api/leads/bulk binds `updates` to the Lead entity, so its keys are the entity's
+ * field names — `assignedTo`, not the `assignedToId` the single-lead PATCH takes. Keeping
+ * this separate from UpdateLeadPayload stops the two shapes being mixed up.
+ */
+export type BulkLeadUpdatePayload = {
+  assignedTo?: string;
+  leadStage?: string;
+  score?: number;
+};
 
 // Matches backend LeadResponseDTO
 export interface BackendLead {
   id: string;
-  consultencyId: string;
+  /** The student this lead became, once it has been enrolled. */
+  studentId?: string | null;
+  /** How far the resulting application has got — the lead's stage stops at Enrolled. */
+  downstreamStage?: string | null;
+  applicationCount?: number;
+  consultancyId: string;
   firstName: string;
   lastName: string;
+  /** Dial code for `phone`, e.g. "+91". Not a country — always render the two together. */
+  phoneCountryCode?: string;
   phone: string;
   email: string;
   isArchived: boolean;
@@ -22,6 +52,162 @@ export interface BackendLead {
   updatedAt: string;
 }
 
+export type SortDirection = "ASC" | "DESC";
+
+export type CourseSearchInstitution = {
+  name: string;
+};
+
+export type CourseSearchRequest = {
+  destinations?: string[];
+  institutions?: CourseSearchInstitution[];
+  nearestCity?: string;
+  intakeMonths?: string[];
+  intakeYears?: number[];
+  intakeAvailableOnly?: boolean;
+  intakeStatuses?: string[];
+  courseLevels?: string[];
+  disciplines?: string[];
+  durations?: string[];
+  minDurationMonths?: number;
+  maxDurationMonths?: number;
+  deliveryModes?: string[];
+  postStudyWorkPermit?: boolean;
+  minTuitionLakhs?: number;
+  maxTuitionLakhs?: number;
+  minIelts?: number;
+  maxIelts?: number;
+  /**
+   * English asked from the student's side: the TestType they hold and their score, so the
+   * server matches courses whose bar for that test they clear. minIelts/maxIelts above ask
+   * the opposite question — which courses want a score in a range — and are kept only for
+   * older callers.
+   *
+   * MOI_LETTER carries no score: holding the letter is the requirement, so englishScore is
+   * omitted rather than sent as zero.
+   */
+  englishTestType?: string;
+  englishScore?: number;
+  /** Keep courses that record no language requirement at all. Defaults to true server-side. */
+  includeUnstatedEnglish?: boolean;
+  /** false excludes courses requiring GRE/GMAT/SAT; omit to not filter on it. */
+  aptitudeTestRequired?: boolean;
+  /** The aptitude test the student sat (GRE, GMAT, SAT, DMAT) and their score. */
+  aptitudeTestType?: string;
+  aptitudeScore?: number;
+  minTurnaroundDays?: number;
+  maxTurnaroundDays?: number;
+  nationality?: string;
+  regionState?: string;
+  isOnshore?: boolean;
+  highestEducationLevel?: string;
+  countryOfEducation?: string;
+  gradingSystem?: string;
+  backlogs?: string;
+  educationGap?: string;
+  studentId?: string;
+  query?: string;
+  sort?: string;
+  page?: number;
+  size?: number;
+};
+
+export type CourseSearchResultItem = {
+  id?: string;
+  courseId?: string;
+  name?: string;
+  courseName?: string;
+  title?: string;
+  universityName?: string;
+  institutionName?: string;
+  destination?: string;
+  country?: string;
+  city?: string;
+  nearestCity?: string;
+  studentEmail?: string;
+  email?: string;
+  phone?: string;
+  studentPhone?: string;
+  createdAt?: string;
+  score?: number;
+  [key: string]: unknown;
+};
+
+export type CourseSearchResponse = {
+  content?: CourseSearchResultItem[];
+  items?: CourseSearchResultItem[];
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  [key: string]: unknown;
+};
+
+export interface PaginatedLeadsResponse {
+  content: BackendLead[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+}
+
+export type GetLeadsPaginatedParams = {
+  page: number;
+  size: number;
+  sortBy?: string;
+  sortDirection?: SortDirection;
+};
+
+/** Full lead detail (matches backend LeadDetailsResponseDTO). */
+export interface LeadDetails {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  phoneCountryCode: string;
+  leadStage: string;
+  score: number | null;
+  sourceId: string | null;
+  sourceName: string | null;
+  assignedToId: string | null;
+  assignedToName: string | null;
+  destinationCountries: string[] | null;
+  fieldOfStudy: string | null;
+  currentStudyLevel: string | null;
+  isWhatsAppAvailable: boolean | null;
+  englishProficiencyTest: string | null;
+  englishProficiencyTestScore: string | null;
+  college: string | null;
+  createdAt: string | null;
+  lastActivityAt: string | null;
+  targetIntakeMonth: string | null;
+  targetIntakeYear: number | null;
+  courseInterests: string[] | null;
+  studyLevels: string[] | null;
+  budgetMinInr: number | null;
+  budgetMaxInr: number | null;
+  notes: string | null;
+}
+
+/** Result of a CSV bulk import (matches backend ImportResponseDTO). */
+export interface LeadImportSkip {
+  row: number;
+  reason: string;
+}
+export interface LeadImportResult {
+  importBatchId: string;
+  imported: number;
+  leads: BackendLead[];
+  skippedReasons: LeadImportSkip[];
+}
+
+/** Rows per request when pulling the full lead list; a few round trips, not one huge body. */
+const LEADS_FETCH_PAGE_SIZE = 200;
+
 export const leadApi = {
   getLeadCount: async (): Promise<number> => {
     const response = await httpClient.get<{ count: number }>(`${API_CONFIG.leads}/count`);
@@ -32,6 +218,91 @@ export const leadApi = {
     console.debug("[leadApi] getLeads called");
     const response = await httpClient.get<BackendLead[]>(API_CONFIG.leads);
     console.debug("[leadApi] getLeads response:", response.data);
+    return response.data;
+  },
+
+  /**
+   * Every lead for the tenant, in one list.
+   *
+   * The dashboard filters, searches and counts stage tabs on the client, so it needs the
+   * whole set: fetching a single server page made the table treat those rows as the entire
+   * dataset — "Showing 1–10 of 10" with one page button, no way to reach the rest.
+   *
+   * Pages through rather than asking for one enormous page, so a large tenant costs a
+   * handful of sequential requests instead of a single huge response.
+   */
+  getAllLeadsSorted: async ({
+    sortBy = "createdAt",
+    sortDirection = "DESC",
+  }: Omit<GetLeadsPaginatedParams, "page" | "size"> = {}): Promise<BackendLead[]> => {
+    const first = await leadApi.getLeadsPaginated({
+      page: 0,
+      size: LEADS_FETCH_PAGE_SIZE,
+      sortBy,
+      sortDirection,
+    });
+
+    const leads = [...(first.content ?? [])];
+    const totalPages =
+      first.totalPages ?? Math.ceil((first.totalElements ?? leads.length) / LEADS_FETCH_PAGE_SIZE);
+
+    for (let page = 1; page < totalPages; page += 1) {
+      const next = await leadApi.getLeadsPaginated({
+        page,
+        size: LEADS_FETCH_PAGE_SIZE,
+        sortBy,
+        sortDirection,
+      });
+      leads.push(...(next.content ?? []));
+    }
+
+    return leads;
+  },
+
+  getLeadsPaginated: async ({
+    page,
+    size,
+    sortBy = "createdAt",
+    sortDirection = "DESC",
+  }: GetLeadsPaginatedParams): Promise<PaginatedLeadsResponse> => {
+    const response = await httpClient.get<PaginatedLeadsResponse>(`${API_CONFIG.leads}/paginated`, {
+      params: {
+        page,
+        size,
+        sortBy,
+        sortDirection,
+      },
+    });
+    return response.data;
+  },
+
+  searchCourses: async (payload: CourseSearchRequest): Promise<CourseSearchResponse> => {
+    const response = await httpClient.post<CourseSearchResponse>(`${API_CONFIG.courses}/search`, payload);
+    return response.data;
+  },
+
+  courseFilters: async (): Promise<CourseSearchResponse> => {
+    const response = await httpClient.get<CourseSearchResponse>(`${API_CONFIG.courses}/search/filters`);
+    return response.data;
+  },
+
+  // Distinct filter values, sourced from the backend so the drawer reflects the
+  // tenant's real data rather than a hardcoded list.
+  getSources: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/sources`);
+    return response.data;
+  },
+
+  getCountries: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/countries`);
+    return response.data;
+  },
+
+  // Every country the backend accepts, not just the ones already in use. The form needs
+  // this one: saving a country the server does not recognise is now a 400, so a picker
+  // limited to the tenant's existing countries could never introduce a new destination.
+  getCountryCatalog: async (): Promise<string[]> => {
+    const response = await httpClient.get<string[]>(`${API_CONFIG.leads}/countries/catalog`);
     return response.data;
   },
 
@@ -46,12 +317,91 @@ export const leadApi = {
     return response.data;
   },
 
-  updateLead: async (id: string, payload: Partial<CreateLeadPayload>): Promise<BackendLead> => {
-    const response = await httpClient.put<BackendLead>(`${API_CONFIG.leads}/${id}`, payload);
+  /** Full lead detail for the details page (GET /api/leads/{id}). */
+  getLeadDetails: async (id: string): Promise<LeadDetails> => {
+    const response = await httpClient.get<LeadDetails>(`${API_CONFIG.leads}/${id}`);
+    return response.data;
+  },
+
+  updateLead: async (id: string, payload: UpdateLeadPayload): Promise<BackendLead> => {
+    const response = await httpClient.patch<BackendLead>(`${API_CONFIG.leads}/${id}`, payload);
     return response.data;
   },
 
   deleteLead: async (id: string): Promise<void> => {
     await httpClient.delete(`${API_CONFIG.leads}/${id}`);
+  },
+
+  bulkUpdateLeads: async (
+    leadIds: string[],
+    updates: BulkLeadUpdatePayload,
+    // A sibling of `updates`, not a key inside it: that object binds onto the Lead entity,
+    // which has no comment field.
+    comment?: string,
+  ): Promise<BackendLead[]> => {
+    const response = await httpClient.post<BackendLead[]>(`${API_CONFIG.leads}/bulk`, {
+      leadIds,
+      updates,
+      comment,
+    });
+    return response.data;
+  },
+
+  /** Bulk-import leads from a CSV file (POST /api/leads/import, multipart). */
+  /** Detects the column headers in a file the user is about to import, for a mapping step. */
+  detectImportColumns: async (file: File): Promise<string[]> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.leads}/import/columns`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data.headers;
+  },
+
+  /**
+   * @param mapping our field name -> the file's column header to read it from.
+   * @param collegeName when set, every row in the batch is imported with Lead Source
+   *                    "College" and this as its college name, regardless of mapping.
+   * @param leadSource when set, every row gets this source name, overriding any mapped
+   *                   leadSource column. Ignored by the server if collegeName is also set.
+   */
+  importLeads: async (
+    file: File,
+    mapping?: Record<string, string>,
+    collegeName?: string,
+    leadSource?: string,
+  ): Promise<LeadImportResult> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (mapping) {
+      for (const [field, header] of Object.entries(mapping)) {
+        if (header) formData.append(`mapping_${field}`, header);
+      }
+    }
+    if (collegeName) formData.append("collegeName", collegeName);
+    if (leadSource) formData.append("leadSource", leadSource);
+    const response = await httpClient.post<LeadImportResult>(
+      `${API_CONFIG.leads}/import`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  },
+
+  /**
+   * Tasks and activities against this lead, as one story.
+   *
+   * Lives under /api/activities rather than /api/leads because the server builds it by
+   * unioning the two tables — the endpoint is named for where the query lives, not for
+   * what it returns. Same shape the application page reads, so the panel is shared.
+   */
+  timeline: async (leadId: string, size = 50): Promise<TimelineItem[]> => {
+    const response = await httpClient.get<{ items?: TimelineItem[] }>(
+      `${API_CONFIG.activities}/lead/${leadId}`,
+      { params: { page: 0, size } },
+    );
+    return response.data?.items ?? [];
   },
 };

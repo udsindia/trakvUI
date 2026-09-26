@@ -7,3 +7,31 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+/temp/*
+
+# Playwright MCP debug artifacts (console logs, page snapshots, screenshots)
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Claude Code local session state
+.claude/
+
+# Local env overrides — these point at a chosen backend and must not ship
+.env.local
+.env.*.local
+
+# Vitest coverage output
+coverage/
+
+# Vitest HTML test report
+.vitest/
+
+# Screenshots and scratch files dropped in the repo root.
+#
+# Two of these were a credentials screenshot and a named person's passport scan.
+# Git history is permanent: once either is committed and pushed, deleting the file
+# later does not remove it. Ignored here so a careless `git add -A` cannot take them.
+/*.png
+/interaktWHatsappAPIs.txt

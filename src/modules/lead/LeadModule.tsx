@@ -1,21 +1,6 @@
-import type { PropsWithChildren } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useAuth } from "@/app/auth/useAuth";
-import type { PermissionKey } from "@/config/permissions/permissions";
+import { PermissionGuard } from "@/app/router/PermissionGuard";
 import { leadRoutes } from "@/modules/lead/leadRoutes";
-
-function LeadPermissionGuard({
-  children,
-  requiredPermissions,
-}: PropsWithChildren<{ requiredPermissions?: PermissionKey[] }>) {
-  const { hasPermissions } = useAuth();
-
-  if (requiredPermissions && !hasPermissions(requiredPermissions)) {
-    return <Navigate replace to="/unauthorized" />;
-  }
-
-  return children;
-}
 
 export default function LeadModule() {
   return (
@@ -24,9 +9,9 @@ export default function LeadModule() {
         <Route
           key={key}
           element={
-            <LeadPermissionGuard requiredPermissions={requiredPermissions}>
+            <PermissionGuard allOf={requiredPermissions}>
               <Component />
-            </LeadPermissionGuard>
+            </PermissionGuard>
           }
           index={index}
           path={path}

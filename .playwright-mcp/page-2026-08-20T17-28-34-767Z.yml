@@ -1,0 +1,185 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - complementary [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - generic [ref=f2e6]:
+          - generic [ref=f2e7]: T
+          - generic [ref=f2e8]:
+            - paragraph [ref=f2e9]: Trakv
+            - paragraph [ref=f2e10]: Education CRM
+          - button [ref=f2e11] [cursor=pointer]
+        - generic [ref=f2e14]:
+          - generic [ref=f2e15]:
+            - paragraph [ref=f2e16]: Main
+            - link [ref=f2e114] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=f2e22]: Dashboard
+            - link [ref=f2e115] [cursor=pointer]:
+              - /url: /leads
+              - generic [ref=f2e27]: Lead Management
+            - link [ref=f2e116] [cursor=pointer]:
+              - /url: /applications
+              - generic [ref=f2e32]: Applications
+            - link [ref=f2e117] [cursor=pointer]:
+              - /url: /courses
+              - generic [ref=f2e37]: Courses
+            - link [ref=f2e118] [cursor=pointer]:
+              - /url: /universities
+              - generic [ref=f2e42]: Universities
+          - generic [ref=f2e43]:
+            - paragraph [ref=f2e44]: Engage
+            - link [ref=f2e119] [cursor=pointer]:
+              - /url: /activities/feed
+              - generic [ref=f2e49]: Activities
+            - link [ref=f2e120] [cursor=pointer]:
+              - /url: /activities/tasks
+              - generic [ref=f2e54]: Tasks
+          - generic [ref=f2e55]:
+            - paragraph [ref=f2e56]: Admin
+            - link [ref=f2e121] [cursor=pointer]:
+              - /url: /settings/team
+              - generic [ref=f2e61]: User Management
+            - link [ref=f2e122] [cursor=pointer]:
+              - /url: /settings/roles
+              - generic [ref=f2e67]: Role Management
+        - generic [ref=f2e69] [cursor=pointer]:
+          - generic [ref=f2e70]: AU
+          - generic [ref=f2e71]:
+            - paragraph [ref=f2e72]: Admin User
+            - paragraph [ref=f2e73]: AGENCY_ADMIN
+    - generic [ref=f2e74]:
+      - banner [ref=f2e75]:
+        - generic [ref=f2e76]:
+          - paragraph [ref=f2e77]: Applications
+          - paragraph [ref=f2e78]: Thu, 20 Aug 2026 · Admin User
+        - generic [ref=f2e80]:
+          - textbox [ref=f2e123]:
+            - /placeholder: Search leads, students, apps…
+          - group
+        - generic [ref=f2e85]:
+          - button [ref=f2e124] [cursor=pointer]: New Lead
+          - button [ref=f2e125] [cursor=pointer]: New Application
+          - separator [ref=f2e94]
+          - button [ref=f2e126] [cursor=pointer]
+          - link [ref=f2e127] [cursor=pointer]:
+            - /url: /activities/tasks
+          - separator [ref=f2e102]
+          - button [ref=f2e128] [cursor=pointer]:
+            - generic [ref=f2e106]: AU
+      - main [ref=f2e107]:
+        - generic [ref=f2e135]:
+          - generic [ref=f2e136]:
+            - heading [level=6] [ref=f2e137]: Application Information
+            - paragraph [ref=f2e138]: Provide details for the student's university application.
+          - separator [ref=f2e139]
+          - generic [ref=f2e140]:
+            - generic [ref=f2e142]:
+              - generic [ref=f2e143]: Select Student (Optional)
+              - generic [ref=f2e144]:
+                - combobox [expanded] [ref=f2e145] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Select Student (Optional)
+              - paragraph [ref=f2e146]: "Optional: Select an existing student to auto-fill details"
+            - generic [ref=f2e148]:
+              - generic [ref=f2e149]:
+                - generic [ref=f2e150]:
+                  - text: Student Name
+                  - generic [ref=f2e151]: "*"
+                - generic [ref=f2e152]:
+                  - textbox [ref=f2e153]:
+                    - /placeholder: Enter full name
+                  - group:
+                    - generic: Student Name *
+              - generic [ref=f2e154]:
+                - generic [ref=f2e155]:
+                  - text: Email Address
+                  - generic [ref=f2e156]: "*"
+                - generic [ref=f2e157]:
+                  - textbox [ref=f2e158]:
+                    - /placeholder: name@example.com
+                  - group:
+                    - generic: Email Address *
+              - generic [ref=f2e159]:
+                - generic [ref=f2e160]:
+                  - text: Phone Number
+                  - generic [ref=f2e161]: "*"
+                - generic [ref=f2e162]:
+                  - textbox [ref=f2e163]:
+                    - /placeholder: +91 98765 43210
+                  - group:
+                    - generic: Phone Number *
+            - generic [ref=f2e165]:
+              - generic [ref=f2e166]:
+                - generic [ref=f2e167]:
+                  - text: Destination Country
+                  - generic [ref=f2e168]: "*"
+                - generic [ref=f2e169]:
+                  - combobox [ref=f2e170] [cursor=pointer]
+                  - textbox
+                  - group:
+                    - generic: Destination Country *
+              - generic [ref=f2e171]:
+                - generic [ref=f2e172]:
+                  - text: Target University
+                  - generic [ref=f2e173]: "*"
+                - generic [ref=f2e174]:
+                  - combobox [disabled] [ref=f2e175]
+                  - textbox [disabled]
+                  - group:
+                    - generic: Target University *
+                - paragraph [ref=f2e176]: Select a destination country first.
+              - generic [ref=f2e177]:
+                - generic [ref=f2e178]:
+                  - text: Course
+                  - generic [ref=f2e179]: "*"
+                - generic [ref=f2e180]:
+                  - combobox [disabled] [ref=f2e181]
+                  - textbox [disabled]
+                  - group:
+                    - generic: Course *
+                - paragraph [ref=f2e182]: Select a university first.
+              - generic [ref=f2e183]:
+                - generic [ref=f2e184]:
+                  - generic [ref=f2e185]:
+                    - text: Intake Month
+                    - generic [ref=f2e186]: "*"
+                  - generic [ref=f2e187]:
+                    - combobox [ref=f2e188] [cursor=pointer]
+                    - textbox
+                    - group:
+                      - generic: Intake Month *
+                - generic [ref=f2e189]:
+                  - generic [ref=f2e190]:
+                    - text: Intake Year
+                    - generic [ref=f2e191]: "*"
+                  - generic [ref=f2e192]:
+                    - spinbutton [ref=f2e193]: "2026"
+                    - group:
+                      - generic: Intake Year *
+          - separator [ref=f2e194]
+          - generic [ref=f2e195]:
+            - button [ref=f2e196] [cursor=pointer]: Cancel
+            - button [ref=f2e197] [cursor=pointer]: Save Application
+  - listbox "Select Student (Optional)" [ref=f2e200]:
+    - option [active] [selected] [ref=f2e201] [cursor=pointer]:
+      - emphasis [ref=f2e202]: None
+    - option "Aditya Verma (aditya.m2@seed.local)" [ref=f2e203] [cursor=pointer]
+    - option "raghava121 raghava (test.custom121@gmail.com)" [ref=f2e204] [cursor=pointer]
+    - option "raghava raghava (test.custom@gmail.com)" [ref=f2e205] [cursor=pointer]
+    - option "Menon Menon (Menon.custom121@gmail.com)" [ref=f2e206] [cursor=pointer]
+    - option "Arjun Nanda (arjun.c2@seed.local)" [ref=f2e207] [cursor=pointer]
+    - option "Rohan Deshpande (rohan.c1@seed.local)" [ref=f2e208] [cursor=pointer]
+    - option "Sneha Kulkarni (sneha.c1@seed.local)" [ref=f2e209] [cursor=pointer]
+    - option "Meera Shah (meera.c2@seed.local)" [ref=f2e210] [cursor=pointer]
+    - option "Kabir Menon (kabir.b1s@seed.local)" [ref=f2e211] [cursor=pointer]
+    - option "Anaya Reddy (anaya.b1s@seed.local)" [ref=f2e212] [cursor=pointer]
+    - option "Reyansh Pillai (reyansh.b2s@seed.local)" [ref=f2e213] [cursor=pointer]
+    - option "Sara Bose (sara.b2s@seed.local)" [ref=f2e214] [cursor=pointer]
+    - option "Arjun Nair (arjun.nair.tcd@example.com)" [ref=f2e215] [cursor=pointer]
+    - option "Ananya Rao (ananya.rao.ubc@example.com)" [ref=f2e216] [cursor=pointer]
+    - option "Priya Sharma (priya.sharma.tcd@example.com)" [ref=f2e217] [cursor=pointer]
+    - option "Vikram Menon (vikram.menon.ubc@example.com)" [ref=f2e218] [cursor=pointer]
+    - option "Karthik Reddy (karthik.reddy.tcd@example.com)" [ref=f2e219] [cursor=pointer]
+    - option "Sneha Iyer (sneha.iyer.tcd@example.com)" [ref=f2e220] [cursor=pointer]
+    - option "priyanka raghava (priyanka.custom121@gmail.com)" [ref=f2e221] [cursor=pointer]

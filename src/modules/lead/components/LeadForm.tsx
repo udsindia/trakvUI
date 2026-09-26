@@ -5,8 +5,10 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   CircularProgress,
   Divider,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -14,9 +16,15 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
-import type {
-  LeadFormOptions,
-  LeadFormValues,
+import {
+  COLLEGE_SOURCE,
+  getTodayDateInput,
+  MAX_SOURCE_LENGTH,
+  OTHER_SOURCE,
+  validateCustomSource,
+  validateIntakeDate,
+  type LeadFormOptions,
+  type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
 import { MultiSelectAutocomplete } from "@/shared/components/MultiSelectAutocomplete";
 
@@ -27,6 +35,14 @@ type LeadFormProps = {
   onCancel: () => void;
   onSubmit: FormEventHandler<HTMLFormElement>;
   options: LeadFormOptions;
+  /** Show the "Assigned Agent" field. Hidden for roles without LEAD_ASSIGN. */
+  canAssign?: boolean;
+  /**
+   * True when editing an existing lead. An existing intake date (e.g. from a month
+   * that has since passed) shouldn't be blocked from being saved along with unrelated
+   * edits, so the past-date and 60-day-runway rules only apply to new leads.
+   */
+  isEditing?: boolean;
 };
 
 export function LeadForm({
@@ -34,6 +50,8 @@ export function LeadForm({
   onCancel,
   onSubmit,
   options,
+  canAssign = true,
+  isEditing = false,
 }: LeadFormProps) {
   const {
     control,
@@ -45,10 +63,17 @@ export function LeadForm({
     name: "notes",
   });
 
+  const sourceValue = useWatch({
+    control,
+    name: "source",
+  });
+  const isCollegeSource = sourceValue === COLLEGE_SOURCE;
+  const isOtherSource = sourceValue === OTHER_SOURCE;
+
   const fieldSx = {
     "& .MuiOutlinedInput-root": {
       bgcolor: "background.paper",
-      borderRadius: 2.5,
+      borderRadius: "9px",
     },
   };
 
@@ -71,7 +96,7 @@ export function LeadForm({
       sx={{
         border: "1px solid",
         borderColor: "#e9eff5",
-        borderRadius: 3,
+        borderRadius: "12px",
         boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
       }}
     >
@@ -203,6 +228,8 @@ export function LeadForm({
                   name="intakeDate"
                   rules={{
                     required: "Intake date is required.",
+                    validate: (value) =>
+                      isEditing ? true : (validateIntakeDate(value) ?? true),
                   }}
                   render={({ field }) => (
                     <TextField
@@ -216,6 +243,7 @@ export function LeadForm({
                       slotProps={{
                         htmlInput: {
                           "aria-label": "Intake Date",
+                          min: isEditing ? undefined : getTodayDateInput(),
                         },
                         inputLabel: {
                           shrink: true,
@@ -249,6 +277,28 @@ export function LeadForm({
                       sx={fieldSx}
                       value={field.value}
                     />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="currentStudyLevel"
+                  render={({ field }) => (
+                    <TextField
+                      fullWidth
+                      id={field.name}
+                      label="Current Study Level"
+                      select
+                      slotProps={alwaysVisibleLabelSlotProps}
+                      sx={fieldSx}
+                      {...field}
+                    >
+                      {options.studyLevelOptions.map((level) => (
+                        <MenuItem key={level} value={level}>
+                          {level}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                   )}
                 />
               </Stack>
@@ -287,34 +337,158 @@ export function LeadForm({
                   )}
                 />
 
+                {isCollegeSource ? (
+                  <Controller
+                    control={control}
+                    name="collegeName"
+                    rules={{
+                      required: isCollegeSource ? "College name is required." : false,
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.collegeName)}
+                        fullWidth
+                        helperText={errors.collegeName?.message}
+                        id={field.name}
+                        label="College Name"
+                        placeholder="Enter the college's name"
+                        required
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                ) : null}
+
+                {isOtherSource ? (
+                  <Controller
+                    control={control}
+                    name="otherSource"
+                    rules={{
+                      validate: (value) => {
+                        // Skip entirely when the user has switched away from "Other",
+                        // so a stale value can never block submitting.
+                        if (!isOtherSource) return true;
+                        return validateCustomSource(value, options.sourceOptions) ?? true;
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.otherSource)}
+                        fullWidth
+                        helperText={
+                          errors.otherSource?.message ??
+                          `Saved as a new lead source (max ${MAX_SOURCE_LENGTH} characters).`
+                        }
+                        id={field.name}
+                        label="Specify Lead Source"
+                        placeholder="e.g. Instagram, Education Fair, Agent Partner"
+                        required
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                ) : null}
+
+                {canAssign ? (
+                  <Controller
+                    control={control}
+                    name="agent"
+                    rules={{
+                      required: "Assigned agent is required.",
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        error={Boolean(errors.agent)}
+                        fullWidth
+                        helperText={errors.agent?.message}
+                        id={field.name}
+                        label="Assigned Agent"
+                        required
+                        select
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      >
+                        <MenuItem disabled value="">
+                          Select agent
+                        </MenuItem>
+                        {options.agentOptions.length === 0 ? (
+                          <MenuItem disabled value="__none">
+                            No active counsellors — add one in User Management
+                          </MenuItem>
+                        ) : (
+                          options.agentOptions.map((agentOption) => (
+                            <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
+                              {agentOption.agentName}
+                            </MenuItem>
+                          ))
+                        )}
+                      </TextField>
+                    )}
+                  />
+                ) : null}
+
+                <Stack direction="row" spacing={1.5}>
+                  <Controller
+                    control={control}
+                    name="englishProficiencyTest"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        id={field.name}
+                        label="English Proficiency Test"
+                        select
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      >
+                        <MenuItem value="">
+                          <em>Not specified</em>
+                        </MenuItem>
+                        {options.englishTestOptions.map((test) => (
+                          <MenuItem key={test} value={test}>
+                            {test}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="englishProficiencyTestScore"
+                    render={({ field }) => (
+                      <TextField
+                        fullWidth
+                        id={field.name}
+                        label="Score"
+                        placeholder="e.g. 7.5"
+                        slotProps={alwaysVisibleLabelSlotProps}
+                        sx={fieldSx}
+                        {...field}
+                      />
+                    )}
+                  />
+                </Stack>
+
                 <Controller
                   control={control}
-                  name="agent"
-                  rules={{
-                    required: "Assigned agent is required.",
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      error={Boolean(errors.agent)}
-                      fullWidth
-                      helperText={errors.agent?.message}
-                      id={field.name}
-                      label="Assigned Agent"
-                      required
-                      select
-                      slotProps={alwaysVisibleLabelSlotProps}
-                      sx={fieldSx}
-                      {...field}
-                    >
-                      <MenuItem disabled value="">
-                        Select agent
-                      </MenuItem>
-                      {options.agentOptions.map((agentOption) => (
-                        <MenuItem key={agentOption.agentId} value={agentOption.agentId}>
-                          {agentOption.agentName}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                  name="isWhatsAppAvailable"
+                  render={({ field: { value, onChange, ...field } }) => (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={value}
+                          onChange={(event) => onChange(event.target.checked)}
+                          {...field}
+                        />
+                      }
+                      label="WhatsApp available on this number"
+                    />
                   )}
                 />
 
@@ -384,7 +558,7 @@ export function LeadForm({
               type="submit"
               variant="contained"
             >
-              {isSubmitting ? "Saving..." : "Save Lead"}
+              {isSubmitting ? "Saving..." : "Update Lead"}
             </Button>
           </Stack>
         </Stack>

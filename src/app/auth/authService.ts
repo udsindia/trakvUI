@@ -3,8 +3,10 @@ import type {
   AuthLoginRequest,
   AuthSession,
   CreateConsultancyRequest,
+  OnboardingRegisterRequest,
   RegisterAdminRequest,
 } from "@/app/auth/auth.types";
+import { API_CONFIG } from "@/config/api/config";
 import {
   MODULE_KEYS,
   defaultTenantModules,
@@ -13,6 +15,7 @@ import {
 import { getPermissionsForRoles } from "@/config/permissions/permissions";
 import { ROLES, type RoleKey } from "@/config/roles/roles";
 import { httpClient } from "@/shared/services/http/client";
+import { normalizePermission } from "@/shared/utils/permissions";
 
 // Actual response from the Spring Boot auth service
 interface BackendAuthResponse {
@@ -24,12 +27,16 @@ interface BackendAuthResponse {
   firstName?: string;
   lastName?: string;
   email?: string;
+  isActive?: boolean;
+  isTrialExpired?: boolean;
+  roles?: string[];
+  permissions?: string[];
 }
 
 // Maps backend role strings to frontend RoleKey
 const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
-  ADMIN: ROLES.TENANT_ADMIN,
-  TENANT_ADMIN: ROLES.TENANT_ADMIN,
+  ADMIN: ROLES.AGENCY_ADMIN,
+  AGENCY_ADMIN: ROLES.AGENCY_ADMIN,
   SUPER_ADMIN: ROLES.SUPER_ADMIN,
   COUNSELLOR: ROLES.COUNSELLOR,
   COUNSELOR: ROLES.COUNSELLOR,
@@ -38,12 +45,18 @@ const BACKEND_ROLE_MAP: Record<string, RoleKey> = {
   ANALYST: ROLES.ANALYST,
 };
 
-const AUTH_STORAGE_KEY = "edutrack.auth.session";
+const AUTH_STORAGE_KEY = "vutrak.auth.session";
+/**
+ * The key this used to be stored under, back when the product was called EduTrack.
+ * Read once and carried over, so renaming the key does not sign everybody out on the
+ * next deploy. Safe to delete once no one has an EduTrack-era session left.
+ */
+const LEGACY_AUTH_STORAGE_KEY = "edutrack.auth.session";
 const AUTH_LOGIN_ENDPOINT = "/auth/login";
 const AUTH_MODE = import.meta.env.VITE_AUTH_MODE ?? "mock";
 const MOCK_AUTH_LATENCY_MS = 450;
 const MOCK_SESSION_DURATION_MS = 1000 * 60 * 60 * 8;
-const MOCK_TENANT_ID = "edutrack-demo";
+const MOCK_TENANT_ID = "vutrak-demo";
 const MOCK_TENANT_NAME = "Arpan Consultancy";
 
 type MockPersona = {
@@ -55,7 +68,7 @@ type MockPersona = {
 const defaultMockPersona: MockPersona = {
   fallbackName: "Demo Tenant Admin",
   keywords: [],
-  roles: [ROLES.TENANT_ADMIN],
+  roles: [ROLES.AGENCY_ADMIN],
 };
 
 const mockPersonas: MockPersona[] = [
@@ -67,7 +80,7 @@ const mockPersonas: MockPersona[] = [
   {
     fallbackName: "Demo Tenant Admin",
     keywords: ["admin"],
-    roles: [ROLES.TENANT_ADMIN],
+    roles: [ROLES.AGENCY_ADMIN],
   },
   {
     fallbackName: "Demo Counsellor",
@@ -129,13 +142,17 @@ function resolveTokenExpiry(token: string) {
 }
 
 function mapBackendResponseToSession(response: BackendAuthResponse, email: string): AuthSession {
-  const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.TENANT_ADMIN;
-  const roles: RoleKey[] = [roleKey];
-  const permissions = getPermissionsForRoles(roles);
+  const roleKey = BACKEND_ROLE_MAP[response.role?.toUpperCase()] ?? ROLES.AGENCY_ADMIN;
+  const backendRoles =
+    response.roles?.filter(Boolean) ??
+    (response.role ? [response.role] : [roleKey]);
+  const permissions = (
+    response.permissions?.filter(Boolean) ?? getPermissionsForRoles([roleKey])
+  ).map((permission) => normalizePermission(permission));
   const fullName = [response.firstName, response.lastName].filter(Boolean).join(" ");
   const displayName = fullName || email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  console.debug("[authService] mapped role:", response.role, "→", roleKey);
+  // console.debug("[authService] login roles:", backendRoles, "| permissions:", permissions);
 
   return {
     user: {
@@ -143,7 +160,7 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
       name: displayName || email,
       email: response.email ?? email,
     },
-    roles,
+    roles: backendRoles,
     permissions,
     tenant: {
       tenantId: response.tenantId,
@@ -156,6 +173,8 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
       tokenType: "Bearer",
       expiresAt: resolveTokenExpiry(response.accessToken),
     },
+    isActive: response.isActive ?? true,
+    isTrialExpired: response.isTrialExpired ?? false,
   };
 }
 
@@ -173,7 +192,7 @@ function isValidSession(session: unknown): session is AuthSession {
   return Boolean(
     candidate.user &&
     candidate.tenant &&
-    candidate.tokens?.accessToken &&
+    candidate.tokens &&
     Array.isArray(candidate.roles) &&
     Array.isArray(candidate.permissions),
   );
@@ -184,7 +203,16 @@ function readStoredSession() {
     return null;
   }
 
-  const serializedSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  let serializedSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
+
+  if (!serializedSession) {
+    serializedSession = window.localStorage.getItem(LEGACY_AUTH_STORAGE_KEY);
+
+    if (serializedSession) {
+      window.localStorage.setItem(AUTH_STORAGE_KEY, serializedSession);
+      window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+    }
+  }
 
   if (!serializedSession) {
     return null;
@@ -193,10 +221,30 @@ function readStoredSession() {
   try {
     const parsedSession = JSON.parse(serializedSession) as unknown;
 
-    return isValidSession(parsedSession) ? parsedSession : null;
+    return isValidSession(parsedSession) ? withCurrentModuleDefaults(parsedSession) : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Sessions are serialized with the module map that existed at login, and resolveModules
+ * reads a missing key as "disabled" — so a module added in a later release stays invisible
+ * to anyone already signed in until their session expires. Backfill missing keys from the
+ * current defaults; stored values still win, so a deliberately disabled module stays off.
+ */
+function withCurrentModuleDefaults(session: AuthSession): AuthSession {
+  if (!session.tenant) {
+    return session;
+  }
+
+  return {
+    ...session,
+    tenant: {
+      ...session.tenant,
+      enabledModules: { ...defaultTenantModules, ...session.tenant.enabledModules },
+    },
+  };
 }
 
 function wait(durationMs: number) {
@@ -261,6 +309,9 @@ function buildMockSession(request: AuthLoginRequest): AuthSession {
   const userName = toDisplayName(identifier) || mockPersona.fallbackName;
   const email = identifier.includes("@") ? identifier : `${userKey}@demo.local`;
   const expiresAt = Date.now() + MOCK_SESSION_DURATION_MS;
+  const normalizedIdentifier = identifier.toLowerCase();
+  const isTrialExpired =
+    normalizedIdentifier.includes("trial") || normalizedIdentifier.includes("expired");
 
   return {
     user: {
@@ -283,6 +334,8 @@ function buildMockSession(request: AuthLoginRequest): AuthSession {
       tokenType: "Bearer",
       expiresAt,
     },
+    isActive: true,
+    isTrialExpired,
   };
 }
 
@@ -342,6 +395,44 @@ export const authService = {
     }
   },
 
+  /**
+   * Re-reads the signed-in user's permissions and returns the session updated with them.
+   *
+   * A restored session carries whatever login stored, so a permission granted since then is
+   * invisible to the UI until the user signs in again — the API would accept the call while
+   * the button stayed hidden. That is routine now that agency admins are granted new
+   * permissions on deploy rather than by migration, so the refresh happens on every session
+   * restore, which is to say on every page load.
+   *
+   * A failure here returns the session untouched. Stale permissions are a nuisance; being
+   * thrown out of a valid session because one request failed is worse, and the server
+   * enforces the real answer regardless of what the UI believes.
+   */
+  async refreshPermissions(session: AuthSession): Promise<AuthSession> {
+    try {
+      // The token goes on explicitly rather than through the httpClient interceptor.
+      // AuthProvider dispatches the session bootstrap in its first effect and registers
+      // that interceptor in its second, so at this point there is none: the request would
+      // go out unauthenticated, come back 401, and be swallowed by the catch below —
+      // silently leaving the stale permissions in place, which is the whole bug this
+      // method exists to fix.
+      const { data } = await httpClient.get<{ permissions?: string[] }>(
+        `${API_CONFIG.auth}/permissions`,
+        { headers: { Authorization: `Bearer ${session.tokens.accessToken}` } },
+      );
+      if (!Array.isArray(data?.permissions)) {
+        return session;
+      }
+
+      const permissions = data.permissions.map(normalizePermission);
+      const refreshed: AuthSession = { ...session, permissions };
+      this.persistSession(refreshed);
+      return refreshed;
+    } catch {
+      return session;
+    }
+  },
+
   restoreSession() {
     if (cachedSession) {
       if (isSessionExpired(cachedSession)) {
@@ -369,6 +460,7 @@ export const authService = {
 
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
     }
   },
 
@@ -386,6 +478,16 @@ export const authService = {
     return data;
   },
 
+  async registerOnboarding(request: OnboardingRegisterRequest) {
+    if (isMockAuthEnabled) {
+      await wait(MOCK_AUTH_LATENCY_MS);
+      return { success: true };
+    }
+
+    const { data } = await httpClient.post("/onboarding/register", request);
+    return data;
+  },
+
   async registerAdminUser(request: RegisterAdminRequest) {
     if (isMockAuthEnabled) {
       await wait(MOCK_AUTH_LATENCY_MS);
@@ -395,4 +497,21 @@ export const authService = {
     const { data } = await httpClient.post("/auth/register", request);
     return data;
   },
+
+  // async registerTenant(request: TenantSignupRequest) {
+  //   if (isMockAuthEnabled) {
+  //     await wait(MOCK_AUTH_LATENCY_MS);
+  //     return {
+  //       tenantId: crypto.randomUUID(),
+  //       message: "Tenant registered successfully.",
+  //     } satisfies TenantSignupResponse;
+  //   }
+
+  //   const { data } = await httpClient.post<TenantSignupResponse>(
+  //     `${API_CONFIG.setup}/register`,
+  //     request,
+  //   );
+
+  //   return data;
+  // },
 };

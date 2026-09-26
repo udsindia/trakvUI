@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Divider,
   Grid,
-  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -16,24 +15,20 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { authService, getAuthErrorMessage } from "@/app/auth/authService";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
+import { AuthBrandLockup } from "@/app/auth/AuthShell";
+import { SERIF } from "@/shared/ui/vutrakTheme";
 
 interface RegisterFormValues {
-  // Consultancy
   consultancyName: string;
   address: string;
   city: string;
   state: string;
   country: string;
   regId: string;
-  // Admin user
-  userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  password: string;
-  confirmPassword: string;
-  role: string;
 }
 
 const defaultValues: RegisterFormValues = {
@@ -43,26 +38,16 @@ const defaultValues: RegisterFormValues = {
   state: "",
   country: "",
   regId: "",
-  userName: "",
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
-  password: "",
-  confirmPassword: "",
-  role: "ADMIN",
 };
-
-const ROLE_OPTIONS = [
-  { value: "ADMIN", label: "Admin" },
-  { value: "COUNSELLOR", label: "Counsellor" },
-  { value: "APPLICATION_MANAGER", label: "Application Manager" },
-  { value: "ACTIVITY_MANAGER", label: "Activity Manager" },
-  { value: "ANALYST", label: "Analyst" },
-];
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     bgcolor: "background.paper",
-    borderRadius: 2.5,
+    borderRadius: "9px",
   },
 };
 
@@ -77,40 +62,26 @@ export function RegisterPage() {
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({ defaultValues, mode: "onBlur" });
-
-  const passwordValue = watch("password");
 
   const onSubmit = async (values: RegisterFormValues) => {
     setServerError(null);
 
     try {
-      // Step 1: create consultancy
-      const consultancyData = await authService.createConsultancy({
-        name: values.consultancyName,
-        address: values.address || undefined,
-        city: values.city || undefined,
-        state: values.state || undefined,
-        country: values.country || undefined,
-        regId: values.regId || undefined,
-      });
-
-      const tenantId = consultancyData?.id;
-      console.debug("[register] consultancy created, id:", tenantId);
-
-      // Step 2: register admin user
-      await authService.registerAdminUser({
-        name: values.userName,
+      await authService.registerOnboarding({
+        consultancyName: values.consultancyName,
+        registrationID: values.regId,
+        consultancyAddress: values.address,
+        consultancyCity: values.city,
+        consultancyState: values.state,
+        consultancyCountry: values.country,
+        firstName: values.firstName,
+        lastName: values.lastName,
         email: values.email,
-        phone: values.phone || undefined,
-        password: values.password,
-        role: values.role,
-        tenantId,
+        phone: values.phone,
       });
 
-      console.debug("[register] user registered, redirecting to login");
       navigate("/login", { state: { registrationSuccess: true } });
     } catch (err: unknown) {
       setServerError(getAuthErrorMessage(err));
@@ -130,21 +101,20 @@ export function RegisterPage() {
         py: 6,
       }}
     >
-      <Box sx={{ mb: 3, textAlign: "center" }}>
-        <Typography variant="overline">Get Started</Typography>
-        <Typography variant="h5">Create your consultancy account</Typography>
-        <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-          Set up your consultancy and the first admin user in one step.
-        </Typography>
-      </Box>
+      <Stack spacing={1.5} sx={{ alignItems: "center", mb: 3.5, maxWidth: 820, width: "100%" }}>
+        <AuthBrandLockup eyebrow="Education CRM" wordmark="VUTrak" />
+        <Stack spacing={0.5} sx={{ alignItems: "center", textAlign: "center" }}>
+          <Typography sx={{ fontFamily: SERIF, fontSize: 27, fontWeight: 600, letterSpacing: "-0.5px" }}>
+            Create your consultancy account
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            Set up your consultancy and the first admin user in one step.
+          </Typography>
+        </Stack>
+      </Stack>
 
       <Card
-        elevation={0}
         sx={{
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 3,
-          boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
           maxWidth: 820,
           width: "100%",
         }}
@@ -182,7 +152,7 @@ export function RegisterPage() {
                           fullWidth
                           helperText={errors.consultancyName?.message}
                           label="Consultancy Name"
-                          placeholder="Arpan Consultancy Pvt. Ltd."
+                          placeholder="Test Consultancy Pvt. Ltd."
                           required
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
@@ -195,12 +165,16 @@ export function RegisterPage() {
                     <Controller
                       control={control}
                       name="regId"
+                      rules={{ required: "Registration ID is required." }}
                       render={({ field }) => (
                         <TextField
                           {...field}
                           fullWidth
+                          error={Boolean(errors.regId)}
+                          helperText={errors.regId?.message}
                           label="Registration ID"
                           placeholder="e.g. CIN / GST number"
+                          required
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
                         />
@@ -234,7 +208,7 @@ export function RegisterPage() {
                           {...field}
                           fullWidth
                           label="City"
-                          placeholder="Mumbai"
+                          placeholder="Hyderabad"
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
                         />
@@ -251,7 +225,7 @@ export function RegisterPage() {
                           {...field}
                           fullWidth
                           label="State"
-                          placeholder="Maharashtra"
+                          placeholder="Telangana"
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
                         />
@@ -292,16 +266,36 @@ export function RegisterPage() {
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Controller
                       control={control}
-                      name="userName"
-                      rules={{ required: "Name is required." }}
+                      name="firstName"
+                      rules={{ required: "First name is required." }}
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          error={Boolean(errors.userName)}
+                          error={Boolean(errors.firstName)}
                           fullWidth
-                          helperText={errors.userName?.message}
-                          label="Full Name"
-                          placeholder="Rahul Sharma"
+                          helperText={errors.firstName?.message}
+                          label="First Name"
+                          placeholder="John"
+                          required
+                          slotProps={alwaysVisibleLabel}
+                          sx={fieldSx}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Controller
+                      control={control}
+                      name="lastName"
+                      rules={{ required: "Last name is required." }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          error={Boolean(errors.lastName)}
+                          fullWidth
+                          helperText={errors.lastName?.message}
+                          label="Last Name"
+                          placeholder="Doe"
                           required
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
@@ -314,12 +308,16 @@ export function RegisterPage() {
                     <Controller
                       control={control}
                       name="phone"
+                      rules={{ required: "Phone number is required." }}
                       render={({ field }) => (
                         <TextField
                           {...field}
+                          error={Boolean(errors.phone)}
                           fullWidth
+                          helperText={errors.phone?.message}
                           label="Phone"
                           placeholder="+91 98765 43210"
+                          required
                           slotProps={alwaysVisibleLabel}
                           sx={fieldSx}
                         />
@@ -354,78 +352,6 @@ export function RegisterPage() {
                       )}
                     />
                   </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Controller
-                      control={control}
-                      name="role"
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Role"
-                          select
-                          slotProps={alwaysVisibleLabel}
-                          sx={fieldSx}
-                        >
-                          {ROLE_OPTIONS.map((opt) => (
-                            <MenuItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      )}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Controller
-                      control={control}
-                      name="password"
-                      rules={{
-                        required: "Password is required.",
-                        minLength: { value: 8, message: "Password must be at least 8 characters." },
-                      }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          error={Boolean(errors.password)}
-                          fullWidth
-                          helperText={errors.password?.message}
-                          label="Password"
-                          required
-                          slotProps={alwaysVisibleLabel}
-                          sx={fieldSx}
-                          type="password"
-                        />
-                      )}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Controller
-                      control={control}
-                      name="confirmPassword"
-                      rules={{
-                        required: "Please confirm your password.",
-                        validate: (value) =>
-                          value === passwordValue || "Passwords do not match.",
-                      }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          error={Boolean(errors.confirmPassword)}
-                          fullWidth
-                          helperText={errors.confirmPassword?.message}
-                          label="Confirm Password"
-                          required
-                          slotProps={alwaysVisibleLabel}
-                          sx={fieldSx}
-                          type="password"
-                        />
-                      )}
-                    />
-                  </Grid>
                 </Grid>
               </Stack>
 
@@ -436,7 +362,7 @@ export function RegisterPage() {
                   fullWidth
                   size="large"
                   startIcon={isSubmitting ? <CircularProgress color="inherit" size={18} /> : null}
-                  sx={{ textTransform: "none", borderRadius: 2.5 }}
+                  sx={{ textTransform: "none", borderRadius: "9px" }}
                   type="submit"
                   variant="contained"
                 >

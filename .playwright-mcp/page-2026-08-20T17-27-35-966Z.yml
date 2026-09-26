@@ -1,0 +1,338 @@
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]:
+        - generic [ref=f1e7]: T
+        - generic [ref=f1e8]:
+          - paragraph [ref=f1e9]: Trakv
+          - paragraph [ref=f1e10]: Education CRM
+        - button [ref=f1e11] [cursor=pointer]
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]:
+          - paragraph [ref=f1e16]: Main
+          - link "Dashboard" [ref=f1e545] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Lead Management" [ref=f1e546] [cursor=pointer]:
+            - /url: /leads
+          - link "Applications" [ref=f1e547] [cursor=pointer]:
+            - /url: /applications
+          - link "Courses" [ref=f1e548] [cursor=pointer]:
+            - /url: /courses
+          - link "Universities" [ref=f1e549] [cursor=pointer]:
+            - /url: /universities
+        - generic [ref=f1e43]:
+          - paragraph [ref=f1e44]: Engage
+          - link "Activities" [ref=f1e550] [cursor=pointer]:
+            - /url: /activities/feed
+          - link "Tasks" [ref=f1e551] [cursor=pointer]:
+            - /url: /activities/tasks
+        - generic [ref=f1e55]:
+          - paragraph [ref=f1e56]: Admin
+          - link "User Management" [ref=f1e552] [cursor=pointer]:
+            - /url: /settings/team
+          - link "Role Management" [ref=f1e553] [cursor=pointer]:
+            - /url: /settings/roles
+      - generic [ref=f1e69] [cursor=pointer]:
+        - generic [ref=f1e70]: AU
+        - generic [ref=f1e71]:
+          - paragraph [ref=f1e72]: Admin User
+          - paragraph [ref=f1e73]: AGENCY_ADMIN
+  - generic [ref=f1e74]:
+    - banner [ref=f1e75]:
+      - generic [ref=f1e76]:
+        - paragraph [ref=f1e77]: Lead Management
+        - paragraph [ref=f1e78]: Thu, 20 Aug 2026 · Admin User
+      - generic [ref=f1e80]:
+        - textbox "Search leads, students, apps…" [ref=f1e554]
+        - group
+      - generic [ref=f1e85]:
+        - button [ref=f1e555] [cursor=pointer]
+        - button [ref=f1e556] [cursor=pointer]
+        - separator [ref=f1e94]
+        - button "notifications" [ref=f1e557] [cursor=pointer]
+        - link "tasks" [ref=f1e558] [cursor=pointer]:
+          - /url: /activities/tasks
+        - separator [ref=f1e102]
+        - button "AU" [ref=f1e559] [cursor=pointer]
+    - main [ref=f1e107]:
+      - generic [ref=f1e129]:
+        - generic [ref=f1e131]:
+          - generic [ref=f1e134]:
+            - tablist "Lead quick filters" [ref=f1e560]:
+              - tab "All 10" [selected] [ref=f1e561] [cursor=pointer]:
+                - generic [ref=f1e139]:
+                  - paragraph [ref=f1e140]: All
+                  - generic [ref=f1e141]: "10"
+              - tab "New 3" [ref=f1e562] [cursor=pointer]:
+                - generic [ref=f1e143]:
+                  - paragraph [ref=f1e144]: New
+                  - generic [ref=f1e145]: "3"
+              - tab "Contacted 3" [ref=f1e563] [cursor=pointer]:
+                - generic [ref=f1e147]:
+                  - paragraph [ref=f1e148]: Contacted
+                  - generic [ref=f1e149]: "3"
+              - tab "Qualified 2" [ref=f1e564] [cursor=pointer]:
+                - generic [ref=f1e151]:
+                  - paragraph [ref=f1e152]: Qualified
+                  - generic [ref=f1e153]: "2"
+              - tab "Prospective 2" [ref=f1e565] [cursor=pointer]:
+                - generic [ref=f1e155]:
+                  - paragraph [ref=f1e156]: Prospective
+                  - generic [ref=f1e157]: "2"
+              - tab "Enrolled 0" [ref=f1e566] [cursor=pointer]:
+                - generic [ref=f1e159]:
+                  - paragraph [ref=f1e160]: Enrolled
+                  - generic [ref=f1e161]: "0"
+            - generic [ref=f1e162] [cursor=pointer]
+          - generic [ref=f1e166]:
+            - textbox "Search name, email, phone…" [ref=f1e567]
+            - group
+          - button [ref=f1e568] [cursor=pointer]
+          - generic [ref=f1e175]:
+            - button [ref=f1e569] [cursor=pointer]
+            - generic: "0"
+        - generic [ref=f1e182]:
+          - table [ref=f1e184]:
+            - rowgroup [ref=f1e185]:
+              - row [ref=f1e570]:
+                - columnheader [ref=f1e187]:
+                  - checkbox [ref=f1e189] [cursor=pointer]
+                - columnheader "Name" [ref=f1e571]
+                - columnheader "Phone" [ref=f1e572]
+                - columnheader "Country" [ref=f1e573]
+                - columnheader "Stage" [ref=f1e574]
+                - columnheader "Score" [ref=f1e575]
+                - columnheader "Agent" [ref=f1e576]
+                - columnheader "Last Activity" [ref=f1e577]
+                - columnheader "Action" [ref=f1e578]
+            - rowgroup [ref=f1e200]:
+              - row [ref=f1e579] [cursor=pointer]:
+                - cell [ref=f1e472]:
+                  - checkbox [ref=f1e474]
+                - cell "Anaya Reddy anaya.b1@seed.local" [ref=f1e580]:
+                  - generic [ref=f1e478]:
+                    - paragraph [ref=f1e479]: Anaya Reddy
+                    - generic [ref=f1e480]: anaya.b1@seed.local
+                - cell [ref=f1e581]:
+                  - paragraph [ref=f1e482]: "+919811100004"
+                - cell [ref=f1e582]:
+                  - paragraph [ref=f1e484]: Germany
+                - cell "Prospective" [ref=f1e583]
+                - cell "—" [ref=f1e584]
+                - cell [ref=f1e585]:
+                  - paragraph [ref=f1e490]: Bruno Costa
+                - cell [ref=f1e586]:
+                  - paragraph [ref=f1e492]: —
+                - cell [ref=f1e587]:
+                  - generic [ref=f1e494]:
+                    - button "Change stage for Anaya Reddy" [ref=f1e588]
+                    - button "Delete Anaya Reddy" [ref=f1e589]
+              - row [ref=f1e590] [cursor=pointer]:
+                - cell [ref=f1e232]:
+                  - checkbox [ref=f1e234]
+                - cell "Ishaan Gupta ishaan.b2@seed.local" [ref=f1e591]:
+                  - generic [ref=f1e238]:
+                    - paragraph [ref=f1e239]: Ishaan Gupta
+                    - generic [ref=f1e240]: ishaan.b2@seed.local
+                - cell [ref=f1e592]:
+                  - paragraph [ref=f1e242]: "+919822200001"
+                - cell [ref=f1e593]:
+                  - paragraph [ref=f1e244]: Canada
+                - cell "New" [ref=f1e594]
+                - cell "—" [ref=f1e595]
+                - cell [ref=f1e596]:
+                  - paragraph [ref=f1e250]: Bela Nair
+                - cell [ref=f1e597]:
+                  - paragraph [ref=f1e252]: —
+                - cell [ref=f1e598]:
+                  - generic [ref=f1e254]:
+                    - button "Change stage for Ishaan Gupta" [ref=f1e599]
+                    - button "Delete Ishaan Gupta" [ref=f1e600]
+              - row [ref=f1e601] [cursor=pointer]:
+                - cell [ref=f1e202]:
+                  - checkbox [ref=f1e204]
+                - cell "Nisha Rao nisha.m2@seed.local" [ref=f1e602]:
+                  - generic [ref=f1e208]:
+                    - paragraph [ref=f1e209]: Nisha Rao
+                    - generic [ref=f1e210]: nisha.m2@seed.local
+                - cell [ref=f1e603]:
+                  - paragraph [ref=f1e212]: "+919833300002"
+                - cell [ref=f1e604]:
+                  - paragraph [ref=f1e214]: Australia
+                - cell "Contacted" [ref=f1e605]
+                - cell "—" [ref=f1e606]
+                - cell [ref=f1e607]:
+                  - paragraph [ref=f1e220]: Bianca Rossi
+                - cell [ref=f1e608]:
+                  - paragraph [ref=f1e222]: —
+                - cell [ref=f1e609]:
+                  - generic [ref=f1e224]:
+                    - button "Change stage for Nisha Rao" [ref=f1e610]
+                    - button "Delete Nisha Rao" [ref=f1e611]
+              - row [ref=f1e612] [cursor=pointer]:
+                - cell [ref=f1e292]:
+                  - checkbox [ref=f1e294]
+                - cell "Reyansh Pillai reyansh.b2@seed.local" [ref=f1e613]:
+                  - generic [ref=f1e298]:
+                    - paragraph [ref=f1e299]: Reyansh Pillai
+                    - generic [ref=f1e300]: reyansh.b2@seed.local
+                - cell [ref=f1e614]:
+                  - paragraph [ref=f1e302]: "+919822200003"
+                - cell [ref=f1e615]:
+                  - paragraph [ref=f1e304]: United Kingdom
+                - cell "Qualified" [ref=f1e616]
+                - cell "—" [ref=f1e617]
+                - cell [ref=f1e618]:
+                  - paragraph [ref=f1e310]: Bela Nair
+                - cell [ref=f1e619]:
+                  - paragraph [ref=f1e312]: —
+                - cell [ref=f1e620]:
+                  - generic [ref=f1e314]:
+                    - button "Change stage for Reyansh Pillai" [ref=f1e621]
+                    - button "Delete Reyansh Pillai" [ref=f1e622]
+              - row [ref=f1e623] [cursor=pointer]:
+                - cell [ref=f1e322]:
+                  - checkbox [ref=f1e324]
+                - cell "Aarav Sharma aarav.b1@seed.local" [ref=f1e624]:
+                  - generic [ref=f1e328]:
+                    - paragraph [ref=f1e329]: Aarav Sharma
+                    - generic [ref=f1e330]: aarav.b1@seed.local
+                - cell [ref=f1e625]:
+                  - paragraph [ref=f1e332]: "+919811100001"
+                - cell [ref=f1e626]:
+                  - paragraph [ref=f1e334]: United Kingdom
+                - cell "New" [ref=f1e627]
+                - cell "—" [ref=f1e628]
+                - cell [ref=f1e629]:
+                  - paragraph [ref=f1e340]: Bruno Costa
+                - cell [ref=f1e630]:
+                  - paragraph [ref=f1e342]: —
+                - cell [ref=f1e631]:
+                  - generic [ref=f1e344]:
+                    - button "Change stage for Aarav Sharma" [ref=f1e632]
+                    - button "Delete Aarav Sharma" [ref=f1e633]
+              - row [ref=f1e634] [cursor=pointer]:
+                - cell [ref=f1e352]:
+                  - checkbox [ref=f1e354]
+                - cell "Diya Iyer diya.b1@seed.local" [ref=f1e635]:
+                  - generic [ref=f1e358]:
+                    - paragraph [ref=f1e359]: Diya Iyer
+                    - generic [ref=f1e360]: diya.b1@seed.local
+                - cell [ref=f1e636]:
+                  - paragraph [ref=f1e362]: "+919811100002"
+                - cell [ref=f1e637]:
+                  - paragraph [ref=f1e364]: Canada
+                - cell "Contacted" [ref=f1e638]
+                - cell "—" [ref=f1e639]
+                - cell [ref=f1e640]:
+                  - paragraph [ref=f1e370]: Bruno Costa
+                - cell [ref=f1e641]:
+                  - paragraph [ref=f1e372]: —
+                - cell [ref=f1e642]:
+                  - generic [ref=f1e374]:
+                    - button "Change stage for Diya Iyer" [ref=f1e643]
+                    - button "Delete Diya Iyer" [ref=f1e644]
+              - row [ref=f1e645] [cursor=pointer]:
+                - cell [ref=f1e382]:
+                  - checkbox [ref=f1e384]
+                - cell "Vivaan Khanna vivaan.b1@seed.local" [ref=f1e646]:
+                  - generic [ref=f1e388]:
+                    - paragraph [ref=f1e389]: Vivaan Khanna
+                    - generic [ref=f1e390]: vivaan.b1@seed.local
+                - cell [ref=f1e647]:
+                  - paragraph [ref=f1e392]: "+919811100005"
+                - cell [ref=f1e648]:
+                  - paragraph [ref=f1e394]: United Kingdom
+                - cell "New" [ref=f1e649]
+                - cell "—" [ref=f1e650]
+                - cell [ref=f1e651]:
+                  - paragraph [ref=f1e400]: Bruno Costa
+                - cell [ref=f1e652]:
+                  - paragraph [ref=f1e402]: —
+                - cell [ref=f1e653]:
+                  - generic [ref=f1e404]:
+                    - button "Change stage for Vivaan Khanna" [ref=f1e654]
+                    - button "Delete Vivaan Khanna" [ref=f1e655]
+              - row [ref=f1e656] [cursor=pointer]:
+                - cell [ref=f1e412]:
+                  - checkbox [ref=f1e414]
+                - cell "Kabir Menon kabir.b1@seed.local" [ref=f1e657]:
+                  - generic [ref=f1e418]:
+                    - paragraph [ref=f1e419]: Kabir Menon
+                    - generic [ref=f1e420]: kabir.b1@seed.local
+                - cell [ref=f1e658]:
+                  - paragraph [ref=f1e422]: "+919811100003"
+                - cell [ref=f1e659]:
+                  - paragraph [ref=f1e424]: Australia
+                - cell "Qualified" [ref=f1e660]
+                - cell "—" [ref=f1e661]
+                - cell [ref=f1e662]:
+                  - paragraph [ref=f1e430]: Bruno Costa
+                - cell [ref=f1e663]:
+                  - paragraph [ref=f1e432]: —
+                - cell [ref=f1e664]:
+                  - generic [ref=f1e434]:
+                    - button "Change stage for Kabir Menon" [ref=f1e665]
+                    - button "Delete Kabir Menon" [ref=f1e666]
+              - row [ref=f1e667] [cursor=pointer]:
+                - cell [ref=f1e442]:
+                  - checkbox [ref=f1e444]
+                - cell "Myra Joshi myra.b2@seed.local" [ref=f1e668]:
+                  - generic [ref=f1e448]:
+                    - paragraph [ref=f1e449]: Myra Joshi
+                    - generic [ref=f1e450]: myra.b2@seed.local
+                - cell [ref=f1e669]:
+                  - paragraph [ref=f1e452]: "+919822200002"
+                - cell [ref=f1e670]:
+                  - paragraph [ref=f1e454]: Australia
+                - cell "Contacted" [ref=f1e671]
+                - cell "—" [ref=f1e672]
+                - cell [ref=f1e673]:
+                  - paragraph [ref=f1e460]: Bela Nair
+                - cell [ref=f1e674]:
+                  - paragraph [ref=f1e462]: —
+                - cell [ref=f1e675]:
+                  - generic [ref=f1e464]:
+                    - button "Change stage for Myra Joshi" [ref=f1e676]
+                    - button "Delete Myra Joshi" [ref=f1e677]
+              - row [ref=f1e678] [cursor=pointer]:
+                - cell [ref=f1e679]:
+                  - checkbox [ref=f1e681]
+                - cell "Sara Bose sara.b2@seed.local" [ref=f1e684]:
+                  - generic [ref=f1e685]:
+                    - paragraph [ref=f1e686]: Sara Bose
+                    - generic [ref=f1e687]: sara.b2@seed.local
+                - cell [ref=f1e688]:
+                  - paragraph [ref=f1e689]: "+919822200004"
+                - cell [ref=f1e690]:
+                  - paragraph [ref=f1e691]: Germany
+                - cell "Prospective" [ref=f1e692]
+                - cell "—" [ref=f1e695]
+                - cell [ref=f1e696]:
+                  - paragraph [ref=f1e697]: Bela Nair
+                - cell [ref=f1e698]:
+                  - paragraph [ref=f1e699]: —
+                - cell [ref=f1e700]:
+                  - generic [ref=f1e701]:
+                    - button "Change stage for Sara Bose" [ref=f1e702]
+                    - button "Delete Sara Bose" [ref=f1e705]
+          - separator [ref=f1e501]
+          - generic [ref=f1e502]:
+            - paragraph [ref=f1e503]: Showing 1–10 of 10 leads
+            - generic [ref=f1e504]:
+              - generic [ref=f1e505]:
+                - paragraph [ref=f1e506]: Items per page
+                - generic [ref=f1e508]:
+                  - combobox [ref=f1e509] [cursor=pointer]: "10"
+                  - textbox: "10"
+                  - group
+              - navigation "pagination navigation" [ref=f1e708]:
+                - list [ref=f1e511]:
+                  - listitem [ref=f1e512]:
+                    - button "Go to previous page" [disabled]
+                  - listitem [ref=f1e513]:
+                    - button "page 1" [ref=f1e709] [cursor=pointer]: "1"
+                  - listitem [ref=f1e515]:
+                    - button "Go to next page" [disabled]
+        - alert [ref=f1e710]:
+          - generic [ref=f1e711]: Lead enrolled — student record created

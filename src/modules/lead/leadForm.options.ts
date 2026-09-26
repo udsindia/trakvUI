@@ -15,7 +15,9 @@ export const leadFormOptions: LeadFormOptions = {
       agentName: "Priya Menon",
     },
   ],
-  countryOptions: ["Canada", "Australia", "United Kingdom", "Germany"],
+  // Must be the canonical spellings CountryNames.canonicalName produces, or the form
+  // offers a value the backend rewrites on save.
+  countryOptions: ["Canada", "Australia", "UK", "Germany"],
   courseOptions: [
     "MBA",
     "Computer Science",
@@ -23,6 +25,17 @@ export const leadFormOptions: LeadFormOptions = {
     "Hospitality Management",
     "Cyber Security",
   ],
-  sourceOptions: ["Website", "Referral", "Social Media", "Walk-in", "Email Campaign"],
+  englishTestOptions: ["IELTS", "TOEFL", "PTE", "Duolingo", "Other", "None"],
+  // "Other" must stay last — it reveals the free-text source field.
+  sourceOptions: [
+    "Website",
+    "Referral",
+    "Social Media",
+    "Walk-in",
+    "Email Campaign",
+    "College",
+    "Other",
+  ],
+  studyLevelOptions: ["High School", "Diploma", "Bachelor's", "Master's", "PhD", "Not Specified"],
   tagOptions: ["High Intent", "Scholarship", "Priority", "Parent Involved", "Repeat Enquiry"],
 };

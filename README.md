@@ -1,4 +1,4 @@
-# EduTrack Visa Counselling Platform
+# VUTrak — Education CRM
 
 Frontend workspace for a modular visa counselling CRM built with React 19, Vite, TypeScript, Material UI, Redux Toolkit, React Router, TanStack Query, Axios, React Hook Form, and TanStack Table.
 
@@ -41,7 +41,9 @@ The app supports mock auth and API auth modes.
 - `VITE_AUTH_MODE=api` switches login to the configured backend
 - `VITE_API_BASE_URL` controls the Axios base URL and defaults to `/api`
 
-Auth session data is persisted in `localStorage` under `edutrack.auth.session`.
+Auth session data is persisted in `localStorage` under `vutrak.auth.session`.
+Sessions written under the old `edutrack.auth.session` key are carried over on first
+read, so the rename does not sign anyone out.
 
 ## Current Route Map
 

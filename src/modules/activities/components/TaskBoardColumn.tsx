@@ -24,7 +24,7 @@ export function TaskBoardColumn({
         bgcolor: "rgba(255, 255, 255, 0.5)",
         border: "1px solid",
         borderColor: "rgba(15, 23, 42, 0.06)",
-        borderRadius: 4,
+        borderRadius: "10px",
         minHeight: 240,
         p: 2,
       }}
@@ -32,7 +32,7 @@ export function TaskBoardColumn({
       <Stack spacing={2}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "space-between" }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-            <Typography sx={{ fontWeight: 700 }} variant="h6">
+            <Typography sx={{ fontWeight: 700 }} variant="body1">
               {title}
             </Typography>
             <Typography color="text.secondary" variant="body2">
@@ -60,7 +60,7 @@ export function TaskBoardColumn({
               sx={{
                 border: "1px dashed",
                 borderColor: "divider",
-                borderRadius: 3,
+                borderRadius: "10px",
                 color: "text.secondary",
                 px: 2,
                 py: 4,

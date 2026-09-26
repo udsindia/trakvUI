@@ -1,0 +1,178 @@
+import type { UniversityRequirementDto } from "@/modules/universities/universitiesApi.types";
+export type CourseLevel = "undergraduate" | "masters" | "phd" | "diploma";
+
+export type EligibilityStatus = "eligible" | "partial" | "not-eligible";
+
+export type RequirementStatus = "met" | "warn" | "miss";
+
+export interface StudentProfile {
+  id: string;
+  name: string;
+  ieltsOverall: number;
+  ieltsWriting: number;
+  ieltsSpeaking: number;
+  degree: string;
+  university: string;
+  percentage: number;
+}
+
+export interface UniversityLink {
+  label: string;
+  url: string;
+}
+
+export interface UniversityTrackRecord {
+  studentsEnrolled: number;
+  visasApproved: number;
+  visaSuccessRate: number;
+  avgApplicationDays: number;
+  avgCommission: string;
+}
+
+export interface UniversityRequirement {
+  id: string;
+  label: string;
+  detail?: string;
+  status: RequirementStatus;
+  studentNote: string;
+}
+
+export interface University {
+  id: string;
+  name: string;
+  shortName: string;
+  country: string;
+  countryCode: string;
+  city: string;
+  flag: string;
+  founded: number;
+  website: string;
+  qsRank?: number;
+  /**
+   * Active courses at this university, from the list response. The pages show this
+   * instead of counting a fetched course list — fetching every university's courses to
+   * count them is what made the catalogue page issue one request per university.
+   */
+  courseCount?: number;
+  about: string;
+  trackRecord: UniversityTrackRecord;
+  links: UniversityLink[];
+  internalNotes: string;
+  generalRequirements: UniversityRequirement[];
+  /**
+   * Raw requirement rows straight from the API, kept alongside the flattened display
+   * list because the editor needs id/courseId and the score fields that
+   * mapRequirement discards.
+   */
+  requirementDtos?: UniversityRequirementDto[];
+}
+
+export interface CourseKeyDates {
+  applicationDeadline: string;
+  rollingAdmissions: boolean;
+  courseStart: string;
+  courseEnd: string;
+  pgwpEligible: string;
+}
+
+export interface CourseFees {
+  tuitionPerYear: string;
+  applicationFee: string;
+  livingCosts: string;
+  scholarship?: string;
+  scholarshipNote?: string;
+}
+
+export interface CourseOurData {
+  studentsSent: number;
+  accepted: number;
+  visaApproved: number;
+  avgCommission: string;
+}
+
+export interface CourseRequirement {
+  id: string;
+  label: string;
+  detail: string;
+  status: RequirementStatus;
+  statusLabel: string;
+}
+
+export interface Course {
+  id: string;
+  universityId: string;
+  name: string;
+  level: CourseLevel;
+  levelLabel: string;
+  /** Field of study, e.g. "Computer Science" — what the finder's Field of Study filter lists. */
+  subjectArea?: string;
+  intakes: string[];
+  duration: string;
+  /** Converted to rupee lakhs for the budget slider and sorting. Derived, never typed. */
+  tuitionLakhs: number;
+  /** The fee as the university quotes it, in tuitionCurrency. This is what gets stored. */
+  tuitionAmount?: number;
+  tuitionCurrency?: string;
+  ieltsMin: number;
+  ieltsPerBand?: number;
+  ieltsLabel: string;
+  applicationFee: string;
+  deadline: string;
+  eligibilityStatus: EligibilityStatus;
+  eligibilityPercent?: number;
+  /** Overrides the badge text, e.g. "Not assessed" when no requirement was stated. */
+  eligibilityLabel?: string;
+  eligibilityWarning?: string;
+  eligibilityHint?: string;
+  alreadyShortlisted?: boolean;
+  /**
+   * Whether the university has recorded a backlog / education-gap limit at all. Courses
+   * with nothing on record still match those filters, so the card distinguishes a
+   * confirmed fit from an unknown one rather than implying the first.
+   */
+  backlogsLimitStated?: boolean;
+  educationGapLimitStated?: boolean;
+  pendingApplications?: number;
+  curriculum: {
+    semester1: string[];
+    semester2: string[];
+  };
+  requirements: CourseRequirement[];
+  keyDates: CourseKeyDates;
+  fees: CourseFees;
+  ourData: CourseOurData;
+}
+
+export interface CourseSearchResult extends Course {
+  university: University;
+}
+
+export type CourseSortOption = "best-match" | "tuition-low" | "qs-rank" | "intake";
+
+export interface CourseSearchFilters {
+  query: string;
+  countries: string[];
+  nearestCity: string;
+  levels: CourseLevel[];
+  disciplines: string[];
+  institutions: string[];
+  intakes: string[];
+  intakeStatuses: string[];
+  nationality: string;
+  regionState: string;
+  isOnshore: boolean;
+  highestEducationLevel: string;
+  countryOfEducation: string;
+  gradingSystem: string;
+  backlogs: string;
+  educationGap: string;
+  turnaroundRange: [number, number];
+  durations: string[];
+  deliveryModes: string[];
+  postStudyWorkPermit: string;
+  tuitionRange: [number, number];
+  ieltsRange: [number, number];
+  eligibleOnly: boolean;
+  matchStudent: boolean;
+  sort: CourseSortOption;
+}

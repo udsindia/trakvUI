@@ -1,0 +1,348 @@
+import { API_CONFIG } from "@/config/api/config";
+import { createAuthRequestConfig } from "@/shared/services/http/authHeaders";
+import { httpClient } from "@/shared/services/http/client";
+import type {
+  CountryDto,
+  CourseImportCommitPayload,
+  CourseImportPreviewResponse,
+  CourseImportResultResponse,
+  CreateCoursePayload,
+  CreateRequirementPayload,
+  CreateUniversityPayload,
+  UpdateCoursePayload,
+  UpdateRequirementPayload,
+  UpdatedCourseDto,
+  CourseDto,
+  CreatedCourseDto,
+  CreatedRequirementDto,
+  CreatedUniversityDto,
+  ListUniversitiesParams,
+  ListUniversityCoursesParams,
+  UniversitiesPageResponse,
+  UniversityCoursesPageResponse,
+  UniversityDetailDto,
+  UniversityImportCommitPayload,
+  UniversityImportPreviewResponse,
+  UniversityImportResultResponse,
+  UniversitySummaryDto,
+  UpdateUniversityPayload,
+} from "@/modules/universities/universitiesApi.types";
+
+const DEFAULT_PAGE_SIZE = 100;
+
+/**
+ * Builds the multipart body + config for a CSV upload.
+ *
+ * The auth config sets a JSON Content-Type; axios must own that header for multipart so
+ * it can append the boundary. Depending on the axios version `headers` is either an
+ * AxiosHeaders instance (has .delete) or a plain object, hence the guarded removal.
+ */
+function buildCsvUpload(file: File, mapping: Record<string, string> = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+  // mapping_<ourField>=<theirColumn>, the same convention the lead import uses.
+  for (const [field, header] of Object.entries(mapping)) {
+    if (header) {
+      formData.append(`mapping_${field}`, header);
+    }
+  }
+
+  const config = createAuthRequestConfig();
+
+  try {
+    if (config.headers && typeof (config.headers as any).delete === "function") {
+      (config.headers as any).delete("Content-Type");
+    }
+  } catch {
+    // ignore header adjustment failures and proceed — axios will attempt to set headers
+  }
+  config.headers = {
+    ...config.headers,
+    "Content-Type": "multipart/form-data",
+  };
+
+  return { formData, config };
+}
+
+/**
+ * Every page of a listing, as one array.
+ *
+ * The pages after the first are independent of each other, so they go out together. Walked
+ * one after another they were the catalogue's whole load time: the server clamps `size` to
+ * 50 however much we ask for, so ~160 universities is four round trips, and serially that
+ * is four times the latency for no reason.
+ *
+ * Page size comes from what the first response reports, not from what we asked for, so the
+ * offsets stay consistent with the server's own clamping.
+ */
+async function fetchAllUniversityPages<T>(
+  fetchPage: (page: number, size: number) => Promise<UniversitiesPageResponse<T>>,
+): Promise<T[]> {
+  const firstPage = await fetchPage(0, DEFAULT_PAGE_SIZE);
+  const pageSize = firstPage.size || DEFAULT_PAGE_SIZE;
+  const totalPages = Math.ceil(firstPage.totalElements / pageSize);
+
+  if (totalPages <= 1) {
+    return [...firstPage.content];
+  }
+
+  const laterPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 1, pageSize)),
+  );
+
+  // Rebuilt in page order, not arrival order — the server's ORDER BY is what makes the
+  // walk stable, and resolving out of order would throw that away.
+  return [...firstPage.content, ...laterPages.flatMap((page) => page.content)];
+}
+
+async function fetchAllCoursePages(
+  universityId: string,
+  params: Omit<ListUniversityCoursesParams, "page" | "size"> = {},
+): Promise<CourseDto[]> {
+  const fetchPage = async (page: number, size: number) => {
+    const response = await httpClient.get<UniversityCoursesPageResponse>(
+      `${API_CONFIG.universities}/${universityId}/courses`,
+      createAuthRequestConfig({
+        params: { availableOnly: false, ...params, page, size },
+      }),
+    );
+    return response.data;
+  };
+
+  // Same shape as fetchAllUniversityPages — the later pages go out together.
+  const firstPage = await fetchPage(0, DEFAULT_PAGE_SIZE);
+  const pageSize = firstPage.size || DEFAULT_PAGE_SIZE;
+  const totalPages = Math.ceil(firstPage.totalElements / pageSize);
+  const allItems = [...firstPage.content];
+
+  if (totalPages > 1) {
+    const laterPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 1, pageSize)),
+    );
+    allItems.push(...laterPages.flatMap((page) => page.content));
+  }
+
+  return allItems;
+}
+
+export const universitiesApi = {
+  listUniversities: async (
+    params: ListUniversitiesParams = {},
+  ): Promise<UniversitiesPageResponse<UniversitySummaryDto>> => {
+    const response = await httpClient.get<UniversitiesPageResponse<UniversitySummaryDto>>(
+      API_CONFIG.universities,
+      createAuthRequestConfig({ params }),
+    );
+    return response.data;
+  },
+
+  listAllUniversities: async (
+    params: Omit<ListUniversitiesParams, "page" | "size"> = {},
+  ): Promise<UniversitySummaryDto[]> => {
+    return fetchAllUniversityPages((page, size) =>
+      universitiesApi.listUniversities({ ...params, page, size }),
+    );
+  },
+
+  listCountries: async (): Promise<CountryDto[]> => {
+    const response = await httpClient.get<CountryDto[]>(
+      `${API_CONFIG.universities}/countries`,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  getUniversity: async (universityId: string): Promise<UniversityDetailDto> => {
+    const response = await httpClient.get<UniversityDetailDto>(
+      `${API_CONFIG.universities}/${universityId}`,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  listUniversityCourses: async (
+    universityId: string,
+    params: ListUniversityCoursesParams = {},
+  ): Promise<UniversityCoursesPageResponse> => {
+    const response = await httpClient.get<UniversityCoursesPageResponse>(
+      `${API_CONFIG.universities}/${universityId}/courses`,
+      createAuthRequestConfig({
+        params: { availableOnly: false, ...params },
+      }),
+    );
+    return response.data;
+  },
+
+  listAllUniversityCourses: async (
+    universityId: string,
+    params: Omit<ListUniversityCoursesParams, "page" | "size"> = {},
+  ): Promise<CourseDto[]> => {
+    return fetchAllCoursePages(universityId, params);
+  },
+
+  createUniversity: async (payload: CreateUniversityPayload): Promise<CreatedUniversityDto> => {
+    const response = await httpClient.post<CreatedUniversityDto>(
+      API_CONFIG.adminUniversities,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  updateUniversity: async (
+    universityId: string,
+    payload: UpdateUniversityPayload,
+  ): Promise<UniversityDetailDto> => {
+    const response = await httpClient.patch<UniversityDetailDto>(
+      `${API_CONFIG.adminUniversities}/${universityId}`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** Column headers in the uploaded file, for the mapping step. */
+  detectCourseImportColumns: async (file: File): Promise<string[]> => {
+    const { formData, config } = buildCsvUpload(file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.adminCourses}/import/columns`,
+      formData,
+      config,
+    );
+    return response.data.headers ?? [];
+  },
+
+  /** Parses + validates the CSV and reports what would happen — writes nothing. */
+  previewCourseImport: async (
+    file: File,
+    mapping: Record<string, string> = {},
+  ): Promise<CourseImportPreviewResponse> => {
+    const { formData, config } = buildCsvUpload(file, mapping);
+
+    const response = await httpClient.post<CourseImportPreviewResponse>(
+      `${API_CONFIG.adminCourses}/import/preview`,
+      formData,
+      config,
+    );
+
+    return response.data;
+  },
+
+  /** Actually performs the import for the reviewed rows returned by previewCourseImport. */
+  commitCourseImport: async (payload: CourseImportCommitPayload): Promise<CourseImportResultResponse> => {
+    const response = await httpClient.post<CourseImportResultResponse>(
+      `${API_CONFIG.adminCourses}/import/commit`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  detectUniversityImportColumns: async (file: File): Promise<string[]> => {
+    const { formData, config } = buildCsvUpload(file);
+    const response = await httpClient.post<{ headers: string[] }>(
+      `${API_CONFIG.adminUniversities}/import/columns`,
+      formData,
+      config,
+    );
+    return response.data.headers ?? [];
+  },
+
+  /** Same two-phase flow as the course import, but the unit is a university. */
+  previewUniversityImport: async (
+    file: File,
+    mapping: Record<string, string> = {},
+  ): Promise<UniversityImportPreviewResponse> => {
+    const { formData, config } = buildCsvUpload(file, mapping);
+
+    const response = await httpClient.post<UniversityImportPreviewResponse>(
+      `${API_CONFIG.adminUniversities}/import/preview`,
+      formData,
+      config,
+    );
+
+    return response.data;
+  },
+
+  commitUniversityImport: async (
+    payload: UniversityImportCommitPayload,
+  ): Promise<UniversityImportResultResponse> => {
+    const response = await httpClient.post<UniversityImportResultResponse>(
+      `${API_CONFIG.adminUniversities}/import/commit`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** CSV template with the expected university columns, served by the backend. */
+  downloadUniversityImportTemplate: async (): Promise<string> => {
+    const response = await httpClient.get<string>(
+      `${API_CONFIG.adminUniversities}/import/template`,
+      { ...createAuthRequestConfig(), responseType: "text" },
+    );
+    return response.data;
+  },
+
+  /** Partial update — only the fields present in the payload are applied. */
+  updateCourse: async (
+    courseId: string,
+    payload: UpdateCoursePayload,
+  ): Promise<UpdatedCourseDto> => {
+    const response = await httpClient.patch<UpdatedCourseDto>(
+      `${API_CONFIG.adminCourses}/${courseId}`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /**
+   * Archives a course (soft delete) so shortlists that reference it survive, or purges it
+   * outright with `purge`. The backend refuses a purge with 409 when a student still has
+   * the course shortlisted — archive is the safe default.
+   */
+  deleteCourse: async (courseId: string, options: { purge?: boolean } = {}): Promise<void> => {
+    await httpClient.delete(
+      `${API_CONFIG.adminCourses}/${courseId}`,
+      createAuthRequestConfig({ params: { purge: options.purge ?? false } }),
+    );
+  },
+
+  createCourse: async (
+    universityId: string,
+    payload: CreateCoursePayload,
+  ): Promise<CreatedCourseDto> => {
+    const response = await httpClient.post<CreatedCourseDto>(
+      `${API_CONFIG.adminUniversities}/${universityId}/courses`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  /** Partial update of an existing requirement row. Null fields are left unchanged. */
+  updateRequirement: async (
+    requirementId: string,
+    payload: UpdateRequirementPayload,
+  ): Promise<CreatedRequirementDto> => {
+    const response = await httpClient.patch<CreatedRequirementDto>(
+      `${API_CONFIG.adminRequirements}/${requirementId}`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
+  createRequirement: async (
+    universityId: string,
+    payload: CreateRequirementPayload,
+  ): Promise<CreatedRequirementDto> => {
+    const response = await httpClient.post<CreatedRequirementDto>(
+      `${API_CONFIG.adminUniversities}/${universityId}/requirements`,
+      payload,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+};
