@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { lazy, Suspense } from "react";
 import type { DraftStage } from "@/modules/settings/components/StageSequenceEditor";
 
@@ -27,7 +27,17 @@ const UniversityStagesSection = lazy(() =>
 import { courseSearchSettings } from "@/config/universities/courseSearchSettings";
 import type { University } from "@/modules/universities/universities.types";
 import type { UniversityInput } from "@/modules/universities/universitiesCatalogService";
-import { useUniversity } from "@/modules/universities/useUniversitiesCatalog";
+import { toAlpha3CountryCode } from "@/modules/universities/universitiesMappers";
+import { useAllCountries, useUniversity } from "@/modules/universities/useUniversitiesCatalog";
+
+/**
+ * Used only when the full list cannot be fetched — the super-admin portal may not reach
+ * the tenant endpoint. Alpha-3, like everything the server stores.
+ */
+const FALLBACK_COUNTRIES = courseSearchSettings.filters.country.options.map((option) => ({
+  code: toAlpha3CountryCode(option.value),
+  name: option.label,
+}));
 
 const emptyUniversity = (): UniversityInput => ({
   name: "",
@@ -81,6 +91,14 @@ export function UniversityFormDrawer({
 }: UniversityFormDrawerProps) {
   const [form, setForm] = useState<UniversityInput>(emptyUniversity());
 
+  // Every country, not just the six the course finder filters on: a university can be
+  // anywhere, and one in a country outside the short list could not be added at all.
+  const { data: allCountries } = useAllCountries();
+  const countryOptions = useMemo(
+    () => (allCountries && allCountries.length > 0 ? allCountries : FALLBACK_COUNTRIES),
+    [allCountries],
+  );
+
   // Stage sequence. Off until somebody asks for it: most universities follow their
   // country, and a form that opens with nine editable rows suggests otherwise.
   const [customiseStages, setCustomiseStages] = useState(false);
@@ -103,7 +121,12 @@ export function UniversityFormDrawer({
 
   useEffect(() => {
     if (university) {
-      setForm({ ...university });
+      // The list holds alpha-2 for the countries it knows ("GB") and alpha-3 otherwise;
+      // the options are alpha-3, so a stored country is matched on that.
+      setForm({
+        ...university,
+        countryCode: university.countryCode ? toAlpha3CountryCode(university.countryCode) : "",
+      });
     } else {
       setForm(emptyUniversity());
     }
@@ -148,13 +171,11 @@ export function UniversityFormDrawer({
   };
 
   const handleCountryChange = (countryCode: string) => {
-    const option = courseSearchSettings.filters.country.options.find(
-      (entry) => entry.value === countryCode,
-    );
+    const option = countryOptions.find((entry) => entry.code === countryCode);
     setForm((current) => ({
       ...current,
       countryCode,
-      country: option?.label ?? current.country,
+      country: option?.name ?? current.country,
     }));
   };
 
@@ -237,9 +258,9 @@ export function UniversityFormDrawer({
             onChange={(event) => handleCountryChange(event.target.value)}
           >
             <option value="">Select country</option>
-            {courseSearchSettings.filters.country.options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {countryOptions.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.name}
               </option>
             ))}
           </TextField>
