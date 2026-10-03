@@ -33,6 +33,7 @@ function useUniversitiesApiEnabled(extraEnabled = true) {
 }
 
 export const countriesQueryKey = ["universities", "countries"] as const;
+export const allCountriesQueryKey = ["universities", "countries", "all"] as const;
 
 /**
  * The single fetch behind every "all universities" view. One walk of the pages, one cache
@@ -64,6 +65,21 @@ export function useCountries() {
     queryKey: countriesQueryKey,
     queryFn: () => universitiesApi.listCountries(),
     enabled: apiEnabled,
+  });
+}
+
+/**
+ * Every country, for an application's destination: a student can apply somewhere the
+ * catalogue has no universities yet. The list never changes, so it is fetched once.
+ */
+export function useAllCountries() {
+  const apiEnabled = useUniversitiesApiEnabled();
+
+  return useQuery({
+    queryKey: allCountriesQueryKey,
+    queryFn: () => universitiesApi.listAllCountries(),
+    enabled: apiEnabled,
+    staleTime: Infinity,
   });
 }
 
