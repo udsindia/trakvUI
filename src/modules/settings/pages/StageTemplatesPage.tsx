@@ -33,7 +33,7 @@ import {
   type StageTemplate,
   type StageChangePreview,
 } from "@/modules/settings/stageTemplatesApi";
-import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
+import { useAllCountries } from "@/modules/universities/useUniversitiesCatalog";
 import { StageChangePreviewDialog } from "@/modules/settings/components/StageChangePreviewDialog";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
@@ -83,8 +83,10 @@ export function StageTemplatesPage() {
     queryFn: stageTemplatesApi.list,
   });
 
-  // Only to offer countries that have no sequence yet; the page works without it.
-  const { data: countries = [] } = useCountries();
+  // Only to offer countries that have no sequence yet; the page works without it. Every
+  // country, not just the catalogue's: applications can now go anywhere, and a country
+  // has to be addable here before its students can get stages of their own.
+  const { data: countries = [] } = useAllCountries();
 
 
   const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
