@@ -7,6 +7,7 @@ export const MODULE_KEYS = {
   UNIVERSITIES: "universities",
   UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
+  CALL_RECORDS: "call-records",
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS];
@@ -21,5 +22,6 @@ export const defaultTenantModules: TenantModuleMap = {
   [MODULE_KEYS.UNIVERSITIES]: true,
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: true,
   [MODULE_KEYS.SETTINGS]: true,
+  [MODULE_KEYS.CALL_RECORDS]: true,
 };
 

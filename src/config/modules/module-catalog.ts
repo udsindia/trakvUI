@@ -98,6 +98,20 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.TASK_VIEW],
   },
   {
+    key: MODULE_KEYS.CALL_RECORDS,
+    title: "Call Records",
+    navLabel: "Call Records",
+    path: "call-records",
+    icon: MODULE_ICON_KEYS.CALL_RECORDS,
+    description: "Every recorded and missed call, with playback and download.",
+    order: 6,
+    // Agency admins only: recordings are sensitive, so no other role sees the tab or the details
+    // (the API enforces the same rule, so this is not just a hidden menu entry).
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
+    restrictToRoles: [ROLES.AGENCY_ADMIN],
+    requiredPermissions: [PERMISSIONS.DASHBOARD_VIEW],
+  },
+  {
     key: MODULE_KEYS.UNIVERSITIES,
     // "Courses" sat directly above "Universities" and read as the catalogue's course list.
     // This screen is the finder: filters first, then matching courses across every
@@ -107,7 +121,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "courses",
     icon: MODULE_ICON_KEYS.UNIVERSITIES,
     description: "Find courses across universities by destination, level, discipline, intake and fees.",
-    order: 6,
+    order: 7,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -124,7 +138,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "universities",
     icon: MODULE_ICON_KEYS.UNIVERSITIES_BROWSE,
     description: "Browse partner institutions, view courses and build shortlists.",
-    order: 7,
+    order: 8,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -145,6 +159,13 @@ export const moduleCatalog: ModuleDefinition[] = [
         navLabel: "User Management",
         path: "team",
         description: "Manage workspace users and access.",
+        requiredPermissions: [PERMISSIONS.USERS_VIEW],
+      },
+      {
+        key: "employees",
+        navLabel: "Employees",
+        path: "employees",
+        description: "Registered employees and their call-recording sync status.",
         requiredPermissions: [PERMISSIONS.USERS_VIEW],
       },
       {
@@ -178,7 +199,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
-    order: 8,
+    order: 9,
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,

@@ -14,6 +14,7 @@ import MenuRounded from "@mui/icons-material/MenuRounded";
 import AdminPanelSettingsRounded from "@mui/icons-material/AdminPanelSettingsRounded";
 import AltRouteRounded from "@mui/icons-material/AltRouteRounded";
 import PeopleRounded from "@mui/icons-material/PeopleRounded";
+import PhoneAndroidRounded from "@mui/icons-material/PhoneAndroidRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import {
   isNavigationItemActive,
@@ -119,9 +120,15 @@ function SidebarContent({
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
   const mainItems = items.filter((item) =>
-    ["dashboard", "lead", "students", "applications", "universities", "universities-browse"].includes(
-      item.id,
-    ),
+    [
+      "dashboard",
+      "lead",
+      "students",
+      "applications",
+      "call-records",
+      "universities",
+      "universities-browse",
+    ].includes(item.id),
   );
   const activitiesItem = items.find((item) => item.id === "activities");
   const tasksItem = activitiesItem?.children?.find((child) => child.id.endsWith(".tasks"));
@@ -145,6 +152,7 @@ function SidebarContent({
   // page is one line here instead of another branch.
   const adminIcons: Record<string, ReactNode> = {
     team: <PeopleRounded />,
+    employees: <PhoneAndroidRounded />,
     stages: <AltRouteRounded />,
   };
   const adminItems =

@@ -3,6 +3,7 @@ import type { PermissionKey } from "@/config/permissions/permissions";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { isSuperAdmin } from "@/config/roles/superAdmin";
 import { AddUserPage } from "@/modules/settings/pages/AddUserPage";
+import { EmployeesPage } from "@/modules/employees/pages/EmployeesPage";
 import { CreateRolePage } from "@/modules/settings/pages/CreateRolePage";
 import { EditRolePage } from "@/modules/settings/pages/EditRolePage";
 import { RolesPage } from "@/modules/settings/pages/RolesPage";
@@ -50,6 +51,12 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "add-user",
     path: "team/create",
     anyOfPermissions: [PERMISSIONS.TEAM_INVITE, PERMISSIONS.USERS_MANAGE],
+  },
+  {
+    Component: EmployeesPage,
+    key: "employees",
+    path: "employees",
+    anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.USERS_VIEW],
   },
   {
     Component: RolesPage,

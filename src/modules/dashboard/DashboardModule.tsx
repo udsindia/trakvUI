@@ -5,6 +5,7 @@ import { useAuth } from "@/app/auth/useAuth";
 import { DashboardAttentionStrip } from "@/modules/dashboard/components/DashboardAttentionStrip";
 import { DashboardHeader } from "@/modules/dashboard/components/DashboardHeader";
 import { DashboardKpiGrid } from "@/modules/dashboard/components/DashboardKpiGrid";
+import { DashboardMissedCallsCard } from "@/modules/dashboard/components/DashboardMissedCallsCard";
 import { DashboardSectionTabs } from "@/modules/dashboard/components/DashboardSectionTabs";
 import { DashboardActivitySection } from "@/modules/dashboard/components/sections/DashboardActivitySection";
 import { DashboardApplicationsSection } from "@/modules/dashboard/components/sections/DashboardApplicationsSection";
@@ -18,6 +19,7 @@ import type { DashboardPeriod } from "@/modules/dashboard/dashboardDateRange";
 import { getDashboardDateRange } from "@/modules/dashboard/dashboardDateRange";
 import { dashboardService } from "@/modules/dashboard/dashboardService";
 import { stageNoticesApi } from "@/modules/applications/stageNoticesApi";
+import { ROLES } from "@/config/roles/roles";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 const LIVE_REFRESH_MS = 30_000;
@@ -100,6 +102,9 @@ export default function DashboardModule() {
       <DashboardKpiGrid kpis={kpis} />
 
       <DashboardAttentionStrip items={attentionItems} />
+
+      {/* Call details are agency-admin only (the API refuses everyone else), so the card is not even mounted for other roles. */}
+      {roles.some((role) => role.toLowerCase() === ROLES.AGENCY_ADMIN) ? <DashboardMissedCallsCard /> : null}
 
       <DashboardSectionTabs
         activeSection={currentSection}
