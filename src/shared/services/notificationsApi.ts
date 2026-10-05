@@ -1,6 +1,10 @@
 import { httpClient } from "@/shared/services/http/client";
 
-export type NotificationType = "LEAD_MARKED_DEAD" | "APPLICATION_WITHDRAWN";
+export type NotificationType =
+  | "LEAD_MARKED_DEAD"
+  | "APPLICATION_WITHDRAWN"
+  | "APPLICATION_ENROLLED"
+  | "APPLICATION_CLOSED";
 
 export type AppNotification = {
   id: string;
@@ -44,6 +48,9 @@ export const notificationsApi = {
 
 /** Where a notification's row should take you when it is clicked. */
 export function notificationLink(notification: AppNotification): string | null {
+  // An enrolment is a call to record the commission, which happens on the commissions
+  // tab rather than on the (now read-only) application page.
+  if (notification.notificationType === "APPLICATION_ENROLLED") return "/applications/commissions";
   if (!notification.entityId) return null;
   if (notification.entityType === "LEAD") return `/leads/${notification.entityId}`;
   if (notification.entityType === "APPLICATION") return `/applications/${notification.entityId}`;

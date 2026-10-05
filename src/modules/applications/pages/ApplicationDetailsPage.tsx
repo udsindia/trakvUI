@@ -32,8 +32,11 @@ import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
+// What an application can be closed with. Offer Accepted is deliberately absent: it is a
+// stage on the way to the visa, not an end, and the server refuses it. Enrolled is the
+// success close — visa received, student enrolled — and hands the application to the
+// agency admins to record commission and archive.
 const TERMINAL_OUTCOMES = [
-  "OFFER_ACCEPTED",
   "ENROLLED",
   "OFFER_DECLINED",
   "VISA_REJECTED",
@@ -152,10 +155,25 @@ export function ApplicationDetailsPage() {
     return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
   }
   if (isError || !application) {
+    // The server answers 404 for an archived application as well as a missing one, and
+    // notifications about a closed application outlive it on the working list. So the
+    // likely reason is said, and the way to it offered, rather than a bare "not found".
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-        <Typography color="error">Application not found.</Typography>
-      </Box>
+      <Stack spacing={1.5} sx={{ alignItems: "center", mt: 10, px: 2, textAlign: "center" }}>
+        <Typography sx={{ fontWeight: 600 }}>This application isn't on the working list.</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: 14, maxWidth: "52ch" }}>
+          It has most likely been archived after it was closed. Archived applications are on the
+          Archive page.
+        </Typography>
+        <Stack direction="row" spacing={1.5}>
+          <Button variant="contained" onClick={() => navigate("/settings/archive")}>
+            Open Archive
+          </Button>
+          <Button variant="outlined" onClick={() => navigate(applicationsRoutePaths.dashboard)}>
+            Back to Applications
+          </Button>
+        </Stack>
+      </Stack>
     );
   }
 
@@ -298,6 +316,10 @@ export function ApplicationDetailsPage() {
                     {isClosed ? (
                       <Alert severity="info">
                         This application is closed ({humanize(application.outcome)}) and is read-only.
+                        {" "}
+                        {application.outcome === "ENROLLED"
+                          ? "It is with the agency admin to record the commission and archive."
+                          : "The agency admin has been notified to archive it."}
                       </Alert>
                     ) : (
                       <Stack spacing={3}>
@@ -359,6 +381,12 @@ export function ApplicationDetailsPage() {
                             onChange={(e) => setCloseReason(e.target.value)}
                             slotProps={{ inputLabel: { shrink: true } }}
                           />
+                          {closeOutcome === "ENROLLED" && (
+                            <Alert severity="info">
+                              Use Enrolled once the visa is received and the student has enrolled. The
+                              agency admin is notified to record the commission and archive it.
+                            </Alert>
+                          )}
                           {closeMutation.isError && (
                             <Alert severity="error">{errorMessage(closeMutation.error)}</Alert>
                           )}

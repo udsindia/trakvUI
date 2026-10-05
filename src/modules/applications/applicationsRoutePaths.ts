@@ -3,6 +3,7 @@ const APPLICATIONS_BASE_PATH = "/applications";
 export const applicationsRoutePaths = {
   dashboard: APPLICATIONS_BASE_PATH,
   create: `${APPLICATIONS_BASE_PATH}/create`,
+  commissions: `${APPLICATIONS_BASE_PATH}/commissions`,
   details: `${APPLICATIONS_BASE_PATH}/:id`,
   edit: `${APPLICATIONS_BASE_PATH}/:id/edit`,
 } as const;
