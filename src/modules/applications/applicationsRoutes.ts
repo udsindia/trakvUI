@@ -5,7 +5,7 @@ import { ApplicationDashboardPage } from "@/modules/applications/pages/Applicati
 import { AddApplicationPage } from "@/modules/applications/pages/AddApplicationPage";
 import { ApplicationDetailsPage } from "@/modules/applications/pages/ApplicationDetailsPage";
 import { EditApplicationPage } from "@/modules/applications/pages/EditApplicationPage";
-import { CommissionsPage } from "@/modules/applications/pages/CommissionsPage";
+import { CommissionsRedirect } from "@/modules/applications/pages/CommissionsRedirect";
 
 type ApplicationRouteDefinition = {
   Component: ComponentType;
@@ -29,8 +29,9 @@ export const applicationsRoutes: ApplicationRouteDefinition[] = [
     requiredPermissions: [PERMISSIONS.APPLICATIONS_MANAGE],
   },
   {
+    // Commissions moved to its own sidebar module; old links and bookmarks land there.
     // Must precede ":id", which would otherwise read "commissions" as an application id.
-    Component: CommissionsPage,
+    Component: CommissionsRedirect,
     key: "commissions",
     path: "commissions",
     requiredPermissions: [PERMISSIONS.COMMISSION_VIEW],
