@@ -271,10 +271,18 @@ function mapRequirement(
 ): UniversityRequirement {
   const label =
     requirement.requirementType === "LANGUAGE_TEST"
-      ? `${requirement.testType?.replace(/_/g, " ") ?? "Language test"}${requirement.minOverallScore ? ` ${requirement.minOverallScore}+` : ""}`
+      ? `${
+          requirement.testType === "OTHER" && requirement.otherTestName
+            ? requirement.otherTestName
+            : requirement.testType?.replace(/_/g, " ") ?? "Language test"
+        }${requirement.minOverallScore ? ` ${requirement.minOverallScore}+` : ""}`
       : requirement.requirementType === "DOCUMENT"
         ? requirement.documentName ?? "Document required"
-        : requirement.requirementType.replace(/_/g, " ");
+        : requirement.requirementType === "APTITUDE_TEST" &&
+            requirement.aptitudeTestType === "OTHER" &&
+            requirement.otherTestName
+          ? `${requirement.otherTestName}${requirement.minOverallScore ? ` ${requirement.minOverallScore}+` : ""}`
+          : requirement.requirementType.replace(/_/g, " ");
 
   return {
     id: requirement.id ?? `req-${index}`,
