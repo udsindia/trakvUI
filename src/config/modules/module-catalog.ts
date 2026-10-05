@@ -74,6 +74,17 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
   },
   {
+    key: MODULE_KEYS.COMMISSIONS,
+    title: "Commissions",
+    navLabel: "Commissions",
+    path: "commissions",
+    icon: MODULE_ICON_KEYS.COMMISSIONS,
+    description: "Commission expected, received and pending on enrolled applications.",
+    order: 5,
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
+    requiredPermissions: [PERMISSIONS.COMMISSION_VIEW],
+  },
+  {
     key: MODULE_KEYS.ACTIVITIES,
     title: "Activities",
     navLabel: "Activities",
@@ -88,7 +99,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.ACTIVITIES,
     description: "Tasks, reminders, and case coordination timelines.",
-    order: 5,
+    order: 6,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -107,7 +118,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "courses",
     icon: MODULE_ICON_KEYS.UNIVERSITIES,
     description: "Find courses across universities by destination, level, discipline, intake and fees.",
-    order: 6,
+    order: 7,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -124,7 +135,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     path: "universities",
     icon: MODULE_ICON_KEYS.UNIVERSITIES_BROWSE,
     description: "Browse partner institutions, view courses and build shortlists.",
-    order: 7,
+    order: 8,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,
@@ -178,7 +189,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
-    order: 8,
+    order: 9,
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,

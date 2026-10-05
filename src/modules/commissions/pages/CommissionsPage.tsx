@@ -33,7 +33,6 @@ import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { useAuth } from "@/app/auth/authHooks";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
-import { ApplicationsSectionTabs } from "@/modules/applications/components/ApplicationsSectionTabs";
 import { applicationsApi, type CommissionRow } from "@/modules/applications/applicationsApi";
 import { applicationDetailsPath } from "@/modules/applications/applicationsRoutePaths";
 
@@ -266,8 +265,8 @@ export function CommissionsPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: { xs: 1.5, md: 2 }, py: 1 }}>
-        <ApplicationsSectionTabs />
+      <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: { xs: 1.5, md: 2 }, py: 1.25 }}>
+        <Typography sx={{ fontSize: 18, fontWeight: 700 }}>Commissions</Typography>
       </Box>
 
       <Box sx={{ bgcolor: "#fcfdff", flex: 1, overflow: "auto", px: { xs: 2, md: 2.5 }, py: 2 }}>
