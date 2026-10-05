@@ -5,6 +5,7 @@ import { ApplicationDashboardPage } from "@/modules/applications/pages/Applicati
 import { AddApplicationPage } from "@/modules/applications/pages/AddApplicationPage";
 import { ApplicationDetailsPage } from "@/modules/applications/pages/ApplicationDetailsPage";
 import { EditApplicationPage } from "@/modules/applications/pages/EditApplicationPage";
+import { CommissionsPage } from "@/modules/applications/pages/CommissionsPage";
 
 type ApplicationRouteDefinition = {
   Component: ComponentType;
@@ -26,6 +27,13 @@ export const applicationsRoutes: ApplicationRouteDefinition[] = [
     key: "create",
     path: "create",
     requiredPermissions: [PERMISSIONS.APPLICATIONS_MANAGE],
+  },
+  {
+    // Must precede ":id", which would otherwise read "commissions" as an application id.
+    Component: CommissionsPage,
+    key: "commissions",
+    path: "commissions",
+    requiredPermissions: [PERMISSIONS.COMMISSION_VIEW],
   },
   {
     // Must precede ":id" so "/applications/<id>/edit" isn't swallowed by the detail route.

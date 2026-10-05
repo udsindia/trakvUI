@@ -4,6 +4,7 @@ import { TuneRounded } from "@mui/icons-material";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import { Badge, Box, Button, CircularProgress, Drawer, InputAdornment, Paper, Stack, TextField, Typography } from "@mui/material";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
+import { ApplicationsSectionTabs } from "@/modules/applications/components/ApplicationsSectionTabs";
 import { ApplicationQuickFilters, type ApplicationQuickFilterTab } from "@/modules/applications/components/ApplicationQuickFilters";
 import { ApplicationTableContainer, type ApplicationRow } from "@/modules/applications/components/ApplicationTableContainer";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
@@ -196,11 +197,14 @@ export function ApplicationDashboardPage() {
             borderBottom: "1px solid",
             borderColor: "divider",
             display: "flex",
+            flexDirection: "column",
             flexShrink: 0,
+            gap: 1,
             px: { xs: 1.5, md: 2 },
             py: { xs: 1, md: 1 },
           }}
         >
+          <ApplicationsSectionTabs />
           <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", width: "100%" }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <ApplicationQuickFilters activeKey={activeQuickFilter} tabs={quickFilterTabs} onChange={handleQuickFilterChange} />
