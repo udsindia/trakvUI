@@ -121,11 +121,17 @@ interface Paged<T> {
 }
 
 
+/**
+ * One large page rather than server-side paging. The endpoint defaults to 20 rows, and the pages that use
+ * this list filter, count and paginate it client-side, so without a size they only ever saw the newest 20.
+ */
+const LIST_PAGE_SIZE = 500;
+
 export const applicationsApi = {
   getApplications: async (): Promise<BackendApplication[]> => {
     const response = await httpClient.get<
       BackendApplication[] | Paged<BackendApplication>
-    >(API_CONFIG.applications);
+    >(API_CONFIG.applications, { params: { page: 0, size: LIST_PAGE_SIZE } });
     const data = response.data;
     return Array.isArray(data) ? data : (data?.content ?? []);
   },

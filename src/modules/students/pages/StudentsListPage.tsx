@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
@@ -18,11 +18,15 @@ import {
 import { studentsApi, type BackendStudent } from "@/modules/students/studentsApi";
 import { studentDetailsPath } from "@/modules/students/studentsRoutePaths";
 import { usersService } from "@/modules/settings/usersService";
+import { ALL_PAGE_SIZE } from "@/shared/components/DataTable";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
+import { matchesSearch } from "@/shared/utils/search";
 
 const DEFAULT_PAGE_SIZE = 10;
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
+// The page filters and pages the list client-side (see studentsApi), so "All" is just a page size that fits it.
+const PAGE_SIZE_OPTIONS = [10, 20, 50, ALL_PAGE_SIZE];
 
 const quickFilterDefinitions = [
   { key: "all", label: "All" },
@@ -62,7 +66,9 @@ export function StudentsListPage() {
   const canViewUsers = hasPermissions([PERMISSIONS.USERS_VIEW]);
   const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // The top bar's search box filters this table live while the page is open (see pageSearch); the
+  // box on the page itself shares the same text, so the two always agree and mobile still has one.
+  const searchQuery = useRegisterPageSearch("Search students: name, phone, counsellor…");
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -153,12 +159,15 @@ export function StudentsListPage() {
         ) {
           return false;
         }
-        if (query) {
-          const haystack =
-            `${student.name} ${student.email} ${student.phone} ${student.counsellor}`.toLowerCase();
-          if (!haystack.includes(query)) return false;
-        }
-        return true;
+        // Every column the table shows, so typing a counsellor, a source or an application stage finds students too.
+        return matchesSearch(query, [
+          student.name,
+          student.email,
+          student.phone,
+          student.counsellor,
+          student.leadSource,
+          student.applicationStage,
+        ]);
       }),
     [studentRows, activeQuickFilter, query],
   );
@@ -175,9 +184,13 @@ export function StudentsListPage() {
       : `Showing ${pageStart}-${pageEnd} of ${visibleCount} students`;
 
   const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setPage(1);
+    pageSearch.setValue(value);
   };
+
+  // A new search starts from the first page, whichever box it was typed into.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   const handleQuickFilterChange = (key: string) => {
     setActiveQuickFilter(key);

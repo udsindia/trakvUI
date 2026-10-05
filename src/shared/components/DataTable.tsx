@@ -20,6 +20,13 @@ import {
   Typography,
 } from "@mui/material";
 
+/**
+ * Put this in pageSizeOptions to offer an "All" choice. It is a page size larger than any list, so the
+ * page maths (rows per page, page count, "Showing 1–N of N") needs no special case: everything lands on page 1.
+ * Only for lists the page holds in full; a server-paged table must not offer it.
+ */
+export const ALL_PAGE_SIZE = Number.MAX_SAFE_INTEGER;
+
 export type DataTableColumn<T> = {
   /** Stable key for the column. */
   id: string;
@@ -230,7 +237,7 @@ export function DataTable<T>({
                   >
                     {pageSizeOptions.map((option) => (
                       <MenuItem key={option} value={option}>
-                        {option}
+                        {option === ALL_PAGE_SIZE ? "All" : option}
                       </MenuItem>
                     ))}
                   </Select>
