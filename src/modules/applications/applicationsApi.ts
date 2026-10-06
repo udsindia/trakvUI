@@ -67,6 +67,10 @@ export interface ApplicationDetail {
   closedAt?: string | null;
   notes?: string | null;
   processedBy?: string | null;
+  /** Set once an admin has moved this enrolled application to Commissions. */
+  movedToCommissionsAt?: string | null;
+  /** Set once the final commission amount was received. */
+  commissionSettledAt?: string | null;
   createdAt: string;
   updatedAt?: string;
   stages: ApplicationStageDetail[];
@@ -262,6 +266,14 @@ export const applicationsApi = {
     const response = await httpClient.put<CommissionRow>(
       `${API_CONFIG.applications}/${id}/commission`,
       payload,
+    );
+    return response.data;
+  },
+
+  /** Take an enrolled application into Commissions: off the Applications and Students lists. */
+  moveToCommissions: async (id: string): Promise<CommissionRow> => {
+    const response = await httpClient.post<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission/move`,
     );
     return response.data;
   },
