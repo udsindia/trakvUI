@@ -64,8 +64,8 @@ export function UniversityDefaultsDialog({
   // Anything that arrived from storage can be changed but not removed — the save has
   // create and modify, no delete. Locking these keeps the buttons honest.
   const lockedKeys = [
-    ...(initial?.languageTests ?? []).map((test) => englishKey(test.testType)),
-    ...(initial?.aptitudeTests ?? []).map((test) => aptitudeKey(test.testType)),
+    ...(initial?.languageTests ?? []).map((test) => englishKey(test.testType, test.otherTestName)),
+    ...(initial?.aptitudeTests ?? []).map((test) => aptitudeKey(test.testType, test.otherTestName)),
   ];
 
   const requirementErrors = validateRequirementSet(set);

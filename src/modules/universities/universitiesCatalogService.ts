@@ -36,6 +36,8 @@ export type UniversityInput = Omit<University, "id" | "generalRequirements"> & {
  */
 export type CourseLanguageTest = {
   testType: TestType;
+  /** The test's name, typed in by hand. Used (and required) only when testType is OTHER. */
+  otherTestName?: string;
   minOverallScore?: number;
   minListening?: number;
   minReading?: number;
@@ -46,6 +48,8 @@ export type CourseLanguageTest = {
 /** One accepted aptitude / entrance test and its cut-off score. */
 export type CourseAptitudeTest = {
   testType: AptitudeTestType;
+  /** The test's name, typed in by hand. Used (and required) only when testType is OTHER. */
+  otherTestName?: string;
   minOverallScore?: number;
 };
 
@@ -106,9 +110,13 @@ export function requirementSetIsEmpty(set: RequirementSet): boolean {
  */
 export type RequirementSetError = {
   /** Which control to mark. */
-  field: "minGpa" | "languageTests";
+  field: "minGpa" | "languageTests" | "aptitudeTests";
   message: string;
 };
+
+/** The stored name of an "Other test", trimmed; empty when none was typed. */
+export const otherTestNameOf = (test: { testType: string; otherTestName?: string }) =>
+  test.testType === "OTHER" ? (test.otherTestName ?? "").trim() : "";
 
 export function validateRequirementSet(set: RequirementSet): RequirementSetError[] {
   const errors: RequirementSetError[] = [];
@@ -122,6 +130,21 @@ export function validateRequirementSet(set: RequirementSet): RequirementSetError
         "Use either one Minimum GPA for every applicant, or the per-length bars — not both. " +
         "With both set, there is no saying which one a three-year applicant is held to.",
     });
+  }
+
+  // An "Other test" is only meaningful with a name, and two with the same name are the same test.
+  const otherNames = (tests: Array<{ testType: string; otherTestName?: string }>) =>
+    tests.filter((test) => test.testType === "OTHER").map((test) => otherTestNameOf(test).toLowerCase());
+  for (const [field, tests] of [
+    ["languageTests", set.languageTests],
+    ["aptitudeTests", set.aptitudeTests],
+  ] as const) {
+    const names = otherNames(tests);
+    if (names.some((name) => name === "")) {
+      errors.push({ field, message: "Type in the name of the other test, or choose a different test." });
+    } else if (new Set(names).size !== names.length) {
+      errors.push({ field, message: "The same other test is listed twice. Keep one." });
+    }
   }
 
   const testTypes = new Set(set.languageTests.map((test) => test.testType));
@@ -149,6 +172,7 @@ export function toRequirementPayloads(
       courseId,
       requirementType: "LANGUAGE_TEST",
       testType: test.testType,
+      otherTestName: test.testType === "OTHER" ? otherTestNameOf(test) : undefined,
       minOverallScore: test.minOverallScore,
       minListening: test.minListening,
       minReading: test.minReading,
@@ -163,6 +187,7 @@ export function toRequirementPayloads(
       courseId,
       requirementType: "APTITUDE_TEST",
       aptitudeTestType: test.testType,
+      otherTestName: test.testType === "OTHER" ? otherTestNameOf(test) : undefined,
       minOverallScore: test.minOverallScore,
       isMandatory: true,
     });
@@ -205,6 +230,7 @@ export function fromRequirementDtos(
     if (requirement.requirementType === "LANGUAGE_TEST" && requirement.testType) {
       set.languageTests.push({
         testType: requirement.testType,
+        otherTestName: requirement.otherTestName ?? undefined,
         minOverallScore: requirement.minOverallScore ?? undefined,
         minListening: requirement.minListening ?? undefined,
         minReading: requirement.minReading ?? undefined,
@@ -214,6 +240,7 @@ export function fromRequirementDtos(
     } else if (requirement.requirementType === "APTITUDE_TEST" && requirement.aptitudeTestType) {
       set.aptitudeTests.push({
         testType: requirement.aptitudeTestType,
+        otherTestName: requirement.otherTestName ?? undefined,
         minOverallScore: requirement.minOverallScore ?? undefined,
       });
     } else if (requirement.requirementType === "ACADEMIC") {
@@ -367,7 +394,13 @@ export const universitiesCatalogService = {
       requirementType: string,
       testType?: string | null,
       aptitudeTestType?: string | null,
-    ) => [courseId ?? "UNI", requirementType, testType ?? aptitudeTestType ?? ""].join("|");
+      otherTestName?: string | null,
+    ) => {
+      const type = testType ?? aptitudeTestType ?? "";
+      // Every "Other test" has the same type, so the typed name is what tells them apart.
+      const name = type === "OTHER" ? `:${(otherTestName ?? "").trim().toLowerCase()}` : "";
+      return [courseId ?? "UNI", requirementType, `${type}${name}`].join("|");
+    };
 
     const existingByKey = new Map(
       existing
@@ -378,6 +411,7 @@ export const universitiesCatalogService = {
             requirement.requirementType,
             requirement.testType,
             requirement.aptitudeTestType,
+            requirement.otherTestName,
           ),
           requirement,
         ]),
@@ -389,7 +423,13 @@ export const universitiesCatalogService = {
     for (const scope of scopes) {
       for (const payload of toRequirementPayloads(set, scope)) {
         const match = existingByKey.get(
-          keyOf(scope, payload.requirementType, payload.testType, payload.aptitudeTestType),
+          keyOf(
+            scope,
+            payload.requirementType,
+            payload.testType,
+            payload.aptitudeTestType,
+            payload.otherTestName,
+          ),
         );
         if (match?.id) {
           updates.push({
