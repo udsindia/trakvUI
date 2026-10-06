@@ -118,10 +118,18 @@ function SidebarContent({
   userName,
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
+  // A module must be listed here as well as in module-catalog to appear in the sidebar;
+  // anything not in a group is dropped silently.
   const mainItems = items.filter((item) =>
-    ["dashboard", "lead", "students", "applications", "universities", "universities-browse"].includes(
-      item.id,
-    ),
+    [
+      "dashboard",
+      "lead",
+      "students",
+      "applications",
+      "commissions",
+      "universities",
+      "universities-browse",
+    ].includes(item.id),
   );
   const activitiesItem = items.find((item) => item.id === "activities");
   const tasksItem = activitiesItem?.children?.find((child) => child.id.endsWith(".tasks"));
