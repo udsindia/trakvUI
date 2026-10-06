@@ -137,7 +137,6 @@ export function CommissionsPage() {
   const queryClient = useQueryClient();
   const { hasPermissions } = useAuth();
   const canManage = hasPermissions([PERMISSIONS.COMMISSION_MANAGE]);
-  const canArchive = hasPermissions([PERMISSIONS.APPLICATIONS_CLOSE]);
 
   const [view, setView] = useState<View>("open");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -215,11 +214,6 @@ export function CommissionsPage() {
     },
   });
 
-  const archiveMutation = useMutation({
-    mutationFn: (id: string) => applicationsApi.deleteApplication(id),
-    onSuccess: invalidate,
-  });
-
   const openEditor = (row: CommissionRow) => {
     saveMutation.reset();
     setForm({
@@ -248,8 +242,7 @@ export function CommissionsPage() {
   const paymentAmountInvalid = payment.amount.trim() === "" || Number.isNaN(Number(payment.amount)) || Number(payment.amount) <= 0;
   const paymentDateInvalid = Boolean(payment.receivedOn) && payment.receivedOn > todayIso();
 
-  const mutationError =
-    archiveMutation.error ?? deletePaymentMutation.error ?? null;
+  const mutationError = deletePaymentMutation.error ?? null;
 
   return (
     <Paper
@@ -272,8 +265,9 @@ export function CommissionsPage() {
           sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mb: 1.5 }}
         >
           <Typography color="text.secondary" sx={{ fontSize: 13.5, maxWidth: "70ch" }}>
-            Record the probable commission, each installment as it arrives, and mark the final
-            amount received to close the entry and move it to the archive.
+            Enrolled applications an admin has moved here. Record the probable commission, each
+            installment as it arrives, and mark the final amount received to close the entry and
+            move it to the archive.
           </Typography>
           <Tabs
             sx={{ flexShrink: 0, minHeight: 32, "& .MuiTab-root": { minHeight: 32, py: 0.25, textTransform: "none" } }}
@@ -394,17 +388,6 @@ export function CommissionsPage() {
                           {editable && (
                             <Button size="small" sx={{ textTransform: "none" }} onClick={() => openEditor(row)}>
                               {row.commissionAmount == null ? "Record" : "Edit"}
-                            </Button>
-                          )}
-                          {canArchive && !row.archived && !row.settledAt && (
-                            <Button
-                              color="inherit"
-                              disabled={archiveMutation.isPending}
-                              size="small"
-                              sx={{ textTransform: "none" }}
-                              onClick={() => archiveMutation.mutate(row.id)}
-                            >
-                              Archive
                             </Button>
                           )}
                         </TableCell>

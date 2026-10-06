@@ -48,9 +48,6 @@ export const notificationsApi = {
 
 /** Where a notification's row should take you when it is clicked. */
 export function notificationLink(notification: AppNotification): string | null {
-  // An enrolment is a call to record the commission, which happens on the Commissions
-  // page rather than on the (now read-only) application page.
-  if (notification.notificationType === "APPLICATION_ENROLLED") return "/commissions";
   if (!notification.entityId) return null;
   if (notification.entityType === "LEAD") return `/leads/${notification.entityId}`;
   if (notification.entityType === "APPLICATION") return `/applications/${notification.entityId}`;
