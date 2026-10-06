@@ -265,10 +265,6 @@ export function CommissionsPage() {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: { xs: 1.5, md: 2 }, py: 1.25 }}>
-        <Typography sx={{ fontSize: 18, fontWeight: 700 }}>Commissions</Typography>
-      </Box>
-
       <Box sx={{ bgcolor: "#fcfdff", flex: 1, overflow: "auto", px: { xs: 2, md: 2.5 }, py: 2 }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
