@@ -11,9 +11,11 @@ import { applicationsApi, type BackendApplication } from "@/modules/applications
 import { applicationStageLabel } from "@/modules/applications/applicationStage";
 import { FilterPanel, type FilterConfig, type FilterPanelValues } from "@/shared/components/FilterPanel";
 import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
+import { ALL_PAGE_SIZE } from "@/shared/components/DataTable";
 
 const DEFAULT_PAGE_SIZE = 10;
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
+// The page filters and pages the list client-side (see applicationsApi), so "All" is just a page size that fits it.
+const PAGE_SIZE_OPTIONS = [10, 20, 50, ALL_PAGE_SIZE];
 
 function countActiveFilters(values: FilterPanelValues, config: FilterConfig[]): number {
   return config.reduce((count, filterConfig) => {
