@@ -286,12 +286,14 @@ export function buildCourseSearchFilterConfig({
     });
   }
 
+  // Tick as many lengths as you like: a counsellor often wants "1.5 to 3 years", which is two of
+  // these windows. A course in any ticked window qualifies.
   if (filterSettings.duration.enabled) {
-    pushDropdownFilter(filters, {
+    filters.push({
+      type: "checkbox-group",
       key: filterSettings.duration.key,
       label: filterSettings.duration.label,
       options: filterSettings.duration.options,
-      placeholder: filterSettings.duration.placeholder,
     });
   }
 

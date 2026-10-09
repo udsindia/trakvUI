@@ -455,7 +455,7 @@ export const courseSearchSettings = {
     educationGap: "" as string,
     turnaround: [0, 45] as [number, number],
     discipline: "" as string,
-    duration: "" as string,
+    duration: [] as string[],
     delivery: "" as string,
     postStudyWorkPermit: "" as string,
     tuition: [5, 60] as [number, number],

@@ -427,16 +427,14 @@ export function buildCourseSearchApiPayload(
     payload.postStudyWorkPermit = asString(filterValues[filterKeys.postStudyWorkPermit.key]) === "yes";
   }
 
-  // The option's value is a range in months, "13-18", with an empty upper end meaning no
-  // limit. Parsed from the value, never the label: an older version stripped digits out of
-  // the label and searched a window around them, which turned "1 year" into "between 1 and
-  // 7 months".
-  const durationRange = /^(\d+)-(\d*)$/.exec(asString(filterValues[filterKeys.duration.key]));
-  if (durationRange) {
-    const min = Number(durationRange[1]);
-    if (min > 0) payload.minDurationMonths = min;
-    if (durationRange[2]) payload.maxDurationMonths = Number(durationRange[2]);
-  }
+  // Each ticked option's value is a range in months, "13-18", with an empty upper end meaning no
+  // limit. They go to the server as they are and it matches a course in ANY of them; they are
+  // never worked out from the label (an older version stripped digits out of the label and
+  // searched a window around them, which turned "1 year" into "between 1 and 7 months").
+  const durationRanges = asStringArray(filterValues[filterKeys.duration.key]).filter((value) =>
+    /^\d+-\d*$/.test(value),
+  );
+  if (durationRanges.length > 0) payload.durationRanges = durationRanges;
 
   const turnaroundRange = asNumberRange(
     filterValues[filterKeys.turnaround.key],

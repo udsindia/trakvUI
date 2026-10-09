@@ -71,6 +71,8 @@ export type CourseSearchRequest = {
   durations?: string[];
   minDurationMonths?: number;
   maxDurationMonths?: number;
+  /** Several length windows, each "min-max" in months (empty max = no limit); a course in any one qualifies. */
+  durationRanges?: string[];
   deliveryModes?: string[];
   postStudyWorkPermit?: boolean;
   minTuitionLakhs?: number;
