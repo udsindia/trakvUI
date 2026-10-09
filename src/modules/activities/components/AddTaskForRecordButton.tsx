@@ -8,6 +8,7 @@ import {
   type ActivityEntityType,
   type CreateTaskRequest,
 } from "@/modules/activities/activityService";
+import { useTaskAssignees } from "@/modules/activities/hooks/useTaskAssignees";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type AddTaskForRecordButtonProps = {
@@ -38,6 +39,9 @@ export function AddTaskForRecordButton({
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [snack, setSnack] = useState("");
+  // Same choice as the Tasks page: without it a task raised here was always the
+  // creator's own, whatever their role allowed.
+  const { canAssign, assignees, isLoading: isLoadingAssignees } = useTaskAssignees(open);
 
   const createTask = useMutation({
     mutationFn: (request: CreateTaskRequest) => activityService.createTask(request),
@@ -66,6 +70,9 @@ export function AddTaskForRecordButton({
 
       <CreateTaskModal
         applications={[]}
+        assignees={assignees}
+        canAssign={canAssign}
+        isLoadingAssignees={isLoadingAssignees}
         errorMessage={
           createTask.isError
             ? getApiErrorMessage(createTask.error, "Unable to create the task.")

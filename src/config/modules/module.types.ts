@@ -7,6 +7,7 @@ export const MODULE_ICON_KEYS = {
   LEADS: "leads",
   STUDENTS: "students",
   APPLICATIONS: "applications",
+  COMMISSIONS: "commissions",
   ACTIVITIES: "activities",
   UNIVERSITIES: "universities",
   UNIVERSITIES_BROWSE: "universities-browse",

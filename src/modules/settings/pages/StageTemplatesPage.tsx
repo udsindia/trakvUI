@@ -33,7 +33,7 @@ import {
   type StageTemplate,
   type StageChangePreview,
 } from "@/modules/settings/stageTemplatesApi";
-import { useCountries } from "@/modules/universities/useUniversitiesCatalog";
+import { useAllCountries } from "@/modules/universities/useUniversitiesCatalog";
 import { StageChangePreviewDialog } from "@/modules/settings/components/StageChangePreviewDialog";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
@@ -83,15 +83,31 @@ export function StageTemplatesPage() {
     queryFn: stageTemplatesApi.list,
   });
 
-  // Only to offer countries that have no sequence yet; the page works without it.
-  const { data: countries = [] } = useCountries();
+  // Only to offer countries that have no sequence yet; the page works without it. Every
+  // country, not just the catalogue's: applications can now go anywhere, and a country
+  // has to be addable here before its students can get stages of their own.
+  const { data: countries = [] } = useAllCountries();
 
 
   const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
-  const selected = useMemo(
+  const listed = useMemo(
     () => templates.find((template) => template.countryCode === selectedCode),
     [templates, selectedCode],
   );
+
+  /*
+    The list holds only countries with a saved sequence (and the default), so a country
+    just picked from Add Country is not in it. Its starting point is whatever it inherits
+    today, fetched on its own. Without this the page had no sequence for it: the editor
+    kept the previous country's stages and Save never enabled.
+  */
+  const isNewCountry = !listed && selectedCode !== ANY_COUNTRY;
+  const inheritedQuery = useQuery({
+    enabled: isNewCountry,
+    queryKey: [...stageTemplatesQueryKey, "inherited", selectedCode],
+    queryFn: () => stageTemplatesApi.get(selectedCode),
+  });
+  const selected = listed ?? (isNewCountry ? inheritedQuery.data : undefined);
 
   /*
     The draft is reseeded whenever the selected country's saved sequence changes — on
@@ -183,7 +199,9 @@ export function StageTemplatesPage() {
       name.length > 0 &&
       trimmed.findIndex((other) => other.toLowerCase() === name.toLowerCase()) !== index,
   );
-  const unchanged = sameAsTemplate(draft, selected);
+  // Saving a new country's inherited sequence as it stands is a change: it gives the
+  // country a sequence of its own.
+  const unchanged = !isNewCountry && sameAsTemplate(draft, selected);
   const canSave =
     canManage && draft.length > 0 && !hasBlank && !duplicate && !unchanged && !saveMutation.isPending;
 
@@ -233,7 +251,9 @@ export function StageTemplatesPage() {
               onChange={(_event, country) => {
                 if (!country) return;
                 // Nothing is written until Save; selecting a country just starts an
-                // override seeded from whatever that country currently inherits.
+                // override seeded from whatever that country currently inherits. Cleared
+                // first so the previous country's stages never show under this one.
+                setDraft([]);
                 setSelectedCode(country.code);
                 setAddingCountry(false);
               }}
@@ -311,10 +331,12 @@ export function StageTemplatesPage() {
                   </ListItemButton>
                 );
               })}
-              {selected === undefined && selectedCode !== ANY_COUNTRY ? (
+              {isNewCountry ? (
                 <ListItemButton selected sx={{ py: 1.25 }}>
                   <Stack spacing={0.25}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{selectedCode}</Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
+                      {selected?.countryName ?? selectedCode}
+                    </Typography>
                     <Typography color="text.disabled" sx={{ fontSize: 11 }}>
                       Not saved yet
                     </Typography>

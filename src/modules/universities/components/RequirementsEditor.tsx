@@ -40,8 +40,13 @@ type RequirementsEditorProps = {
   lockedKeys?: string[];
 };
 
-export const englishKey = (testType: TestType) => `english:${testType}`;
-export const aptitudeKey = (testType: AptitudeTestType) => `aptitude:${testType}`;
+// An "Other test" is told apart from another by the name typed in, so the name is part of its key.
+const otherSuffix = (testType: string, otherTestName?: string) =>
+  testType === "OTHER" ? `:${(otherTestName ?? "").trim().toLowerCase()}` : "";
+export const englishKey = (testType: TestType, otherTestName?: string) =>
+  `english:${testType}${otherSuffix(testType, otherTestName)}`;
+export const aptitudeKey = (testType: AptitudeTestType, otherTestName?: string) =>
+  `aptitude:${testType}${otherSuffix(testType, otherTestName)}`;
 
 const numberOrUndefined = (raw: string) => (raw === "" ? undefined : Number(raw));
 
@@ -62,9 +67,10 @@ export function RequirementsEditor({
   const locked = new Set(lockedKeys);
   // Recomputed each render so the message clears the moment the conflict is resolved.
   const errors = validateRequirementSet(value);
-  const errorFor = (field: "minGpa" | "languageTests") =>
+  const errorFor = (field: "minGpa" | "languageTests" | "aptitudeTests") =>
     errors.find((entry) => entry.field === field);
   const englishError = errorFor("languageTests");
+  const aptitudeError = errorFor("aptitudeTests");
   const updateEnglish = (index: number, patch: Partial<CourseLanguageTest>) => {
     onChange({
       ...value,
@@ -75,8 +81,12 @@ export function RequirementsEditor({
   };
 
   const addEnglish = () => {
+    // Offer the next listed test not already added; once they are all used, add an "Other test",
+    // which can be added any number of times (each with its own typed name).
     const taken = new Set(value.languageTests.map((test) => test.testType));
-    const next = ENGLISH_TEST_OPTIONS.find((option) => !taken.has(option.value));
+    const next =
+      ENGLISH_TEST_OPTIONS.find((option) => option.value !== "OTHER" && !taken.has(option.value)) ??
+      ENGLISH_TEST_OPTIONS.find((option) => option.value === "OTHER");
     if (!next) {
       return;
     }
@@ -101,7 +111,9 @@ export function RequirementsEditor({
 
   const addAptitude = () => {
     const taken = new Set(value.aptitudeTests.map((test) => test.testType));
-    const next = APTITUDE_TEST_OPTIONS.find((option) => !taken.has(option.value));
+    const next =
+      APTITUDE_TEST_OPTIONS.find((option) => option.value !== "OTHER" && !taken.has(option.value)) ??
+      APTITUDE_TEST_OPTIONS.find((option) => option.value === "OTHER");
     if (!next) {
       return;
     }
@@ -132,6 +144,7 @@ export function RequirementsEditor({
         const takenElsewhere = value.languageTests
           .filter((_, other) => other !== index)
           .map((other) => other.testType);
+        const rowLocked = locked.has(englishKey(test.testType, test.otherTestName));
 
         return (
           <Box
@@ -144,22 +157,42 @@ export function RequirementsEditor({
                 select
                 label="Test"
                 size="small"
-                disabled={locked.has(englishKey(test.testType))}
+                disabled={rowLocked}
                 value={test.testType}
-                onChange={(event) =>
-                  updateEnglish(index, { testType: event.target.value as TestType })
-                }
+                onChange={(event) => {
+                  const testType = event.target.value as TestType;
+                  // The typed name belongs to "Other test" only; drop it when switching to a listed test.
+                  updateEnglish(index, {
+                    testType,
+                    otherTestName: testType === "OTHER" ? test.otherTestName : undefined,
+                  });
+                }}
               >
                 {ENGLISH_TEST_OPTIONS.map((entry) => (
                   <MenuItem
                     key={entry.value}
                     value={entry.value}
-                    disabled={takenElsewhere.includes(entry.value)}
+                    // "Other test" can be added again and again; every listed test only once.
+                    disabled={entry.value !== "OTHER" && takenElsewhere.includes(entry.value)}
                   >
                     {entry.label}
                   </MenuItem>
                 ))}
               </TextField>
+              {test.testType === "OTHER" ? (
+                <TextField
+                  fullWidth
+                  required
+                  label="Test name"
+                  placeholder="e.g. University's own English test"
+                  size="small"
+                  disabled={rowLocked}
+                  error={!(test.otherTestName ?? "").trim()}
+                  value={test.otherTestName ?? ""}
+                  inputProps={{ maxLength: 100 }}
+                  onChange={(event) => updateEnglish(index, { otherTestName: event.target.value })}
+                />
+              ) : null}
               {option && option.max > 0 ? (
                 <TextField
                   fullWidth
@@ -181,7 +214,7 @@ export function RequirementsEditor({
               )}
               <IconButton
                 aria-label="Remove test"
-                disabled={locked.has(englishKey(test.testType))}
+                disabled={rowLocked}
                 size="small"
                 onClick={() => removeEnglish(index)}
               >
@@ -213,7 +246,7 @@ export function RequirementsEditor({
                 ))}
               </Stack>
             ) : null}
-            {locked.has(englishKey(test.testType)) ? (
+            {rowLocked ? (
               <Typography color="text.secondary" sx={{ fontSize: 11, mt: 1 }}>
                 Already saved — scores can be changed, but this test can&apos;t be removed.
               </Typography>
@@ -227,7 +260,6 @@ export function RequirementsEditor({
         </Alert>
       ) : null}
       <Button
-        disabled={value.languageTests.length >= ENGLISH_TEST_OPTIONS.length}
         size="small"
         startIcon={<AddRounded />}
         sx={{ alignSelf: "flex-start", textTransform: "none" }}
@@ -246,6 +278,7 @@ export function RequirementsEditor({
         const takenElsewhere = value.aptitudeTests
           .filter((_, other) => other !== index)
           .map((other) => other.testType);
+        const rowLocked = locked.has(aptitudeKey(test.testType, test.otherTestName));
 
         return (
           <Box key={`aptitude-${index}`}>
@@ -255,22 +288,42 @@ export function RequirementsEditor({
               select
               label="Test"
               size="small"
-              disabled={locked.has(aptitudeKey(test.testType))}
+              disabled={rowLocked}
               value={test.testType}
-              onChange={(event) =>
-                updateAptitude(index, { testType: event.target.value as AptitudeTestType })
-              }
+              onChange={(event) => {
+                const testType = event.target.value as AptitudeTestType;
+                // The typed name belongs to "Other test" only; drop it when switching to a listed test.
+                updateAptitude(index, {
+                  testType,
+                  otherTestName: testType === "OTHER" ? test.otherTestName : undefined,
+                });
+              }}
             >
               {APTITUDE_TEST_OPTIONS.map((entry) => (
                 <MenuItem
                   key={entry.value}
                   value={entry.value}
-                  disabled={takenElsewhere.includes(entry.value)}
+                  // "Other test" can be added again and again; every listed test only once.
+                  disabled={entry.value !== "OTHER" && takenElsewhere.includes(entry.value)}
                 >
                   {entry.label}
                 </MenuItem>
               ))}
             </TextField>
+            {test.testType === "OTHER" ? (
+              <TextField
+                fullWidth
+                required
+                label="Test name"
+                placeholder="e.g. University's own entrance test"
+                size="small"
+                disabled={rowLocked}
+                error={!(test.otherTestName ?? "").trim()}
+                value={test.otherTestName ?? ""}
+                inputProps={{ maxLength: 100 }}
+                onChange={(event) => updateAptitude(index, { otherTestName: event.target.value })}
+              />
+            ) : null}
             <TextField
               fullWidth
               label="Minimum score"
@@ -284,14 +337,14 @@ export function RequirementsEditor({
             />
               <IconButton
                 aria-label="Remove test"
-                disabled={locked.has(aptitudeKey(test.testType))}
+                disabled={rowLocked}
                 size="small"
                 onClick={() => removeAptitude(index)}
               >
                 <DeleteOutlineRounded fontSize="small" />
               </IconButton>
             </Stack>
-            {locked.has(aptitudeKey(test.testType)) ? (
+            {rowLocked ? (
               <Typography color="text.secondary" sx={{ fontSize: 11, mt: 0.5 }}>
                 Already saved — the score can be changed, but this test can&apos;t be removed.
               </Typography>
@@ -299,8 +352,12 @@ export function RequirementsEditor({
           </Box>
         );
       })}
+      {aptitudeError ? (
+        <Alert severity="error" sx={{ fontSize: 13 }}>
+          {aptitudeError.message}
+        </Alert>
+      ) : null}
       <Button
-        disabled={value.aptitudeTests.length >= APTITUDE_TEST_OPTIONS.length}
         size="small"
         startIcon={<AddRounded />}
         sx={{ alignSelf: "flex-start", textTransform: "none" }}

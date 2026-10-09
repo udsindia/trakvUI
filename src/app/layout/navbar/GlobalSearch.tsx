@@ -24,7 +24,10 @@ import { leadApi } from "@/modules/lead/leadApi";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { studentsApi } from "@/modules/students/studentsApi";
 import { studentDetailsPath } from "@/modules/students/studentsRoutePaths";
+import { fromBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { pageSearch, usePageSearchState } from "@/shared/state/pageSearch";
+import { matchesSearch } from "@/shared/utils/search";
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_PER_GROUP = 5;
@@ -38,8 +41,9 @@ type SearchResult = {
   to: string;
 };
 
+/** Words in any order, phone numbers however they are written — see matchesSearch. */
 function includesQuery(query: string, ...fields: (string | null | undefined)[]) {
-  return fields.some((field) => Boolean(field) && field!.toLowerCase().includes(query));
+  return matchesSearch(query, fields);
 }
 
 /** Joins the parts that have a value, so a missing course leaves no stray separator. */
@@ -81,8 +85,13 @@ export function GlobalSearch() {
     return () => window.clearTimeout(timeoutId);
   }, [inputValue]);
 
+  // On the Leads and Students pages this box narrows the page's table live instead of showing a
+  // drop-down of matches (see pageSearch).
+  const pageMode = usePageSearchState();
+  const filtersPage = pageMode.placeholder !== null;
+
   const normalizedQuery = query.trim().toLowerCase();
-  const isSearching = normalizedQuery.length >= MIN_QUERY_LENGTH;
+  const isSearching = !filtersPage && normalizedQuery.length >= MIN_QUERY_LENGTH;
 
   const canViewLeads = hasPermissions([PERMISSIONS.LEAD_VIEW]);
   const canViewStudents = hasPermissions([PERMISSIONS.STUDENTS_VIEW]);
@@ -121,6 +130,11 @@ export function GlobalSearch() {
             lead.email,
             lead.phone,
             joinPhoneNumber(lead.phoneCountryCode, lead.phone),
+            // The agent, destination and source, so searching "Siraj" or "USA" finds the leads too.
+            lead.assignedToName,
+            lead.destinationCountries?.join(" "),
+            lead.sourceName,
+            fromBackendLeadStage(lead.leadStage),
           ),
       )
       .slice(0, MAX_PER_GROUP)
@@ -128,7 +142,12 @@ export function GlobalSearch() {
         key: `lead-${lead.id}`,
         group: "Leads",
         primary: fullName(lead.firstName, lead.lastName) || lead.email || "Unnamed lead",
-        secondary: subtitle(lead.email, joinPhoneNumber(lead.phoneCountryCode, lead.phone)),
+        secondary: subtitle(
+          lead.email,
+          joinPhoneNumber(lead.phoneCountryCode, lead.phone),
+          lead.destinationCountries?.[0],
+          lead.assignedToName,
+        ),
         to: leadRoutePaths.details(lead.id),
       }));
 
@@ -140,6 +159,7 @@ export function GlobalSearch() {
           student.email,
           student.phone,
           joinPhoneNumber(student.phoneCountryCode, student.phone),
+          student.leadSourceName,
         ),
       )
       .slice(0, MAX_PER_GROUP)
@@ -160,6 +180,8 @@ export function GlobalSearch() {
           application.email,
           application.universityName,
           application.courseName,
+          application.currentStageName,
+          application.partnerAgencyName,
         ),
       )
       .slice(0, MAX_PER_GROUP)
@@ -228,9 +250,9 @@ export function GlobalSearch() {
       >
         <TextField
           fullWidth
-          placeholder="Search leads, students, apps…"
+          placeholder={filtersPage ? (pageMode.placeholder ?? "") : "Search leads, students, apps…"}
           size="small"
-          value={inputValue}
+          value={filtersPage ? pageMode.value : inputValue}
           sx={{
             "& .MuiOutlinedInput-root": {
               bgcolor: "#F7FAFC",
@@ -254,6 +276,10 @@ export function GlobalSearch() {
             },
           }}
           onChange={(event) => {
+            if (filtersPage) {
+              pageSearch.setValue(event.target.value);
+              return;
+            }
             setInputValue(event.target.value);
             setIsOpen(true);
           }}

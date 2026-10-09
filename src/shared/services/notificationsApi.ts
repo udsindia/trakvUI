@@ -1,6 +1,10 @@
 import { httpClient } from "@/shared/services/http/client";
 
-export type NotificationType = "LEAD_MARKED_DEAD" | "APPLICATION_WITHDRAWN";
+export type NotificationType =
+  | "LEAD_MARKED_DEAD"
+  | "APPLICATION_WITHDRAWN"
+  | "APPLICATION_ENROLLED"
+  | "APPLICATION_CLOSED";
 
 export type AppNotification = {
   id: string;

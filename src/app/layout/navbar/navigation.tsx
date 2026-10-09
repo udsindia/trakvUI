@@ -8,6 +8,7 @@ import SchoolRounded from "@mui/icons-material/SchoolRounded";
 import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
 import MicRounded from "@mui/icons-material/MicRounded";
+import PaymentsRounded from "@mui/icons-material/PaymentsRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
   ModuleIconKey,
@@ -28,6 +29,7 @@ const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   leads: <TrendingUpRounded />,
   students: <GroupsRounded />,
   applications: <AssignmentRounded />,
+  commissions: <PaymentsRounded />,
   activities: <EventNoteRounded />,
   universities: <SchoolRounded />,
   "universities-browse": <AccountBalanceRounded />,

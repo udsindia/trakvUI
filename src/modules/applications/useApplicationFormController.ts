@@ -19,8 +19,8 @@ import { universityCoursesQueryKey } from "@/modules/universities/universitiesCa
 import { useAuth } from "@/app/auth/useAuth";
 import { PERMISSIONS } from "@/config/permissions/permissions";
 import {
+  useAllCountries,
   useAllUniversities,
-  useCountries,
   useUniversitiesByCountry,
   useUniversityCourseOptions,
 } from "@/modules/universities/useUniversitiesCatalog";
@@ -172,7 +172,7 @@ export function useApplicationFormController(
     data: countries = [],
     isLoading: countriesLoading,
     isError: countriesError,
-  } = useCountries();
+  } = useAllCountries();
 
   const {
     data: universities = [],

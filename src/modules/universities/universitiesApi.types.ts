@@ -33,10 +33,18 @@ export type TestType =
   | "INTER_ENGLISH"
   | "INTER_ENGLISH_AVG"
   | "CAMBRIDGE_C1"
-  | "CAMBRIDGE_C2";
+  | "CAMBRIDGE_C2"
+  /** A test not in this list; its name is typed in by hand and sent as otherTestName. */
+  | "OTHER";
 
 /** Aptitude / entrance tests. Backed by its own enum and column server-side. */
-export type AptitudeTestType = "GRE" | "GMAT" | "SAT" | "DMAT";
+export type AptitudeTestType =
+  | "GRE"
+  | "GMAT"
+  | "SAT"
+  | "DMAT"
+  /** A test not in this list; its name is typed in by hand and sent as otherTestName. */
+  | "OTHER";
 
 /** A student's recorded language test — NOT valid on a requirement. */
 export type LanguageTestType = "IELTS_ACADEMIC" | "IELTS_UKVI" | "TOEFL_IBT" | string;
@@ -71,6 +79,8 @@ export interface UniversityRequirementDto {
   requirementType: RequirementType;
   testType?: TestType | null;
   aptitudeTestType?: AptitudeTestType | null;
+  /** The test's name when testType / aptitudeTestType is OTHER. */
+  otherTestName?: string | null;
   minOverallScore?: number | null;
   minListening?: number | null;
   minReading?: number | null;
@@ -221,6 +231,8 @@ export interface CreateRequirementPayload {
   requirementType: RequirementType;
   testType?: TestType;
   aptitudeTestType?: AptitudeTestType;
+  /** Required when testType / aptitudeTestType is OTHER. */
+  otherTestName?: string;
   documentName?: string;
   minOverallScore?: number;
   minListening?: number;

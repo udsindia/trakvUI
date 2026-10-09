@@ -32,6 +32,7 @@ import {
   toBackendLeadStage,
 } from "@/modules/lead/leadStageMappers";
 import { usersService } from "@/modules/settings/usersService";
+import { ALL_PAGE_SIZE } from "@/shared/components/DataTable";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import {
   FilterPanel,
@@ -41,10 +42,18 @@ import {
   type FilterPanelValues,
 } from "@/shared/components/FilterPanel";
 import { joinPhoneNumber } from "@/shared/utils/phone";
+import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
+import { matchesSearch } from "@/shared/utils/search";
 import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
 
 const DEFAULT_PAGE_SIZE = 10;
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
+// The page already holds the whole lead list (see the query below), so "All" is just a page size that fits it.
+const PAGE_SIZE_OPTIONS = [10, 20, 50, ALL_PAGE_SIZE];
+
+/** Enrolled leads are students now and live on the Students page, so this page does not list them. */
+function isEnrolled(lead: BackendLead) {
+  return fromBackendLeadStage(lead.leadStage) === ENROLLED_STAGE || lead.leadStage?.toUpperCase() === "ENROLLED";
+}
 
 const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "all", label: "All" },
@@ -52,7 +61,6 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "contacted", label: "Contacted" },
   { key: "qualified", label: "Qualified" },
   { key: "prospective", label: "Prospective" },
-  { key: "enrolled", label: "Enrolled" },
   { key: "dead", label: "Dead" },
 ];
 
@@ -155,15 +163,10 @@ function getStageKey(stage: string) {
 }
 
 function applySearchFilter(rows: LeadRow[], query: string): LeadRow[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return rows;
-  return rows.filter(
-    (row) =>
-      row.name.toLowerCase().includes(q) ||
-      row.email.toLowerCase().includes(q) ||
-      row.phone.includes(q) ||
-      row.agent.toLowerCase().includes(q) ||
-      row.stage.toLowerCase().includes(q),
+  if (!query.trim()) return rows;
+  // Every column the table shows, so typing a country, a source or a counsellor finds the leads too.
+  return rows.filter((row) =>
+    matchesSearch(query, [row.name, row.email, row.phone, row.agent, row.stage, row.source, row.country]),
   );
 }
 
@@ -219,7 +222,9 @@ export function LeadDashboardPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
   // Stage changes are the same decision here as on the lead's own page, dialogs and all.
   const { requestStageChange, requestComment, dialogs } = useLeadStageChange();
-  const [leadSearchQuery, setLeadSearchQuery] = useState("");
+  // The top bar's search box filters this table live while the page is open (see pageSearch); the
+  // box on the page itself shares the same text, so the two always agree and mobile still has one.
+  const leadSearchQuery = useRegisterPageSearch("Search leads: name, phone, agent, country…");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
@@ -286,7 +291,10 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
-  const leadRows: LeadRow[] = useMemo(() => backendLeads.map(mapBackendLeadToRow), [backendLeads]);
+  const leadRows: LeadRow[] = useMemo(
+    () => backendLeads.filter((lead) => !isEnrolled(lead)).map(mapBackendLeadToRow),
+    [backendLeads],
+  );
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(
     () =>
@@ -341,12 +349,13 @@ export function LeadDashboardPage() {
   }, []);
 
   const handleSearchChange = useCallback((query: string) => {
-    setLeadSearchQuery((currentQuery) => {
-      if (currentQuery === query) return currentQuery;
-      setPage(1);
-      return query;
-    });
+    pageSearch.setValue(query);
   }, []);
+
+  // A new search starts from the first page, whichever box it was typed into.
+  useEffect(() => {
+    setPage(1);
+  }, [leadSearchQuery]);
 
   const handleQuickFilterChange = useCallback((key: string) => {
     setActiveQuickFilter((currentKey) => {

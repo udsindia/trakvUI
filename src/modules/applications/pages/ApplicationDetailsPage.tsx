@@ -32,8 +32,11 @@ import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
+// What an application can be closed with. Offer Accepted is deliberately absent: it is a
+// stage on the way to the visa, not an end, and the server refuses it. Enrolled is the
+// success close — visa received, student enrolled — and hands the application to the
+// agency admins to record commission and archive.
 const TERMINAL_OUTCOMES = [
-  "OFFER_ACCEPTED",
   "ENROLLED",
   "OFFER_DECLINED",
   "VISA_REJECTED",
@@ -65,6 +68,7 @@ export function ApplicationDetailsPage() {
   const navigate = useNavigate();
   const { hasPermissions } = useAuth();
   const canEdit = hasPermissions([PERMISSIONS.APPLICATIONS_MANAGE]);
+  const canManageCommission = hasPermissions([PERMISSIONS.COMMISSION_MANAGE]);
   const queryClient = useQueryClient();
 
   const [moveNote, setMoveNote] = useState("");
@@ -138,6 +142,14 @@ export function ApplicationDetailsPage() {
     },
   });
 
+  const moveToCommissionsMutation = useMutation({
+    mutationFn: () => applicationsApi.moveToCommissions(id!),
+    onSuccess: () => {
+      invalidate();
+      navigate("/commissions");
+    },
+  });
+
   const closeMutation = useMutation({
     mutationFn: (vars: { outcome: string; reason: string }) =>
       applicationsApi.closeApplication(id!, vars.outcome, vars.reason),
@@ -152,10 +164,25 @@ export function ApplicationDetailsPage() {
     return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
   }
   if (isError || !application) {
+    // The server answers 404 for an archived application as well as a missing one, and
+    // notifications about a closed application outlive it on the working list. So the
+    // likely reason is said, and the way to it offered, rather than a bare "not found".
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-        <Typography color="error">Application not found.</Typography>
-      </Box>
+      <Stack spacing={1.5} sx={{ alignItems: "center", mt: 10, px: 2, textAlign: "center" }}>
+        <Typography sx={{ fontWeight: 600 }}>This application isn't on the working list.</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: 14, maxWidth: "52ch" }}>
+          It has most likely been archived after it was closed. Archived applications are on the
+          Archive page.
+        </Typography>
+        <Stack direction="row" spacing={1.5}>
+          <Button variant="contained" onClick={() => navigate("/settings/archive")}>
+            Open Archive
+          </Button>
+          <Button variant="outlined" onClick={() => navigate(applicationsRoutePaths.dashboard)}>
+            Back to Applications
+          </Button>
+        </Stack>
+      </Stack>
     );
   }
 
@@ -296,9 +323,45 @@ export function ApplicationDetailsPage() {
                     <Divider sx={{ mb: 2 }} />
 
                     {isClosed ? (
-                      <Alert severity="info">
-                        This application is closed ({humanize(application.outcome)}) and is read-only.
-                      </Alert>
+                      <Stack spacing={1.5}>
+                        <Alert severity="info">
+                          This application is closed ({humanize(application.outcome)}) and is read-only.
+                          {" "}
+                          {application.outcome !== "ENROLLED"
+                            ? "The agency admin has been notified to archive it."
+                            : application.movedToCommissionsAt
+                              ? "It has been moved to Commissions, where the commission is recorded."
+                              : "The agency admin has been asked to move it to Commissions."}
+                        </Alert>
+                        {application.outcome === "ENROLLED" && application.movedToCommissionsAt && canManageCommission ? (
+                          <Box display="flex" justifyContent="flex-end">
+                            <Button variant="outlined" onClick={() => navigate("/commissions")}>
+                              Open Commissions
+                            </Button>
+                          </Box>
+                        ) : null}
+                        {application.outcome === "ENROLLED" && !application.movedToCommissionsAt && canManageCommission ? (
+                          <>
+                            <Typography color="text.secondary" variant="body2">
+                              Moving it takes the application off the Applications list and the student off
+                              the Students list. Record the commission on the Commissions page; it is
+                              archived there once the final amount is received.
+                            </Typography>
+                            {moveToCommissionsMutation.isError && (
+                              <Alert severity="error">{errorMessage(moveToCommissionsMutation.error)}</Alert>
+                            )}
+                            <Box display="flex" justifyContent="flex-end">
+                              <Button
+                                variant="contained"
+                                disabled={moveToCommissionsMutation.isPending}
+                                onClick={() => moveToCommissionsMutation.mutate()}
+                              >
+                                {moveToCommissionsMutation.isPending ? "Moving..." : "Move to Commissions"}
+                              </Button>
+                            </Box>
+                          </>
+                        ) : null}
+                      </Stack>
                     ) : (
                       <Stack spacing={3}>
                         {/* Move to next stage */}
@@ -359,6 +422,12 @@ export function ApplicationDetailsPage() {
                             onChange={(e) => setCloseReason(e.target.value)}
                             slotProps={{ inputLabel: { shrink: true } }}
                           />
+                          {closeOutcome === "ENROLLED" && (
+                            <Alert severity="info">
+                              Use Enrolled once the visa is received and the student has enrolled. The
+                              agency admin is notified to move it to Commissions and record the commission.
+                            </Alert>
+                          )}
                           {closeMutation.isError && (
                             <Alert severity="error">{errorMessage(closeMutation.error)}</Alert>
                           )}

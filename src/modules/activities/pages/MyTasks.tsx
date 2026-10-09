@@ -22,25 +22,23 @@ import { TaskBoardColumn } from "@/modules/activities/components/TaskBoardColumn
 import { TaskTable } from "@/modules/activities/components/TaskTable";
 import { TaskDetailsSidebar } from "@/modules/activities/components/TaskDetailsSidebar";
 import { useTaskBoard } from "@/modules/activities/hooks/useTaskBoard";
+import { useTaskAssignees } from "@/modules/activities/hooks/useTaskAssignees";
 import { taskColumnDefinitions } from "@/modules/activities/mock/mockData";
 import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
-import { usersService } from "@/modules/settings/usersService";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import type { TaskPriority } from "@/modules/activities/types/types";
 
 const allPriorityValue = "all";
 
 export function MyTasks() {
-  const { hasPermission, tenant } = useAuth();
+  const { hasPermission } = useAuth();
   const canCreateTask = hasPermission(PERMISSIONS.TASK_CREATE);
   // Without TASK_ASSIGN the task is the creator's own, so there is no team to fetch —
   // and a counsellor cannot read the team endpoint anyway, the same reason AddLeadPage
   // guards its own user query.
-  const canAssignTask = hasPermission(PERMISSIONS.TASK_ASSIGN);
-  const tenantId = tenant?.tenantId ?? "";
   const [selectedAgentId, setSelectedAgentId] = useState(ACTIVITY_ALL_AGENTS_OPTION_ID);
   const [selectedPriorityValue, setSelectedPriorityValue] = useState<string>(allPriorityValue);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -101,13 +99,11 @@ export function MyTasks() {
     queryFn: applicationsApi.getApplications,
   });
 
-  // Shares the key AddLeadPage uses, so opening the task modal after the lead form costs
-  // no second request.
-  const assigneesQuery = useQuery({
-    enabled: createTaskOpen && canAssignTask && Boolean(tenantId),
-    queryKey: ["settings", "users", tenantId],
-    queryFn: () => usersService.getUsers(tenantId),
-  });
+  const {
+    canAssign: canAssignTask,
+    assignees: assigneeOptions,
+    isLoading: isLoadingAssignees,
+  } = useTaskAssignees(createTaskOpen);
 
   // Who is carrying what, across everyone this user is allowed to see. The server does the
   // scoping, so this is fetched for everybody and the panel hides itself when it comes back
@@ -120,13 +116,6 @@ export function MyTasks() {
   // More than one agent in the (server-scoped) summary means this user can see a team.
   const canSeeTeam = (summaryQuery.data?.agents ?? []).length > 1;
 
-  const assigneeOptions = useMemo(
-    () =>
-      (assigneesQuery.data ?? [])
-        .filter((user) => user.active)
-        .map((user) => ({ id: user.id, name: user.name })),
-    [assigneesQuery.data],
-  );
 
   const columns = useMemo(
     () =>
@@ -355,7 +344,7 @@ export function MyTasks() {
         applications={applicationsQuery.data ?? []}
         assignees={assigneeOptions}
         canAssign={canAssignTask}
-        isLoadingAssignees={assigneesQuery.isLoading}
+        isLoadingAssignees={isLoadingAssignees}
         isLoadingLinks={
           leadsQuery.isLoading || studentsQuery.isLoading || applicationsQuery.isLoading
         }

@@ -152,6 +152,15 @@ export const universitiesApi = {
     return response.data;
   },
 
+  /** Every ISO country, not only those the catalogue covers. */
+  listAllCountries: async (): Promise<CountryDto[]> => {
+    const response = await httpClient.get<CountryDto[]>(
+      `${API_CONFIG.universities}/countries/all`,
+      createAuthRequestConfig(),
+    );
+    return response.data;
+  },
+
   getUniversity: async (universityId: string): Promise<UniversityDetailDto> => {
     const response = await httpClient.get<UniversityDetailDto>(
       `${API_CONFIG.universities}/${universityId}`,

@@ -119,6 +119,8 @@ function SidebarContent({
   userName,
 }: SidebarContentProps) {
   const sidebar = useTheme().palette.sidebar;
+  // A module must be listed here as well as in module-catalog to appear in the sidebar;
+  // anything not in a group is dropped silently.
   const mainItems = items.filter((item) =>
     [
       "dashboard",
@@ -126,6 +128,7 @@ function SidebarContent({
       "students",
       "applications",
       "call-records",
+      "commissions",
       "universities",
       "universities-browse",
     ].includes(item.id),

@@ -37,6 +37,9 @@ export const ENGLISH_TEST_OPTIONS: Array<{
   },
   { value: "CAMBRIDGE_C1", label: "Cambridge C1 Advanced", max: 210, step: 1, hasBands: false },
   { value: "CAMBRIDGE_C2", label: "Cambridge C2 Proficiency", max: 230, step: 1, hasBands: false },
+  // Any test not listed above. The name is typed in by hand (otherTestName); the score scale is
+  // unknown, so the minimum score is free-form up to a generous ceiling.
+  { value: "OTHER", label: "Other test", max: 1000, step: 0.5, hasBands: false },
 ];
 
 /**
@@ -53,6 +56,8 @@ export const APTITUDE_TEST_OPTIONS: Array<{
   { value: "GMAT", label: "GMAT", max: 800, step: 10 },
   { value: "SAT", label: "SAT", max: 1600, step: 10 },
   { value: "DMAT", label: "DMAT", max: 100, step: 1 },
+  // Any test not listed above; the name is typed in by hand (otherTestName).
+  { value: "OTHER", label: "Other test", max: 1000, step: 0.5 },
 ];
 
 /** Scales a GPA can be quoted on. Stored as text in gpa_scale. */

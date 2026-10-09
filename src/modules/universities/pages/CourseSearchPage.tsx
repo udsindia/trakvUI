@@ -18,6 +18,7 @@ import {
   Drawer,
   FormControl,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Stack,
@@ -119,6 +120,11 @@ import {
 
 const { defaults: defaultSearchSettings, filters: filterKeys } = courseSearchSettings;
 const sliderFallbacks = getCourseSearchSliderFallbacks();
+
+// The server pages the results and caps a page at 50, so there is no "All" here as there is on the
+// lead/student/application tables, which hold their whole list in the browser.
+const COURSE_PAGE_SIZE_OPTIONS = [10, 20, 50];
+const DEFAULT_COURSE_PAGE_SIZE = 20;
 
 type SearchFiltersApiInstitution = {
   key?: string;
@@ -682,6 +688,11 @@ export function CourseSearchPage() {
   // What the server matched, which is not what is on screen: the API returns one page of
   // 20. The counter used to read "20 courses found" whether there were 20 matches or 200.
   const [courseResultTotal, setCourseResultTotal] = useState(0);
+  // Which page of those matches is on screen (1-based) and how many make a page. The server does the
+  // paging; a new search of any kind starts back at page 1.
+  const [coursePage, setCoursePage] = useState(1);
+  const [coursePageSize, setCoursePageSize] = useState(DEFAULT_COURSE_PAGE_SIZE);
+  const resultsScrollRef = useRef<HTMLDivElement | null>(null);
   // Whether the last search asked about backlogs or education gap — the cards qualify a
   // match only when it was one of those the counsellor filtered on.
   const [academicFilterApplied, setAcademicFilterApplied] = useState(false);
@@ -962,14 +973,26 @@ export function CourseSearchPage() {
    * no client-side filtering to fall back on).
    */
   const runCourseSearch = useCallback(
-    async (values: FilterPanelValues, query: string, sortValue: CourseSortOption) => {
+    async (
+      values: FilterPanelValues,
+      query: string,
+      sortValue: CourseSortOption,
+      page = 1,
+      size = coursePageSize,
+    ) => {
       setCourseSearchError(null);
       setIsApplyingFilters(true);
 
       try {
-        const payload = buildCourseSearchApiPayload(values, query, sortValue, studentId);
+        const payload = {
+          ...buildCourseSearchApiPayload(values, query, sortValue, studentId),
+          page: page - 1,
+          size,
+        };
         setAcademicFilterApplied(Boolean(payload.backlogs) || Boolean(payload.educationGap));
         const response = await leadApi.searchCourses(payload);
+        setCoursePage(page);
+        setCoursePageSize(size);
         setCourseResults(normalizeCourseSearchApiResults(response));
         setCourseResultTotal(
           typeof response?.totalElements === "number"
@@ -990,8 +1013,14 @@ export function CourseSearchPage() {
         setIsApplyingFilters(false);
       }
     },
-    [studentId],
+    [studentId, coursePageSize],
   );
+
+  /** Moves to another page of the same search, then back to the top of the results. */
+  const goToCoursePage = async (page: number, size = coursePageSize) => {
+    const ok = await runCourseSearch(filterValues, searchQuery, sort, page, size);
+    if (ok) resultsScrollRef.current?.scrollTo({ top: 0 });
+  };
 
   const handleApplyFilters = async (values: FilterPanelValues) => {
     setFilterValues(values);
@@ -1169,7 +1198,7 @@ export function CourseSearchPage() {
 
       <Box sx={{ display: "flex", flex: 1, flexDirection: "column", minHeight: 0 }}>
         <Box sx={[universitiesContentSx, { display: "flex", flexDirection: "column" }]}>
-          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2.75 }}>
+          <Box ref={resultsScrollRef} sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2.75 }}>
             {isApplyingFilters ? (
               <Typography color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
                 Loading courses...
@@ -1197,7 +1226,9 @@ export function CourseSearchPage() {
                     </Box>{" "}
                     {(courseResultTotal || filteredResults.length) === 1 ? "course" : "courses"} found
                     {courseResultTotal > filteredResults.length
-                      ? ` · showing the first ${filteredResults.length}`
+                      ? ` · showing ${(coursePage - 1) * coursePageSize + 1}–${
+                          (coursePage - 1) * coursePageSize + filteredResults.length
+                        }`
                       : ""}
                   </Typography>
                   <Chip
@@ -1247,6 +1278,38 @@ export function CourseSearchPage() {
                     </Box>
                   ) : null}
                 </Stack>
+
+                {courseResultTotal > 0 ? (
+                  <Stack
+                    direction={{ xs: "column", md: "row" }}
+                    spacing={1.5}
+                    sx={{ alignItems: { md: "center" }, justifyContent: "space-between", mt: 2 }}
+                  >
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                      <Typography color="text.secondary" sx={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                        Items per page
+                      </Typography>
+                      <FormControl size="small" sx={{ minWidth: 76 }}>
+                        <Select
+                          value={coursePageSize}
+                          onChange={(event) => void goToCoursePage(1, Number(event.target.value))}
+                        >
+                          {COURSE_PAGE_SIZE_OPTIONS.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Stack>
+                    <Pagination
+                      count={Math.max(1, Math.ceil(courseResultTotal / coursePageSize))}
+                      page={coursePage}
+                      shape="rounded"
+                      onChange={(_, value) => void goToCoursePage(value)}
+                    />
+                  </Stack>
+                ) : null}
               </>
             )}
           </Box>

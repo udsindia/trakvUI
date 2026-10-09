@@ -74,6 +74,17 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
   },
   {
+    key: MODULE_KEYS.COMMISSIONS,
+    title: "Commissions",
+    navLabel: "Commissions",
+    path: "commissions",
+    icon: MODULE_ICON_KEYS.COMMISSIONS,
+    description: "Commission expected, received and pending on enrolled applications.",
+    order: 5,
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
+    requiredPermissions: [PERMISSIONS.COMMISSION_VIEW],
+  },
+  {
     key: MODULE_KEYS.ACTIVITIES,
     title: "Activities",
     navLabel: "Activities",
@@ -88,7 +99,7 @@ export const moduleCatalog: ModuleDefinition[] = [
     ],
     icon: MODULE_ICON_KEYS.ACTIVITIES,
     description: "Tasks, reminders, and case coordination timelines.",
-    order: 5,
+    order: 6,
     allowedRoles: [
       ROLES.SUPER_ADMIN,
       ROLES.AGENCY_ADMIN,

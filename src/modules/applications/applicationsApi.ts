@@ -67,6 +67,10 @@ export interface ApplicationDetail {
   closedAt?: string | null;
   notes?: string | null;
   processedBy?: string | null;
+  /** Set once an admin has moved this enrolled application to Commissions. */
+  movedToCommissionsAt?: string | null;
+  /** Set once the final commission amount was received. */
+  commissionSettledAt?: string | null;
   createdAt: string;
   updatedAt?: string;
   stages: ApplicationStageDetail[];
@@ -115,17 +119,72 @@ export interface StageHistoryEntry {
   changedAt: string;
 }
 
+/** One installment received — backend CommissionPaymentDTO. */
+export interface CommissionPayment {
+  id: string;
+  amount: number;
+  /** ISO date (yyyy-mm-dd). */
+  receivedOn: string;
+  note?: string | null;
+  createdAt: string;
+}
+
+/** One enrolled application on the commissions tab — backend CommissionRowDTO. */
+export interface CommissionRow {
+  id: string;
+  studentId?: string | null;
+  studentName?: string | null;
+  universityName?: string | null;
+  courseName?: string | null;
+  partnerAgencyName?: string | null;
+  closedAt?: string | null;
+  /** The expected (probable) commission. */
+  commissionAmount?: number | null;
+  commissionCurrency?: string | null;
+  /** Sum of the installments. */
+  receivedAmount: number;
+  /** Expected less received; null while no expected amount is set, negative if overpaid. */
+  pendingAmount?: number | null;
+  /** ISO date (yyyy-mm-dd). A task is raised for the admin on this day. */
+  commissionFollowUpDate?: string | null;
+  commissionNotes?: string | null;
+  /** Set once the final amount is marked received; the row is then read-only. */
+  settledAt?: string | null;
+  archived: boolean;
+  payments: CommissionPayment[];
+}
+
+export interface AddCommissionPaymentPayload {
+  amount: number;
+  receivedOn: string;
+  note: string | null;
+}
+
+/** Sent whole: a null clears the field. */
+export interface UpdateCommissionPayload {
+  amount: number | null;
+  currency: string | null;
+  followUpDate: string | null;
+  notes: string | null;
+}
+
 /** The list endpoint returns a Spring Page ({ content: [...] }); older builds returned a raw array. */
 interface Paged<T> {
   content?: T[];
 }
 
 
+/**
+ * One large page rather than server-side paging. The endpoint defaults to 20 rows, and the pages that use
+ * this list filter, count and paginate it client-side, so without a size they only ever saw the newest 20.
+ */
+const LIST_PAGE_SIZE = 500;
+
 export const applicationsApi = {
   getApplications: async (): Promise<BackendApplication[]> => {
     const response = await httpClient.get<
       BackendApplication[] | Paged<BackendApplication>
-    >(API_CONFIG.applications);
+    >(API_CONFIG.applications, { params: { page: 0, size: LIST_PAGE_SIZE } });
     const data = response.data;
     return Array.isArray(data) ? data : (data?.content ?? []);
   },
@@ -195,6 +254,62 @@ export const applicationsApi = {
   /** Soft-delete (archive) an application. It is then hidden from lists. */
   deleteApplication: async (id: string): Promise<void> => {
     await httpClient.delete(`${API_CONFIG.applications}/${id}`);
+  },
+
+  /** Every enrolled application, archived ones included. Agency admins only. */
+  getCommissions: async (): Promise<CommissionRow[]> => {
+    const response = await httpClient.get<CommissionRow[]>(
+      `${API_CONFIG.applications}/commissions`,
+    );
+    return response.data ?? [];
+  },
+
+  /** Record the probable commission and follow-up date on an enrolled application. */
+  updateCommission: async (
+    id: string,
+    payload: UpdateCommissionPayload,
+  ): Promise<CommissionRow> => {
+    const response = await httpClient.put<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission`,
+      payload,
+    );
+    return response.data;
+  },
+
+  /** Take an enrolled application into Commissions: off the Applications and Students lists. */
+  moveToCommissions: async (id: string): Promise<CommissionRow> => {
+    const response = await httpClient.post<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission/move`,
+    );
+    return response.data;
+  },
+
+  /** Record one installment received. */
+  addCommissionPayment: async (
+    id: string,
+    payload: AddCommissionPaymentPayload,
+  ): Promise<CommissionRow> => {
+    const response = await httpClient.post<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission/payments`,
+      payload,
+    );
+    return response.data;
+  },
+
+  /** Remove an installment entered by mistake. */
+  deleteCommissionPayment: async (id: string, paymentId: string): Promise<CommissionRow> => {
+    const response = await httpClient.delete<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission/payments/${paymentId}`,
+    );
+    return response.data;
+  },
+
+  /** Final amount received: closes the commission and archives the application. */
+  settleCommission: async (id: string): Promise<CommissionRow> => {
+    const response = await httpClient.post<CommissionRow>(
+      `${API_CONFIG.applications}/${id}/commission/settle`,
+    );
+    return response.data;
   },
 
   getHistory: async (id: string): Promise<StageHistoryEntry[]> => {
