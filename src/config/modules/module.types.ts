@@ -12,6 +12,7 @@ export const MODULE_ICON_KEYS = {
   UNIVERSITIES: "universities",
   UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
+  CALL_RECORDS: "call-records",
 } as const;
 
 export type ModuleIconKey =
@@ -37,6 +38,12 @@ export interface ModuleDefinition extends ModuleNavigationItemDefinition {
   icon: ModuleIconKey;
   order: number;
   allowedRoles: RoleKey[];
+  /**
+   * Hard role restriction. Unlike allowedRoles (which is descriptive only and is not enforced
+   * anywhere), when this is set the module is hidden and blocked for every role not listed,
+   * whatever permissions that role holds. Super admins are exempt.
+   */
+  restrictToRoles?: RoleKey[];
   /** User must have every permission in this list to access the module. */
   requiredPermissions?: PermissionKey[];
   /** User must have at least one permission in this list to access the module. */

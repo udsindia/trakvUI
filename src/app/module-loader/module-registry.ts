@@ -20,6 +20,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
   [MODULE_KEYS.UNIVERSITIES]: () => import("@/modules/universities"),
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: () => import("@/modules/universities-browse"),
   [MODULE_KEYS.SETTINGS]: () => import("@/modules/settings"),
+  [MODULE_KEYS.CALL_RECORDS]: () => import("@/modules/call-records"),
 };
 
 const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
@@ -32,6 +33,7 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.UNIVERSITIES]: lazy(moduleImporters[MODULE_KEYS.UNIVERSITIES]),
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: lazy(moduleImporters[MODULE_KEYS.UNIVERSITIES_BROWSE]),
   [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
+  [MODULE_KEYS.CALL_RECORDS]: lazy(moduleImporters[MODULE_KEYS.CALL_RECORDS]),
 };
 
 function isNavItemAccessible(
@@ -62,7 +64,16 @@ export function resolveModules({
 
   return moduleCatalog.map((moduleDefinition) => {
     const enabled = superAdmin ? true : (tenant.enabledModules[moduleDefinition.key] ?? false);
-    const accessible = superAdmin ? true : isNavItemAccessible(permissions, moduleDefinition);
+    // A module with restrictToRoles is closed to every other role regardless of their permissions.
+    // Roles from the server are upper case (AGENCY_ADMIN) and the constants are lower case.
+    const roleAllowed =
+      !moduleDefinition.restrictToRoles ||
+      roles.some((role) =>
+        moduleDefinition.restrictToRoles?.some((allowed) => allowed === role.toLowerCase()),
+      );
+    const accessible = superAdmin
+      ? true
+      : roleAllowed && isNavItemAccessible(permissions, moduleDefinition);
 
     // Gate sub-items individually so e.g. Role Management is hidden from a user who lacks
     // ROLE_VIEW even when the parent Settings section is visible via another permission.
