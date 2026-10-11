@@ -6,15 +6,30 @@
  * phone-number ids (via a window `message` event). We hand all three to the
  * backend, which exchanges the code for a long-lived business token server-side.
  *
- * Requires two build-time env vars:
+ * Needs the Meta App ID and the Embedded Signup configuration id. Callers pass the
+ * ones the backend serves (GET /whatsapp/embedded-signup/settings), so setting them on
+ * the backend is enough; the build-time env vars are only a fallback:
  *   VITE_META_APP_ID         — your Meta App ID
  *   VITE_META_WA_CONFIG_ID   — the Embedded Signup configuration id from the
- *                              App Dashboard → WhatsApp → Embedded Signup
+ *                              App Dashboard → Facebook Login for Business → Configurations
  */
 
-const APP_ID = import.meta.env.VITE_META_APP_ID as string | undefined;
-const CONFIG_ID = import.meta.env.VITE_META_WA_CONFIG_ID as string | undefined;
+const ENV_APP_ID = import.meta.env.VITE_META_APP_ID as string | undefined;
+const ENV_CONFIG_ID = import.meta.env.VITE_META_WA_CONFIG_ID as string | undefined;
 const GRAPH_VERSION = "v19.0";
+
+/** The two ids, as served by the backend; either may be missing. */
+export interface EmbeddedSignupIds {
+  appId?: string | null;
+  configId?: string | null;
+}
+
+function resolveIds(ids?: EmbeddedSignupIds) {
+  return {
+    appId: ids?.appId || ENV_APP_ID,
+    configId: ids?.configId || ENV_CONFIG_ID,
+  };
+}
 
 declare global {
   interface Window {
@@ -40,23 +55,25 @@ export interface EmbeddedSignupResult {
 
 let sdkPromise: Promise<void> | null = null;
 
-/** True only when both env vars are present — gate the button on this. */
-export function isEmbeddedSignupConfigured(): boolean {
-  return !!APP_ID && !!CONFIG_ID;
+/** True only when both ids are known (passed in, or from the env) — gate the button on this. */
+export function isEmbeddedSignupConfigured(ids?: EmbeddedSignupIds): boolean {
+  const { appId, configId } = resolveIds(ids);
+  return !!appId && !!configId;
 }
 
-function loadSdk(): Promise<void> {
+function loadSdk(appId: string | undefined): Promise<void> {
   if (window.FB) return Promise.resolve();
   if (sdkPromise) return sdkPromise;
 
   sdkPromise = new Promise<void>((resolve, reject) => {
-    if (!APP_ID) {
-      reject(new Error("VITE_META_APP_ID is not set"));
+    if (!appId) {
+      sdkPromise = null;
+      reject(new Error("The Meta App ID is not set"));
       return;
     }
     window.fbAsyncInit = () => {
       window.FB!.init({
-        appId: APP_ID,
+        appId,
         autoLogAppEvents: true,
         xfbml: false,
         version: GRAPH_VERSION,
@@ -81,9 +98,10 @@ function loadSdk(): Promise<void> {
  * Opens the Embedded Signup popup and resolves once the user finishes and a code
  * is returned. Rejects on cancel / error / missing config.
  */
-export async function launchEmbeddedSignup(): Promise<EmbeddedSignupResult> {
-  await loadSdk();
-  if (!CONFIG_ID) throw new Error("VITE_META_WA_CONFIG_ID is not set");
+export async function launchEmbeddedSignup(ids?: EmbeddedSignupIds): Promise<EmbeddedSignupResult> {
+  const { appId, configId } = resolveIds(ids);
+  await loadSdk(appId);
+  if (!configId) throw new Error("The Embedded Signup configuration id is not set");
 
   return new Promise<EmbeddedSignupResult>((resolve, reject) => {
     // Session info (waba_id / phone_number_id) arrives via postMessage, usually
@@ -123,7 +141,7 @@ export async function launchEmbeddedSignup(): Promise<EmbeddedSignupResult> {
         }
       },
       {
-        config_id: CONFIG_ID,
+        config_id: configId,
         response_type: "code",
         override_default_response_type: true,
         extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },

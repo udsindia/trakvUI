@@ -96,7 +96,13 @@ function draftError(d: Draft): string | null {
  * Creating here submits straight to Meta for review, the same as WhatsApp Manager;
  * Meta's verdict arrives later; the list re-checks with Meta while anything is in review.
  */
-export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplateName: string | null }) {
+export function WhatsAppTemplatesSection({
+  connected,
+  configTemplateName,
+}: {
+  connected: boolean;
+  configTemplateName: string | null;
+}) {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
@@ -108,6 +114,8 @@ export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplat
   const [fromCache, setFromCache] = useState(false);
   const templatesQuery = useQuery({
     queryKey: TEMPLATES_KEY,
+    // Templates belong to the connected WhatsApp Business account; there is none to ask about yet.
+    enabled: connected,
     queryFn: async () => {
       try {
         const synced = (await httpClient.post<Template[]>("/whatsapp/templates/sync")).data ?? [];
@@ -123,6 +131,7 @@ export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplat
   });
   const triggersQuery = useQuery({
     queryKey: TRIGGERS_KEY,
+    enabled: connected,
     queryFn: async () => (await httpClient.get<Trigger[]>("/whatsapp/templates/triggers")).data ?? [],
   });
 
@@ -191,7 +200,7 @@ export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplat
             variant="outlined"
             size="small"
             startIcon={templatesQuery.isFetching ? <CircularProgress size={14} /> : <SyncRounded />}
-            disabled={templatesQuery.isFetching}
+            disabled={!connected || templatesQuery.isFetching}
             onClick={() => {
               setNotice(null);
               void templatesQuery.refetch();
@@ -203,6 +212,7 @@ export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplat
             variant="contained"
             size="small"
             startIcon={<AddRounded />}
+            disabled={!connected}
             onClick={() => {
               setNotice(null);
               create.reset();
@@ -233,7 +243,11 @@ export function WhatsAppTemplatesSection({ configTemplateName }: { configTemplat
         </Alert>
       )}
 
-      {templatesQuery.isLoading ? (
+      {!connected ? (
+        <Typography color="text.secondary" variant="body2" sx={{ py: 2 }}>
+          Connect WhatsApp above to create message templates and see their review status.
+        </Typography>
+      ) : templatesQuery.isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
           <CircularProgress size={24} />
         </Box>

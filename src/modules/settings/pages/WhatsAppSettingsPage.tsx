@@ -18,6 +18,7 @@ import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import {
   isEmbeddedSignupConfigured,
   launchEmbeddedSignup,
+  type EmbeddedSignupIds,
 } from "@/shared/services/meta/whatsappEmbeddedSignup";
 
 type WhatsAppConfig = {
@@ -44,7 +45,21 @@ const CONFIG_KEY = ["whatsapp", "config"];
 export function WhatsAppSettingsPage() {
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<{ severity: "success" | "error"; text: string } | null>(null);
-  const signupAvailable = isEmbeddedSignupConfigured();
+
+  // The Meta ids come from the backend, so setting them there is enough; a failure here
+  // falls back to whatever the build was given.
+  const { data: signupIds, isLoading: signupIdsLoading } = useQuery({
+    queryKey: ["whatsapp", "embedded-signup-settings"],
+    queryFn: async () => {
+      try {
+        return (await httpClient.get<EmbeddedSignupIds>("/whatsapp/embedded-signup/settings")).data;
+      } catch {
+        return undefined;
+      }
+    },
+    staleTime: Infinity,
+  });
+  const signupAvailable = isEmbeddedSignupConfigured(signupIds);
 
   const { data: config, isLoading, isError, error } = useQuery({
     queryKey: CONFIG_KEY,
@@ -62,7 +77,7 @@ export function WhatsAppSettingsPage() {
 
   const connect = useMutation({
     mutationFn: async () => {
-      const result = await launchEmbeddedSignup();
+      const result = await launchEmbeddedSignup(signupIds);
       const response = await httpClient.post<WhatsAppConfig>("/whatsapp/embedded-signup", {
         code: result.code,
         wabaId: result.wabaId,
@@ -133,39 +148,36 @@ export function WhatsAppSettingsPage() {
               </Alert>
             )}
 
-            {signupAvailable ? (
-              <Button
-                variant="contained"
-                disabled={connect.isPending}
-                onClick={() => {
-                  setNotice(null);
-                  connect.mutate();
-                }}
-                startIcon={connect.isPending ? <CircularProgress size={16} color="inherit" /> : <WhatsAppIcon />}
-                sx={{ alignSelf: "flex-start", bgcolor: "#25D366", "&:hover": { bgcolor: "#1da851" } }}
-              >
-                {connect.isPending ? "Connecting..." : config ? "Reconnect WhatsApp" : "Connect WhatsApp"}
-              </Button>
-            ) : !config ? (
-              // Only worth saying to an agency that is not connected: one already connected
-              // (by VUTrak support) has nothing to do here.
-              <Alert severity="info">
-                WhatsApp signup is not enabled on this VUTrak site yet. Contact VUTrak support to connect your number.
-              </Alert>
-            ) : null}
+            {/* Always shown, so the agency can see where connecting happens; disabled with
+                the reason until the Meta side is configured. */}
+            <Button
+              variant="contained"
+              disabled={!signupAvailable || connect.isPending}
+              onClick={() => {
+                setNotice(null);
+                connect.mutate();
+              }}
+              startIcon={connect.isPending ? <CircularProgress size={16} color="inherit" /> : <WhatsAppIcon />}
+              sx={{ alignSelf: "flex-start", bgcolor: "#25D366", "&:hover": { bgcolor: "#1da851" } }}
+            >
+              {connect.isPending ? "Connecting..." : config ? "Reconnect WhatsApp" : "Connect WhatsApp"}
+            </Button>
 
-            {signupAvailable && (
-              <Typography color="text.secondary" variant="caption">
-                Connecting opens Meta's window: sign in with Facebook, choose or create your business and
-                WhatsApp Business account, and verify the phone number. Reconnecting replaces the number and
-                keeps your welcome template.
-              </Typography>
-            )}
+            <Typography color={signupAvailable || signupIdsLoading ? "text.secondary" : "warning.main"} variant="caption">
+              {signupAvailable || signupIdsLoading
+                ? "Connecting opens Meta's window: sign in with Facebook, choose or create your business and " +
+                  "WhatsApp Business account, and verify the phone number. Reconnecting replaces the number and " +
+                  "keeps your welcome template."
+                : "Connecting is not available yet: the Meta App ID and Embedded Signup configuration still have " +
+                  "to be set up for this VUTrak site."}
+            </Typography>
           </Stack>
         )}
       </Paper>
 
-      {config && <WhatsAppTemplatesSection configTemplateName={config.welcomeTemplateName} />}
+      {!isLoading && !isError && (
+        <WhatsAppTemplatesSection connected={!!config} configTemplateName={config?.welcomeTemplateName ?? null} />
+      )}
     </Box>
   );
 }
