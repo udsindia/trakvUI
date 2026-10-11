@@ -19,6 +19,7 @@ import {
   isEmbeddedSignupConfigured,
   launchEmbeddedSignup,
   type EmbeddedSignupIds,
+  type EmbeddedSignupPrefill,
 } from "@/shared/services/meta/whatsappEmbeddedSignup";
 
 type WhatsAppConfig = {
@@ -30,6 +31,9 @@ type WhatsAppConfig = {
 };
 
 const CONFIG_KEY = ["whatsapp", "config"];
+
+/** GET /whatsapp/embedded-signup/settings: the Meta ids, plus what to pre-fill in Meta's form. */
+type SignupSettings = EmbeddedSignupIds & { prefill?: EmbeddedSignupPrefill };
 
 /**
  * The agency connects its own WhatsApp Business number.
@@ -52,7 +56,7 @@ export function WhatsAppSettingsPage() {
     queryKey: ["whatsapp", "embedded-signup-settings"],
     queryFn: async () => {
       try {
-        return (await httpClient.get<EmbeddedSignupIds>("/whatsapp/embedded-signup/settings")).data;
+        return (await httpClient.get<SignupSettings>("/whatsapp/embedded-signup/settings")).data;
       } catch {
         return undefined;
       }
@@ -77,7 +81,7 @@ export function WhatsAppSettingsPage() {
 
   const connect = useMutation({
     mutationFn: async () => {
-      const result = await launchEmbeddedSignup(signupIds);
+      const result = await launchEmbeddedSignup(signupIds, signupIds?.prefill);
       const response = await httpClient.post<WhatsAppConfig>("/whatsapp/embedded-signup", {
         code: result.code,
         wabaId: result.wabaId,
