@@ -11,6 +11,7 @@ import { StageTemplatesPage } from "@/modules/settings/pages/StageTemplatesPage"
 import { ArchivePage } from "@/modules/settings/pages/ArchivePage";
 import { PartnerAgenciesPage } from "@/modules/settings/pages/PartnerAgenciesPage";
 import { TeamPage } from "@/modules/settings/pages/TeamPage";
+import { WhatsAppSettingsPage } from "@/modules/settings/pages/WhatsAppSettingsPage";
 import {
   hasAllPermissions,
   hasAnyPermission,
@@ -101,6 +102,14 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "archive",
     path: "archive",
     anyOfPermissions: [PERMISSIONS.LEAD_VIEW, PERMISSIONS.STUDENTS_VIEW, PERMISSIONS.APPLICATIONS_VIEW],
+  },
+  {
+    // Connecting a number decides who every lead's WhatsApp comes from, so it sits with
+    // the other agency-wide settings; the API refuses it without SETTINGS_MANAGE too.
+    Component: WhatsAppSettingsPage,
+    key: "whatsapp",
+    path: "whatsapp",
+    requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
   },
 ];
 
