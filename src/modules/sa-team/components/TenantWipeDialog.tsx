@@ -20,6 +20,11 @@ import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type TenantWipeDialogProps = {
   open: boolean;
+  /**
+   * "wipe" clears the tenant's records and keeps the workspace; "delete" removes the
+   * tenant and everything of it. Same safeguards, different consequences, so one dialog.
+   */
+  mode?: "wipe" | "delete";
   tenantId: string;
   tenantName: string;
   onClose: () => void;
@@ -37,12 +42,14 @@ type TenantWipeDialogProps = {
  */
 export function TenantWipeDialog({
   open,
+  mode = "wipe",
   tenantId,
   tenantName,
   onClose,
   onWiped,
 }: TenantWipeDialogProps) {
   const [typedName, setTypedName] = useState("");
+  const isDelete = mode === "delete";
 
   useEffect(() => {
     if (open) setTypedName("");
@@ -54,18 +61,23 @@ export function TenantWipeDialog({
     // number from a previous visit would be worse than a spinner.
     gcTime: 0,
     staleTime: 0,
-    queryKey: ["sa", "tenant-wipe-preview", tenantId],
-    queryFn: () => saTeamApi.previewTenantWipe(tenantId),
+    queryKey: ["sa", `tenant-${mode}-preview`, tenantId],
+    queryFn: () =>
+      isDelete ? saTeamApi.previewTenantDelete(tenantId) : saTeamApi.previewTenantWipe(tenantId),
   });
 
   const wipeMutation = useMutation({
-    mutationFn: () => saTeamApi.wipeTenantData(tenantId, typedName.trim()),
+    mutationFn: () =>
+      isDelete
+        ? saTeamApi.deleteTenant(tenantId, typedName.trim())
+        : saTeamApi.wipeTenantData(tenantId, typedName.trim()),
     onSuccess: (report) => onWiped(report),
   });
 
   const preview = previewQuery.data;
   const nameMatches = typedName.trim().toLowerCase() === tenantName.trim().toLowerCase();
-  const nothingToRemove = preview?.total === 0;
+  // A tenant always has something to delete - at least the tenant itself.
+  const nothingToRemove = !isDelete && preview?.total === 0;
 
   // Only the rows that actually exist. A list of twenty zeroes buries the one number
   // that matters.
@@ -79,13 +91,22 @@ export function TenantWipeDialog({
     <Dialog fullWidth maxWidth="sm" open={open} onClose={wipeMutation.isPending ? undefined : onClose}>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1, pb: 1 }}>
         <WarningAmberRounded color="error" />
-        Clear tenant data
+        {isDelete ? "Delete tenant" : "Clear tenant data"}
       </DialogTitle>
 
       <DialogContent>
         <Typography sx={{ mb: 2 }} variant="body2">
-          This permanently removes the records below from{" "}
-          <strong>{tenantName}</strong>. It cannot be undone.
+          {isDelete ? (
+            <>
+              This permanently deletes <strong>{tenantName}</strong>: the workspace, its users and
+              settings, and all of its records. Its users can no longer sign in. It cannot be undone.
+            </>
+          ) : (
+            <>
+              This permanently removes the records below from <strong>{tenantName}</strong>. It
+              cannot be undone.
+            </>
+          )}
         </Typography>
 
         {previewQuery.isLoading ? (
@@ -138,10 +159,11 @@ export function TenantWipeDialog({
         )}
 
         <Typography color="text.secondary" sx={{ display: "block", mt: 2 }} variant="caption">
-          Kept: the workspace itself, its users and their roles, lead sources, application
-          stage sequences, and commission, WhatsApp and ad settings. Everyone can sign back
-          in straight away and find the tenant empty. The university and course catalogue is
-          shared between tenants, so this unlinks it here rather than deleting any of it.
+          {isDelete
+            ? "Kept: shared system roles, and the super-admin audit log, which records this deletion."
+            : "Kept: the workspace itself, its users and their roles, lead sources, application " +
+              "stage sequences, and commission, WhatsApp and ad settings. Everyone can sign back " +
+              "in straight away and find the tenant empty."}
         </Typography>
 
         {!nothingToRemove ? (
@@ -158,7 +180,10 @@ export function TenantWipeDialog({
 
         {wipeMutation.isError ? (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {getApiErrorMessage(wipeMutation.error, "Could not clear the tenant's data.")}
+            {getApiErrorMessage(
+              wipeMutation.error,
+              isDelete ? "Could not delete the tenant." : "Could not clear the tenant's data.",
+            )}
           </Alert>
         ) : null}
       </DialogContent>
@@ -175,8 +200,12 @@ export function TenantWipeDialog({
           onClick={() => wipeMutation.mutate()}
         >
           {wipeMutation.isPending
-            ? "Clearing…"
-            : `Clear ${preview?.total ?? 0} records`}
+            ? isDelete
+              ? "Deleting…"
+              : "Clearing…"
+            : isDelete
+              ? "Delete tenant"
+              : `Clear ${preview?.total ?? 0} records`}
         </Button>
       </DialogActions>
     </Dialog>

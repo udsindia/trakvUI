@@ -1,4 +1,6 @@
 import DeleteSweepRounded from "@mui/icons-material/DeleteSweepRounded";
+import DeleteForeverRounded from "@mui/icons-material/DeleteForeverRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
 import BlockRounded from "@mui/icons-material/BlockRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
@@ -26,10 +28,11 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
+import { TenantEditDialog } from "@/modules/sa-team/components/TenantEditDialog";
 import { TenantWipeDialog } from "@/modules/sa-team/components/TenantWipeDialog";
 import type { TenantSummary } from "@/modules/sa-team/sa.types";
 import { saAuthService } from "@/modules/sa-team/saAuthService";
-import { saTeamApi } from "@/modules/sa-team/saTeamApi";
+import { saTeamApi, type TenantWipeReport } from "@/modules/sa-team/saTeamApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 import { dataTableSx } from "@/shared/ui/tableStyles";
 
@@ -56,16 +59,24 @@ function PlanChip({ plan }: { plan: string }) {
 function TenantDrawer({
   tenant,
   onClose,
+  onUpdated,
+  onDeleted,
 }: {
   tenant: TenantSummary | null;
   onClose: () => void;
+  onUpdated: (tenant: TenantSummary) => void;
+  onDeleted: (report: TenantWipeReport) => void;
 }) {
   const queryClient = useQueryClient();
   const [snack, setSnack] = useState<string | null>(null);
   const canSuspend = saAuthService.hasPermission(SA_PERMISSIONS.TENANTS_SUSPEND);
   const canChangePlan = saAuthService.hasPermission(SA_PERMISSIONS.PLAN_MANAGE);
   const canWipe = saAuthService.hasPermission(SA_PERMISSIONS.TENANT_WIPE);
+  const canEdit = saAuthService.hasPermission(SA_PERMISSIONS.TENANTS_ONBOARD);
+  const canDelete = saAuthService.hasPermission(SA_PERMISSIONS.TENANT_DELETE);
   const [wipeOpen, setWipeOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(tenant?.plan ?? "");
 
   const suspendMut = useMutation({
@@ -138,6 +149,17 @@ function TenantDrawer({
               value={new Date(tenant.createdAt).toLocaleDateString()}
             />
           </Stack>
+
+          {canEdit && (
+            <Button
+              variant="outlined"
+              startIcon={<EditRounded />}
+              onClick={() => setEditOpen(true)}
+              sx={{ alignSelf: "flex-start" }}
+            >
+              Edit details
+            </Button>
+          )}
 
           {canChangePlan && (
             <Box>
@@ -215,8 +237,58 @@ function TenantDrawer({
               )}
             </Box>
           )}
+
+          {canDelete && (
+            <Box>
+              <Button
+                fullWidth
+                color="error"
+                variant="contained"
+                startIcon={<DeleteForeverRounded />}
+                disabled={tenant.active}
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete Tenant
+              </Button>
+              <Typography color="text.secondary" sx={{ display: "block", mt: 0.5 }} variant="caption">
+                {tenant.active
+                  ? "Suspend the tenant first. Only suspended tenants can be deleted."
+                  : "Permanently removes the tenant, its users, settings and all its records."}
+              </Typography>
+            </Box>
+          )}
         </Stack>
       </Drawer>
+
+      {tenant && editOpen && (
+        <TenantEditDialog
+          open={editOpen}
+          tenant={tenant}
+          onClose={() => setEditOpen(false)}
+          onSaved={(updated) => {
+            setEditOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["sa", "tenants"] });
+            setSnack("Tenant details saved");
+            onUpdated(updated);
+          }}
+        />
+      )}
+
+      {tenant && (
+        <TenantWipeDialog
+          open={deleteOpen}
+          mode="delete"
+          tenantId={tenant.id}
+          tenantName={tenant.name}
+          onClose={() => setDeleteOpen(false)}
+          onWiped={(report) => {
+            setDeleteOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["sa", "tenants"] });
+            queryClient.invalidateQueries({ queryKey: ["sa", "dashboard"] });
+            onDeleted(report);
+          }}
+        />
+      )}
 
       {tenant && (
         <TenantWipeDialog
@@ -254,6 +326,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function SaTenantsPage() {
   const [selected, setSelected] = useState<TenantSummary | null>(null);
+  // Page-level, because the drawer that deletes a tenant is gone by the time it reports.
+  const [notice, setNotice] = useState<string | null>(null);
 
   const tenantsQuery = useQuery({
     queryKey: ["sa", "tenants"],
@@ -354,7 +428,14 @@ export function SaTenantsPage() {
         key={selected?.id ?? "none"}
         tenant={selected}
         onClose={() => setSelected(null)}
+        onUpdated={(updated) => setSelected(updated)}
+        onDeleted={(report) => {
+          setSelected(null);
+          setNotice(`Deleted ${report.tenantName} (${report.total} records removed)`);
+        }}
       />
+
+      <Snackbar open={!!notice} autoHideDuration={5000} onClose={() => setNotice(null)} message={notice} />
     </Stack>
   );
 }
