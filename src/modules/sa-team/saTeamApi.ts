@@ -27,6 +27,16 @@ saClient.interceptors.request.use((config) => {
   return config;
 });
 
+/** The tenant details a super admin can correct after onboarding. */
+export interface TenantDetailsInput {
+  name: string;
+  regId: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+}
+
 /** Backend TenantWipeReport — per-entity counts, ordered as the wipe runs. */
 export interface TenantWipeReport {
   tenantId: string;
@@ -130,6 +140,29 @@ export const saTeamApi = {
     const res = await saClient.post<TenantWipeReport>(`/superadmin/tenants/${id}/wipe`, {
       confirmName,
     });
+    return res.data;
+  },
+
+  /** What deleting this tenant would remove: its data, users, roles and settings. */
+  async previewTenantDelete(id: string) {
+    const res = await saClient.get<TenantWipeReport>(`/superadmin/tenants/${id}/delete-preview`);
+    return res.data;
+  },
+
+  /**
+   * Deletes a suspended tenant and everything of it. confirmName must match the tenant's
+   * name, and the server refuses an active tenant, so neither guard rests on this screen.
+   */
+  async deleteTenant(id: string, confirmName: string) {
+    const res = await saClient.post<TenantWipeReport>(`/superadmin/tenants/${id}/delete`, {
+      confirmName,
+    });
+    return res.data;
+  },
+
+  /** Corrects the details given at onboarding. */
+  async updateTenantDetails(id: string, details: TenantDetailsInput) {
+    const res = await saClient.patch<TenantSummary>(`/superadmin/tenants/${id}`, details);
     return res.data;
   },
 
