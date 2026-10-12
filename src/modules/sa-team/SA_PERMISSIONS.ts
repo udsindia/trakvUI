@@ -15,6 +15,7 @@ export const SA_PERMISSIONS = {
   UNIVERSITIES_VIEW: "SA_UNIVERSITIES_VIEW",
   UNIVERSITIES_MANAGE: "SA_UNIVERSITIES_MANAGE",
   TENANT_WIPE: "SA_TENANT_WIPE",
+  TENANT_DELETE: "SA_TENANT_DELETE",
 } as const;
 
 export type SaPermissionCode = (typeof SA_PERMISSIONS)[keyof typeof SA_PERMISSIONS];
@@ -36,6 +37,7 @@ export const SA_PERMISSION_LABELS: Record<SaPermissionCode, string> = {
   SA_UNIVERSITIES_VIEW: "View Universities Catalog",
   SA_UNIVERSITIES_MANAGE: "Manage Universities Catalog",
   SA_TENANT_WIPE: "Clear Tenant Data",
+  SA_TENANT_DELETE: "Delete Tenants",
 };
 
 export const SA_PERMISSION_GROUPS: { label: string; permissions: SaPermissionCode[] }[] = [
@@ -52,6 +54,7 @@ export const SA_PERMISSION_GROUPS: { label: string; permissions: SaPermissionCod
       SA_PERMISSIONS.TENANTS_ONBOARD,
       SA_PERMISSIONS.IMPERSONATE,
       SA_PERMISSIONS.TENANT_WIPE,
+      SA_PERMISSIONS.TENANT_DELETE,
     ],
   },
   {
