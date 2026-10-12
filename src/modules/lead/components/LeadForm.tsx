@@ -558,7 +558,7 @@ export function LeadForm({
               type="submit"
               variant="contained"
             >
-              {isSubmitting ? "Saving..." : "Update Lead"}
+              {isSubmitting ? "Saving..." : isEditing ? "Update Lead" : "Add Lead"}
             </Button>
           </Stack>
         </Stack>
