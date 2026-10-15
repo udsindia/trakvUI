@@ -68,10 +68,14 @@ function daysUntil(dueDate: string): number | null {
   return Math.round((due.getTime() - startOfToday().getTime()) / 86_400_000);
 }
 
+/** Done, cancelled or rescheduled: nothing is left to do, so nothing is overdue. */
+const isClosed = (task: BoardTask) =>
+  task.status === "DONE" || task.status === "CANCELLED" || task.status === "SUPERSEDED";
+
 /** "Overdue 3d" carries more than a date a reader has to compare against today. */
-function dueLabel(dueDate: string): { text: string; overdue: boolean; soon: boolean } {
+function dueLabel(dueDate: string, closed = false): { text: string; overdue: boolean; soon: boolean } {
   const days = daysUntil(dueDate);
-  if (days === null) return { text: dueDate || "—", overdue: false, soon: false };
+  if (days === null || closed) return { text: dueDate || "—", overdue: false, soon: false };
   if (days < 0) return { text: `Overdue ${Math.abs(days)}d`, overdue: true, soon: false };
   if (days === 0) return { text: "Today", overdue: false, soon: true };
   if (days === 1) return { text: "Tomorrow", overdue: false, soon: true };
@@ -103,6 +107,9 @@ export function TaskTable({ tasks, showAssignee = false, onTaskClick }: TaskTabl
       }
     };
     return [...tasks].sort((a, b) => {
+      // Finished tasks sink below open ones whatever the sort; their past due dates would
+      // otherwise put them at the top as the most overdue.
+      if (isClosed(a) !== isClosed(b)) return isClosed(a) ? 1 : -1;
       const left = value(a);
       const right = value(b);
       if (left === right) return a.title.localeCompare(b.title);
@@ -156,7 +163,7 @@ export function TaskTable({ tasks, showAssignee = false, onTaskClick }: TaskTabl
         </TableHead>
         <TableBody>
           {sorted.map((task) => {
-            const due = dueLabel(task.dueDate);
+            const due = dueLabel(task.dueDate, isClosed(task));
             return (
               <TableRow
                 key={task.id}
