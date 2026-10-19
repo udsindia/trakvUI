@@ -28,7 +28,10 @@ import { PageHeader } from "@/modules/lead/components/PageHeader";
 import { leadApi } from "@/modules/lead/leadApi";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { studentsApi } from "@/modules/applications/studentsApi";
+import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
+import { matchesSearch } from "@/shared/utils/search";
 import type { TaskPriority } from "@/modules/activities/types/types";
 
 const allPriorityValue = "all";
@@ -117,13 +120,35 @@ export function MyTasks() {
   const canSeeTeam = (summaryQuery.data?.agents ?? []).length > 1;
 
 
+  // The top bar's search box narrows these tasks live while this page is open (see pageSearch),
+  // and the box above the list shares the same text, exactly as on the Students page.
+  const searchQuery = useRegisterPageSearch("Search tasks: title, lead, assignee…");
+  const visibleTasks = useMemo(
+    () =>
+      tasks.filter((task) =>
+        matchesSearch(searchQuery, [
+          task.title,
+          task.description,
+          task.priority,
+          task.status?.replace("_", " "),
+          task.dueDate,
+          task.assignedAgent?.name,
+          task.linkedLead?.name,
+          task.linkedLead?.email,
+          task.linkedLead?.phone,
+          task.linkedLead?.details,
+        ]),
+      ),
+    [tasks, searchQuery],
+  );
+
   const columns = useMemo(
     () =>
       taskColumnDefinitions.map((column) => ({
         ...column,
-        tasks: tasks.filter((task) => task.column === column.key),
+        tasks: visibleTasks.filter((task) => task.column === column.key),
       })),
-    [tasks],
+    [visibleTasks],
   );
 
   return (
@@ -269,8 +294,23 @@ export function MyTasks() {
                 sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5 }}
               >
                 <Typography color="text.secondary" sx={{ fontSize: 12 }}>
-                  {tasks.length === 1 ? "1 task" : `${tasks.length} tasks`}
+                  {searchQuery.trim()
+                    ? `${visibleTasks.length} of ${tasks.length} tasks`
+                    : tasks.length === 1
+                      ? "1 task"
+                      : `${tasks.length} tasks`}
                 </Typography>
+                <GlobalSearchBar
+                  placeholder="Search tasks…"
+                  value={searchQuery}
+                  onSearch={(value) => pageSearch.setValue(value)}
+                  sx={{
+                    flexShrink: 0,
+                    mx: "auto",
+                    width: { xs: 150, sm: 220, md: 280 },
+                    "& .MuiOutlinedInput-root": { boxShadow: "none", height: 38 },
+                  }}
+                />
                 <ToggleButtonGroup
                   exclusive
                   size="small"
@@ -287,7 +327,7 @@ export function MyTasks() {
               </Stack>
 
               {taskView === "table" ? (
-                <TaskTable showAssignee={scope !== "mine"} tasks={tasks} onTaskClick={openTask} />
+                <TaskTable showAssignee={scope !== "mine"} tasks={visibleTasks} onTaskClick={openTask} />
               ) : (
                 <Box
                   sx={{

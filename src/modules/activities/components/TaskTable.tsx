@@ -149,6 +149,7 @@ export function TaskTable({ tasks, showAssignee = false, onTaskClick }: TaskTabl
             {header("dueDate", "Due", 110)}
             {header("title", "Task")}
             {header("about", "About", 180)}
+            <TableCell sx={{ fontSize: 12, fontWeight: 700, py: 1, width: 140 }}>Phone</TableCell>
             {showAssignee ? header("assignee", "Assignee", 150) : null}
             {header("priority", "Priority", 100)}
             <TableCell sx={{ fontSize: 12, fontWeight: 700, py: 1, width: 110 }}>Status</TableCell>
@@ -186,6 +187,13 @@ export function TaskTable({ tasks, showAssignee = false, onTaskClick }: TaskTabl
                 <TableCell sx={{ py: 0.75 }}>
                   <Typography color="text.secondary" noWrap sx={{ fontSize: 12 }}>
                     {task.linkedLead?.name ?? "—"}
+                  </Typography>
+                </TableCell>
+
+                {/* The lead's or student's number, so the person can be called without opening the task. */}
+                <TableCell sx={{ py: 0.75 }}>
+                  <Typography color="text.secondary" noWrap sx={{ fontSize: 12 }}>
+                    {task.linkedLead?.phone || "—"}
                   </Typography>
                 </TableCell>
 
