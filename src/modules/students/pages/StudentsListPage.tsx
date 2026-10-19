@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography } from "@mui/material";
+import { TuneRounded } from "@mui/icons-material";
 import { useAuth } from "@/app/auth/useAuth";
 import { NAVBAR_HEIGHT } from "@/app/layout/Navbar";
 import { PERMISSIONS } from "@/config/permissions/permissions";
@@ -20,6 +21,13 @@ import { studentDetailsPath } from "@/modules/students/studentsRoutePaths";
 import { usersService } from "@/modules/settings/usersService";
 import { ALL_PAGE_SIZE } from "@/shared/components/DataTable";
 import { GlobalSearchBar } from "@/shared/components/GlobalSearchBar";
+import {
+  FilterPanel,
+  getDefaultFilterPanelValues,
+  type DateRangeFilterValue,
+  type FilterConfig,
+  type FilterPanelValues,
+} from "@/shared/components/FilterPanel";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
 import { matchesSearch } from "@/shared/utils/search";
@@ -27,6 +35,62 @@ import { matchesSearch } from "@/shared/utils/search";
 const DEFAULT_PAGE_SIZE = 10;
 // The page filters and pages the list client-side (see studentsApi), so "All" is just a page size that fits it.
 const PAGE_SIZE_OPTIONS = [10, 20, 50, ALL_PAGE_SIZE];
+
+/**
+ * The Filters drawer, the same panel the Lead Management page uses. The option lists are filled in
+ * from the students actually loaded (see dynamicFilterConfig), so nothing is offered that matches
+ * nobody; this static copy only defines the controls and their empty defaults.
+ */
+const filterConfig: FilterConfig[] = [
+  { type: "dropdown", label: "Counsellor", key: "counsellor", placeholder: "All counsellors", options: [] },
+  { type: "dropdown", label: "Application stage", key: "applicationStage", placeholder: "All stages", options: [] },
+  { type: "checkbox-group", label: "Source", key: "source", options: [] },
+  { type: "date-range", label: "Enrolled date", key: "dateRange" },
+];
+
+/** Counts the filter groups set away from their default: the badge on the Filters button. */
+function countActiveFilters(values: FilterPanelValues): number {
+  return filterConfig.reduce((count, config) => {
+    const value = values[config.key];
+    switch (config.type) {
+      case "dropdown":
+        return count + (typeof value === "string" && value ? 1 : 0);
+      case "checkbox-group":
+        return count + (Array.isArray(value) && value.length > 0 ? 1 : 0);
+      case "date-range": {
+        const range = value as DateRangeFilterValue | undefined;
+        return count + (range && (range.startDate || range.endDate) ? 1 : 0);
+      }
+      default:
+        return count;
+    }
+  }, 0);
+}
+
+function applyPanelFilters(rows: StudentRow[], values: FilterPanelValues): StudentRow[] {
+  return rows.filter((row) => {
+    const counsellor = values.counsellor as string | undefined;
+    if (counsellor && row.counsellor !== counsellor) return false;
+
+    const stage = values.applicationStage as string | undefined;
+    if (stage && row.applicationStage !== stage) return false;
+
+    const sources = values.source as string[] | undefined;
+    if (Array.isArray(sources) && sources.length > 0 && !sources.includes(row.leadSource)) return false;
+
+    const range = values.dateRange as DateRangeFilterValue | undefined;
+    if (range?.startDate || range?.endDate) {
+      const enrolled = row.enrolledAt ? new Date(row.enrolledAt).getTime() : NaN;
+      if (Number.isNaN(enrolled)) return false;
+      // Both bounds are whole local days, so a student enrolled at 11pm on the end date is still in.
+      const start = range.startDate ? new Date(`${range.startDate}T00:00:00`).getTime() : NaN;
+      const end = range.endDate ? new Date(`${range.endDate}T23:59:59.999`).getTime() : NaN;
+      if (!Number.isNaN(start) && enrolled < start) return false;
+      if (!Number.isNaN(end) && enrolled > end) return false;
+    }
+    return true;
+  });
+}
 
 const quickFilterDefinitions = [
   { key: "all", label: "All" },
@@ -70,6 +134,10 @@ export function StudentsListPage() {
   // box on the page itself shares the same text, so the two always agree and mobile still has one.
   const searchQuery = useRegisterPageSearch("Search students: name, phone, counsellor…");
   const [activeQuickFilter, setActiveQuickFilter] = useState("all");
+  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
+    getDefaultFilterPanelValues(filterConfig),
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -150,9 +218,33 @@ export function StudentsListPage() {
 
   const query = searchQuery.trim().toLowerCase();
 
+  // Offer only what exists in the loaded students: the counsellors who have students, the stages
+  // they are at, and the sources they came from.
+  const dynamicFilterConfig = useMemo<FilterConfig[]>(() => {
+    const distinct = (values: string[]) =>
+      Array.from(new Set(values.filter((value) => value && value !== "—"))).sort((a, b) =>
+        a.localeCompare(b),
+      );
+    const counsellors = distinct(studentRows.map((row) => row.counsellor));
+    const stages = distinct(studentRows.map((row) => row.applicationStage));
+    const sources = distinct(studentRows.map((row) => row.leadSource));
+
+    return filterConfig
+      // A viewer who cannot list users gets no counsellor names, so there is nothing to choose from.
+      .filter((config) => config.key !== "counsellor" || counsellors.length > 0)
+      .map((config) => {
+        if (config.key === "counsellor") return { ...config, options: counsellors };
+        if (config.key === "applicationStage") return { ...config, options: stages };
+        if (config.key === "source") return { ...config, options: sources };
+        return config;
+      });
+  }, [studentRows]);
+
+  const activeFilterCount = countActiveFilters(filterValues);
+
   const filteredRows = useMemo(
     () =>
-      studentRows.filter((student) => {
+      applyPanelFilters(studentRows, filterValues).filter((student) => {
         if (
           activeQuickFilter !== "all" &&
           (student.fromLead ? "lead" : "direct") !== activeQuickFilter
@@ -169,8 +261,16 @@ export function StudentsListPage() {
           student.applicationStage,
         ]);
       }),
-    [studentRows, activeQuickFilter, query],
+    [studentRows, filterValues, activeQuickFilter, query],
   );
+
+  const handleFilterChange = (values: FilterPanelValues) => {
+    setFilterValues((current) => {
+      if (JSON.stringify(current) === JSON.stringify(values)) return current;
+      setPage(1);
+      return values;
+    });
+  };
 
   const visibleCount = filteredRows.length;
   const pageCount = Math.max(1, Math.ceil(visibleCount / pageSize));
@@ -208,6 +308,7 @@ export function StudentsListPage() {
   };
 
   return (
+    <>
     <Paper
       elevation={0}
       sx={{
@@ -251,6 +352,22 @@ export function StudentsListPage() {
               "& .MuiOutlinedInput-root": { boxShadow: "none", height: 38 },
             }}
           />
+
+          <Badge
+            badgeContent={activeFilterCount}
+            color="primary"
+            overlap="rectangular"
+            sx={{ flexShrink: 0, "& .MuiBadge-badge": { fontWeight: 700 } }}
+          >
+            <Button
+              startIcon={<TuneRounded sx={{ fontSize: 18 }} />}
+              variant="outlined"
+              sx={{ borderRadius: "9px", textTransform: "none", whiteSpace: "nowrap" }}
+              onClick={() => setDrawerOpen(true)}
+            >
+              Filters
+            </Button>
+          </Badge>
         </Stack>
       </Box>
 
@@ -292,5 +409,25 @@ export function StudentsListPage() {
         )}
       </Box>
     </Paper>
+
+    <Drawer
+      anchor="right"
+      open={drawerOpen}
+      slotProps={{ paper: { sx: { display: "flex", flexDirection: "column", width: { xs: "100%", sm: 360 } } } }}
+      onClose={() => setDrawerOpen(false)}
+    >
+      <FilterPanel
+        filtersConfig={dynamicFilterConfig}
+        sx={{ height: "100%" }}
+        values={filterValues}
+        width="100%"
+        onFiltersChange={handleFilterChange}
+        onApplyFilters={(values) => {
+          handleFilterChange(values);
+          setDrawerOpen(false);
+        }}
+      />
+    </Drawer>
+    </>
   );
 }

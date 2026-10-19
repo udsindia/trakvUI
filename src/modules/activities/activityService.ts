@@ -110,6 +110,8 @@ export interface BackendTaskDto {
   description?: string | null;
   dueDate: string;
   entityName?: string | null;
+  /** Phone of the lead or student the task is about. */
+  entityPhone?: string | null;
   entityType?: ActivityEntityType;
   id: string;
   leadId?: string | null;
@@ -381,6 +383,8 @@ function normalizeTask(value: unknown): BackendTaskDto {
     description: asNullableString(source.description),
     dueDate,
     entityName: asNullableString(source.entityName),
+    // normalizeTask copies only the fields it names, so a new field is dropped here unless it is listed.
+    entityPhone: asNullableString(source.entityPhone),
     entityType: asString(source.entityType) as ActivityEntityType,
     id: asString(source.id),
     leadId: asNullableString(source.leadId),
@@ -492,7 +496,7 @@ function mapBackendTaskToBoardItem(
       name: task.entityName ?? (leadId ? `Lead ${leadId.slice(0, 8)}` : "No linked lead"),
       details: task.entityType ? titleCase(task.entityType) : "General task",
       email: "",
-      phone: "",
+      phone: task.entityPhone ?? "",
       status: task.status,
     },
     notes: task.completionNote
