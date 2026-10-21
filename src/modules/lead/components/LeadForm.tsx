@@ -26,6 +26,8 @@ import {
   type LeadFormOptions,
   type LeadFormValues,
 } from "@/modules/lead/leadForm.types";
+import { selectIsStudioTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
 import { MultiSelectAutocomplete } from "@/shared/components/MultiSelectAutocomplete";
 
 const MAX_NOTES_LENGTH = 500;
@@ -57,6 +59,10 @@ export function LeadForm({
     control,
     formState: { errors, isSubmitting },
   } = form;
+
+  // A studio captures a contact, not a study plan: no countries, intake, course,
+  // study level or English test, and email is optional.
+  const isStudio = useAppSelector(selectIsStudioTenant);
 
   const notesValue = useWatch({
     control,
@@ -111,7 +117,9 @@ export function LeadForm({
           <Stack spacing={0.75}>
             <Typography variant="h6">Lead Information</Typography>
             <Typography color="text.secondary" variant="body2">
-              Capture the primary contact and intake details for a new prospect.
+              {isStudio
+                ? "Capture the contact details for a new enquiry."
+                : "Capture the primary contact and intake details for a new prospect."}
             </Typography>
           </Stack>
 
@@ -179,7 +187,7 @@ export function LeadForm({
                       message: "Enter a valid email address.",
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                     },
-                    required: "Email address is required.",
+                    required: isStudio ? false : "Email address is required.",
                   }}
                   render={({ field }) => (
                     <TextField
@@ -190,7 +198,7 @@ export function LeadForm({
                       id={field.name}
                       label="Email Address"
                       placeholder="name@example.com"
-                      required
+                      required={!isStudio}
                       slotProps={alwaysVisibleLabelSlotProps}
                       sx={fieldSx}
                       type="email"
@@ -199,6 +207,8 @@ export function LeadForm({
                   )}
                 />
 
+                {isStudio ? null : (
+                  <>
                 <Controller
                   control={control}
                   name="countries"
@@ -301,6 +311,8 @@ export function LeadForm({
                     </TextField>
                   )}
                 />
+                  </>
+                )}
               </Stack>
             </Grid>
 
@@ -432,6 +444,7 @@ export function LeadForm({
                   />
                 ) : null}
 
+                {isStudio ? null : (
                 <Stack direction="row" spacing={1.5}>
                   <Controller
                     control={control}
@@ -474,6 +487,7 @@ export function LeadForm({
                     )}
                   />
                 </Stack>
+                )}
 
                 <Controller
                   control={control}

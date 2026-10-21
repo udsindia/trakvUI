@@ -139,13 +139,13 @@ function formatLastActivity(isoString: string | null): string {
   });
 }
 
-function mapBackendLeadToRow(lead: BackendLead): LeadRow {
+function mapBackendLeadToRow(lead: BackendLead, isStudio: boolean): LeadRow {
   return {
     id: lead.id,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     email: lead.email ?? "",
     phone: joinPhoneNumber(lead.phoneCountryCode, lead.phone),
-    stage: fromBackendLeadStage(lead.leadStage),
+    stage: fromBackendLeadStage(lead.leadStage, isStudio),
     downstreamStage: lead.downstreamStage ?? null,
     applicationCount: lead.applicationCount ?? 0,
     agent: lead.assignedToName ?? "—",
@@ -291,9 +291,15 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
 
+  // An agency's enrolled leads move to Students; a studio has no Students page, so its
+  // booked leads stay here.
+  const isStudio = tenant?.industry === "STUDIO";
   const leadRows: LeadRow[] = useMemo(
-    () => backendLeads.filter((lead) => !isEnrolled(lead)).map(mapBackendLeadToRow),
-    [backendLeads],
+    () =>
+      backendLeads
+        .filter((lead) => isStudio || !isEnrolled(lead))
+        .map((lead) => mapBackendLeadToRow(lead, isStudio)),
+    [backendLeads, isStudio],
   );
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(

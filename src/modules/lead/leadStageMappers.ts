@@ -9,6 +9,8 @@ const UI_TO_BACKEND_STAGE: Record<string, string> = {
   Qualified: "QUALIFIED",
   Prospective: "PROSPECTIVE",
   Enrolled: "CONVERTED",
+  // A studio's name for the same stored stage: the client has booked a session.
+  Booked: "CONVERTED",
   Dead: "DEAD",
 };
 
@@ -29,6 +31,9 @@ const BACKEND_TO_UI_STAGE: Record<string, string> = {
 /** The stage whose selection enrols the lead as a student. */
 export const ENROLLED_STAGE = "Enrolled";
 
+/** A studio's label for CONVERTED. It is an ordinary stage change — no student is made. */
+export const BOOKED_STAGE = "Booked";
+
 /** The stage that writes a lead off. Selecting it notifies the agency admin. */
 export const DEAD_STAGE = "Dead";
 
@@ -36,7 +41,8 @@ export function toBackendLeadStage(stage: string): string {
   return UI_TO_BACKEND_STAGE[stage] ?? stage.toUpperCase().replace(/\s+/g, "_");
 }
 
-export function fromBackendLeadStage(stage: string | null | undefined): string {
+export function fromBackendLeadStage(stage: string | null | undefined, isStudio = false): string {
   if (!stage) return "New";
+  if (isStudio && stage === "CONVERTED") return BOOKED_STAGE;
   return BACKEND_TO_UI_STAGE[stage] ?? stage;
 }
