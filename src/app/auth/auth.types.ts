@@ -11,6 +11,8 @@ export interface AuthenticatedUser {
 export interface TenantContextState {
   tenantId: string;
   tenantName: string;
+  /** The tenant's vertical from the backend: "EDUCATION" or "STUDIO". Absent on old sessions. */
+  industry?: string;
   enabledModules: TenantModuleMap;
 }
 

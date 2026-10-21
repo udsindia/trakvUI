@@ -29,7 +29,10 @@ import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { LeadActivityTimeline } from "@/modules/lead/components/LeadActivityTimeline";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
-import { LEAD_STAGES } from "@/modules/lead/components/LeadTableContainer";
+import { selectIsStudioTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
+import { leadStagesFor } from "@/modules/lead/components/LeadTableContainer";
+import { fromBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
 
 const stageColor: Record<string, { backgroundColor: string; color: string }> = {
@@ -101,7 +104,10 @@ export function LeadDetailsPage() {
 
   const fullName = lead ? [lead.firstName, lead.lastName].filter(Boolean).join(" ") : "";
   const { requestStageChange, dialogs, lastMessage, clearLastMessage } = useLeadStageChange();
-  const stage = humanizeStage(lead?.leadStage);
+  const isStudio = useAppSelector(selectIsStudioTenant);
+  const stageOptions = leadStagesFor(isStudio);
+  const stage =
+    isStudio && lead?.leadStage ? fromBackendLeadStage(lead.leadStage, true) : humanizeStage(lead?.leadStage);
   const chipStyle = stageColor[stage] ?? {};
   const phone = lead
     ? joinPhoneNumber(lead.phoneCountryCode, lead.phone) || "—"
@@ -174,14 +180,14 @@ export function LeadDetailsPage() {
                     })
                   }
                 >
-                  {LEAD_STAGES.map((option) => (
+                  {stageOptions.map((option) => (
                     <MenuItem key={option} value={option}>
                       {option}
                     </MenuItem>
                   ))}
                   {/* A stage the pipeline no longer offers still has to render its own
                       current value, or the dropdown would show empty. */}
-                  {LEAD_STAGES.includes(stage as (typeof LEAD_STAGES)[number]) ? null : (
+                  {stageOptions.includes(stage) ? null : (
                     <MenuItem value={stage}>{stage}</MenuItem>
                   )}
                 </TextField>

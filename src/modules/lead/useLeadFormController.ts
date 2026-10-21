@@ -55,10 +55,15 @@ export function buildCreateLeadPayload(
   // split silently ate the first digit of every number typed without a space.
   const { countryCode, phoneNo } = splitPhoneNumber(values.phone);
 
-  // "2024-09-01" → intakeMonth="September", year=2024
-  const intakeDate = new Date(values.intakeDate);
-  const intakeMonth = intakeDate.toLocaleString("en-US", { month: "long" }) || "January";
-  const year = isNaN(intakeDate.getFullYear()) ? new Date().getFullYear() : intakeDate.getFullYear();
+  // "2024-09-01" → intakeMonth="September", year=2024. A studio's form has no intake
+  // date, so a blank one sends neither rather than an "Invalid Date" month.
+  const intakeDate = values.intakeDate ? new Date(values.intakeDate) : null;
+  const intakeMonth =
+    intakeDate && !isNaN(intakeDate.getTime())
+      ? intakeDate.toLocaleString("en-US", { month: "long" })
+      : undefined;
+  const year =
+    intakeDate && !isNaN(intakeDate.getTime()) ? intakeDate.getFullYear() : undefined;
   const assignedAgent = agentOptions.find(
     (agentOption) => agentOption.agentId === values.agent,
   );
