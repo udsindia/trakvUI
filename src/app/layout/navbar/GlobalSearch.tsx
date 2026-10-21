@@ -73,6 +73,7 @@ function fullName(first?: string | null, last?: string | null) {
 export function GlobalSearch() {
   const navigate = useNavigate();
   const { hasPermissions, tenant } = useAuth();
+  const isStudio = tenant?.industry === "STUDIO";
 
   const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
@@ -255,7 +256,7 @@ export function GlobalSearch() {
       >
         <TextField
           fullWidth
-          placeholder={filtersPage ? (pageMode.placeholder ?? "") : "Search leads, students, apps…"}
+          placeholder={filtersPage ? (pageMode.placeholder ?? "") : (isStudio ? "Search leads…" : "Search leads, students, apps…")}
           size="small"
           value={filtersPage ? pageMode.value : inputValue}
           sx={{

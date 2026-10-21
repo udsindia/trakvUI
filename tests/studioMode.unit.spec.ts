@@ -19,6 +19,12 @@ describe("tenantModulesForIndustry", () => {
     expect(modules.lead).toBe(true);
     expect(modules.activities).toBe(true);
     expect(modules.settings).toBe(true);
+    expect(modules.bookings).toBe(true);
+  });
+
+  test("an agency never sees Bookings", () => {
+    expect(tenantModulesForIndustry({ students: true, bookings: false }).bookings).toBe(false);
+    expect(defaultTenantModules.bookings).toBe(false);
   });
 
   test("no flags from the backend leaves every module at its default", () => {
