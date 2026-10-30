@@ -11,6 +11,7 @@ import {
   Divider,
   InputAdornment,
   Link,
+  MenuItem,
   Stack,
   TextField,
   ToggleButton,
@@ -26,14 +27,17 @@ import { SettingsPageHeader } from "@/modules/settings/components/SettingsPageHe
 import { bookingsApi, type Booking, type BookingStatus } from "@/modules/bookings/bookingsApi";
 import {
   groupByDay,
+  matchesFrequency,
   rangeFor,
   summarize,
   timeRange,
   type BookingView,
+  type FrequencyFilter,
 } from "@/modules/bookings/bookingRange";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
 import { fromBackendLeadStage } from "@/modules/lead/leadStageMappers";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { BOOKING_FREQUENCIES } from "@/modules/lead/studioLeadFields";
 
 /** The studio-bookings calendar, where sessions are created and edited. Optional. */
 const CALENDAR_URL = import.meta.env.VITE_STUDIO_BOOKINGS_URL as string | undefined;
@@ -96,6 +100,30 @@ function SummaryCard({ label, value, hint }: { label: string; value: string | nu
   );
 }
 
+/**
+ * What the client booked and whether they come back. Recurring is a filled chip because it
+ * is the one worth noticing at a glance: a regular show is worth more than a one-off.
+ */
+function RequirementLine({ booking }: { booking: Booking }) {
+  const recurring = booking.bookingFrequency === "RECURRING";
+  const oneTime = booking.bookingFrequency === "ONE_TIME";
+  if (!booking.serviceRequirement && !recurring && !oneTime) return null;
+  return (
+    <Stack alignItems="center" direction="row" spacing={0.75} sx={{ flexWrap: "wrap", mt: 0.5, rowGap: 0.5 }}>
+      {recurring ? (
+        <Chip label="Recurring" size="small" sx={{ bgcolor: "#EDE7F6", color: "#5E35B1", fontSize: 11, fontWeight: 700, height: 20 }} />
+      ) : oneTime ? (
+        <Chip label="One-time" size="small" variant="outlined" sx={{ color: "text.secondary", fontSize: 11, height: 20 }} />
+      ) : null}
+      {booking.serviceRequirement ? (
+        <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+          {booking.serviceRequirement}
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
 function BookingRow({ booking }: { booking: Booking }) {
   const status = STATUS_STYLE[booking.status] ?? STATUS_STYLE.CONFIRMED;
   const cancelled = booking.status === "CANCELLED";
@@ -139,6 +167,7 @@ function BookingRow({ booking }: { booking: Booking }) {
             .filter(Boolean)
             .join(" · ")}
         </Typography>
+        <RequirementLine booking={booking} />
       </Box>
 
       <Box>
@@ -164,6 +193,7 @@ function BookingRow({ booking }: { booking: Booking }) {
 export function BookingsPage() {
   const [view, setView] = useState<BookingView>("upcoming");
   const [search, setSearch] = useState("");
+  const [frequency, setFrequency] = useState<FrequencyFilter>("all");
   // Fixed per view for the life of the page, so the query key stays stable between renders.
   const range = useMemo(() => rangeFor(view), [view]);
 
@@ -174,14 +204,18 @@ export function BookingsPage() {
 
   const query = search.trim().toLowerCase();
   const visible = useMemo(() => {
-    const matching = query
-      ? bookings.filter((b) =>
-          `${b.clientName} ${b.leadName ?? ""} ${b.phone ?? ""} ${b.notes ?? ""}`.toLowerCase().includes(query),
-        )
-      : bookings;
+    const matching = bookings
+      .filter((b) => matchesFrequency(b, frequency))
+      .filter(
+        (b) =>
+          !query ||
+          `${b.clientName} ${b.leadName ?? ""} ${b.phone ?? ""} ${b.notes ?? ""} ${b.serviceRequirement ?? ""}`
+            .toLowerCase()
+            .includes(query),
+      );
     // Past sessions read newest first; upcoming soonest first, as the API sends them.
     return view === "past" ? [...matching].reverse() : matching;
-  }, [bookings, query, view]);
+  }, [bookings, query, view, frequency]);
 
   const days = useMemo(() => groupByDay(visible), [visible]);
   const summary = useMemo(() => summarize(bookings), [bookings]);
@@ -231,8 +265,24 @@ export function BookingsPage() {
           </ToggleButton>
         </ToggleButtonGroup>
 
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
         <TextField
-          placeholder="Search client, phone or notes"
+          select
+          aria-label="Clients"
+          size="small"
+          sx={{ minWidth: { sm: 160 } }}
+          value={frequency}
+          onChange={(event) => setFrequency(event.target.value as FrequencyFilter)}
+        >
+          <MenuItem value="all">All clients</MenuItem>
+          {BOOKING_FREQUENCIES.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label} only
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          placeholder="Search client, phone, notes or requirement"
           size="small"
           slotProps={{
             input: {
@@ -247,6 +297,7 @@ export function BookingsPage() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
+        </Stack>
       </Stack>
 
       {isLoading ? (
@@ -258,7 +309,7 @@ export function BookingsPage() {
       ) : days.length === 0 ? (
         <Card elevation={0} sx={{ ...cardSx, p: 4, textAlign: "center" }}>
           <Typography sx={{ fontWeight: 600 }}>
-            {query ? "No bookings match your search." : view === "upcoming" ? "No upcoming sessions." : "No sessions in the past 60 days."}
+            {query || frequency !== "all" ? "No bookings match your filters." : view === "upcoming" ? "No upcoming sessions." : "No sessions in the past 60 days."}
           </Typography>
           <Typography color="text.secondary" sx={{ fontSize: 13, mt: 0.5 }}>
             Sessions appear here as soon as they are saved in the booking calendar.

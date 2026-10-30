@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Booking } from "../src/modules/bookings/bookingsApi";
-import { dayLabel, groupByDay, rangeFor, summarize } from "../src/modules/bookings/bookingRange";
+import { dayLabel, groupByDay, matchesFrequency, rangeFor, summarize } from "../src/modules/bookings/bookingRange";
 
 const NOW = new Date(2026, 9, 21, 10, 0); // Wed 21 Oct 2026, 10:00 local
 
@@ -58,5 +58,21 @@ describe("summarize", () => {
       NOW,
     );
     expect(summary).toEqual({ todaySessions: 1, weekSessions: 2, weekHours: 5, pending: 1 });
+  });
+});
+
+describe("matchesFrequency", () => {
+  const start = new Date(2026, 9, 21, 11);
+  const recurring = { ...booking("r", start, 1), bookingFrequency: "RECURRING" };
+  const oneTime = { ...booking("o", start, 1), bookingFrequency: "ONE_TIME" };
+  const unknown = booking("u", start, 1);
+
+  test("all clients shows every booking", () => {
+    expect([recurring, oneTime, unknown].every((b) => matchesFrequency(b, "all"))).toBe(true);
+  });
+
+  test("a frequency filter keeps only bookings known to match it", () => {
+    expect([recurring, oneTime, unknown].filter((b) => matchesFrequency(b, "RECURRING"))).toEqual([recurring]);
+    expect([recurring, oneTime, unknown].filter((b) => matchesFrequency(b, "ONE_TIME"))).toEqual([oneTime]);
   });
 });

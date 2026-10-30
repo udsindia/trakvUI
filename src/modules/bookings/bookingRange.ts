@@ -72,3 +72,15 @@ export function summarize(bookings: Booking[], now: Date = new Date()) {
     pending: live.filter((b) => b.status === "PENDING").length,
   };
 }
+
+/** The Bookings page's client filter: everyone, or only one-off or repeat clients. */
+export type FrequencyFilter = "all" | "RECURRING" | "ONE_TIME";
+
+/**
+ * Whether a booking passes the client filter. A booking whose lead has no frequency yet
+ * (or has no lead) only shows under "all": guessing it into either group would make the
+ * recurring count look more certain than it is.
+ */
+export function matchesFrequency(booking: Booking, filter: FrequencyFilter): boolean {
+  return filter === "all" || booking.bookingFrequency === filter;
+}
