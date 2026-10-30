@@ -93,6 +93,8 @@ export interface TimelineItem {
   dueDate?: string | null;
   rescheduleCount?: number | null;
   agentId?: string | null;
+  /** Who logged it, or whom the task is with. */
+  agentName?: string | null;
   source?: string | null;
   eventAt: string;
   isPreEnrolment?: boolean;

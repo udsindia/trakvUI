@@ -45,6 +45,11 @@ import { joinPhoneNumber } from "@/shared/utils/phone";
 import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
 import { matchesSearch } from "@/shared/utils/search";
 import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
+import {
+  INTEREST_LEVELS,
+  describeRequirement,
+  interestLevelOption,
+} from "@/modules/lead/studioLeadFields";
 
 const DEFAULT_PAGE_SIZE = 10;
 // The page already holds the whole lead list (see the query below), so "All" is just a page size that fits it.
@@ -64,6 +69,16 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "dead", label: "Dead" },
 ];
 
+/** A studio's tabs follow its own stages (STUDIO_LEAD_STAGES), Booked included. */
+const studioQuickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "contacted", label: "Contacted" },
+  { key: "quoted", label: "Quoted" },
+  { key: "booked", label: "Booked" },
+  { key: "lost", label: "Lost" },
+];
+
 const filterConfig: FilterConfig[] = [
   {
     // Options are injected at runtime from the real counsellor list
@@ -81,6 +96,14 @@ const filterConfig: FilterConfig[] = [
     placeholder: "All Countries",
     // Fallback only — replaced by the tenant's own countries once those load.
     options: ["Canada", "Australia", "UK", "Germany"],
+  },
+  {
+    // Studio only (see dynamicFilterConfig). Matched on the label the row shows.
+    type: "dropdown",
+    label: "Interest",
+    key: "interest",
+    placeholder: "Any interest",
+    options: INTEREST_LEVELS.map((level) => level.label),
   },
   {
     type: "slider",
@@ -155,6 +178,8 @@ function mapBackendLeadToRow(lead: BackendLead, isStudio: boolean): LeadRow {
     nextAction: "",
     country: lead.destinationCountries?.[0] ?? "",
     createdAt: lead.createdAt ?? "",
+    interestLevel: lead.interestLevel ?? null,
+    requirement: describeRequirement(lead.serviceRequirement, lead.bookingFrequency),
   };
 }
 
@@ -166,7 +191,17 @@ function applySearchFilter(rows: LeadRow[], query: string): LeadRow[] {
   if (!query.trim()) return rows;
   // Every column the table shows, so typing a country, a source or a counsellor finds the leads too.
   return rows.filter((row) =>
-    matchesSearch(query, [row.name, row.email, row.phone, row.agent, row.stage, row.source, row.country]),
+    matchesSearch(query, [
+      row.name,
+      row.email,
+      row.phone,
+      row.agent,
+      row.stage,
+      row.source,
+      row.country,
+      row.requirement ?? "",
+      interestLevelOption(row.interestLevel)?.label ?? "",
+    ]),
   );
 }
 
@@ -177,6 +212,9 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
     const countryFilter = values.country as string | undefined;
     if (countryFilter && row.country !== countryFilter) return false;
+
+    const interestFilter = values.interest as string | undefined;
+    if (interestFilter && interestLevelOption(row.interestLevel)?.label !== interestFilter) return false;
 
     const scoreFilter = values.score as [number, number] | undefined;
     if (Array.isArray(scoreFilter)) {
@@ -232,6 +270,9 @@ export function LeadDashboardPage() {
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
+  // An agency's enrolled leads move to Students; a studio has no Students page, so its
+  // booked leads stay here. A studio also filters by interest rather than by country.
+  const isStudio = tenant?.industry === "STUDIO";
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   /*
@@ -283,17 +324,15 @@ export function LeadDashboardPage() {
 
     return filterConfig
       .filter((config) => config.key !== "agent" || canAssignLeads)
+      .filter((config) => (isStudio ? config.key !== "country" : config.key !== "interest"))
       .map((config) => {
         if (config.key === "agent") return { ...config, options: counsellorNames };
         if (config.key === "source" && sourceOptions) return { ...config, options: sourceOptions };
         if (config.key === "country" && countryOptions) return { ...config, options: countryOptions };
         return config;
       });
-  }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
+  }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads, isStudio]);
 
-  // An agency's enrolled leads move to Students; a studio has no Students page, so its
-  // booked leads stay here.
-  const isStudio = tenant?.industry === "STUDIO";
   const leadRows: LeadRow[] = useMemo(
     () =>
       backendLeads
@@ -304,14 +343,14 @@ export function LeadDashboardPage() {
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(
     () =>
-      quickFilterDefinitions.map((tab) => ({
+      (isStudio ? studioQuickFilterDefinitions : quickFilterDefinitions).map((tab) => ({
         ...tab,
         count:
           tab.key === "all"
             ? leadRows.length
             : leadRows.filter((lead) => getStageKey(lead.stage) === tab.key).length,
       })),
-    [leadRows],
+    [leadRows, isStudio],
   );
 
   const fullyFilteredRows = useMemo(() => {

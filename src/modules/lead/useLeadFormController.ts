@@ -36,6 +36,9 @@ const defaultLeadFormValues: LeadFormValues = {
   isWhatsAppAvailable: false,
   name: "",
   notes: "",
+  interestLevel: "",
+  serviceRequirement: "",
+  bookingFrequency: "",
   phone: "",
   source: "",
   tags: [],
@@ -92,6 +95,11 @@ export function buildCreateLeadPayload(
     englishProficiencyTest: values.englishProficiencyTest || undefined,
     englishProficiencyTestScore: values.englishProficiencyTestScore || undefined,
     notes: values.notes,
+    // Sent blank rather than left out, so clearing one on edit actually clears it.
+    // An agency's form never sets them, and blank on an unset field changes nothing.
+    interestLevel: values.interestLevel,
+    serviceRequirement: values.serviceRequirement.trim(),
+    bookingFrequency: values.bookingFrequency,
   };
 }
 
@@ -126,6 +134,9 @@ export function mapLeadDetailsToFormValues(lead: LeadDetails): LeadFormValues {
     isWhatsAppAvailable: lead.isWhatsAppAvailable ?? false,
     name: [lead.firstName, lead.lastName].filter(Boolean).join(" "),
     notes: lead.notes ?? "",
+    interestLevel: lead.interestLevel ?? "",
+    serviceRequirement: lead.serviceRequirement ?? "",
+    bookingFrequency: lead.bookingFrequency ?? "",
     phone: joinPhoneNumber(lead.phoneCountryCode, lead.phone),
     source: isKnownSource ? savedSource : OTHER_SOURCE,
     tags: [],

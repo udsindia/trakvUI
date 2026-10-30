@@ -5,6 +5,10 @@ import type { CreateLeadPayload } from "@/modules/lead/leadForm.types";
 
 export type UpdateLeadPayload = Partial<CreateLeadPayload> & {
   leadStage?: string;
+  /** Blank clears these; leaving them out leaves them alone. */
+  interestLevel?: string;
+  serviceRequirement?: string;
+  bookingFrequency?: string;
   assignedToId?: string;
   assignedToName?: string;
   /**
@@ -42,6 +46,12 @@ export interface BackendLead {
   email: string;
   isArchived: boolean;
   leadStage: string;
+  /** Studio only: CASUAL_ENQUIRY | PROSPECTIVE | INTERESTED. See studioLeadFields.ts. */
+  interestLevel?: string | null;
+  /** Studio only: what the client wants to book, e.g. "Shoot + Anchor". */
+  serviceRequirement?: string | null;
+  /** Studio only: ONE_TIME | RECURRING. */
+  bookingFrequency?: string | null;
   assignedToId: string;
   assignedToName: string;
   sourceName: string;
@@ -170,6 +180,12 @@ export interface LeadDetails {
   phone: string;
   phoneCountryCode: string;
   leadStage: string;
+  /** Studio only: CASUAL_ENQUIRY | PROSPECTIVE | INTERESTED. See studioLeadFields.ts. */
+  interestLevel?: string | null;
+  /** Studio only: what the client wants to book, e.g. "Shoot + Anchor". */
+  serviceRequirement?: string | null;
+  /** Studio only: ONE_TIME | RECURRING. */
+  bookingFrequency?: string | null;
   score: number | null;
   sourceId: string | null;
   sourceName: string | null;
@@ -403,5 +419,21 @@ export const leadApi = {
       { params: { page: 0, size } },
     );
     return response.data?.items ?? [];
+  },
+
+  /**
+   * A note on the lead, written to its timeline as a NOTE activity so it carries who wrote
+   * it and when. With a follow-up date the backend also raises a follow-up task for the
+   * writer, which shows in My Tasks and holds off the automated WhatsApp follow-ups.
+   */
+  addNote: async (leadId: string, note: string, followUpAt?: Date | null): Promise<void> => {
+    await httpClient.post(API_CONFIG.activities, {
+      entityType: "LEAD",
+      entityId: leadId,
+      activityType: "NOTE",
+      outcomeNotes: note,
+      activityAt: new Date().toISOString(),
+      nextFollowupAt: followUpAt ? followUpAt.toISOString() : null,
+    });
   },
 };

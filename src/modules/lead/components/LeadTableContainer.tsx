@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { SERIF } from "@/shared/ui/vutrakTheme";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { leadRoutePaths } from "@/modules/lead/leadRoutePaths";
+import { interestLevelOption } from "@/modules/lead/studioLeadFields";
 
 export type LeadRow = {
   country: string;
@@ -45,6 +46,10 @@ export type LeadRow = {
    */
   downstreamStage?: string | null;
   applicationCount?: number;
+  /** Studio only: the stored InterestLevel, e.g. INTERESTED. */
+  interestLevel?: string | null;
+  /** Studio only: "Shoot + Anchor · Recurring", or null when neither is known. */
+  requirement?: string | null;
 };
 
 export const LEAD_STAGES = [
@@ -59,10 +64,14 @@ export type LeadStage = (typeof LEAD_STAGES)[number];
 
 /** The stages a tenant can pick: a studio books clients where an agency enrols students. */
 export function leadStagesFor(isStudio: boolean): readonly string[] {
-  return isStudio
-    ? LEAD_STAGES.map((stage) => (stage === "Enrolled" ? "Booked" : stage))
-    : LEAD_STAGES;
+  return isStudio ? STUDIO_LEAD_STAGES : LEAD_STAGES;
 }
+
+/**
+ * A studio's pipeline. Shorter than an agency's: how keen the client is lives in the
+ * interest level, not in extra stages, and Booked is the stored CONVERTED.
+ */
+export const STUDIO_LEAD_STAGES = ["New", "Contacted", "Quoted", "Booked", "Lost"] as const;
 
 /** A user a lead can be assigned to, as offered by the assign pickers. */
 export type LeadAgentOption = {
@@ -99,12 +108,31 @@ const stageStyles: Record<string, { backgroundColor: string; color: string }> = 
   Qualified: { backgroundColor: "#F3E7F8", color: "#7B1FA2" },
   Prospective: { backgroundColor: "#FDEEDD", color: "#B35A00" },
   Negotiation: { backgroundColor: "#FBF0DA", color: "#8A5B08" },
+  Quoted: { backgroundColor: "#FDEEDD", color: "#B35A00" },
   Enrolled: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
+  Booked: { backgroundColor: "#E1F5EC", color: "#0B7A57" },
   // Grey, not red: a dead lead is closed, not a failure to be flagged at the reader.
   Dead: { backgroundColor: "#E8EBEE", color: "#4A5A66" },
   Lost: { backgroundColor: "#FBE5E5", color: "#C0392F" },
   Archived: { backgroundColor: "#EEF2F6", color: "#55707C" },
 };
+
+/**
+ * How keen a studio lead is, under its stage: both are true at once (Quoted, and only a
+ * casual enquiry), so it sits alongside rather than replacing it. Not shown until set.
+ */
+function InterestChip({ value }: { value?: string | null }) {
+  const option = interestLevelOption(value);
+  if (!option) return null;
+  return (
+    <Chip
+      label={option.label}
+      size="small"
+      variant="outlined"
+      sx={{ borderColor: option.color, color: option.color, fontSize: 11, height: 20 }}
+    />
+  );
+}
 
 /**
  * Score is rendered as a bare figure rather than a filled badge — a column of
@@ -132,7 +160,8 @@ export function LeadTableContainer({
   pageCount,
   paginationLabel,
 }: LeadTableContainerProps) {
-  const stageOptions = leadStagesFor(useAppSelector(selectIsStudioTenant));
+  const isStudio = useAppSelector(selectIsStudioTenant);
+  const stageOptions = leadStagesFor(isStudio);
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
@@ -304,16 +333,28 @@ export function LeadTableContainer({
         </Typography>
       ),
     },
-    {
-      id: "country",
-      header: "Country",
-      minWidth: 92,
-      render: (lead) => (
-        <Typography sx={{ fontSize: 12.5 }} variant="body2">
-          {lead.country || "—"}
-        </Typography>
-      ),
-    },
+    // A studio has no destination country; what the client wants to book takes its place.
+    isStudio
+      ? {
+          id: "requirement",
+          header: "Requirement",
+          minWidth: 150,
+          render: (lead) => (
+            <Typography color={lead.requirement ? "text.primary" : "text.disabled"} sx={{ fontSize: 12.5 }} variant="body2">
+              {lead.requirement || "—"}
+            </Typography>
+          ),
+        }
+      : {
+          id: "country",
+          header: "Country",
+          minWidth: 92,
+          render: (lead) => (
+            <Typography sx={{ fontSize: 12.5 }} variant="body2">
+              {lead.country || "—"}
+            </Typography>
+          ),
+        },
     {
       id: "stage",
       header: "Stage",
@@ -325,6 +366,7 @@ export function LeadTableContainer({
             Under the lead's own stage rather than replacing it: both are true, and which
             one matters depends on whether you are chasing the acquisition or the visa.
           */}
+          {isStudio ? <InterestChip value={lead.interestLevel} /> : null}
           {lead.downstreamStage ? (
             <Typography color="text.secondary" sx={{ fontSize: 11, pl: 0.25 }}>
               {lead.downstreamStage}

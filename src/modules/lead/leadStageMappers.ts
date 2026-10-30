@@ -11,7 +11,10 @@ const UI_TO_BACKEND_STAGE: Record<string, string> = {
   Enrolled: "CONVERTED",
   // A studio's name for the same stored stage: the client has booked a session.
   Booked: "CONVERTED",
+  // A studio has sent the client a price.
+  Quoted: "QUOTED",
   Dead: "DEAD",
+  Lost: "LOST",
 };
 
 const BACKEND_TO_UI_STAGE: Record<string, string> = {
@@ -22,6 +25,7 @@ const BACKEND_TO_UI_STAGE: Record<string, string> = {
   // Retired in favour of PROSPECTIVE; kept so pre-migration rows still render.
   PROPOSAL_SENT: "Prospective",
   NEGOTIATION: "Negotiation",
+  QUOTED: "Quoted",
   CONVERTED: "Enrolled",
   DEAD: "Dead",
   LOST: "Lost",
