@@ -72,7 +72,8 @@ function fullName(first?: string | null, last?: string | null) {
  */
 export function GlobalSearch() {
   const navigate = useNavigate();
-  const { hasPermissions } = useAuth();
+  const { hasPermissions, tenant } = useAuth();
+  const isStudio = tenant?.industry === "STUDIO";
 
   const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
@@ -94,8 +95,13 @@ export function GlobalSearch() {
   const isSearching = !filtersPage && normalizedQuery.length >= MIN_QUERY_LENGTH;
 
   const canViewLeads = hasPermissions([PERMISSIONS.LEAD_VIEW]);
-  const canViewStudents = hasPermissions([PERMISSIONS.STUDENTS_VIEW]);
-  const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
+  // A module the tenant's industry switches off (a studio has no students or
+  // applications) is not searched, whatever the role's permissions say.
+  const canViewStudents =
+    hasPermissions([PERMISSIONS.STUDENTS_VIEW]) && tenant?.enabledModules.students !== false;
+  const canViewApplications =
+    hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]) &&
+    tenant?.enabledModules.applications !== false;
 
   // Keys match LeadDashboardPage, StudentsListPage and ApplicationDashboardPage exactly —
   // same key, same fetcher, one shared cache entry rather than a second copy.
@@ -250,7 +256,7 @@ export function GlobalSearch() {
       >
         <TextField
           fullWidth
-          placeholder={filtersPage ? (pageMode.placeholder ?? "") : "Search leads, students, apps…"}
+          placeholder={filtersPage ? (pageMode.placeholder ?? "") : (isStudio ? "Search leads…" : "Search leads, students, apps…")}
           size="small"
           value={filtersPage ? pageMode.value : inputValue}
           sx={{

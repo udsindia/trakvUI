@@ -42,6 +42,22 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.LEAD_VIEW],
   },
   {
+    key: MODULE_KEYS.BOOKINGS,
+    title: "Bookings",
+    navLabel: "Bookings",
+    path: "bookings",
+    icon: MODULE_ICON_KEYS.BOOKINGS,
+    description: "Studio sessions from the booking calendar, and the WhatsApp messages each has had.",
+    order: 3,
+    allowedRoles: [
+      ROLES.SUPER_ADMIN,
+      ROLES.AGENCY_ADMIN,
+      ROLES.COUNSELLOR,
+      ROLES.ANALYST,
+    ],
+    requiredPermissions: [PERMISSIONS.LEAD_VIEW],
+  },
+  {
     key: MODULE_KEYS.STUDENTS,
     title: "Students",
     navLabel: "Students",

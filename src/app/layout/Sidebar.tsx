@@ -1,3 +1,5 @@
+import { selectIsStudioTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
 import type { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -118,6 +120,7 @@ function SidebarContent({
   userInitials,
   userName,
 }: SidebarContentProps) {
+  const isStudio = useAppSelector(selectIsStudioTenant);
   const sidebar = useTheme().palette.sidebar;
   // A module must be listed here as well as in module-catalog to appear in the sidebar;
   // anything not in a group is dropped silently.
@@ -125,6 +128,7 @@ function SidebarContent({
     [
       "dashboard",
       "lead",
+      "bookings",
       "students",
       "applications",
       "call-records",
@@ -258,7 +262,7 @@ function SidebarContent({
                 textTransform: "uppercase",
               }}
             >
-              Education CRM
+              {isStudio ? "Studio CRM" : "Education CRM"}
             </Typography>
           </Box>
         ) : null}

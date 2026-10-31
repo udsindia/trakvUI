@@ -429,6 +429,15 @@ export function TaskDetailsSidebar({
 
             <Box sx={{ bgcolor: "background.paper", px: 3, py: 2 }}>
               <Stack spacing={1.5}>
+                {isClosedTask ? (
+                  <Alert severity="info">
+                    {task.status === "DONE"
+                      ? "This task is completed, so there is nothing left to do on it."
+                      : task.status === "CANCELLED"
+                        ? "This task was cancelled, so it cannot be changed."
+                        : "This task was rescheduled. Open the new task to work on it."}
+                  </Alert>
+                ) : null}
                 <Stack
                   direction="row"
                   spacing={1}
