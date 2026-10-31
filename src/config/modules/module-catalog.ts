@@ -207,6 +207,13 @@ export const moduleCatalog: ModuleDefinition[] = [
         description: "Filed-away leads, students and applications.",
         requiredPermissions: [PERMISSIONS.LEAD_VIEW],
       },
+      {
+        key: "whatsapp",
+        navLabel: "WhatsApp",
+        path: "whatsapp",
+        description: "Connect the agency's WhatsApp Business number.",
+        requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
+      },
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
