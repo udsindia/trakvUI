@@ -214,6 +214,13 @@ export const moduleCatalog: ModuleDefinition[] = [
         description: "Connect the agency's WhatsApp Business number.",
         requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
       },
+      {
+        key: "lead-ads",
+        navLabel: "Lead Ads",
+        path: "lead-ads",
+        description: "Bring Facebook and Instagram lead ad enquiries in as leads.",
+        requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
+      },
     ],
     icon: MODULE_ICON_KEYS.SETTINGS,
     description: "Team members, roles, and workspace administration.",
