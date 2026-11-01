@@ -12,6 +12,7 @@ import { ArchivePage } from "@/modules/settings/pages/ArchivePage";
 import { PartnerAgenciesPage } from "@/modules/settings/pages/PartnerAgenciesPage";
 import { TeamPage } from "@/modules/settings/pages/TeamPage";
 import { WhatsAppSettingsPage } from "@/modules/settings/pages/WhatsAppSettingsPage";
+import { LeadAdsSettingsPage } from "@/modules/settings/pages/LeadAdsSettingsPage";
 import {
   hasAllPermissions,
   hasAnyPermission,
@@ -109,6 +110,13 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     Component: WhatsAppSettingsPage,
     key: "whatsapp",
     path: "whatsapp",
+    requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
+  },
+  {
+    // Decides where every ad lead lands and holds the page's token: agency-wide, like WhatsApp.
+    Component: LeadAdsSettingsPage,
+    key: "lead-ads",
+    path: "lead-ads",
     requiredPermissions: [PERMISSIONS.SETTINGS_TENANT],
   },
 ];

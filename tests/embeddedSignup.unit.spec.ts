@@ -13,7 +13,7 @@ type Listener = (event: { origin: string; data: string }) => void;
 
 let listeners: Set<Listener>;
 let loginCallback: (response: { authResponse?: { code?: string } }) => void;
-let loginOptions: { extras: { setup: { business?: Record<string, string> } } };
+let loginOptions: { extras: { setup: { business?: Record<string, string> }; featureType: string } };
 let popup: { closed: boolean };
 
 function message(event: string, data: Record<string, string> = {}) {
@@ -23,8 +23,8 @@ function message(event: string, data: Record<string, string> = {}) {
 }
 
 /** Starts the launcher and lets loadSdk's resolution reach FB.login. */
-async function start(prefill?: { businessName?: string; email?: string }) {
-  const result = launchEmbeddedSignup({ appId: "app", configId: "cfg" }, prefill);
+async function start(prefill?: { businessName?: string; email?: string }, coexistence = false) {
+  const result = launchEmbeddedSignup({ appId: "app", configId: "cfg" }, prefill, { coexistence });
   await vi.advanceTimersByTimeAsync(0);
   return result;
 }
@@ -60,7 +60,7 @@ describe("launchEmbeddedSignup", () => {
     await vi.advanceTimersByTimeAsync(0);
     message("FINISH", { waba_id: "W1", phone_number_id: "P1" });
     loginCallback({ authResponse: { code: "C1" } });
-    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: "P1" });
+    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: "P1", coexistence: false });
   });
 
   test("resolves when the code arrives before the account", async () => {
@@ -69,7 +69,7 @@ describe("launchEmbeddedSignup", () => {
     loginCallback({ authResponse: { code: "C1" } });
     await vi.advanceTimersByTimeAsync(2_000);
     message("FINISH", { waba_id: "W1", phone_number_id: "P1" });
-    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: "P1" });
+    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: "P1", coexistence: false });
   });
 
   test("accepts FINISH_ONLY_WABA, which has no number", async () => {
@@ -77,7 +77,7 @@ describe("launchEmbeddedSignup", () => {
     await vi.advanceTimersByTimeAsync(0);
     message("FINISH_ONLY_WABA", { waba_id: "W1" });
     loginCallback({ authResponse: { code: "C1" } });
-    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: undefined });
+    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: undefined, coexistence: false });
   });
 
   test("rejects when the person cancels part-way", async () => {
@@ -115,5 +115,23 @@ describe("launchEmbeddedSignup", () => {
     message("FINISH", { waba_id: "W1", phone_number_id: "P1" });
     loginCallback({ authResponse: { code: "C1" } });
     await result;
+  });
+
+  test("asks Meta for the standard flow unless coexistence is chosen", async () => {
+    const result = start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(loginOptions.extras.featureType).toBe("");
+    message("FINISH", { waba_id: "W1", phone_number_id: "P1" });
+    loginCallback({ authResponse: { code: "C1" } });
+    await result;
+  });
+
+  test("connects a WhatsApp Business app number and reports it as coexistence", async () => {
+    const result = start(undefined, true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(loginOptions.extras.featureType).toBe("whatsapp_business_app_onboarding");
+    message("FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING", { waba_id: "W1" });
+    loginCallback({ authResponse: { code: "C1" } });
+    await expect(result).resolves.toEqual({ code: "C1", wabaId: "W1", phoneNumberId: undefined, coexistence: true });
   });
 });

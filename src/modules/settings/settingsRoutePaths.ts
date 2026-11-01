@@ -9,4 +9,5 @@ export const settingsRoutePaths = {
   partnerAgencies: "/settings/partner-agencies",
   archive: "/settings/archive",
   whatsapp: "/settings/whatsapp",
+  leadAds: "/settings/lead-ads",
 } as const;
