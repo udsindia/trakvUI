@@ -9,6 +9,7 @@ export const MODULE_KEYS = {
   UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
   CALL_RECORDS: "call-records",
+  INBOX: "inbox",
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS];
@@ -25,5 +26,6 @@ export const defaultTenantModules: TenantModuleMap = {
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: true,
   [MODULE_KEYS.SETTINGS]: true,
   [MODULE_KEYS.CALL_RECORDS]: true,
+  [MODULE_KEYS.INBOX]: true,
 };
 

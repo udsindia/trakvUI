@@ -21,6 +21,7 @@ const moduleImporters: Record<ModuleKey, ModuleImport> = {
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: () => import("@/modules/universities-browse"),
   [MODULE_KEYS.SETTINGS]: () => import("@/modules/settings"),
   [MODULE_KEYS.CALL_RECORDS]: () => import("@/modules/call-records"),
+  [MODULE_KEYS.INBOX]: () => import("@/modules/inbox"),
 };
 
 const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
@@ -34,6 +35,7 @@ const lazyModuleMap: Record<ModuleKey, ReturnType<typeof lazy>> = {
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: lazy(moduleImporters[MODULE_KEYS.UNIVERSITIES_BROWSE]),
   [MODULE_KEYS.SETTINGS]: lazy(moduleImporters[MODULE_KEYS.SETTINGS]),
   [MODULE_KEYS.CALL_RECORDS]: lazy(moduleImporters[MODULE_KEYS.CALL_RECORDS]),
+  [MODULE_KEYS.INBOX]: lazy(moduleImporters[MODULE_KEYS.INBOX]),
 };
 
 function isNavItemAccessible(

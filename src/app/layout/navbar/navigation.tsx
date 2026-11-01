@@ -8,6 +8,7 @@ import SchoolRounded from "@mui/icons-material/SchoolRounded";
 import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
 import MicRounded from "@mui/icons-material/MicRounded";
+import ForumRounded from "@mui/icons-material/ForumRounded";
 import PaymentsRounded from "@mui/icons-material/PaymentsRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
@@ -35,6 +36,7 @@ const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   "universities-browse": <AccountBalanceRounded />,
   settings: <SettingsRounded />,
   "call-records": <MicRounded />,
+  inbox: <ForumRounded />,
 };
 
 function normalizeRoutePath(path: string) {

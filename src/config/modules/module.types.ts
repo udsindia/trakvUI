@@ -13,6 +13,7 @@ export const MODULE_ICON_KEYS = {
   UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
   CALL_RECORDS: "call-records",
+  INBOX: "inbox",
 } as const;
 
 export type ModuleIconKey =

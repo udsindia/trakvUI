@@ -8,6 +8,7 @@ import {
   CircularProgress,
   Dialog,
   DialogActions,
+  MenuItem,
   DialogContent,
   DialogTitle,
   FormControlLabel,
@@ -34,8 +35,12 @@ type AdChannelConfig = {
   channel: "META" | "GOOGLE";
   metaPageId: string | null;
   metaFormId: string | null;
+  instagramAccountId?: string | null;
+  instagramUsername?: string | null;
   isActive: boolean;
 };
+
+type LeadForm = { id: string; name: string | null; status: string | null };
 
 type PageChoice = { id: string; name: string | null };
 type ConnectStart = { connection: string; pages: PageChoice[] };
@@ -86,6 +91,20 @@ export function LeadAdsSettingsPage() {
   });
   const meta = configs.data?.find((c) => c.channel === "META");
 
+  // The page's lead forms, read with the page's own token while the picker is open.
+  const forms = useQuery({
+    queryKey: ["ads", "meta-forms", picker?.connection, pageId],
+    queryFn: async () =>
+      (
+        await httpClient.post<LeadForm[]>("/ads/config/meta/connect/forms", {
+          connection: picker?.connection,
+          pageId,
+        })
+      ).data,
+    enabled: !!picker && !!pageId,
+    retry: false,
+  });
+
   const inbound = useQuery({
     queryKey: LOG_KEY,
     queryFn: async () =>
@@ -124,7 +143,9 @@ export function LeadAdsSettingsPage() {
       void queryClient.invalidateQueries({ queryKey: CONFIGS_KEY });
       setNotice({
         severity: "success",
-        text: "Page connected. New leads from its lead forms will appear in VUTrak within a minute of being submitted.",
+        text:
+          "Page connected. New leads from its lead forms will appear in VUTrak within a minute of being submitted, " +
+          "and Direct messages to its linked Instagram account go to the Instagram Inbox.",
       });
     },
     onError: (err) => setNotice({ severity: "error", text: getApiErrorMessage(err, "The page could not be connected") }),
@@ -184,6 +205,12 @@ export function LeadAdsSettingsPage() {
                 <Box component="dd" sx={{ m: 0 }}>{meta.metaPageId ?? "-"}</Box>
                 <Box component="dt" sx={{ color: "text.secondary" }}>Lead form</Box>
                 <Box component="dd" sx={{ m: 0 }}>{meta.metaFormId ?? "All forms on the page"}</Box>
+                <Box component="dt" sx={{ color: "text.secondary" }}>Instagram</Box>
+                <Box component="dd" sx={{ m: 0 }}>
+                  {meta.instagramAccountId
+                    ? `${meta.instagramUsername ? "@" + meta.instagramUsername : meta.instagramAccountId} — Direct messages go to the Instagram Inbox`
+                    : "No Instagram professional account linked to this page"}
+                </Box>
               </Box>
             )}
 
@@ -258,20 +285,48 @@ export function LeadAdsSettingsPage() {
       <Dialog open={!!picker} onClose={() => !choosePage.isPending && setPicker(null)} fullWidth maxWidth="xs">
         <DialogTitle>Choose your page</DialogTitle>
         <DialogContent>
-          <RadioGroup value={pageId} onChange={(e) => setPageId(e.target.value)}>
+          <RadioGroup
+            value={pageId}
+            onChange={(e) => {
+              setPageId(e.target.value);
+              setFormId("");
+            }}
+          >
             {picker?.pages.map((p) => (
               <FormControlLabel key={p.id} value={p.id} control={<Radio />} label={p.name ?? p.id} />
             ))}
           </RadioGroup>
-          <TextField
-            label="Lead form ID (optional)"
-            helperText="Leave empty to take leads from every form on the page."
-            value={formId}
-            onChange={(e) => setFormId(e.target.value)}
-            fullWidth
-            size="small"
-            sx={{ mt: 2 }}
-          />
+          {forms.isError ? (
+            // Listing forms needs the Lead Ads permissions; the ID can still be typed.
+            <TextField
+              label="Lead form ID (optional)"
+              helperText="Leave empty to take leads from every form on the page."
+              value={formId}
+              onChange={(e) => setFormId(e.target.value)}
+              fullWidth
+              size="small"
+              sx={{ mt: 2 }}
+            />
+          ) : (
+            <TextField
+              select
+              label="Lead form"
+              value={formId}
+              onChange={(e) => setFormId(e.target.value)}
+              helperText={forms.isLoading ? "Loading the page's lead forms..." : "Take leads from one form, or from all of them."}
+              fullWidth
+              size="small"
+              sx={{ mt: 2 }}
+            >
+              <MenuItem value="">All forms on the page</MenuItem>
+              {forms.data?.map((f) => (
+                <MenuItem key={f.id} value={f.id}>
+                  {f.name ?? f.id}
+                  {f.status && f.status !== "ACTIVE" ? ` (${f.status.toLowerCase()})` : ""}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPicker(null)} disabled={choosePage.isPending}>Cancel</Button>

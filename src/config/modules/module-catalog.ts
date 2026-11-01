@@ -42,6 +42,18 @@ export const moduleCatalog: ModuleDefinition[] = [
     requiredPermissions: [PERMISSIONS.LEAD_VIEW],
   },
   {
+    key: MODULE_KEYS.INBOX,
+    title: "Instagram Inbox",
+    navLabel: "Instagram Inbox",
+    path: "inbox",
+    icon: MODULE_ICON_KEYS.INBOX,
+    description: "Direct messages to the agency's Instagram account, answered from VUTrak.",
+    order: 2,
+    // Instagram enquiries are leads in waiting: whoever works leads works this inbox.
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN, ROLES.COUNSELLOR],
+    requiredPermissions: [PERMISSIONS.LEAD_VIEW],
+  },
+  {
     key: MODULE_KEYS.STUDENTS,
     title: "Students",
     navLabel: "Students",

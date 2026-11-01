@@ -125,6 +125,7 @@ function SidebarContent({
     [
       "dashboard",
       "lead",
+      "inbox",
       "students",
       "applications",
       "call-records",
