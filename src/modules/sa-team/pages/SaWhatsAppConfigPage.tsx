@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import {
   isEmbeddedSignupConfigured,
   launchEmbeddedSignup,
-} from "@/modules/sa-team/metaEmbeddedSignup";
+} from "@/shared/services/meta/whatsappEmbeddedSignup";
 import type { TenantSummary } from "@/modules/sa-team/sa.types";
 import { saTeamApi } from "@/modules/sa-team/saTeamApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
@@ -98,7 +98,9 @@ export function SaWhatsAppConfigPage() {
         code: result.code,
         wabaId: result.wabaId,
         phoneNumberId: result.phoneNumberId,
-        tenantDisplayName: selectedTenant!.name,
+        // No tenantDisplayName: it is sent as the template's header {{1}}, and a
+        // template without that header (hello_world) is then rejected by Meta. The
+        // backend keeps whatever display name the tenant already has.
       });
     },
     onSuccess: () => {

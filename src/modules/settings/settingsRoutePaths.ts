@@ -8,4 +8,5 @@ export const settingsRoutePaths = {
   stages: "/settings/stages",
   partnerAgencies: "/settings/partner-agencies",
   archive: "/settings/archive",
+  whatsapp: "/settings/whatsapp",
 } as const;

@@ -86,7 +86,6 @@ export function CallRecordingPlayerDialog({ recording, onClose }: CallRecordingP
               <CircularProgress size={28} />
             </Box>
           ) : objectUrl ? (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
             <audio autoPlay controls src={objectUrl} style={{ width: "100%" }} />
           ) : null}
         </Stack>
