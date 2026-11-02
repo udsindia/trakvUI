@@ -10,6 +10,11 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Drawer,
   FormControl,
@@ -28,6 +33,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { SA_PERMISSIONS } from "@/modules/sa-team/SA_PERMISSIONS";
+import { INDUSTRIES, IndustryChip, industryLabel } from "@/modules/sa-team/components/IndustryChip";
 import { TenantEditDialog } from "@/modules/sa-team/components/TenantEditDialog";
 import { TenantWipeDialog } from "@/modules/sa-team/components/TenantWipeDialog";
 import type { TenantSummary } from "@/modules/sa-team/sa.types";
@@ -78,6 +84,9 @@ function TenantDrawer({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(tenant?.plan ?? "");
+  const currentIndustry = tenant?.industry || "EDUCATION";
+  const [selectedIndustry, setSelectedIndustry] = useState(currentIndustry);
+  const [industryConfirmOpen, setIndustryConfirmOpen] = useState(false);
 
   const suspendMut = useMutation({
     mutationFn: () => saTeamApi.suspendTenant(tenant!.id),
@@ -111,6 +120,20 @@ function TenantDrawer({
     onError: (err) => setSnack(getApiErrorMessage(err, "Failed to update plan")),
   });
 
+  const industryMut = useMutation({
+    mutationFn: (industry: string) => saTeamApi.updateTenantIndustry(tenant!.id, industry),
+    onSuccess: (updated) => {
+      setIndustryConfirmOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["sa", "tenants"] });
+      setSnack(`Industry changed to ${industryLabel(updated.industry)}`);
+      onUpdated(updated);
+    },
+    onError: (err) => {
+      setIndustryConfirmOpen(false);
+      setSnack(getApiErrorMessage(err, "Failed to change industry"));
+    },
+  });
+
   if (!tenant) return null;
 
   return (
@@ -130,6 +153,7 @@ function TenantDrawer({
             <Row label="Admin Email" value={tenant.adminEmail ?? "—"} />
             <Row label="Slug" value={tenant.slug} />
             <Row label="Plan" value={<PlanChip plan={tenant.plan} />} />
+            <Row label="Industry" value={<IndustryChip industry={tenant.industry} />} />
             <Row
               label="Status"
               value={
@@ -189,6 +213,40 @@ function TenantDrawer({
                   {planMut.isPending ? <CircularProgress size={16} /> : "Update"}
                 </Button>
               </Stack>
+            </Box>
+          )}
+
+          {canChangePlan && (
+            <Box>
+              <Typography gutterBottom variant="subtitle2">
+                Change Industry
+              </Typography>
+              <Stack direction="row" spacing={1}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Industry</InputLabel>
+                  <Select
+                    label="Industry"
+                    value={selectedIndustry}
+                    onChange={(e) => setSelectedIndustry(e.target.value)}
+                  >
+                    {INDUSTRIES.map((i) => (
+                      <MenuItem key={i.value} value={i.value}>
+                        {i.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="outlined"
+                  disabled={selectedIndustry === currentIndustry || industryMut.isPending}
+                  onClick={() => setIndustryConfirmOpen(true)}
+                >
+                  Update
+                </Button>
+              </Stack>
+              <Typography color="text.secondary" sx={{ display: "block", mt: 0.5 }} variant="caption">
+                Changes which modules the tenant&apos;s users see. No data is deleted.
+              </Typography>
             </Box>
           )}
 
@@ -259,6 +317,37 @@ function TenantDrawer({
           )}
         </Stack>
       </Drawer>
+
+      <Dialog
+        open={industryConfirmOpen}
+        onClose={industryMut.isPending ? undefined : () => setIndustryConfirmOpen(false)}
+      >
+        <DialogTitle>
+          Switch {tenant.name} to {industryLabel(selectedIndustry)}?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {INDUSTRIES.find((i) => i.value === selectedIndustry)?.description}
+          </DialogContentText>
+          <DialogContentText sx={{ mt: 1.5 }}>
+            Nothing is deleted. Records in modules that are switched off stay in the database and
+            come back if you switch back. The tenant&apos;s users see the change the next time they
+            sign in.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button disabled={industryMut.isPending} onClick={() => setIndustryConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={industryMut.isPending}
+            onClick={() => industryMut.mutate(selectedIndustry)}
+          >
+            {industryMut.isPending ? <CircularProgress size={16} color="inherit" /> : "Switch"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {tenant && editOpen && (
         <TenantEditDialog
@@ -369,6 +458,7 @@ export function SaTenantsPage() {
               <TableCell sx={{ fontWeight: 600 }}>Admin Email</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Slug</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Plan</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Industry</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>City</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Country</TableCell>
@@ -402,6 +492,9 @@ export function SaTenantsPage() {
                   <PlanChip plan={t.plan} />
                 </TableCell>
                 <TableCell>
+                  <IndustryChip industry={t.industry} />
+                </TableCell>
+                <TableCell>
                   <Chip
                     label={t.active ? "Active" : "Suspended"}
                     size="small"
@@ -415,7 +508,7 @@ export function SaTenantsPage() {
             ))}
             {tenants.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 6, color: "text.secondary" }}>
                   No tenants found.
                 </TableCell>
               </TableRow>

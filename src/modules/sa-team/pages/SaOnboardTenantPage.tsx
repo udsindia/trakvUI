@@ -4,7 +4,11 @@ import {
   Box,
   Button,
   CircularProgress,
+  FormControlLabel,
+  FormLabel,
   Paper,
+  Radio,
+  RadioGroup,
   Stack,
   Step,
   StepLabel,
@@ -15,11 +19,12 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DEFAULT_INDUSTRY, INDUSTRIES, industryLabel } from "@/modules/sa-team/components/IndustryChip";
 import type { OnboardTenantFormValues } from "@/modules/sa-team/sa.types";
 import { saTeamApi } from "@/modules/sa-team/saTeamApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
-const STEPS = ["Consultancy Details", "Admin User", "Review", "Done"];
+const STEPS = ["Business Details", "Admin User", "Review", "Done"];
 const SA_TEAL = "#0d7a7a";
 
 const EMPTY: OnboardTenantFormValues = {
@@ -33,6 +38,7 @@ const EMPTY: OnboardTenantFormValues = {
   lastName: "",
   email: "",
   phone: "",
+  industry: DEFAULT_INDUSTRY,
 };
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
@@ -52,6 +58,8 @@ export function SaOnboardTenantPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<OnboardTenantFormValues>(EMPTY);
   const [error, setError] = useState<string | null>(null);
+  // The name field follows the kind of business, so a studio is not asked for a "consultancy".
+  const businessWord = form.industry === "STUDIO" ? "Studio" : "Consultancy";
 
   const onboardMut = useMutation({
     mutationFn: saTeamApi.onboardTenant,
@@ -83,7 +91,7 @@ export function SaOnboardTenantPage() {
       <Box>
         <Typography variant="h4">Onboard Tenant</Typography>
         <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-          Manually register a new consultancy on the platform.
+          Manually register a new business on the platform.
         </Typography>
       </Box>
 
@@ -137,11 +145,40 @@ export function SaOnboardTenantPage() {
           {step === 0 && (
             <Stack spacing={2.5}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                Consultancy Details
+                Business Details
               </Typography>
+              <Box>
+                <FormLabel id="industry-label" sx={{ fontSize: 14 }}>
+                  Industry
+                </FormLabel>
+                <RadioGroup
+                  aria-labelledby="industry-label"
+                  value={form.industry}
+                  onChange={(e) => set("industry", e.target.value)}
+                >
+                  {INDUSTRIES.map((i) => (
+                    <FormControlLabel
+                      key={i.value}
+                      value={i.value}
+                      control={<Radio size="small" />}
+                      label={
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {i.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {i.description}
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ alignItems: "flex-start", mt: 1, "& .MuiRadio-root": { pt: 0.25 } }}
+                    />
+                  ))}
+                </RadioGroup>
+              </Box>
               <TextField
                 required
-                label="Consultancy Name"
+                label={`${businessWord} Name`}
                 value={form.consultancyName}
                 onChange={(e) => set("consultancyName", e.target.value)}
               />
@@ -217,7 +254,8 @@ export function SaOnboardTenantPage() {
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 Review Details
               </Typography>
-              <ReviewRow label="Consultancy Name" value={form.consultancyName} />
+              <ReviewRow label="Industry" value={industryLabel(form.industry)} />
+              <ReviewRow label={`${businessWord} Name`} value={form.consultancyName} />
               <ReviewRow label="Registration ID" value={form.registrationID} />
               <ReviewRow label="Address" value={form.consultancyAddress} />
               <ReviewRow label="City" value={form.consultancyCity} />
