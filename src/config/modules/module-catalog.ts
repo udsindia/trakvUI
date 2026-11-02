@@ -208,6 +208,7 @@ export const moduleCatalog: ModuleDefinition[] = [
         path: "stages",
         description: "Stage sequences per destination country.",
         requiredPermissions: [PERMISSIONS.APPLICATIONS_VIEW],
+        requiredModule: MODULE_KEYS.APPLICATIONS,
       },
       {
         key: "partner-agencies",
@@ -215,6 +216,7 @@ export const moduleCatalog: ModuleDefinition[] = [
         path: "partner-agencies",
         description: "Third-party agencies, their coverage and commission.",
         requiredPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+        requiredModule: MODULE_KEYS.UNIVERSITIES,
       },
       {
         key: "archive",

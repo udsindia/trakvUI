@@ -30,6 +30,12 @@ export interface ModuleNavigationItemDefinition {
   requiredPermissions?: PermissionKey[];
   /** Child-level gating: user must have at least one permission in this list to see this item. */
   anyOfPermissions?: PermissionKey[];
+  /**
+   * Child-level gating: hidden when the tenant's industry switches this module off (a
+   * studio has no applications, so it has no Application Stages either), whatever the
+   * user's permissions say.
+   */
+  requiredModule?: ModuleKey;
 }
 
 export interface ModuleDefinition extends ModuleNavigationItemDefinition {

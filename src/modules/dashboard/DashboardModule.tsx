@@ -20,6 +20,7 @@ import { getDashboardDateRange } from "@/modules/dashboard/dashboardDateRange";
 import { dashboardService } from "@/modules/dashboard/dashboardService";
 import { stageNoticesApi } from "@/modules/applications/stageNoticesApi";
 import { ROLES } from "@/config/roles/roles";
+import { MODULE_KEYS } from "@/config/modules/modules";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 const LIVE_REFRESH_MS = 30_000;
@@ -31,10 +32,14 @@ export default function DashboardModule() {
   const [period, setPeriod] = useState<DashboardPeriod>("week");
   const [activeSection, setActiveSection] = useState(roleConfig.sectionTabs[0]?.id ?? "leads");
   const dateRange = useMemo(() => getDashboardDateRange(period), [period]);
+  // A studio tenant has no applications: no Applications tab, and no notice count to ask
+  // the API for (it answers 403 for a module the workspace does not have).
+  const applicationsEnabled = tenant?.enabledModules?.[MODULE_KEYS.APPLICATIONS] !== false;
+  const isStudio = tenant?.industry === "STUDIO";
 
   const dashboardQuery = useQuery({
-    queryKey: ["dashboard", dateRange.fromDate, dateRange.toDate],
-    queryFn: () => dashboardService.getDashboard(period),
+    queryKey: ["dashboard", dateRange.fromDate, dateRange.toDate, isStudio],
+    queryFn: () => dashboardService.getDashboard(period, { studio: isStudio }),
     refetchInterval: LIVE_REFRESH_MS,
     retry: 1,
   });
@@ -52,7 +57,10 @@ export default function DashboardModule() {
   const dashboard = dashboardQuery.data?.data;
   const kpis = dashboard?.kpis ?? roleConfig.kpis;
   const greeting = dashboard?.greeting ?? "Welcome";
-  const sectionTabs = roleConfig.sectionTabs;
+  const sectionTabs = useMemo(
+    () => roleConfig.sectionTabs.filter((tab) => applicationsEnabled || tab.id !== "applications"),
+    [roleConfig.sectionTabs, applicationsEnabled],
+  );
   const currentSection = sectionTabs.some((tab) => tab.id === activeSection)
     ? activeSection
     : sectionTabs[0]?.id ?? "leads";
@@ -66,6 +74,7 @@ export default function DashboardModule() {
   const { data: stageNoticeCount = 0 } = useQuery({
     queryKey: ["applications", "stage-notices", "count"],
     queryFn: stageNoticesApi.count,
+    enabled: applicationsEnabled,
   });
 
   const attentionItems = useMemo(() => {

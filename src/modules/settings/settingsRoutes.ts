@@ -1,3 +1,4 @@
+import { MODULE_KEYS, type ModuleKey } from "@/config/modules/modules";
 import type { ComponentType } from "react";
 import type { PermissionKey } from "@/config/permissions/permissions";
 import { PERMISSIONS } from "@/config/permissions/permissions";
@@ -23,6 +24,8 @@ type SettingsRouteDefinition = {
   path?: string;
   requiredPermissions?: PermissionKey[];
   anyOfPermissions?: PermissionKey[];
+  /** Not routed when the tenant's industry switches this module off. */
+  requiredModule?: ModuleKey;
 };
 
 export const settingsRoutes: SettingsRouteDefinition[] = [
@@ -84,6 +87,7 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "stages",
     path: "stages",
     anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.APPLICATIONS_VIEW],
+    requiredModule: MODULE_KEYS.APPLICATIONS,
   },
   {
     // Gated on the catalogue rather than on settings: agencies are added from the
@@ -93,6 +97,7 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "partner-agencies",
     path: "partner-agencies",
     anyOfPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+    requiredModule: MODULE_KEYS.UNIVERSITIES,
   },
   {
     // Visible to anyone who can see the records it lists — it shows nothing they could

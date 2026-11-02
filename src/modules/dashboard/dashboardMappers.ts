@@ -29,6 +29,15 @@ const LEAD_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
   LOST: { label: "Lost", color: "#94a3b8" },
 };
 
+// A studio's pipeline: CONVERTED is a booked session, and QUOTED sits between contact and booking.
+const STUDIO_LEAD_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
+  NEW: { label: "New", color: "#4f46e5" },
+  CONTACTED: { label: "Contacted", color: "#7c3aed" },
+  QUOTED: { label: "Quoted", color: "#f97316" },
+  CONVERTED: { label: "Booked", color: "#10b981" },
+  LOST: { label: "Lost", color: "#94a3b8" },
+};
+
 const APPLICATION_STAGE_CONFIG: Record<string, { color: string; label: string }> = {
   DOC_CHECK: { label: "Doc Check", color: "#818cf8" },
   APPLIED: { label: "Applied", color: "#6366f1" },
@@ -106,7 +115,14 @@ function mapPipelineStage(stage: string, config: Record<string, { color: string;
   };
 }
 
-function buildKpiCard(key: DashboardKpiCardKey, kpi: BackendDashboardResponse["kpi"]): DashboardKpiDto {
+/** What the dashboard is shown for: a studio converts a lead into a booking, not an enrolment. */
+export type DashboardMapOptions = { studio?: boolean };
+
+function buildKpiCard(
+  key: DashboardKpiCardKey,
+  kpi: BackendDashboardResponse["kpi"],
+  options: DashboardMapOptions = {},
+): DashboardKpiDto {
   switch (key) {
     case "REVENUE_RECEIVED":
       return {
@@ -138,7 +154,7 @@ function buildKpiCard(key: DashboardKpiCardKey, kpi: BackendDashboardResponse["k
     case "CONVERSION_RATE":
       return {
         accent: "green",
-        delta: "Lead to enrolment",
+        delta: options.studio ? "Lead to booking" : "Lead to enrolment",
         deltaTone: "flat",
         icon: "📈",
         label: "Conversion Rate",
@@ -208,7 +224,10 @@ export interface DashboardViewModel {
   widgets: DashboardWidgetVisibility;
 }
 
-export function mapDashboardResponse(response: BackendDashboardResponse): DashboardViewModel {
+export function mapDashboardResponse(
+  response: BackendDashboardResponse,
+  options: DashboardMapOptions = {},
+): DashboardViewModel {
   const { capabilities, kpi } = response;
   const sectionOrder = response.sectionOrder?.length
     ? response.sectionOrder
@@ -230,7 +249,7 @@ export function mapDashboardResponse(response: BackendDashboardResponse): Dashbo
   };
 
   const leadStages = response.leadPipeline.stages.map((stage) => ({
-    ...mapPipelineStage(stage.stage, LEAD_STAGE_CONFIG),
+    ...mapPipelineStage(stage.stage, options.studio ? STUDIO_LEAD_STAGE_CONFIG : LEAD_STAGE_CONFIG),
     count: stage.count,
   }));
 
@@ -245,7 +264,7 @@ export function mapDashboardResponse(response: BackendDashboardResponse): Dashbo
     quickActions: quickActionKeys
       .map((key) => QUICK_ACTION_CONFIG[key])
       .filter((action): action is DashboardQuickAction => Boolean(action)),
-    kpis: kpiCards.map((key) => buildKpiCard(key, kpi)),
+    kpis: kpiCards.map((key) => buildKpiCard(key, kpi, options)),
     sectionOrder,
     widgets,
     leadPipeline: widgets.leadPipeline
