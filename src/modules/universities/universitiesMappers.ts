@@ -1,3 +1,4 @@
+import { inrRateFor } from "@/shared/utils/tuitionCurrencies";
 import type {
   CourseDto,
   StudyLevel,
@@ -90,14 +91,6 @@ const UI_LEVEL_TO_STUDY_LEVEL: Record<CourseLevel, StudyLevel> = {
   diploma: "DIPLOMA",
 };
 
-const CURRENCY_TO_INR_RATE: Record<string, number> = {
-  GBP: 105,
-  EUR: 90,
-  USD: 83,
-  AUD: 55,
-  CAD: 60,
-  INR: 1,
-};
 
 function resolveCountry(countryCode: string) {
   const alpha3 = toCanonicalAlpha3(countryCode);
@@ -210,7 +203,7 @@ export function tuitionToLakhs(amount?: number, currency = "GBP") {
     return 0;
   }
 
-  const rate = CURRENCY_TO_INR_RATE[currency.toUpperCase()] ?? 80;
+  const rate = inrRateFor(currency);
   return Math.round((amount * rate) / 100_000 * 10) / 10;
 }
 

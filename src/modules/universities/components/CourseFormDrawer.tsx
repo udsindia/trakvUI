@@ -1,3 +1,4 @@
+import { TUITION_CURRENCIES } from "@/shared/utils/tuitionCurrencies";
 import {
   Alert,
   Autocomplete,
@@ -45,7 +46,6 @@ function arrayToLines(values: string[]) {
   return values.join("\n");
 }
 
-const TUITION_CURRENCIES = ["GBP", "EUR", "USD", "AUD", "CAD", "INR"];
 
 /** IELTS still drives the eligibility badge, so it is mirrored onto the legacy fields. */
 function deriveIeltsFields(tests: RequirementSet["languageTests"]) {
@@ -326,14 +326,23 @@ export function CourseFormDrawer({
             select
             label="Currency"
             size="small"
+            // The list shows names; the field shows just the code, which is what fits.
+            slotProps={{ select: { renderValue: (value) => String(value) } }}
             value={form.tuitionCurrency ?? "GBP"}
             onChange={(event) =>
               setForm((current) => ({ ...current, tuitionCurrency: event.target.value }))
             }
           >
-            {TUITION_CURRENCIES.map((code) => (
-              <MenuItem key={code} value={code}>
-                {code}
+            {/* A course saved with a currency outside the list keeps it rather than showing blank. */}
+            {[
+              ...TUITION_CURRENCIES,
+              ...(form.tuitionCurrency &&
+              !TUITION_CURRENCIES.some((c) => c.code === form.tuitionCurrency?.toUpperCase())
+                ? [{ code: form.tuitionCurrency.toUpperCase(), name: "" }]
+                : []),
+            ].map((currency) => (
+              <MenuItem key={currency.code} value={currency.code}>
+                {currency.name ? `${currency.code} · ${currency.name}` : currency.code}
               </MenuItem>
             ))}
           </TextField>
