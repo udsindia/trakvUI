@@ -1,3 +1,4 @@
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded, UploadRounded } from "@mui/icons-material";
@@ -253,18 +254,19 @@ export function LeadDashboardPage() {
   const queryClient = useQueryClient();
   const tenantId = tenant?.tenantId ?? "";
 
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
+  // Remembered for the tab, so opening a lead and coming back keeps the list as it was.
+  const [filterValues, setFilterValues] = useSessionState<FilterPanelValues>("leads.filters", () =>
     getDefaultFilterPanelValues(filterConfig),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeQuickFilter, setActiveQuickFilter] = useState("all");
+  const [activeQuickFilter, setActiveQuickFilter] = useSessionState("leads.quickFilter", "all");
   // Stage changes are the same decision here as on the lead's own page, dialogs and all.
   const { requestStageChange, requestComment, dialogs } = useLeadStageChange();
   // The top bar's search box filters this table live while the page is open (see pageSearch); the
   // box on the page itself shares the same text, so the two always agree and mobile still has one.
   const leadSearchQuery = useRegisterPageSearch("Search leads: name, phone, agent, country…");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useSessionState("leads.page", 1);
+  const [pageSize, setPageSize] = useSessionState("leads.pageSize", DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -376,13 +378,13 @@ export function LeadDashboardPage() {
   const handlePageChange = useCallback((nextPage: number) => {
     const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
     setPage((currentPage) => (currentPage === normalizedPage ? currentPage : normalizedPage));
-  }, [pageCount]);
+  }, [pageCount, setPage]);
 
   const handlePageSizeChange = useCallback((nextPageSize: number) => {
     if (nextPageSize === pageSize) return;
     setPageSize(nextPageSize);
     setPage(1);
-  }, [pageSize]);
+  }, [pageSize, setPage, setPageSize]);
 
   const handleFilterChange = useCallback((values: FilterPanelValues) => {
     setFilterValues((currentValues) => {
@@ -392,16 +394,20 @@ export function LeadDashboardPage() {
       setPage(1);
       return values;
     });
-  }, []);
+  }, [setFilterValues, setPage]);
 
   const handleSearchChange = useCallback((query: string) => {
     pageSearch.setValue(query);
   }, []);
 
-  // A new search starts from the first page, whichever box it was typed into.
+  // A new search starts from the first page, whichever box it was typed into. Only a real
+  // change of text counts: arriving on the page must not undo the page it remembered.
+  const lastSearchRef = useRef(leadSearchQuery);
   useEffect(() => {
+    if (lastSearchRef.current === leadSearchQuery) return;
+    lastSearchRef.current = leadSearchQuery;
     setPage(1);
-  }, [leadSearchQuery]);
+  }, [leadSearchQuery, setPage]);
 
   const handleQuickFilterChange = useCallback((key: string) => {
     setActiveQuickFilter((currentKey) => {
@@ -409,7 +415,7 @@ export function LeadDashboardPage() {
       setPage(1);
       return key;
     });
-  }, []);
+  }, [setActiveQuickFilter, setPage]);
 
   const handleDeleteLead = async (id: string) => {
     try {
