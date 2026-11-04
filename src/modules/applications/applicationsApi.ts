@@ -27,6 +27,8 @@ export interface BackendApplication {
   /** Third party processing the application; absent or empty means in-house. */
   processedBy?: string | null;
   outcome?: string;
+  /** Open and still in its first stage: the only time the details can be edited. */
+  editable?: boolean;
 
   // Legacy/optional (may be absent)
   leadId?: string;

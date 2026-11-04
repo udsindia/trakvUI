@@ -45,8 +45,12 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     targetCountry: app.targetCountry ?? countryDisplayName(app.destinationCountryCode),
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
+    partnerAgency: app.partnerAgencyName ?? "",
+    intake: [app.intakeMonth, app.intakeYear].filter(Boolean).join(" "),
     stage: applicationStageLabel(app),
     createdAt: app.createdAt,
+    // Older servers do not send the flag; leave Edit on there and let the save decide.
+    editable: app.editable ?? true,
   };
 }
 
