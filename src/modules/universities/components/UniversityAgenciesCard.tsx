@@ -15,11 +15,13 @@ import {
 } from "@mui/material";
 import AddRounded from "@mui/icons-material/AddRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
 import {
   GRADE_STYLES,
   partnerAgenciesApi,
   type PartnerAgencySummary,
   type SaveUniversityPartnerAgency,
+  type UniversityPartnerAgency,
 } from "@/modules/universities/partnerAgenciesApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
@@ -49,6 +51,29 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState<SaveUniversityPartnerAgency>(emptyDraft);
+  /** The link being edited; null while adding a new agency. */
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Saving an agency already on this university updates that link in place on the server,
+  // so editing is the add form filled in, with the agency fixed. Notes go back unchanged:
+  // the save replaces them, and this form does not show them.
+  const startEdit = (agency: UniversityPartnerAgency) => {
+    setEditingId(agency.id);
+    setDraft({
+      partnerAgencyId: agency.partnerAgencyId,
+      agencyName: agency.agencyName,
+      commissionPercentage: agency.commissionPercentage ?? null,
+      ranking: agency.ranking ?? null,
+      notes: agency.notes ?? null,
+    });
+    setAdding(true);
+  };
+
+  const closeForm = () => {
+    setAdding(false);
+    setEditingId(null);
+    setDraft(emptyDraft);
+  };
 
   const agenciesQuery = useQuery({
     enabled: Boolean(universityId),
@@ -59,7 +84,7 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
   // Loaded only while the add form is open — the list is for suggesting, and there is no
   // reason to fetch every agency in the tenant just to render this card.
   const tenantAgencies = useQuery({
-    enabled: adding,
+    enabled: adding && !editingId,
     queryKey: ["partner-agencies", "tenant"],
     queryFn: () => partnerAgenciesApi.forTenant(),
   });
@@ -79,8 +104,7 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
   const save = useMutation({
     mutationFn: () => partnerAgenciesApi.save(universityId, draft),
     onSuccess: async () => {
-      setAdding(false);
-      setDraft(emptyDraft);
+      closeForm();
       await refresh();
     },
   });
@@ -140,60 +164,71 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
           }}
         >
           <Stack spacing={1.5}>
-            <Autocomplete
-              freeSolo
-              autoHighlight
-              disabled={agencyOptions.length === 0 && tenantAgencies.isLoading}
-              options={agencyOptions}
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.name
-              }
-              inputValue={draft.agencyName ?? ""}
-              // Typing is the same act as choosing: the name is kept either way, and the
-              // id is only set when a suggestion was actually taken. That is what tells
-              // the server to reuse an agency rather than find-or-create by name.
-              onInputChange={(_event, value, reason) =>
-                setDraft((current) => ({
-                  ...current,
-                  agencyName: value,
-                  partnerAgencyId: reason === "reset" ? current.partnerAgencyId : null,
-                }))
-              }
-              onChange={(_event, value) =>
-                setDraft((current) => ({
-                  ...current,
-                  agencyName: typeof value === "string" ? value : value?.name ?? "",
-                  partnerAgencyId: typeof value === "string" || !value ? null : value.id,
-                }))
-              }
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Stack>
-                    <Typography sx={{ fontSize: 13 }}>{option.name}</Typography>
-                    <Typography color="text.secondary" sx={{ fontSize: 11 }}>
-                      {option.universityCount === 1
-                        ? "1 university"
-                        : `${option.universityCount} universities`}
-                      {option.bestGrade ? ` · best grade ${option.bestGrade}` : ""}
-                    </Typography>
-                  </Stack>
-                </li>
-              )}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  autoFocus
-                  fullWidth
-                  helperText={
-                    alreadyLinked.size > 0
-                      ? "Start typing — agencies already on this university are not offered again."
-                      : "Start typing. An agency you already work with is reused, not duplicated."
-                  }
-                  label="Agency name"
-                  size="small"
-                />
-              )}
-            />
+            {editingId ? (
+              <TextField
+                disabled
+                fullWidth
+                helperText="To change the agency itself, remove this one and add the other."
+                label="Agency name"
+                size="small"
+                value={draft.agencyName ?? ""}
+              />
+            ) : (
+              <Autocomplete
+                freeSolo
+                autoHighlight
+                disabled={agencyOptions.length === 0 && tenantAgencies.isLoading}
+                options={agencyOptions}
+                getOptionLabel={(option) =>
+                  typeof option === "string" ? option : option.name
+                }
+                inputValue={draft.agencyName ?? ""}
+                // Typing is the same act as choosing: the name is kept either way, and the
+                // id is only set when a suggestion was actually taken. That is what tells
+                // the server to reuse an agency rather than find-or-create by name.
+                onInputChange={(_event, value, reason) =>
+                  setDraft((current) => ({
+                    ...current,
+                    agencyName: value,
+                    partnerAgencyId: reason === "reset" ? current.partnerAgencyId : null,
+                  }))
+                }
+                onChange={(_event, value) =>
+                  setDraft((current) => ({
+                    ...current,
+                    agencyName: typeof value === "string" ? value : value?.name ?? "",
+                    partnerAgencyId: typeof value === "string" || !value ? null : value.id,
+                  }))
+                }
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <Stack>
+                      <Typography sx={{ fontSize: 13 }}>{option.name}</Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: 11 }}>
+                        {option.universityCount === 1
+                          ? "1 university"
+                          : `${option.universityCount} universities`}
+                        {option.bestGrade ? ` · best grade ${option.bestGrade}` : ""}
+                      </Typography>
+                    </Stack>
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    autoFocus
+                    fullWidth
+                    helperText={
+                      alreadyLinked.size > 0
+                        ? "Start typing — agencies already on this university are not offered again."
+                        : "Start typing. An agency you already work with is reused, not duplicated."
+                    }
+                    label="Agency name"
+                    size="small"
+                  />
+                )}
+              />
+            )}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <TextField
                 fullWidth
@@ -231,10 +266,7 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
               <Button
                 size="small"
                 sx={{ textTransform: "none" }}
-                onClick={() => {
-                  setAdding(false);
-                  setDraft(emptyDraft);
-                }}
+                onClick={closeForm}
               >
                 Cancel
               </Button>
@@ -297,6 +329,19 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
                     flexShrink: 0,
                   }}
                 />
+              </Tooltip>
+            ) : null}
+
+            {canManage ? (
+              <Tooltip title="Edit rank and commission">
+                <IconButton
+                  aria-label={`Edit ${agency.agencyName}`}
+                  disabled={save.isPending}
+                  size="small"
+                  onClick={() => startEdit(agency)}
+                >
+                  <EditOutlined fontSize="small" />
+                </IconButton>
               </Tooltip>
             ) : null}
 
