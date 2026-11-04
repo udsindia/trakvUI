@@ -132,11 +132,10 @@ export const moduleCatalog: ModuleDefinition[] = [
     icon: MODULE_ICON_KEYS.CALL_RECORDS,
     description: "Every recorded and missed call, with playback and download.",
     order: 6,
-    // Agency admins only: recordings are sensitive, so no other role sees the tab or the details
-    // (the API enforces the same rule, so this is not just a hidden menu entry).
+    // Recordings are sensitive: only the agency admin holds CALL_RECORDING_VIEW unless they give
+    // it to another role, and the API checks the same permission.
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
-    restrictToRoles: [ROLES.AGENCY_ADMIN],
-    requiredPermissions: [PERMISSIONS.DASHBOARD_VIEW],
+    requiredPermissions: [PERMISSIONS.CALL_RECORDING_VIEW],
   },
   {
     key: MODULE_KEYS.UNIVERSITIES,
@@ -239,9 +238,9 @@ export const moduleCatalog: ModuleDefinition[] = [
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN],
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
       PERMISSIONS.USERS_VIEW,
       PERMISSIONS.ROLES_VIEW,
+      PERMISSIONS.STAGE_TEMPLATE_MANAGE,
     ],
   },
 ];

@@ -1,5 +1,7 @@
 import { selectIsStudioTenant } from "@/app/auth/authSlice";
 import { useAppSelector } from "@/app/store/hooks";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 import { useMemo } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -90,6 +92,7 @@ export function Topbar({
   );
 
   const isStudio = useAppSelector(selectIsStudioTenant);
+  const { hasPermissions } = useAuth();
 
   const defaultQuickActions: DashboardQuickAction[] = isStudio
     ? [
@@ -102,11 +105,14 @@ export function Topbar({
         // { icon: "✅", label: "Tasks", href: "/activities/tasks" },
       ];
 
-  // A studio has no students or applications, so no shortcut may lead to them.
+  // A studio has no students or applications, so no shortcut may lead to them; and a
+  // shortcut is offered only to someone the API would let do it.
   const actionButtons = (quickActions.length ? quickActions : defaultQuickActions).filter(
     (action) =>
-      !isStudio ||
-      !(action.href?.startsWith("/applications") || action.href?.startsWith("/students")),
+      (!isStudio ||
+        !(action.href?.startsWith("/applications") || action.href?.startsWith("/students"))) &&
+      (action.href !== "/leads/create" || hasPermissions([PERMISSIONS.LEAD_CREATE])) &&
+      (action.href !== "/applications/create" || hasPermissions([PERMISSIONS.APPLICATIONS_CREATE])),
   );
 
   const actionButtonIcons = [AddRounded, AssignmentRounded, TaskAltRounded];

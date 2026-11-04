@@ -98,6 +98,8 @@ export function StudentDetailsPage() {
   const { hasPermissions, tenant } = useAuth();
   const canViewUsers = hasPermissions([PERMISSIONS.USERS_VIEW]);
   const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
+  const canCreateApplications = hasPermissions([PERMISSIONS.APPLICATIONS_CREATE]);
+  const canEditStudent = hasPermissions([PERMISSIONS.STUDENTS_MANAGE]);
 
   const {
     data: student,
@@ -189,15 +191,19 @@ export function StudentDetailsPage() {
                 journey was: leave the student, open Applications, find them again in a
                 picker of everyone.
               */}
-              <Button
-                variant="contained"
-                onClick={() => navigate(applicationCreateForStudentPath(student.id))}
-              >
-                New application
-              </Button>
-              <Button variant="outlined" onClick={() => setEditOpen(true)}>
-                Edit
-              </Button>
+              {canCreateApplications ? (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate(applicationCreateForStudentPath(student.id))}
+                >
+                  New application
+                </Button>
+              ) : null}
+              {canEditStudent ? (
+                <Button variant="outlined" onClick={() => setEditOpen(true)}>
+                  Edit
+                </Button>
+              ) : null}
               <AddTaskForRecordButton
                 entityId={student.id}
                 entityType="STUDENT"

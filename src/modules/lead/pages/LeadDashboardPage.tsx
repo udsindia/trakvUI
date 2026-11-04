@@ -269,6 +269,7 @@ export function LeadDashboardPage() {
   const [importOpen, setImportOpen] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
+  const canImportLeads = hasPermissions([PERMISSIONS.LEAD_IMPORT]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
   // An agency's enrolled leads move to Students; a studio has no Students page, so its
   // booked leads stay here. A studio also filters by interest rather than by country.
@@ -535,7 +536,7 @@ export function LeadDashboardPage() {
               }}
             />
 
-            {canCreateLeads ? (
+            {canImportLeads ? (
               <Button
                 startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
                 variant="contained"

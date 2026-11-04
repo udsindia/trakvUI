@@ -36,7 +36,6 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "team-index",
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
       PERMISSIONS.USERS_VIEW,
     ],
   },
@@ -46,7 +45,6 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     path: "team",
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
       PERMISSIONS.USERS_VIEW,
     ],
   },
@@ -54,7 +52,7 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     Component: AddUserPage,
     key: "add-user",
     path: "team/create",
-    anyOfPermissions: [PERMISSIONS.TEAM_INVITE, PERMISSIONS.USERS_MANAGE],
+    anyOfPermissions: [PERMISSIONS.USERS_MANAGE],
   },
   {
     Component: EmployeesPage,
@@ -83,11 +81,11 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
   {
     // Readable by anyone who can see applications - the sequence is what an
     // application's pipeline is drawn from. The page itself hides every control
-    // without SETTINGS_MANAGE, and the API refuses the writes regardless.
+    // without STAGE_TEMPLATE_MANAGE, and the API refuses the writes regardless.
     Component: StageTemplatesPage,
     key: "stages",
     path: "stages",
-    anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.APPLICATIONS_VIEW],
+    anyOfPermissions: [PERMISSIONS.STAGE_TEMPLATE_MANAGE, PERMISSIONS.APPLICATIONS_VIEW],
     requiredModule: MODULE_KEYS.APPLICATIONS,
   },
   {

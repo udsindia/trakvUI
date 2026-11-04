@@ -29,17 +29,16 @@ export const PERMISSIONS = {
   TASK_CREATE: "TASK_CREATE",
   TASK_ASSIGN: "TASK_ASSIGN",               // may give a task to someone else
   TASK_VIEW: "TASK_VIEW",
-  TASK_VIEW_TEAM: "TASK_VIEW_TEAM",         // no backend equivalent (kept distinct)
   TASK_UPDATE: "TASK_COMPLETE",             // closest granted task-write perm
-  TASK_DELETE: "TASK_DELETE",               // no backend equivalent (kept distinct)
   ACTIVITY_VIEW: "ACTIVITY_VIEW",
   ACTIVITY_LOG: "ACTIVITY_LOG",
   UNIVERSITIES_VIEW: "UNIVERSITY_VIEW",
   UNIVERSITIES_MANAGE: "UNIVERSITY_MANAGE",
+  STAGE_TEMPLATE_MANAGE: "STAGE_TEMPLATE_MANAGE", // add/delete countries, edit stage sequences
+  CALL_RECORDING_VIEW: "CALL_RECORDING_VIEW",
   COMMISSION_VIEW: "COMMISSION_VIEW",
   COMMISSION_MANAGE: "COMMISSION_MANAGE",
   SETTINGS_TENANT: "SETTINGS_MANAGE",
-  TEAM_INVITE: "TEAM_INVITE",               // no backend equivalent (kept distinct)
   USERS_VIEW: "USER_VIEW",
   USERS_MANAGE: "USER_MANAGE",
   ROLES_VIEW: "ROLE_VIEW",
