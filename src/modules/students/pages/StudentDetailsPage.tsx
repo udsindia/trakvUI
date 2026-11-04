@@ -30,6 +30,7 @@ import { usersService } from "@/modules/settings/usersService";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 import { EditStudentDialog } from "@/modules/students/components/EditStudentDialog";
+import { StudentDocumentsLink } from "@/modules/students/components/StudentDocumentsLink";
 import { applicationCreateForStudentPath } from "@/modules/applications/applicationsRoutePaths";
 
 /** Outcome → chip colour, matching the applications pages. */
@@ -100,6 +101,8 @@ export function StudentDetailsPage() {
   const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
   const canCreateApplications = hasPermissions([PERMISSIONS.APPLICATIONS_CREATE]);
   const canEditStudent = hasPermissions([PERMISSIONS.STUDENTS_MANAGE]);
+  // The link is saved through the profile update, so it needs both.
+  const canManageDocuments = hasPermissions([PERMISSIONS.STUDENTS_DOCS, PERMISSIONS.STUDENTS_MANAGE]);
 
   const {
     data: student,
@@ -204,6 +207,11 @@ export function StudentDetailsPage() {
                   Edit
                 </Button>
               ) : null}
+              <StudentDocumentsLink
+                canManage={canManageDocuments}
+                documentsUrl={student.documentsUrl}
+                studentId={student.id}
+              />
               <AddTaskForRecordButton
                 entityId={student.id}
                 entityType="STUDENT"
