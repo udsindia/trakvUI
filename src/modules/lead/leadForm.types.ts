@@ -125,8 +125,8 @@ export type CreateLeadPayload = {
   emailAddress: string;
   leadSource: string;
   countriesOfInterest: string[];
-  intakeMonth: string;
-  year: number;
+  intakeMonth?: string;
+  year?: number;
   fieldOfStudy: string;
   currentStudyLevel: string;
   isWhatsAppAvailable: boolean;

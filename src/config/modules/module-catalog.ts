@@ -51,6 +51,19 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 2,
     // Instagram enquiries are leads in waiting: whoever works leads works this inbox.
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN, ROLES.COUNSELLOR],
+    key: MODULE_KEYS.BOOKINGS,
+    title: "Bookings",
+    navLabel: "Bookings",
+    path: "bookings",
+    icon: MODULE_ICON_KEYS.BOOKINGS,
+    description: "Studio sessions from the booking calendar, and the WhatsApp messages each has had.",
+    order: 3,
+    allowedRoles: [
+      ROLES.SUPER_ADMIN,
+      ROLES.AGENCY_ADMIN,
+      ROLES.COUNSELLOR,
+      ROLES.ANALYST,
+    ],
     requiredPermissions: [PERMISSIONS.LEAD_VIEW],
   },
   {

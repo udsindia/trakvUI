@@ -1,3 +1,5 @@
+import { selectIsStudioTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
 import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
@@ -54,6 +56,13 @@ export const LEAD_STAGES = [
   "Dead",
 ] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
+
+/** The stages a tenant can pick: a studio books clients where an agency enrols students. */
+export function leadStagesFor(isStudio: boolean): readonly string[] {
+  return isStudio
+    ? LEAD_STAGES.map((stage) => (stage === "Enrolled" ? "Booked" : stage))
+    : LEAD_STAGES;
+}
 
 /** A user a lead can be assigned to, as offered by the assign pickers. */
 export type LeadAgentOption = {
@@ -123,6 +132,7 @@ export function LeadTableContainer({
   pageCount,
   paginationLabel,
 }: LeadTableContainerProps) {
+  const stageOptions = leadStagesFor(useAppSelector(selectIsStudioTenant));
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
@@ -586,7 +596,7 @@ export function LeadTableContainer({
           <FormControl fullWidth size="small">
             <InputLabel>Stage</InputLabel>
             <Select label="Stage" value={stageDialogValue} onChange={(e) => setStageDialogValue(e.target.value)}>
-              {LEAD_STAGES.map((stage) => (
+              {stageOptions.map((stage) => (
                 <MenuItem key={stage} value={stage}>
                   {stage}
                 </MenuItem>
@@ -609,7 +619,7 @@ export function LeadTableContainer({
           <FormControl fullWidth size="small">
             <InputLabel>New Stage</InputLabel>
             <Select label="New Stage" value={bulkStageValue} onChange={(e) => setBulkStageValue(e.target.value)}>
-              {LEAD_STAGES.map((stage) => (
+              {stageOptions.map((stage) => (
                 <MenuItem key={stage} value={stage}>
                   {stage}
                 </MenuItem>

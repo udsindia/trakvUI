@@ -9,6 +9,7 @@ import GroupsRounded from "@mui/icons-material/GroupsRounded";
 import AccountBalanceRounded from "@mui/icons-material/AccountBalanceRounded";
 import MicRounded from "@mui/icons-material/MicRounded";
 import ForumRounded from "@mui/icons-material/ForumRounded";
+import EventAvailableRounded from "@mui/icons-material/EventAvailableRounded";
 import PaymentsRounded from "@mui/icons-material/PaymentsRounded";
 import type { ResolvedModule } from "@/app/module-loader/module.types";
 import type {
@@ -37,6 +38,7 @@ const moduleIconMap: Record<ModuleIconKey, ReactNode> = {
   settings: <SettingsRounded />,
   "call-records": <MicRounded />,
   inbox: <ForumRounded />,
+  bookings: <EventAvailableRounded />,
 };
 
 function normalizeRoutePath(path: string) {

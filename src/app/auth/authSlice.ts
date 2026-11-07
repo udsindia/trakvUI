@@ -131,6 +131,9 @@ export const selectAuthRoles = (state: RootState) => state.auth.roles;
 export const selectAuthPermissions = (state: RootState) =>
   state.auth.permissions;
 export const selectAuthTenant = (state: RootState) => state.auth.tenant;
+/** True for a studio tenant, which has no study-abroad fields or modules. */
+export const selectIsStudioTenant = (state: RootState) =>
+  state.auth.tenant?.industry === "STUDIO";
 export const selectAuthBootstrapStatus = (state: RootState) =>
   state.auth.bootstrapStatus;
 export const selectAuthSessionStatus = (state: RootState) =>

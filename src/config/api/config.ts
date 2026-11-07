@@ -16,4 +16,5 @@ export const API_CONFIG = {
   stageTemplates: "/stage-templates",
   employeeDevices: "/employee-devices",
   callRecordings: "/call-recordings",
+  bookings: "/bookings",
 } as const;

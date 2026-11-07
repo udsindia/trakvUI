@@ -14,6 +14,7 @@ export const MODULE_ICON_KEYS = {
   SETTINGS: "settings",
   CALL_RECORDS: "call-records",
   INBOX: "inbox",
+  BOOKINGS: "bookings",
 } as const;
 
 export type ModuleIconKey =

@@ -10,6 +10,7 @@ import { API_CONFIG } from "@/config/api/config";
 import {
   MODULE_KEYS,
   defaultTenantModules,
+  tenantModulesForIndustry,
   type TenantModuleMap,
 } from "@/config/modules/modules";
 import { getPermissionsForRoles } from "@/config/permissions/permissions";
@@ -31,6 +32,10 @@ interface BackendAuthResponse {
   isTrialExpired?: boolean;
   roles?: string[];
   permissions?: string[];
+  /** "EDUCATION" | "STUDIO" — the tenant's vertical. */
+  industry?: string;
+  /** Industry module flags (students, applications, universities, bookings…). */
+  modules?: Record<string, boolean>;
 }
 
 // Maps backend role strings to frontend RoleKey
@@ -165,7 +170,8 @@ function mapBackendResponseToSession(response: BackendAuthResponse, email: strin
     tenant: {
       tenantId: response.tenantId,
       tenantName: displayName || response.tenantId,
-      enabledModules: { ...defaultTenantModules },
+      industry: response.industry,
+      enabledModules: tenantModulesForIndustry(response.modules),
     },
     tokens: {
       accessToken: response.accessToken,

@@ -1,3 +1,5 @@
+import { selectIsStudioTenant } from "@/app/auth/authSlice";
+import { useAppSelector } from "@/app/store/hooks";
 import { useMemo } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -87,13 +89,25 @@ export function Topbar({
     [userName],
   );
 
-  const defaultQuickActions: DashboardQuickAction[] = [
-    { icon: "➕", label: "New Lead", href: "/leads/create" },
-    { icon: "📄", label: "New Application", href: "/applications/create" },
-    // { icon: "✅", label: "Tasks", href: "/activities/tasks" },
-  ];
+  const isStudio = useAppSelector(selectIsStudioTenant);
 
-  const actionButtons = quickActions.length ? quickActions : defaultQuickActions;
+  const defaultQuickActions: DashboardQuickAction[] = isStudio
+    ? [
+        { icon: "➕", label: "New Lead", href: "/leads/create" },
+        { icon: "📅", label: "Bookings", href: "/bookings" },
+      ]
+    : [
+        { icon: "➕", label: "New Lead", href: "/leads/create" },
+        { icon: "📄", label: "New Application", href: "/applications/create" },
+        // { icon: "✅", label: "Tasks", href: "/activities/tasks" },
+      ];
+
+  // A studio has no students or applications, so no shortcut may lead to them.
+  const actionButtons = (quickActions.length ? quickActions : defaultQuickActions).filter(
+    (action) =>
+      !isStudio ||
+      !(action.href?.startsWith("/applications") || action.href?.startsWith("/students")),
+  );
 
   const actionButtonIcons = [AddRounded, AssignmentRounded, TaskAltRounded];
 
