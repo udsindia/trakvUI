@@ -1,6 +1,7 @@
 import type { FormEventHandler } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -29,6 +30,12 @@ import {
 import { selectIsStudioTenant } from "@/app/auth/authSlice";
 import { useAppSelector } from "@/app/store/hooks";
 import { MultiSelectAutocomplete } from "@/shared/components/MultiSelectAutocomplete";
+import {
+  BOOKING_FREQUENCIES,
+  INTEREST_LEVELS,
+  MAX_SERVICE_REQUIREMENT_LENGTH,
+  SERVICE_REQUIREMENTS,
+} from "@/modules/lead/studioLeadFields";
 
 const MAX_NOTES_LENGTH = 500;
 
@@ -488,6 +495,89 @@ export function LeadForm({
                   />
                 </Stack>
                 )}
+
+                {isStudio ? (
+                  <>
+                    {/* Free text with suggestions: a studio can offer something not on the list. */}
+                    <Controller
+                      control={control}
+                      name="serviceRequirement"
+                      render={({ field }) => (
+                        <Autocomplete
+                          freeSolo
+                          id={field.name}
+                          options={[...SERVICE_REQUIREMENTS]}
+                          // Typing and picking are the same act: the text is the value.
+                          inputValue={field.value}
+                          onInputChange={(_event, value) => field.onChange(value)}
+                          onBlur={field.onBlur}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Requirement"
+                              placeholder="e.g. Shoot + Anchor"
+                              InputLabelProps={{ ...params.InputLabelProps, shrink: true }}
+                              inputProps={{ ...params.inputProps, maxLength: MAX_SERVICE_REQUIREMENT_LENGTH }}
+                              sx={fieldSx}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+
+                    <Stack direction="row" spacing={1.5}>
+                      <Controller
+                        control={control}
+                        name="bookingFrequency"
+                        render={({ field }) => (
+                          <TextField
+                            fullWidth
+                            id={field.name}
+                            label="One-time or recurring"
+                            select
+                            slotProps={alwaysVisibleLabelSlotProps}
+                            sx={fieldSx}
+                            {...field}
+                          >
+                            <MenuItem value="">
+                              <em>Not known yet</em>
+                            </MenuItem>
+                            {BOOKING_FREQUENCIES.map((frequency) => (
+                              <MenuItem key={frequency.value} value={frequency.value}>
+                                {frequency.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        )}
+                      />
+
+                      <Controller
+                        control={control}
+                        name="interestLevel"
+                        render={({ field }) => (
+                          <TextField
+                            fullWidth
+                            id={field.name}
+                            label="Interest"
+                            select
+                            slotProps={alwaysVisibleLabelSlotProps}
+                            sx={fieldSx}
+                            {...field}
+                          >
+                            <MenuItem value="">
+                              <em>Not judged yet</em>
+                            </MenuItem>
+                            {INTEREST_LEVELS.map((level) => (
+                              <MenuItem key={level.value} value={level.value}>
+                                {level.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        )}
+                      />
+                    </Stack>
+                  </>
+                ) : null}
 
                 <Controller
                   control={control}

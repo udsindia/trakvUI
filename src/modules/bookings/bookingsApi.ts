@@ -18,6 +18,10 @@ export interface Booking {
   leadId?: string | null;
   leadName?: string | null;
   leadStage?: string | null;
+  /** From the linked lead: what they booked, e.g. "Shoot + Anchor". */
+  serviceRequirement?: string | null;
+  /** From the linked lead: ONE_TIME | RECURRING, or null when not known. */
+  bookingFrequency?: string | null;
   confirmationSentAt?: string | null;
   reminderSentAt?: string | null;
   cancellationSentAt?: string | null;

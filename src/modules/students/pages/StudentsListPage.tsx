@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useSessionState } from "@/shared/hooks/useSessionState";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Badge, Box, Button, CircularProgress, Drawer, Paper, Stack, Typography } from "@mui/material";
@@ -133,13 +134,14 @@ export function StudentsListPage() {
   // The top bar's search box filters this table live while the page is open (see pageSearch); the
   // box on the page itself shares the same text, so the two always agree and mobile still has one.
   const searchQuery = useRegisterPageSearch("Search students: name, phone, counsellor…");
-  const [activeQuickFilter, setActiveQuickFilter] = useState("all");
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
+  // Remembered for the tab, so opening a student and coming back keeps the list as it was.
+  const [activeQuickFilter, setActiveQuickFilter] = useSessionState("students.quickFilter", "all");
+  const [filterValues, setFilterValues] = useSessionState<FilterPanelValues>("students.filters", () =>
     getDefaultFilterPanelValues(filterConfig),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useSessionState("students.page", 1);
+  const [pageSize, setPageSize] = useSessionState("students.pageSize", DEFAULT_PAGE_SIZE);
 
   const {
     data: backendStudents = [],
@@ -287,10 +289,14 @@ export function StudentsListPage() {
     pageSearch.setValue(value);
   };
 
-  // A new search starts from the first page, whichever box it was typed into.
+  // A new search starts from the first page, whichever box it was typed into. Only a real
+  // change of text counts: arriving on the page must not undo the page it remembered.
+  const lastSearchRef = useRef(searchQuery);
   useEffect(() => {
+    if (lastSearchRef.current === searchQuery) return;
+    lastSearchRef.current = searchQuery;
     setPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, setPage]);
 
   const handleQuickFilterChange = (key: string) => {
     setActiveQuickFilter(key);

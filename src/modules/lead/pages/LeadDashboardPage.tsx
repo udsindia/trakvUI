@@ -1,3 +1,4 @@
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded, UploadRounded } from "@mui/icons-material";
@@ -45,6 +46,11 @@ import { joinPhoneNumber } from "@/shared/utils/phone";
 import { pageSearch, useRegisterPageSearch } from "@/shared/state/pageSearch";
 import { matchesSearch } from "@/shared/utils/search";
 import { useLeadStageChange } from "@/modules/lead/hooks/useLeadStageChange";
+import {
+  INTEREST_LEVELS,
+  describeRequirement,
+  interestLevelOption,
+} from "@/modules/lead/studioLeadFields";
 
 const DEFAULT_PAGE_SIZE = 10;
 // The page already holds the whole lead list (see the query below), so "All" is just a page size that fits it.
@@ -64,6 +70,16 @@ const quickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
   { key: "dead", label: "Dead" },
 ];
 
+/** A studio's tabs follow its own stages (STUDIO_LEAD_STAGES), Booked included. */
+const studioQuickFilterDefinitions: Omit<LeadQuickFilterTab, "count">[] = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "contacted", label: "Contacted" },
+  { key: "quoted", label: "Quoted" },
+  { key: "booked", label: "Booked" },
+  { key: "lost", label: "Lost" },
+];
+
 const filterConfig: FilterConfig[] = [
   {
     // Options are injected at runtime from the real counsellor list
@@ -81,6 +97,14 @@ const filterConfig: FilterConfig[] = [
     placeholder: "All Countries",
     // Fallback only — replaced by the tenant's own countries once those load.
     options: ["Canada", "Australia", "UK", "Germany"],
+  },
+  {
+    // Studio only (see dynamicFilterConfig). Matched on the label the row shows.
+    type: "dropdown",
+    label: "Interest",
+    key: "interest",
+    placeholder: "Any interest",
+    options: INTEREST_LEVELS.map((level) => level.label),
   },
   {
     type: "slider",
@@ -155,6 +179,8 @@ function mapBackendLeadToRow(lead: BackendLead, isStudio: boolean): LeadRow {
     nextAction: "",
     country: lead.destinationCountries?.[0] ?? "",
     createdAt: lead.createdAt ?? "",
+    interestLevel: lead.interestLevel ?? null,
+    requirement: describeRequirement(lead.serviceRequirement, lead.bookingFrequency),
   };
 }
 
@@ -166,7 +192,17 @@ function applySearchFilter(rows: LeadRow[], query: string): LeadRow[] {
   if (!query.trim()) return rows;
   // Every column the table shows, so typing a country, a source or a counsellor finds the leads too.
   return rows.filter((row) =>
-    matchesSearch(query, [row.name, row.email, row.phone, row.agent, row.stage, row.source, row.country]),
+    matchesSearch(query, [
+      row.name,
+      row.email,
+      row.phone,
+      row.agent,
+      row.stage,
+      row.source,
+      row.country,
+      row.requirement ?? "",
+      interestLevelOption(row.interestLevel)?.label ?? "",
+    ]),
   );
 }
 
@@ -177,6 +213,9 @@ function applyPanelFilters(rows: LeadRow[], values: FilterPanelValues): LeadRow[
 
     const countryFilter = values.country as string | undefined;
     if (countryFilter && row.country !== countryFilter) return false;
+
+    const interestFilter = values.interest as string | undefined;
+    if (interestFilter && interestLevelOption(row.interestLevel)?.label !== interestFilter) return false;
 
     const scoreFilter = values.score as [number, number] | undefined;
     if (Array.isArray(scoreFilter)) {
@@ -215,23 +254,28 @@ export function LeadDashboardPage() {
   const queryClient = useQueryClient();
   const tenantId = tenant?.tenantId ?? "";
 
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
+  // Remembered for the tab, so opening a lead and coming back keeps the list as it was.
+  const [filterValues, setFilterValues] = useSessionState<FilterPanelValues>("leads.filters", () =>
     getDefaultFilterPanelValues(filterConfig),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeQuickFilter, setActiveQuickFilter] = useState("all");
+  const [activeQuickFilter, setActiveQuickFilter] = useSessionState("leads.quickFilter", "all");
   // Stage changes are the same decision here as on the lead's own page, dialogs and all.
   const { requestStageChange, requestComment, dialogs } = useLeadStageChange();
   // The top bar's search box filters this table live while the page is open (see pageSearch); the
   // box on the page itself shares the same text, so the two always agree and mobile still has one.
   const leadSearchQuery = useRegisterPageSearch("Search leads: name, phone, agent, country…");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useSessionState("leads.page", 1);
+  const [pageSize, setPageSize] = useSessionState("leads.pageSize", DEFAULT_PAGE_SIZE);
   const [snack, setSnack] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const canCreateLeads = hasPermissions([PERMISSIONS.LEAD_CREATE]);
+  const canImportLeads = hasPermissions([PERMISSIONS.LEAD_IMPORT]);
   const canAssignLeads = hasPermissions([PERMISSIONS.LEAD_ASSIGN]);
+  // An agency's enrolled leads move to Students; a studio has no Students page, so its
+  // booked leads stay here. A studio also filters by interest rather than by country.
+  const isStudio = tenant?.industry === "STUDIO";
   const activeFilterCount = countActiveFilters(filterValues, filterConfig);
 
   /*
@@ -283,13 +327,14 @@ export function LeadDashboardPage() {
 
     return filterConfig
       .filter((config) => config.key !== "agent" || canAssignLeads)
+      .filter((config) => (isStudio ? config.key !== "country" : config.key !== "interest"))
       .map((config) => {
         if (config.key === "agent") return { ...config, options: counsellorNames };
         if (config.key === "source" && sourceOptions) return { ...config, options: sourceOptions };
         if (config.key === "country" && countryOptions) return { ...config, options: countryOptions };
         return config;
       });
-  }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads]);
+  }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads, isStudio]);
 
   // An agency's enrolled leads move to Students; a studio has no Students page, so its
   // booked leads stay here.
@@ -304,14 +349,14 @@ export function LeadDashboardPage() {
 
   const quickFilterTabs: LeadQuickFilterTab[] = useMemo(
     () =>
-      quickFilterDefinitions.map((tab) => ({
+      (isStudio ? studioQuickFilterDefinitions : quickFilterDefinitions).map((tab) => ({
         ...tab,
         count:
           tab.key === "all"
             ? leadRows.length
             : leadRows.filter((lead) => getStageKey(lead.stage) === tab.key).length,
       })),
-    [leadRows],
+    [leadRows, isStudio],
   );
 
   const fullyFilteredRows = useMemo(() => {
@@ -336,13 +381,13 @@ export function LeadDashboardPage() {
   const handlePageChange = useCallback((nextPage: number) => {
     const normalizedPage = Math.max(1, Math.min(nextPage, pageCount));
     setPage((currentPage) => (currentPage === normalizedPage ? currentPage : normalizedPage));
-  }, [pageCount]);
+  }, [pageCount, setPage]);
 
   const handlePageSizeChange = useCallback((nextPageSize: number) => {
     if (nextPageSize === pageSize) return;
     setPageSize(nextPageSize);
     setPage(1);
-  }, [pageSize]);
+  }, [pageSize, setPage, setPageSize]);
 
   const handleFilterChange = useCallback((values: FilterPanelValues) => {
     setFilterValues((currentValues) => {
@@ -352,16 +397,20 @@ export function LeadDashboardPage() {
       setPage(1);
       return values;
     });
-  }, []);
+  }, [setFilterValues, setPage]);
 
   const handleSearchChange = useCallback((query: string) => {
     pageSearch.setValue(query);
   }, []);
 
-  // A new search starts from the first page, whichever box it was typed into.
+  // A new search starts from the first page, whichever box it was typed into. Only a real
+  // change of text counts: arriving on the page must not undo the page it remembered.
+  const lastSearchRef = useRef(leadSearchQuery);
   useEffect(() => {
+    if (lastSearchRef.current === leadSearchQuery) return;
+    lastSearchRef.current = leadSearchQuery;
     setPage(1);
-  }, [leadSearchQuery]);
+  }, [leadSearchQuery, setPage]);
 
   const handleQuickFilterChange = useCallback((key: string) => {
     setActiveQuickFilter((currentKey) => {
@@ -369,7 +418,7 @@ export function LeadDashboardPage() {
       setPage(1);
       return key;
     });
-  }, []);
+  }, [setActiveQuickFilter, setPage]);
 
   const handleDeleteLead = async (id: string) => {
     try {
@@ -496,7 +545,7 @@ export function LeadDashboardPage() {
               }}
             />
 
-            {canCreateLeads ? (
+            {canImportLeads ? (
               <Button
                 startIcon={<UploadRounded sx={{ fontSize: 18 }} />}
                 variant="contained"

@@ -30,6 +30,7 @@ import { usersService } from "@/modules/settings/usersService";
 import { joinPhoneNumber } from "@/shared/utils/phone";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 import { EditStudentDialog } from "@/modules/students/components/EditStudentDialog";
+import { StudentDocumentsLink } from "@/modules/students/components/StudentDocumentsLink";
 import { applicationCreateForStudentPath } from "@/modules/applications/applicationsRoutePaths";
 
 /** Outcome → chip colour, matching the applications pages. */
@@ -98,6 +99,10 @@ export function StudentDetailsPage() {
   const { hasPermissions, tenant } = useAuth();
   const canViewUsers = hasPermissions([PERMISSIONS.USERS_VIEW]);
   const canViewApplications = hasPermissions([PERMISSIONS.APPLICATIONS_VIEW]);
+  const canCreateApplications = hasPermissions([PERMISSIONS.APPLICATIONS_CREATE]);
+  const canEditStudent = hasPermissions([PERMISSIONS.STUDENTS_MANAGE]);
+  // The link is saved through the profile update, so it needs both.
+  const canManageDocuments = hasPermissions([PERMISSIONS.STUDENTS_DOCS, PERMISSIONS.STUDENTS_MANAGE]);
 
   const {
     data: student,
@@ -189,15 +194,24 @@ export function StudentDetailsPage() {
                 journey was: leave the student, open Applications, find them again in a
                 picker of everyone.
               */}
-              <Button
-                variant="contained"
-                onClick={() => navigate(applicationCreateForStudentPath(student.id))}
-              >
-                New application
-              </Button>
-              <Button variant="outlined" onClick={() => setEditOpen(true)}>
-                Edit
-              </Button>
+              {canCreateApplications ? (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate(applicationCreateForStudentPath(student.id))}
+                >
+                  New application
+                </Button>
+              ) : null}
+              {canEditStudent ? (
+                <Button variant="outlined" onClick={() => setEditOpen(true)}>
+                  Edit
+                </Button>
+              ) : null}
+              <StudentDocumentsLink
+                canManage={canManageDocuments}
+                documentsUrl={student.documentsUrl}
+                studentId={student.id}
+              />
               <AddTaskForRecordButton
                 entityId={student.id}
                 entityType="STUDENT"

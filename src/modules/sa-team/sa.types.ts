@@ -49,6 +49,8 @@ export interface TenantSummary {
   updatedAt: string;
   /** Primary AGENCY_ADMIN login email (the tenant's contact). */
   adminEmail: string | null;
+  /** EDUCATION or STUDIO; decides which modules the tenant's users see. */
+  industry?: string | null;
 }
 
 export interface SaDashboardStats {
@@ -101,4 +103,6 @@ export interface OnboardTenantFormValues {
   lastName: string;
   email: string;
   phone: string;
+  /** EDUCATION (the default) or STUDIO. */
+  industry: string;
 }

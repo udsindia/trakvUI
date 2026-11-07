@@ -13,10 +13,7 @@ import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 export function TeamPage() {
   const { hasAnyPermission, tenant } = useAuth();
   const queryClient = useQueryClient();
-  const canManageUsers = hasAnyPermission([
-    PERMISSIONS.TEAM_INVITE,
-    PERMISSIONS.USERS_MANAGE,
-  ]);
+  const canManageUsers = hasAnyPermission([PERMISSIONS.USERS_MANAGE]);
   const tenantId = tenant?.tenantId ?? "";
 
   const usersQuery = useQuery({

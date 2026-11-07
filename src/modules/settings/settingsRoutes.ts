@@ -1,3 +1,4 @@
+import { MODULE_KEYS, type ModuleKey } from "@/config/modules/modules";
 import type { ComponentType } from "react";
 import type { PermissionKey } from "@/config/permissions/permissions";
 import { PERMISSIONS } from "@/config/permissions/permissions";
@@ -25,6 +26,8 @@ type SettingsRouteDefinition = {
   path?: string;
   requiredPermissions?: PermissionKey[];
   anyOfPermissions?: PermissionKey[];
+  /** Not routed when the tenant's industry switches this module off. */
+  requiredModule?: ModuleKey;
 };
 
 export const settingsRoutes: SettingsRouteDefinition[] = [
@@ -34,7 +37,6 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "team-index",
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
       PERMISSIONS.USERS_VIEW,
     ],
   },
@@ -44,7 +46,6 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     path: "team",
     anyOfPermissions: [
       PERMISSIONS.SETTINGS_TENANT,
-      PERMISSIONS.TEAM_INVITE,
       PERMISSIONS.USERS_VIEW,
     ],
   },
@@ -52,7 +53,7 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     Component: AddUserPage,
     key: "add-user",
     path: "team/create",
-    anyOfPermissions: [PERMISSIONS.TEAM_INVITE, PERMISSIONS.USERS_MANAGE],
+    anyOfPermissions: [PERMISSIONS.USERS_MANAGE],
   },
   {
     Component: EmployeesPage,
@@ -81,11 +82,12 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
   {
     // Readable by anyone who can see applications - the sequence is what an
     // application's pipeline is drawn from. The page itself hides every control
-    // without SETTINGS_MANAGE, and the API refuses the writes regardless.
+    // without STAGE_TEMPLATE_MANAGE, and the API refuses the writes regardless.
     Component: StageTemplatesPage,
     key: "stages",
     path: "stages",
-    anyOfPermissions: [PERMISSIONS.SETTINGS_TENANT, PERMISSIONS.APPLICATIONS_VIEW],
+    anyOfPermissions: [PERMISSIONS.STAGE_TEMPLATE_MANAGE, PERMISSIONS.APPLICATIONS_VIEW],
+    requiredModule: MODULE_KEYS.APPLICATIONS,
   },
   {
     // Gated on the catalogue rather than on settings: agencies are added from the
@@ -95,6 +97,7 @@ export const settingsRoutes: SettingsRouteDefinition[] = [
     key: "partner-agencies",
     path: "partner-agencies",
     anyOfPermissions: [PERMISSIONS.UNIVERSITIES_VIEW],
+    requiredModule: MODULE_KEYS.UNIVERSITIES,
   },
   {
     // Visible to anyone who can see the records it lists — it shows nothing they could

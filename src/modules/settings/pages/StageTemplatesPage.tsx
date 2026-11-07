@@ -64,7 +64,7 @@ const stageTemplatesQueryKey = ["settings", "stage-templates"];
 
 export function StageTemplatesPage() {
   const { hasPermissions } = useAuth();
-  const canManage = hasPermissions([PERMISSIONS.SETTINGS_TENANT]);
+  const canManage = hasPermissions([PERMISSIONS.STAGE_TEMPLATE_MANAGE]);
   const queryClient = useQueryClient();
 
   const [selectedCode, setSelectedCode] = useState<string>(ANY_COUNTRY);

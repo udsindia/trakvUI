@@ -90,7 +90,7 @@ export function UniversityDetailsPage() {
   // Changing a sequence reconciles applications already in flight, which is why the server
   // gates it on SETTINGS_MANAGE rather than on managing the catalogue. Matched here so the
   // controls are not offered to somebody who would only get a 403.
-  const canManageStages = hasPermissions([PERMISSIONS.SETTINGS_TENANT]);
+  const canManageStages = hasPermissions([PERMISSIONS.STAGE_TEMPLATE_MANAGE]);
   const [courseDrawerOpen, setCourseDrawerOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [coursePendingDelete, setCoursePendingDelete] = useState<Course | null>(null);

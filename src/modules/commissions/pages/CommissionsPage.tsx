@@ -316,6 +316,7 @@ export function CommissionsPage() {
                   <TableCell sx={{ width: 40 }} />
                   <TableCell sx={{ fontWeight: 700 }}>Student</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>University / Course</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Agency</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Enrolled</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Expected</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Received</TableCell>
@@ -359,8 +360,14 @@ export function CommissionsPage() {
                           )}
                           <Typography color="text.secondary" sx={{ fontSize: 12.5 }}>
                             {row.courseName}
-                            {row.partnerAgencyName ? ` · via ${row.partnerAgencyName}` : ""}
                           </Typography>
+                        </TableCell>
+                        <TableCell sx={{ fontSize: 13 }}>
+                          {row.partnerAgencyName || (
+                            <Typography color="text.secondary" component="span" sx={{ fontSize: 13 }}>
+                              Direct
+                            </Typography>
+                          )}
                         </TableCell>
                         <TableCell sx={{ fontVariantNumeric: "tabular-nums", fontSize: 13 }}>
                           {row.closedAt ? row.closedAt.slice(0, 10) : "—"}
@@ -394,7 +401,7 @@ export function CommissionsPage() {
                       </TableRow>
 
                       <TableRow>
-                        <TableCell colSpan={10} sx={{ py: 0 }}>
+                        <TableCell colSpan={11} sx={{ py: 0 }}>
                           <Collapse unmountOnExit in={isOpen} timeout="auto">
                             <Box sx={{ pb: 2, pl: 6, pt: 1 }}>
                               <Typography sx={{ fontSize: 13, fontWeight: 700, mb: 1 }}>Installments</Typography>

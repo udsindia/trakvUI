@@ -1,3 +1,4 @@
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import {
   useCallback,
   useEffect,
@@ -677,11 +678,17 @@ export function CourseSearchPage() {
   const navigate = useNavigate();
   const { data: countries = [] } = useCountries();
 
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>(() =>
+  // The last search is remembered for the tab and run again on return (see below), so going
+  // to a course or a student and back does not throw the counsellor's filters away.
+  const [filterValues, setFilterValues] = useSessionState<FilterPanelValues>("courses.filters", () =>
     getCourseSearchDefaultFilterValues(buildCourseSearchFilterConfig({})),
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<CourseSortOption>(defaultSearchSettings.sort);
+  const [searchQuery, setSearchQuery] = useSessionState("courses.search", "");
+  const [sort, setSort] = useSessionState<CourseSortOption>("courses.sort", defaultSearchSettings.sort);
+  const [lastSearch, setLastSearch] = useSessionState<{ page: number; size: number } | null>(
+    "courses.lastSearch",
+    null,
+  );
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
   const [courseResults, setCourseResults] = useState<CourseSearchResult[]>([]);
@@ -931,7 +938,7 @@ export function CourseSearchPage() {
     setFilterValues((current) =>
       current[disciplineKey] ? current : { ...current, [disciplineKey]: match.value },
     );
-  }, [selectedStudent, dynamicOptions.discipline, disciplineKey]);
+  }, [selectedStudent, dynamicOptions.discipline, disciplineKey, setFilterValues]);
   const activeFilterCount = countActiveFilters(filterValues, filterConfig, defaultFilterValues);
 
   const filteredResults = useMemo(() => courseResults, [courseResults]);
@@ -960,6 +967,7 @@ export function CourseSearchPage() {
    * as though clearing the filters had also cleared the results.
    */
   const handleClearFilters = () => {
+    setLastSearch(null);
     setFilterValues(defaultFilterValues);
     setSort(defaultSearchSettings.sort);
     setSearchQuery("");
@@ -993,6 +1001,7 @@ export function CourseSearchPage() {
         const response = await leadApi.searchCourses(payload);
         setCoursePage(page);
         setCoursePageSize(size);
+        setLastSearch({ page, size });
         setCourseResults(normalizeCourseSearchApiResults(response));
         setCourseResultTotal(
           typeof response?.totalElements === "number"
@@ -1013,8 +1022,18 @@ export function CourseSearchPage() {
         setIsApplyingFilters(false);
       }
     },
-    [studentId, coursePageSize],
+    [studentId, coursePageSize, setLastSearch],
   );
+
+  // Coming back to the finder: run the remembered search once, on the page it was on.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || !lastSearch) return;
+    restoredRef.current = true;
+    void runCourseSearch(filterValues, searchQuery, sort, lastSearch.page, lastSearch.size);
+    // Only on arrival; later searches are started by the user.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Moves to another page of the same search, then back to the top of the results. */
   const goToCoursePage = async (page: number, size = coursePageSize) => {

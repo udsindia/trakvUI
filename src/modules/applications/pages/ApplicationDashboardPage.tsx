@@ -1,3 +1,4 @@
+import { useSessionState } from "@/shared/hooks/useSessionState";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TuneRounded } from "@mui/icons-material";
@@ -45,18 +46,26 @@ function mapBackendApplicationToRow(app: BackendApplication): ApplicationRow {
     targetCountry: app.targetCountry ?? countryDisplayName(app.destinationCountryCode),
     targetUniversity: app.targetUniversity ?? app.universityName ?? "",
     course: app.course ?? app.courseName ?? "",
+    partnerAgency: app.partnerAgencyName ?? "",
+    intake: [app.intakeMonth, app.intakeYear].filter(Boolean).join(" "),
     stage: applicationStageLabel(app),
     createdAt: app.createdAt,
+    // Older servers do not send the flag; leave Edit on there and let the save decide.
+    editable: app.editable ?? true,
   };
 }
 
 export function ApplicationDashboardPage() {
-  const [filterValues, setFilterValues] = useState<FilterPanelValues>({ country: "", stage: "" });
-  const [activeQuickFilter, setActiveQuickFilter] = useState("all");
+  // Remembered for the tab, so opening an application and coming back keeps the list as it was.
+  const [filterValues, setFilterValues] = useSessionState<FilterPanelValues>("applications.filters", {
+    country: "",
+    stage: "",
+  });
+  const [activeQuickFilter, setActiveQuickFilter] = useSessionState("applications.quickFilter", "all");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [searchQuery, setSearchQuery] = useSessionState("applications.search", "");
+  const [page, setPage] = useSessionState("applications.page", 1);
+  const [pageSize, setPageSize] = useSessionState("applications.pageSize", DEFAULT_PAGE_SIZE);
 
   const queryClient = useQueryClient();
 

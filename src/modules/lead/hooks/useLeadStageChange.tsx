@@ -7,6 +7,8 @@ import { EnrolStudentDialog } from "@/modules/students/components/EnrolStudentDi
 import { studentsApi, type UpdateStudentPayload } from "@/modules/students/studentsApi";
 import { activityService } from "@/modules/activities/activityService";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 
 type RequestStageChange = (input: {
   leadId: string;
@@ -47,6 +49,8 @@ type UseLeadStageChangeResult = {
  */
 export function useLeadStageChange(): UseLeadStageChangeResult {
   const queryClient = useQueryClient();
+  const { hasPermissions } = useAuth();
+  const canConvert = hasPermissions([PERMISSIONS.LEAD_CONVERT]);
   const [lastMessage, setLastMessage] = useState("");
 
   const [pendingChange, setPendingChange] = useState<{
@@ -128,6 +132,11 @@ export function useLeadStageChange(): UseLeadStageChangeResult {
     // Enrolling is not a stage change like the others — it creates a student, and this is
     // the moment somebody has the passport and the transcript in front of them.
     if (stage === ENROLLED_STAGE) {
+      // The server refuses it too; saying so here saves filling in the enrolment form first.
+      if (!canConvert) {
+        setLastMessage("You don't have permission to convert leads to students.");
+        return Promise.resolve();
+      }
       return new Promise<void>((resolve) => {
         setPendingEnrolment({ id: leadId, name: leadName, done: resolve });
       });

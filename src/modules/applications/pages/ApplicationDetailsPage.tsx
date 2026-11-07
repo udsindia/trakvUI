@@ -301,6 +301,7 @@ export function ApplicationDetailsPage() {
                       <Typography variant="body2"><strong>Study Level:</strong> {humanize(application.studyLevel) || "—"}</Typography>
                       <Typography variant="body2"><strong>Country:</strong> {countryDisplayName(application.destinationCountryCode) || "—"}</Typography>
                       <Typography variant="body2"><strong>Intake:</strong> {application.intakeMonth} {application.intakeYear}</Typography>
+                      <Typography variant="body2"><strong>Partner Agency:</strong> {application.partnerAgencyName || "Direct"}</Typography>
                       <Typography variant="body2"><strong>Tuition (INR):</strong> {application.tuitionFeeInr ?? "—"}</Typography>
                       <Typography variant="body2"><strong>Application Fee (INR):</strong> {application.applicationFeeInr ?? "—"}</Typography>
                       <Typography variant="body2"><strong>Processed By:</strong> {application.processedBy || "In-house"}</Typography>

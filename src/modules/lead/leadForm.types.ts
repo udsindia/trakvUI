@@ -15,6 +15,10 @@ export type LeadFormValues = {
   isWhatsAppAvailable: boolean;
   name: string;
   notes: string;
+  /** Studio only — see studioLeadFields.ts. Blank means not set. */
+  interestLevel: string;
+  serviceRequirement: string;
+  bookingFrequency: string;
   phone: string;
   source: string;
   tags: string[];
@@ -134,6 +138,9 @@ export type CreateLeadPayload = {
   englishProficiencyTestScore?: string;
   college?: string;
   notes?: string;
+  interestLevel?: string;
+  serviceRequirement?: string;
+  bookingFrequency?: string;
 };
 
 export type AgentOption = {

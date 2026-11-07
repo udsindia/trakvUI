@@ -1,3 +1,4 @@
+import { clearSessionState } from "@/shared/hooks/useSessionState";
 import axios from "axios";
 import type {
   AuthLoginRequest,
@@ -463,6 +464,8 @@ export const authService = {
 
   clearSession() {
     cachedSession = null;
+    // Filters and paging remembered for this tab belong to the person signing out.
+    clearSessionState();
 
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);

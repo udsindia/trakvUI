@@ -89,6 +89,7 @@ export function LeadActivityTimeline({ leadId }: LeadActivityTimelineProps) {
 
             <Typography color="text.secondary" sx={{ fontSize: 11.5, mt: 0.25 }}>
               {formatWhen(item.eventAt)}
+              {item.agentName ? ` · ${isTask ? "with" : "by"} ${item.agentName}` : ""}
               {isTask && item.dueDate ? ` · due ${item.dueDate}` : ""}
             </Typography>
           </Box>

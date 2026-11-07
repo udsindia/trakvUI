@@ -126,6 +126,14 @@ export const saTeamApi = {
     return res.data;
   },
 
+  /** Switches which modules the tenant sees. Nothing is deleted. */
+  updateTenantIndustry: async (id: string, industry: string): Promise<TenantSummary> => {
+    const res = await saClient.patch<TenantSummary>(`/superadmin/tenants/${id}/industry`, {
+      industry,
+    });
+    return res.data;
+  },
+
   /** What clearing this tenant would remove, counted but not removed. */
   async previewTenantWipe(id: string) {
     const res = await saClient.get<TenantWipeReport>(`/superadmin/tenants/${id}/wipe-preview`);

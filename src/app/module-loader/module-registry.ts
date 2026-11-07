@@ -81,8 +81,12 @@ export function resolveModules({
 
     // Gate sub-items individually so e.g. Role Management is hidden from a user who lacks
     // ROLE_VIEW even when the parent Settings section is visible via another permission.
+    // A child tied to a module the tenant's industry switches off is hidden too.
     const children = moduleDefinition.children?.filter(
-      (child) => superAdmin || isNavItemAccessible(permissions, child),
+      (child) =>
+        superAdmin ||
+        (isNavItemAccessible(permissions, child) &&
+          (!child.requiredModule || tenant.enabledModules[child.requiredModule] !== false)),
     );
 
     return {

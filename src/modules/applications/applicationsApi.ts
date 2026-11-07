@@ -27,6 +27,8 @@ export interface BackendApplication {
   /** Third party processing the application; absent or empty means in-house. */
   processedBy?: string | null;
   outcome?: string;
+  /** Open and still in its first stage: the only time the details can be edited. */
+  editable?: boolean;
 
   // Legacy/optional (may be absent)
   leadId?: string;
@@ -93,6 +95,8 @@ export interface TimelineItem {
   dueDate?: string | null;
   rescheduleCount?: number | null;
   agentId?: string | null;
+  /** Who logged it, or whom the task is with. */
+  agentName?: string | null;
   source?: string | null;
   eventAt: string;
   isPreEnrolment?: boolean;

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { applicationStageStyles } from "@/modules/applications/applicationStage";
 import { applicationEditPath } from "@/modules/applications/applicationsRoutePaths";
+import { useAuth } from "@/app/auth/useAuth";
+import { PERMISSIONS } from "@/config/permissions/permissions";
 
 export type ApplicationRow = {
   id: string;
@@ -14,8 +16,14 @@ export type ApplicationRow = {
   targetCountry: string;
   targetUniversity: string;
   course: string;
+  /** The partner agency handling it, or empty when the agency applies directly. */
+  partnerAgency: string;
+  /** e.g. "September 2026", or empty. */
+  intake: string;
   stage: string;
   createdAt: string;
+  /** Open and still in its first stage; afterwards the details are frozen. */
+  editable: boolean;
 };
 
 type ApplicationTableContainerProps = {
@@ -58,6 +66,9 @@ export function ApplicationTableContainer({
 }: ApplicationTableContainerProps) {
   const navigate = useNavigate();
   const [actionLoading, setActionLoading] = useState(false);
+  const { hasPermissions } = useAuth();
+  const canEdit = hasPermissions([PERMISSIONS.APPLICATIONS_MANAGE]);
+  const canDelete = hasPermissions([PERMISSIONS.APPLICATIONS_CLOSE]);
 
   // Row actions sit inside a row that navigates on click, so each one has to stop the
   // event itself. Without this, cancelling the delete confirm still opened the
@@ -104,6 +115,8 @@ export function ApplicationTableContainer({
     { id: "country", header: "Country", minWidth: 100, render: (a) => <TextCell value={a.targetCountry} /> },
     { id: "university", header: "University", minWidth: 120, render: (a) => <TextCell value={a.targetUniversity} /> },
     { id: "course", header: "Course", minWidth: 120, render: (a) => <TextCell value={a.course} /> },
+    { id: "agency", header: "Agency", minWidth: 110, render: (a) => <TextCell value={a.partnerAgency} /> },
+    { id: "intake", header: "Intake", minWidth: 100, render: (a) => <TextCell value={a.intake} /> },
     {
       id: "stage",
       header: "Stage",
@@ -126,30 +139,39 @@ export function ApplicationTableContainer({
       align: "right",
       render: (app) => (
         <Stack direction="row" spacing={0.75} sx={{ justifyContent: "flex-end" }}>
-          <Tooltip title="Edit application">
-            <IconButton
-              aria-label={`Edit the application for ${app.studentName}`}
-              disabled={actionLoading}
-              size="small"
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: "7px",
-                color: "text.secondary",
-                height: 28,
-                width: 28,
-                "&:hover": { borderColor: "primary.main", color: "primary.main" },
-              }}
-              onClick={(event) => handleRowEdit(event, app)}
-            >
-              <EditOutlined fontSize="small" />
-            </IconButton>
+          <Tooltip
+            title={
+              app.editable
+                ? "Edit application"
+                : "Locked: details can only be edited before the application moves past its first stage"
+            }
+          >
+            {/* The span keeps the tooltip working while the button is disabled. */}
+            <span>
+              <IconButton
+                aria-label={`Edit the application for ${app.studentName}`}
+                disabled={actionLoading || !canEdit || !app.editable}
+                size="small"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "7px",
+                  color: "text.secondary",
+                  height: 28,
+                  width: 28,
+                  "&:hover": { borderColor: "primary.main", color: "primary.main" },
+                }}
+                onClick={(event) => handleRowEdit(event, app)}
+              >
+                <EditOutlined fontSize="small" />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title="Delete application">
             <IconButton
               aria-label={`Delete the application for ${app.studentName}`}
-              disabled={actionLoading || !onDeleteApplication}
+              disabled={actionLoading || !onDeleteApplication || !canDelete}
               size="small"
               sx={{
                 border: "1px solid",

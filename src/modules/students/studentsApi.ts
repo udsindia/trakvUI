@@ -53,6 +53,8 @@ export interface BackendStudentDetail extends BackendStudent {
   academicScore?: number | null;
   scoreType?: string | null;
   workExperienceMonths?: number | null;
+  /** Link to the student's documents folder in the agency's own storage. */
+  documentsUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
   languageTests?: StudentLanguageTest[];
@@ -83,6 +85,8 @@ export interface UpdateStudentPayload {
   academicScore?: number | null;
   scoreType?: string | null;
   workExperienceMonths?: number | null;
+  /** A web link to the documents folder; "" clears it. Needs STUDENT_DOCS. */
+  documentsUrl?: string | null;
 }
 
 /** The list endpoint returns a Spring Page; older builds returned a raw array. */
