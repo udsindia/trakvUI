@@ -9,6 +9,7 @@ export const MODULE_KEYS = {
   UNIVERSITIES_BROWSE: "universities-browse",
   SETTINGS: "settings",
   CALL_RECORDS: "call-records",
+  INBOX: "inbox",
   BOOKINGS: "bookings",
 } as const;
 
@@ -26,6 +27,7 @@ export const defaultTenantModules: TenantModuleMap = {
   [MODULE_KEYS.UNIVERSITIES_BROWSE]: true,
   [MODULE_KEYS.SETTINGS]: true,
   [MODULE_KEYS.CALL_RECORDS]: true,
+  [MODULE_KEYS.INBOX]: true,
   // Studio only — switched on by the backend's "bookings" industry flag.
   [MODULE_KEYS.BOOKINGS]: false,
 };
