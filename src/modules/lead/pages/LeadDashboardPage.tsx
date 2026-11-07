@@ -336,6 +336,9 @@ export function LeadDashboardPage() {
       });
   }, [usersQuery.data, sourcesQuery.data, countriesQuery.data, canAssignLeads, isStudio]);
 
+  // An agency's enrolled leads move to Students; a studio has no Students page, so its
+  // booked leads stay here.
+  const isStudio = tenant?.industry === "STUDIO";
   const leadRows: LeadRow[] = useMemo(
     () =>
       backendLeads

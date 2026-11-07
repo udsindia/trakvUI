@@ -52,7 +52,25 @@ export interface EmbeddedSignupResult {
   code: string;
   wabaId?: string;
   phoneNumberId?: string;
+  /** True when Meta finished a WhatsApp Business app (coexistence) onboarding. */
+  coexistence: boolean;
 }
+
+export interface EmbeddedSignupOptions {
+  /**
+   * Connect the number the business already uses in the WhatsApp Business app. The number
+   * stays in the app; the person confirms by scanning a QR code in it instead of an OTP.
+   */
+  coexistence?: boolean;
+}
+
+/** Meta's `featureType` for the popup: the coexistence flow, or the standard one. */
+export function signupFeatureType(options?: EmbeddedSignupOptions): string {
+  return options?.coexistence ? "whatsapp_business_app_onboarding" : "";
+}
+
+/** Meta's finish event for a WhatsApp Business app number. */
+export const COEXISTENCE_FINISH_EVENT = "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING";
 
 let sdkPromise: Promise<void> | null = null;
 
@@ -120,6 +138,7 @@ const CLOSE_GRACE_MS = 1_500;
 export async function launchEmbeddedSignup(
   ids?: EmbeddedSignupIds,
   prefill?: EmbeddedSignupPrefill,
+  options?: EmbeddedSignupOptions,
 ): Promise<EmbeddedSignupResult> {
   const { appId, configId } = resolveIds(ids);
   await loadSdk(appId);
@@ -127,7 +146,7 @@ export async function launchEmbeddedSignup(
 
   return new Promise<EmbeddedSignupResult>((resolve, reject) => {
     let code: string | undefined;
-    let session: { wabaId?: string; phoneNumberId?: string } | undefined;
+    let session: { wabaId?: string; phoneNumberId?: string; coexistence: boolean } | undefined;
     let settled = false;
     let popup: Window | null = null;
     let sessionTimer: ReturnType<typeof setTimeout> | undefined;
@@ -150,7 +169,12 @@ export async function launchEmbeddedSignup(
     const finishIfComplete = () => {
       if (settled || !code || !session) return;
       cleanup();
-      resolve({ code, wabaId: session.wabaId, phoneNumberId: session.phoneNumberId });
+      resolve({
+        code,
+        wabaId: session.wabaId,
+        phoneNumberId: session.phoneNumberId,
+        coexistence: session.coexistence,
+      });
     };
     const awaitOtherHalf = () => {
       clearTimeout(sessionTimer);
@@ -178,7 +202,12 @@ export async function launchEmbeddedSignup(
       } else if (String(data.event ?? "").startsWith("FINISH")) {
         // FINISH, FINISH_ONLY_WABA, FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING, ...
         // FINISH_ONLY_WABA has no number; the backend reads it from the account.
-        session = { wabaId: data.data?.waba_id, phoneNumberId: data.data?.phone_number_id };
+        // A WhatsApp Business app number reports only the account; the backend reads the number.
+        session = {
+          wabaId: data.data?.waba_id,
+          phoneNumberId: data.data?.phone_number_id,
+          coexistence: data.event === COEXISTENCE_FINISH_EVENT,
+        };
         if (code) finishIfComplete();
         else awaitOtherHalf();
       }
@@ -223,11 +252,34 @@ export async function launchEmbeddedSignup(
         override_default_response_type: true,
         extras: {
           setup: Object.keys(business).length ? { business } : {},
-          featureType: "",
+          featureType: signupFeatureType(options),
           sessionInfoVersion: "3",
         },
       },
     );
     if (window.open !== originalOpen) window.open = originalOpen; // no popup was opened
+  });
+}
+
+/**
+ * Opens Facebook Login for Business with a configuration other than the WhatsApp one (for
+ * example the Lead Ads one) and resolves with the login code for the backend to exchange.
+ * Rejects when the person closes the window or declines.
+ */
+export async function launchFacebookLogin(ids: EmbeddedSignupIds): Promise<string> {
+  const appId = ids.appId || ENV_APP_ID;
+  const configId = ids.configId;
+  await loadSdk(appId);
+  if (!configId) throw new Error("The Facebook Login configuration id is not set");
+
+  return new Promise<string>((resolve, reject) => {
+    window.FB!.login(
+      (response) => {
+        const code = response?.authResponse?.code;
+        if (code) resolve(code);
+        else reject(new Error("Facebook login was closed before it finished."));
+      },
+      { config_id: configId, response_type: "code", override_default_response_type: true },
+    );
   });
 }

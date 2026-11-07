@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Booking } from "../src/modules/bookings/bookingsApi";
 import { dayLabel, groupByDay, matchesFrequency, rangeFor, summarize } from "../src/modules/bookings/bookingRange";
+import { dayLabel, groupByDay, rangeFor, summarize } from "../src/modules/bookings/bookingRange";
 
 const NOW = new Date(2026, 9, 21, 10, 0); // Wed 21 Oct 2026, 10:00 local
 

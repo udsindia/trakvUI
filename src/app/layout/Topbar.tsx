@@ -113,6 +113,11 @@ export function Topbar({
         !(action.href?.startsWith("/applications") || action.href?.startsWith("/students"))) &&
       (action.href !== "/leads/create" || hasPermissions([PERMISSIONS.LEAD_CREATE])) &&
       (action.href !== "/applications/create" || hasPermissions([PERMISSIONS.APPLICATIONS_CREATE])),
+  // A studio has no students or applications, so no shortcut may lead to them.
+  const actionButtons = (quickActions.length ? quickActions : defaultQuickActions).filter(
+    (action) =>
+      !isStudio ||
+      !(action.href?.startsWith("/applications") || action.href?.startsWith("/students")),
   );
 
   const actionButtonIcons = [AddRounded, AssignmentRounded, TaskAltRounded];

@@ -128,6 +128,7 @@ function SidebarContent({
     [
       "dashboard",
       "lead",
+      "inbox",
       "bookings",
       "students",
       "applications",
