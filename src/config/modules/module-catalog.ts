@@ -51,6 +51,9 @@ export const moduleCatalog: ModuleDefinition[] = [
     order: 2,
     // Instagram enquiries are leads in waiting: whoever works leads works this inbox.
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.AGENCY_ADMIN, ROLES.COUNSELLOR],
+    requiredPermissions: [PERMISSIONS.LEAD_VIEW],
+  },
+  {
     key: MODULE_KEYS.BOOKINGS,
     title: "Bookings",
     navLabel: "Bookings",
