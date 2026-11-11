@@ -37,35 +37,41 @@ type RescheduleTaskInput = {
 
 type UseTaskBoardOptions = {
   selectedAgentId?: string;
-  /**
-   * Whose tasks the board shows. "team" is everyone inside the caller's visibility scope,
-   * which the server decides — a counsellor asking for the team simply gets themselves.
-   */
   scope?: "mine" | "team";
   selectedPriority?: TaskPriority;
+  selectedTaskFilter?: "OPEN" | "TODAY" | "OVERDUE" | "STUCK" | null;
 };
 
 export function useTaskBoard({
   selectedAgentId = ACTIVITY_ALL_AGENTS_OPTION_ID,
   scope = "mine",
   selectedPriority,
+  selectedTaskFilter,
 }: UseTaskBoardOptions) {
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const taskBoardQuery = useQuery({
-    queryKey: ["activities", "tasks", scope, selectedAgentId, selectedPriority ?? "all"],
-    queryFn: () =>
-      scope === "team"
-        ? activityService.getTeamTaskBoard({
-            agentId: selectedAgentId,
-            priority: selectedPriority,
-          })
-        : activityService.getTaskBoard({
-            agentId: selectedAgentId,
-            priority: selectedPriority,
-          }),
-  });
+const taskBoardQuery = useQuery({
+  queryKey: [
+    "activities",
+    "tasks",
+    scope,
+    selectedAgentId,
+    selectedPriority ?? "all",
+    selectedTaskFilter ?? "all",
+  ],
+  queryFn: () =>
+    scope === "team"
+      ? activityService.getTeamTaskBoard({
+          agentId: selectedAgentId,
+          priority: selectedPriority,
+          taskFilter: selectedTaskFilter ?? undefined,
+        })
+      : activityService.getTaskBoard({
+          agentId: selectedAgentId,
+          priority: selectedPriority,
+        }),
+});
 
   const tasks = useMemo(
     () => (taskBoardQuery.data?.tasks ?? []).map(activityService.mapTaskDtoToModel),
