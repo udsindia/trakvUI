@@ -43,6 +43,9 @@ export function MyTasks() {
   // and a counsellor cannot read the team endpoint anyway, the same reason AddLeadPage
   // guards its own user query.
   const [selectedAgentId, setSelectedAgentId] = useState(ACTIVITY_ALL_AGENTS_OPTION_ID);
+  const [selectedTaskFilter, setSelectedTaskFilter] = useState<
+  "OPEN" | "TODAY" | "OVERDUE" | "STUCK" | null
+>(null);
   const [selectedPriorityValue, setSelectedPriorityValue] = useState<string>(allPriorityValue);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   /**
@@ -77,6 +80,7 @@ export function MyTasks() {
   } = useTaskBoard({
     scope,
     selectedAgentId,
+    selectedTaskFilter,
     selectedPriority:
       selectedPriorityValue === allPriorityValue
         ? undefined
@@ -264,18 +268,32 @@ export function MyTasks() {
         </Box>
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
-          {/*
-            Above the board, because it is the question you ask first: who is carrying what.
-
-            Deliberately not clickable. The board below is findBoardForUser — strictly your
-            own tasks — so filtering it to another agent would always empty it. Drilling
-            into someone else's tasks needs /api/tasks/team, which nothing calls yet.
-          */}
+         {/*
+  Shows team workload. Clicking a count filters the tasks below
+  by the selected employee and task category.
+*/}
           <TeamTaskSummary
-            agents={summaryQuery.data?.agents ?? []}
-            isError={summaryQuery.isError}
-            isLoading={summaryQuery.isLoading}
-          />
+  agents={summaryQuery.data?.agents ?? []}
+  isError={summaryQuery.isError}
+  isLoading={summaryQuery.isLoading}
+  selectedAgentId={selectedAgentId}
+  selectedTaskFilter={selectedTaskFilter}
+  onSelectTaskFilter={(agentId, filter) => {
+    const isAlreadySelected =
+      scope === "team" &&
+      selectedAgentId === agentId &&
+      selectedTaskFilter === filter;
+
+    if (isAlreadySelected) {
+      setSelectedAgentId(ACTIVITY_ALL_AGENTS_OPTION_ID);
+      setSelectedTaskFilter(null);
+    } else {
+      setScope("team");
+      setSelectedAgentId(agentId);
+      setSelectedTaskFilter(filter);
+    }
+  }}
+/>
 
           {isBoardLoading ? (
             <Stack sx={{ alignItems: "center", justifyContent: "center", minHeight: 320 }}>

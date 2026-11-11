@@ -226,6 +226,7 @@ export interface BackendTaskBoardResponse {
 export interface GetTaskBoardParams {
   agentId?: string;
   priority?: TaskPriority;
+  taskFilter?: "OPEN" | "TODAY" | "OVERDUE" | "STUCK";
 }
 
 export interface GetTaskBoardResponse {
@@ -723,13 +724,14 @@ export const activityService = {
       `${API_CONFIG.tasks}/team`,
       {
         params: {
-          // The board is not paged, so this asks for enough to fill it in one go.
-          page: 0,
-          size: 200,
-          ...(params.agentId && params.agentId !== ACTIVITY_ALL_AGENTS_OPTION_ID
-            ? { agentId: params.agentId }
-            : {}),
-        },
+  // The board is not paged, so this asks for enough to fill it in one go.
+  page: 0,
+  size: 200,
+  ...(params.agentId && params.agentId !== ACTIVITY_ALL_AGENTS_OPTION_ID
+    ? { agentId: params.agentId }
+    : {}),
+  ...(params.taskFilter ? { taskFilter: params.taskFilter } : {}),
+},
       },
     );
 
