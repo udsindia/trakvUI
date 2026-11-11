@@ -216,14 +216,6 @@ export function BookingsPage() {
     // Past sessions read newest first; upcoming soonest first, as the API sends them.
     return view === "past" ? [...matching].reverse() : matching;
   }, [bookings, query, view, frequency]);
-    const matching = query
-      ? bookings.filter((b) =>
-          `${b.clientName} ${b.leadName ?? ""} ${b.phone ?? ""} ${b.notes ?? ""}`.toLowerCase().includes(query),
-        )
-      : bookings;
-    // Past sessions read newest first; upcoming soonest first, as the API sends them.
-    return view === "past" ? [...matching].reverse() : matching;
-  }, [bookings, query, view]);
 
   const days = useMemo(() => groupByDay(visible), [visible]);
   const summary = useMemo(() => summarize(bookings), [bookings]);
@@ -291,8 +283,6 @@ export function BookingsPage() {
         </TextField>
         <TextField
           placeholder="Search client, phone, notes or requirement"
-        <TextField
-          placeholder="Search client, phone or notes"
           size="small"
           slotProps={{
             input: {
@@ -320,7 +310,6 @@ export function BookingsPage() {
         <Card elevation={0} sx={{ ...cardSx, p: 4, textAlign: "center" }}>
           <Typography sx={{ fontWeight: 600 }}>
             {query || frequency !== "all" ? "No bookings match your filters." : view === "upcoming" ? "No upcoming sessions." : "No sessions in the past 60 days."}
-            {query ? "No bookings match your search." : view === "upcoming" ? "No upcoming sessions." : "No sessions in the past 60 days."}
           </Typography>
           <Typography color="text.secondary" sx={{ fontSize: 13, mt: 0.5 }}>
             Sessions appear here as soon as they are saved in the booking calendar.

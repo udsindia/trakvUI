@@ -73,11 +73,6 @@ export function leadStagesFor(isStudio: boolean): readonly string[] {
  */
 export const STUDIO_LEAD_STAGES = ["New", "Contacted", "Quoted", "Booked", "Lost"] as const;
 
-  return isStudio
-    ? LEAD_STAGES.map((stage) => (stage === "Enrolled" ? "Booked" : stage))
-    : LEAD_STAGES;
-}
-
 /** A user a lead can be assigned to, as offered by the assign pickers. */
 export type LeadAgentOption = {
   agentId: string;
@@ -167,7 +162,6 @@ export function LeadTableContainer({
 }: LeadTableContainerProps) {
   const isStudio = useAppSelector(selectIsStudioTenant);
   const stageOptions = leadStagesFor(isStudio);
-  const stageOptions = leadStagesFor(useAppSelector(selectIsStudioTenant));
   const navigate = useNavigate();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
