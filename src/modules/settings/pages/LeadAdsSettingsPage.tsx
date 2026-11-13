@@ -118,8 +118,8 @@ export function LeadAdsSettingsPage() {
 
   const startConnect = useMutation({
     mutationFn: async () => {
-      const code = await launchFacebookLogin({ appId: settings?.appId, configId: settings?.configId });
-      return (await httpClient.post<ConnectStart>("/ads/config/meta/connect", { code })).data;
+      const login = await launchFacebookLogin({ appId: settings?.appId, configId: settings?.configId });
+      return (await httpClient.post<ConnectStart>("/ads/config/meta/connect", login)).data;
     },
     onSuccess: (result) => {
       setPicker(result);

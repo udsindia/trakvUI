@@ -44,7 +44,7 @@ declare global {
 }
 
 interface FbLoginResponse {
-  authResponse?: { code?: string };
+  authResponse?: { code?: string; accessToken?: string };
   status?: string;
 }
 
@@ -263,23 +263,32 @@ export async function launchEmbeddedSignup(
 
 /**
  * Opens Facebook Login for Business with a configuration other than the WhatsApp one (for
- * example the Lead Ads one) and resolves with the login code for the backend to exchange.
+ * example the Lead Ads one) and resolves with what the login returned for the backend.
  * Rejects when the person closes the window or declines.
+ *
+ * Asks for the access token, not a code: a code from this popup is bound to the SDK's own
+ * per-popup redirect, which the backend can't reproduce, so Meta refuses to exchange it
+ * ("Error validating verification code"). The backend checks the token was issued to our app.
+ * A code is still passed on if Meta returns one instead.
  */
-export async function launchFacebookLogin(ids: EmbeddedSignupIds): Promise<string> {
+export async function launchFacebookLogin(
+  ids: EmbeddedSignupIds,
+): Promise<{ accessToken?: string; code?: string }> {
   const appId = ids.appId || ENV_APP_ID;
   const configId = ids.configId;
   await loadSdk(appId);
   if (!configId) throw new Error("The Facebook Login configuration id is not set");
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     window.FB!.login(
       (response) => {
+        const accessToken = response?.authResponse?.accessToken;
         const code = response?.authResponse?.code;
-        if (code) resolve(code);
+        if (accessToken) resolve({ accessToken });
+        else if (code) resolve({ code });
         else reject(new Error("Facebook login was closed before it finished."));
       },
-      { config_id: configId, response_type: "code", override_default_response_type: true },
+      { config_id: configId },
     );
   });
 }
