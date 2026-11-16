@@ -190,10 +190,10 @@ export function ApplicationDetailsPage() {
   const currentStage = stages.find((s) => s.id === application.currentStageId);
   const currentIndex = currentStage ? stages.indexOf(currentStage) : -1;
   const isClosed = application.outcome !== "IN_PROGRESS";
-  // There is no stored DRAFT state — every application is created IN_PROGRESS. "Draft"
-  // here means it has not advanced yet, which is exactly what PATCH /applications/{id}
-  // allows. Keep this in step with ApplicationService.updateApplication.
-  const isDraft = !isClosed && (currentIndex <= 0);
+  // Editable only while open and still in the first stage (Application Submitted) — the
+  // same test PATCH /applications/{id} applies. Keep in step with
+  // ApplicationService.updateApplication.
+  const isEditable = !isClosed && currentIndex <= 0;
   const nextStage = currentStage
     ? stages.find((s) => s.stageOrder === currentStage.stageOrder + 1)
     : stages[0];
@@ -231,7 +231,7 @@ export function ApplicationDetailsPage() {
                 size="medium"
                 studentId={application.studentId}
               />
-              {canEdit && isDraft ? (
+              {canEdit && isEditable ? (
                 <Button
                   startIcon={<EditOutlined />}
                   variant="outlined"

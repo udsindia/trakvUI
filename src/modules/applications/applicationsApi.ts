@@ -27,7 +27,7 @@ export interface BackendApplication {
   /** Third party processing the application; absent or empty means in-house. */
   processedBy?: string | null;
   outcome?: string;
-  /** Open and still in its first stage: the only time the details can be edited. */
+  /** Open and still in Application Submitted (first stage): the only time details can be edited. */
   editable?: boolean;
 
   // Legacy/optional (may be absent)
@@ -214,7 +214,7 @@ export const applicationsApi = {
     return response.data;
   },
 
-  /** Partial update; permitted only while the application is still a draft. */
+  /** Partial update; permitted only in the Application Submitted (first) stage. */
   updateApplication: async (
     id: string,
     payload: UpdateApplicationPayload,
