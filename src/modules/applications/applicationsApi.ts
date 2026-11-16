@@ -27,7 +27,7 @@ export interface BackendApplication {
   /** Third party processing the application; absent or empty means in-house. */
   processedBy?: string | null;
   outcome?: string;
-  /** Open and still in Application Submitted (first stage): the only time details can be edited. */
+  /** Open and at or before the Visa Applied stage: details can be edited until then. */
   editable?: boolean;
 
   // Legacy/optional (may be absent)
@@ -214,7 +214,7 @@ export const applicationsApi = {
     return response.data;
   },
 
-  /** Partial update; permitted only in the Application Submitted (first) stage. */
+  /** Partial update; permitted up to Visa Applied, destination country included. */
   updateApplication: async (
     id: string,
     payload: UpdateApplicationPayload,

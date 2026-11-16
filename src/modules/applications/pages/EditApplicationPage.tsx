@@ -7,16 +7,17 @@ import { useApplicationFormController } from "@/modules/applications/useApplicat
 /**
  * Edits an existing application, reusing the create form and controller.
  *
- * The backend permits this only while the application is open and still in its first
- * stage (Application Submitted). After any stage change the PATCH is refused and the form
- * surfaces that as a form-level error. The details page hides the Edit button and the
- * list locks the row's edit icon in that case, so this is the belt-and-braces path.
+ * The backend permits this while the application is open and at or before Visa Applied;
+ * the destination country included. A refused PATCH surfaces as a form-level error. The details page hides the
+ * Edit button and the list locks the row's edit icon past Visa Applied, so this is the
+ * belt-and-braces path.
  */
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const {
     form,
     isEditMode,
+    countryLocked,
     students,
     countries,
     universities,
@@ -70,6 +71,7 @@ export function EditApplicationPage() {
           <ApplicationForm
             form={form}
             isEditMode={isEditMode}
+            countryLocked={countryLocked}
             students={students}
             countries={countries}
             universities={universities}

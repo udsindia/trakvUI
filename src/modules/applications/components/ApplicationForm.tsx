@@ -70,6 +70,8 @@ type ApplicationFormProps = {
   onCountryChange: (countryCode: string) => void;
   /** Edit mode locks the fields that cannot change after creation. */
   isEditMode?: boolean;
+  /** Edit mode past Visa Applied: the destination country can no longer change. */
+  countryLocked?: boolean;
   onUniversityChange: (universityId: string) => void;
   /** A university typed by hand rather than picked from the catalogue. */
   onUniversityNameChange: (name: string) => void;
@@ -101,6 +103,7 @@ export function ApplicationForm({
   coursesError = false,
   onCountryChange,
   isEditMode = false,
+  countryLocked = false,
   onUniversityChange,
   onUniversityNameChange,
   onCustomUniversityToggle,
@@ -172,8 +175,11 @@ export function ApplicationForm({
     if (countriesLoading) {
       return "Loading countries…";
     }
+    if (countryLocked) {
+      return "Locked — the stage has moved past Visa Applied, so the country can no longer change.";
+    }
     if (isEditMode) {
-      return "Changing it clears the university and course. Locked once the stage moves past Application Submitted.";
+      return "Changing it clears the university and course. The application keeps its current stage.";
     }
     return undefined;
   })();
@@ -376,7 +382,7 @@ export function ApplicationForm({
                     rules={{ required: "Destination country is required." }}
                     render={({ field }) => (
                       <TextField
-                        disabled={countriesLoading}
+                        disabled={countriesLoading || countryLocked}
                         error={Boolean(errors.destinationCountry) || countriesError}
                         fullWidth
                         helperText={countryHelperText}

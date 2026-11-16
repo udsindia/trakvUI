@@ -30,6 +30,7 @@ import { ApplicationStageChevrons } from "@/shared/components/StageFlow";
 import { countryDisplayName } from "@/modules/universities/universitiesMappers";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
 import { applicationEditPath, applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
+import { isApplicationEditable } from "@/modules/applications/applicationEditRules";
 import { AddTaskForRecordButton } from "@/modules/activities/components/AddTaskForRecordButton";
 
 // What an application can be closed with. Offer Accepted is deliberately absent: it is a
@@ -188,12 +189,10 @@ export function ApplicationDetailsPage() {
 
   const stages = [...application.stages].sort((a, b) => a.stageOrder - b.stageOrder);
   const currentStage = stages.find((s) => s.id === application.currentStageId);
-  const currentIndex = currentStage ? stages.indexOf(currentStage) : -1;
   const isClosed = application.outcome !== "IN_PROGRESS";
-  // Editable only while open and still in the first stage (Application Submitted) — the
-  // same test PATCH /applications/{id} applies. Keep in step with
-  // ApplicationService.updateApplication.
-  const isEditable = !isClosed && currentIndex <= 0;
+  // Editable while open and at or before Visa Applied — the same test PATCH
+  // /applications/{id} applies (see applicationEditRules).
+  const isEditable = isApplicationEditable(application);
   const nextStage = currentStage
     ? stages.find((s) => s.stageOrder === currentStage.stageOrder + 1)
     : stages[0];
