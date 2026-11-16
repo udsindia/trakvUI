@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { partnerAgenciesApi } from "@/modules/universities/partnerAgenciesApi";
 import { applicationsRoutePaths } from "@/modules/applications/applicationsRoutePaths";
 import { applicationsApi } from "@/modules/applications/applicationsApi";
+import { isCountryEditable } from "@/modules/applications/applicationEditRules";
 import { studentsApi } from "@/modules/applications/studentsApi";
 import {
   OTHER_COURSE_ID,
@@ -540,14 +541,20 @@ export function useApplicationFormController(
       // The backend refuses edits once an application is closed; say why rather
       // than showing the generic retry message.
       if (axios.isAxiosError(error)) {
-        const code = (error.response?.data as { code?: string } | undefined)?.code;
-        if (code === "NOT_A_DRAFT" || code === "ALREADY_CLOSED") {
-          form.setError("root", {
-            message:
-              code === "ALREADY_CLOSED"
-                ? "This application has been closed, so its details can no longer be edited."
-                : "This application has moved past Application Submitted, so its details (including the destination country) can no longer be edited.",
-          });
+        // GlobalExceptionHandler sends the code as `error`; older handlers used `code`.
+        const body = error.response?.data as { code?: string; error?: string } | undefined;
+        const code = body?.code ?? body?.error;
+        const lockedMessages: Record<string, string> = {
+          ALREADY_CLOSED: "This application has been closed, so its details can no longer be edited.",
+          STAGE_LOCKED:
+            "This application has moved past Visa Applied, so its details can no longer be edited.",
+          NOT_A_DRAFT:
+            "This application has moved past Visa Applied, so its details can no longer be edited.",
+        };
+        if (code && lockedMessages[code]) {
+          // Prefer the server's message: for STAGE_LOCKED it names the stage edits stop at.
+          const serverMessage = (error.response?.data as { message?: string } | undefined)?.message;
+          form.setError("root", { message: serverMessage || lockedMessages[code] });
           return;
         }
       }
@@ -568,6 +575,7 @@ export function useApplicationFormController(
   return {
     form,
     isEditMode,
+    countryLocked: editingApplication ? !isCountryEditable(editingApplication) : false,
     students: students ?? [],
     countries,
     universities: universityOptions,

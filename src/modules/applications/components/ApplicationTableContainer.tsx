@@ -22,7 +22,7 @@ export type ApplicationRow = {
   intake: string;
   stage: string;
   createdAt: string;
-  /** Open and still in Application Submitted (first stage); afterwards details are frozen. */
+  /** Open and at or before Visa Applied; afterwards details are frozen. */
   editable: boolean;
 };
 
@@ -143,7 +143,7 @@ export function ApplicationTableContainer({
             title={
               app.editable
                 ? "Edit application"
-                : "Locked: applications can only be edited in the Application Submitted stage"
+                : "Locked: applications can only be edited up to the Visa Applied stage"
             }
           >
             {/* The span keeps the tooltip working while the button is disabled. */}
