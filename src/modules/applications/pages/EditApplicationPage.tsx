@@ -7,10 +7,10 @@ import { useApplicationFormController } from "@/modules/applications/useApplicat
 /**
  * Edits an existing application, reusing the create form and controller.
  *
- * The backend only permits this while the application is still a draft — open and still
- * in the first stage of its sequence. Once it has advanced, the PATCH is refused and the
- * form surfaces that as a form-level error. The details page hides the Edit button in
- * that case, so this is the belt-and-braces path.
+ * The backend permits this only while the application is open and still in its first
+ * stage (Application Submitted). After any stage change the PATCH is refused and the form
+ * surfaces that as a form-level error. The details page hides the Edit button and the
+ * list locks the row's edit icon in that case, so this is the belt-and-braces path.
  */
 export function EditApplicationPage() {
   const { id } = useParams<{ id: string }>();

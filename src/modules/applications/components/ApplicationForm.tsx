@@ -166,16 +166,14 @@ export function ApplicationForm({
     if (errors.destinationCountry?.message) {
       return errors.destinationCountry.message;
     }
-    if (isEditMode) {
-      // Matches ApplicationService: the stage sequence was cloned from this country at
-      // creation, so changing it would leave the application on the wrong sequence.
-      return "Fixed after creation — the stages were set from it. File a new application to change it.";
-    }
     if (countriesError) {
       return "Could not load countries. Please refresh and try again.";
     }
     if (countriesLoading) {
       return "Loading countries…";
+    }
+    if (isEditMode) {
+      return "Changing it clears the university and course. Locked once the stage moves past Application Submitted.";
     }
     return undefined;
   })();
@@ -378,7 +376,7 @@ export function ApplicationForm({
                     rules={{ required: "Destination country is required." }}
                     render={({ field }) => (
                       <TextField
-                        disabled={countriesLoading || isEditMode}
+                        disabled={countriesLoading}
                         error={Boolean(errors.destinationCountry) || countriesError}
                         fullWidth
                         helperText={countryHelperText}

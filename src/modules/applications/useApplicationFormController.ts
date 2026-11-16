@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -86,9 +86,9 @@ export function buildCreateApplicationPayload(
 }
 
 /**
- * destinationCountry and studentId are absent by design: the stage sequence is cloned
- * from the country at creation, and moving an application between students is not an
- * edit. Both fields are read-only in edit mode.
+ * studentId is absent by design: moving an application between students is not an edit,
+ * so that field is read-only in edit mode. The destination country can change; the
+ * backend keeps the application's existing stages when it does.
  */
 function buildUpdateApplicationPayload(
   values: ApplicationFormValues,
@@ -103,6 +103,8 @@ function buildUpdateApplicationPayload(
   };
 
   return {
+    destinationCountryCode: values.destinationCountry || undefined,
+    universityId: values.universityId || undefined,
     universityName: values.targetUniversity,
     courseName: values.courseName,
     courseId: values.courseId || undefined,
@@ -178,6 +180,7 @@ export function useApplicationFormController(
     data: universities = [],
     isLoading: universitiesLoading,
     isError: universitiesError,
+    isSuccess: universitiesLoaded,
   } = useUniversitiesByCountry(destinationCountry || undefined);
 
   // Only fetched while no destination is chosen, so the ordinary country-first flow
@@ -196,6 +199,7 @@ export function useApplicationFormController(
     data: courses = [],
     isLoading: coursesLoading,
     isError: coursesError,
+    isSuccess: coursesLoaded,
   } = useUniversityCourseOptions(universityId || undefined);
 
   /**
@@ -227,26 +231,27 @@ export function useApplicationFormController(
     queryFn: () => applicationsApi.getApplicationById(applicationId as string),
   });
 
+  /**
+   * Seeding happens ONCE per application. It used to re-run form.reset whenever the
+   * countries, universities or students arrays changed — and before the catalogue query
+   * is enabled `universities` is a fresh `[]` on every render, so every keystroke reset
+   * the form back to the saved values. A window-focus refetch did the same. The user
+   * could type, but nothing stuck, so the application could not be edited.
+   */
+  const seededForRef = useRef<string | null>(null);
+  const universityLinkedForRef = useRef<string | null>(null);
+  const courseLinkedForRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!editingApplication) {
+    if (!editingApplication || seededForRef.current === editingApplication.id) {
       return;
     }
-    const country = countries.find((c) => c.code === editingApplication.destinationCountryCode);
+    seededForRef.current = editingApplication.id;
+    universityLinkedForRef.current = null;
+    courseLinkedForRef.current = null;
 
-    // Applications store names, not ids. Resolve the stored name against the catalogue
-    // so an edit reopens in the mode it was created in: a match restores the link (and
-    // with it the course list), no match opens in custom mode with the box ticked.
-    const matchedUniversity = universities.find(
-      (u) =>
-        u.name.trim().toLowerCase() ===
-        (editingApplication.universityName ?? "").trim().toLowerCase(),
-    );
-
-    // Resolved here rather than left to the auto-fill effect above. Both write the same
-    // three fields, but this reset re-runs whenever the catalogue queries settle, and a
-    // late re-run would blank what the effect had already filled — the student id has not
-    // changed, so the effect never fires again to put it back. Since all three are
-    // required, that left the form permanently unsubmittable.
+    // The student fields are filled by the auto-fill effect above once both the id and
+    // the student list are present; seed them here too when the list is already cached.
     const student = students?.find((s) => s.id === editingApplication.studentId);
 
     form.reset({
@@ -256,12 +261,14 @@ export function useApplicationFormController(
       email: student?.email ?? "",
       phone: student?.phone ?? "",
       targetUniversity: editingApplication.universityName ?? "",
-      universityId: matchedUniversity?.id ?? "",
-      useCustomUniversity: !matchedUniversity,
+      // Linked to the catalogue below once the university list has loaded. Until then
+      // the name is shown as typed text, which is valid and submittable on its own.
+      universityId: "",
+      useCustomUniversity: true,
       courseName: editingApplication.courseName ?? "",
       courseId: "",
       studyLevel: (editingApplication.studyLevel as ApplicationFormValues["studyLevel"]) ?? "",
-      destinationCountry: country?.code ?? editingApplication.destinationCountryCode ?? "",
+      destinationCountry: editingApplication.destinationCountryCode ?? "",
       intakeMonth: editingApplication.intakeMonth ?? "",
       intakeYear: editingApplication.intakeYear ?? new Date().getFullYear(),
       tuitionFeeInr:
@@ -274,7 +281,61 @@ export function useApplicationFormController(
       partnerAgencyId: editingApplication.partnerAgencyId ?? "",
       processedBy: editingApplication.processedBy ?? "",
     });
-  }, [editingApplication, countries, universities, students, form]);
+  }, [editingApplication, students, form]);
+
+  // Applications store names, not ids. Once the destination's universities have loaded,
+  // resolve the stored name so the edit reopens linked to the catalogue (and with it the
+  // course list). Runs once, and only if the user has not already changed the university.
+  useEffect(() => {
+    if (
+      !editingApplication ||
+      seededForRef.current !== editingApplication.id ||
+      universityLinkedForRef.current === editingApplication.id ||
+      !universitiesLoaded
+    ) {
+      return;
+    }
+    universityLinkedForRef.current = editingApplication.id;
+
+    const savedName = (editingApplication.universityName ?? "").trim().toLowerCase();
+    if (form.getValues("targetUniversity").trim().toLowerCase() !== savedName) {
+      return;
+    }
+    const matched = universities.find((u) => u.name.trim().toLowerCase() === savedName);
+    if (matched) {
+      setValue("universityId", matched.id);
+      setValue("useCustomUniversity", false);
+    } else {
+      // Nothing to link to: no course list either, so the course will be checked off.
+      courseLinkedForRef.current = editingApplication.id;
+    }
+  }, [editingApplication, universitiesLoaded, universities, form, setValue]);
+
+  // Then pick the saved course out of that university's list, so the course picker shows
+  // it instead of an empty box. No match → fall back to typed names, keeping the saved one.
+  useEffect(() => {
+    if (
+      !editingApplication ||
+      universityLinkedForRef.current !== editingApplication.id ||
+      courseLinkedForRef.current === editingApplication.id ||
+      !universityId ||
+      !coursesLoaded
+    ) {
+      return;
+    }
+    courseLinkedForRef.current = editingApplication.id;
+
+    const savedCourse = (editingApplication.courseName ?? "").trim().toLowerCase();
+    if (form.getValues("courseName").trim().toLowerCase() !== savedCourse) {
+      return; // the user already changed the university or course
+    }
+    const matched = courses.find((c) => c.name.trim().toLowerCase() === savedCourse);
+    if (matched) {
+      setValue("courseId", matched.id);
+    } else if (savedCourse) {
+      setValue("useCustomUniversity", true);
+    }
+  }, [editingApplication, universityId, coursesLoaded, courses, form, setValue]);
 
   const handleCountryChange = (countryCode: string) => {
     setValue("destinationCountry", countryCode, { shouldValidate: true });
@@ -468,19 +529,24 @@ export function useApplicationFormController(
           buildCreateApplicationPayload(submitted, countries),
         );
       }
+      // Lists and the details page are cached under ["applications", ...]; without this
+      // they keep showing the pre-edit values until the next refetch.
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
       form.reset(defaultApplicationFormValues);
       navigate(applicationsRoutePaths.dashboard);
     } catch (error) {
       console.error("Failed to save application:", error);
 
-      // The backend refuses edits once an application has moved on; say why rather
+      // The backend refuses edits once an application is closed; say why rather
       // than showing the generic retry message.
       if (axios.isAxiosError(error)) {
         const code = (error.response?.data as { code?: string } | undefined)?.code;
         if (code === "NOT_A_DRAFT" || code === "ALREADY_CLOSED") {
           form.setError("root", {
             message:
-              "This application has already moved past its first stage, so its details can no longer be edited.",
+              code === "ALREADY_CLOSED"
+                ? "This application has been closed, so its details can no longer be edited."
+                : "This application has moved past Application Submitted, so its details (including the destination country) can no longer be edited.",
           });
           return;
         }

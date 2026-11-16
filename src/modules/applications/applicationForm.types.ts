@@ -78,6 +78,10 @@ export type VisaFormValues = {
  */
 export type UpdateApplicationPayload = {
   assignedTo?: string;
+  /** Alpha-3. Changing it keeps the application's current stages and progress. */
+  destinationCountryCode?: string;
+  /** Catalogue university id; omitted when typed by hand. */
+  universityId?: string;
   universityName?: string;
   courseName?: string;
   courseId?: string;
@@ -87,7 +91,7 @@ export type UpdateApplicationPayload = {
   tuitionFeeInr?: number;
   applicationFeeInr?: number;
   notes?: string;
-  /** Editable after the application advances, unlike every other field here. */
+  /** Sent as "" to clear it. */
   processedBy?: string;
   /** Optional — omitted means a direct application. */
   partnerAgencyId?: string;
