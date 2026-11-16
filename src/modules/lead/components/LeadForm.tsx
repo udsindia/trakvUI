@@ -228,11 +228,11 @@ export function LeadForm({
                       error={Boolean(errors.countries)}
                       helperText={errors.countries?.message}
                       id={field.name}
-                      label="Country"
+                      label="destination countries"
                       options={options.countryOptions}
                       onBlur={field.onBlur}
                       onChange={field.onChange}
-                      placeholder="Select countries"
+                      placeholder="select desired destination countries"
                       required
                       sx={fieldSx}
                       value={field.value}
