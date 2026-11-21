@@ -32,6 +32,8 @@ type UniversityAgenciesCardProps = {
 
 const emptyDraft: SaveUniversityPartnerAgency = {
   agencyName: "",
+  contactEmail: "",
+  contactPhone: "",
   commissionPercentage: null,
   ranking: null,
 };
@@ -53,6 +55,8 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
   const [draft, setDraft] = useState<SaveUniversityPartnerAgency>(emptyDraft);
   /** The link being edited; null while adding a new agency. */
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState("");
+const [phoneError, setPhoneError] = useState("");
 
   // Saving an agency already on this university updates that link in place on the server,
   // so editing is the add form filled in, with the agency fixed. Notes go back unchanged:
@@ -62,6 +66,8 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
     setDraft({
       partnerAgencyId: agency.partnerAgencyId,
       agencyName: agency.agencyName,
+      contactEmail: agency.contactEmail ?? "",
+      contactPhone: agency.contactPhone ?? "",
       commissionPercentage: agency.commissionPercentage ?? null,
       ranking: agency.ranking ?? null,
       notes: agency.notes ?? null,
@@ -123,6 +129,30 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
   }
 
   const agencies = agenciesQuery.data ?? [];
+  const validateContactForm = () => {
+  let isValid = true;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9]{10}$/;
+
+  // Email validation
+  if (!emailRegex.test(draft.contactEmail?.trim() ?? "")) {
+    setEmailError("Please enter a valid email address.");
+    isValid = false;
+  } else {
+    setEmailError("");
+  }
+
+  // Phone validation
+  if (!phoneRegex.test(draft.contactPhone?.trim() ?? "")) {
+    setPhoneError("Phone number must be exactly 10 digits.");
+    isValid = false;
+  } else {
+    setPhoneError("");
+  }
+
+  return isValid;
+};
 
   return (
     <>
@@ -229,6 +259,38 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
                 )}
               />
             )}
+
+<TextField
+  fullWidth
+  label="Contact Email"
+  type="email"
+  value={draft.contactEmail ?? ""}
+  error={Boolean(emailError)}
+  helperText={emailError}
+  onChange={(e) => {
+    setDraft((prev) => ({
+      ...prev,
+      contactEmail: e.target.value,
+    }));
+    setEmailError("");
+  }}
+/>
+
+<TextField
+  fullWidth
+  label="Contact Phone"
+  value={draft.contactPhone ?? ""}
+  error={Boolean(phoneError)}
+  helperText={phoneError}
+  onChange={(e) => {
+    setDraft((prev) => ({
+      ...prev,
+      contactPhone: e.target.value,
+    }));
+    setPhoneError("");
+  }}
+/>
+
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <TextField
                 fullWidth
@@ -271,14 +333,18 @@ export function UniversityAgenciesCard({ universityId, canManage }: UniversityAg
                 Cancel
               </Button>
               <Button
-                disabled={!draft.agencyName?.trim() || save.isPending}
-                size="small"
-                sx={{ textTransform: "none" }}
-                variant="contained"
-                onClick={() => save.mutate()}
-              >
-                {save.isPending ? "Saving…" : "Save"}
-              </Button>
+               disabled={!draft.agencyName?.trim() || save.isPending}
+               size="small"
+               sx={{ textTransform: "none" }}
+               variant="contained"
+              onClick={() => {
+                if (validateContactForm()) {
+                save.mutate();
+              }
+            }}
+>
+  {save.isPending ? "Saving…" : "Save"}
+</Button>
             </Stack>
           </Stack>
         </Box>

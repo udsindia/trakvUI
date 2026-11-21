@@ -53,6 +53,11 @@ export const partnerAgenciesApi = {
     return response.data ?? [];
   },
 
+deleteGlobal: async (partnerAgencyId: string): Promise<void> => {
+  await httpClient.delete(`/partner-agencies/${partnerAgencyId}`);
+},
+
+
   forUniversity: async (universityId: string): Promise<UniversityPartnerAgency[]> => {
     const response = await httpClient.get<UniversityPartnerAgency[]>(base(universityId));
     return response.data ?? [];
