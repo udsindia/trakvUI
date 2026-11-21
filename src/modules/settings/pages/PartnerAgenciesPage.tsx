@@ -1,19 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
+  Dialog,
+DialogActions,
+DialogContent,
+DialogTitle,
+IconButton,
   Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  TextField,
+Tooltip,
   Typography,
 } from "@mui/material";
 import { httpClient } from "@/shared/services/http/client";
-import { GRADE_STYLES } from "@/modules/universities/partnerAgenciesApi";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import {
+  GRADE_STYLES,
+  partnerAgenciesApi,
+} from "@/modules/universities/partnerAgenciesApi";
 import { getApiErrorMessage } from "@/shared/services/http/errorMessage";
 
 type PartnerAgencySummary = {
@@ -28,12 +42,6 @@ type PartnerAgencySummary = {
   bestGrade?: string | null;
 };
 
-/** A range where the ends differ, a single figure where they don't, a dash where neither. */
-function commissionRange(agency: PartnerAgencySummary): string {
-  const { lowestCommission: low, highestCommission: high } = agency;
-  if (low == null || high == null) return "—";
-  return low === high ? `${low}%` : `${low}–${high}%`;
-}
 
 /**
  * Every third-party agency this tenant works with.
@@ -48,6 +56,112 @@ function commissionRange(agency: PartnerAgencySummary): string {
  * university anyway, which is the page you would have to go to regardless.
  */
 export function PartnerAgenciesPage() {
+
+  const queryClient = useQueryClient();
+
+  const [editingAgency, setEditingAgency] = useState<PartnerAgencySummary | null>(null);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  
+const [emailError, setEmailError] = useState("");
+const [phoneError, setPhoneError] = useState("");
+const validateContactForm = () => {
+  let isValid = true;
+
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^\+?[0-9]{10}$/;
+
+  if (!emailRegex.test(contactEmail.trim())) {
+    setEmailError("Please enter a valid email address.");
+    isValid = false;
+  } else {
+    setEmailError("");
+  }
+
+  if (!phoneRegex.test(contactPhone.trim())) {
+    setPhoneError("Please enter a valid phone number (10 digits).");
+    isValid = false;
+  } else {
+    setPhoneError("");
+  }
+
+  return isValid;
+};
+
+ const updateContact = useMutation({
+  mutationFn: async () => {
+    if (!editingAgency) {
+      throw new Error("No agency selected.");
+    }
+
+    const universityIds = await partnerAgenciesApi.coverage(
+      editingAgency.id
+    );
+
+    if (universityIds.length === 0) {
+      throw new Error("This agency has no university associations.");
+    }
+
+    const existingAgencies = await partnerAgenciesApi.forUniversity(
+      universityIds[0]
+    );
+
+    const existingAgency = existingAgencies.find(
+      (item) => item.partnerAgencyId === editingAgency.id
+    );
+
+    if (!existingAgency) {
+      throw new Error("Existing agency arrangement not found.");
+    }
+   
+
+
+    return partnerAgenciesApi.save(universityIds[0], {
+      partnerAgencyId: editingAgency.id,
+      contactName: existingAgency.contactName,
+      contactEmail,
+      contactPhone,
+      commissionPercentage: existingAgency.commissionPercentage,
+      ranking: existingAgency.ranking,
+      notes: existingAgency.notes,
+    });
+  },
+
+  onSuccess: async () => {
+    setEditingAgency(null);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["partner-agencies", "all"],
+    });
+
+    await queryClient.invalidateQueries({
+      queryKey: ["partner-agencies", "tenant"],
+    });
+  },
+});
+  const startEdit = (agency: PartnerAgencySummary) => {
+  setEditingAgency(agency);
+  setContactEmail(agency.contactEmail ?? "");
+  setContactPhone(agency.contactPhone ?? "");
+  setEmailError("");
+  setPhoneError("");
+  updateContact.reset();
+};
+
+  const deleteAgency = useMutation({
+    mutationFn: (agencyId: string) =>
+      partnerAgenciesApi.deleteGlobal(agencyId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["partner-agencies", "all"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["partner-agencies", "tenant"],
+      });
+    },
+  });
+
   const { data: agencies = [], isLoading, isError, error } = useQuery({
     queryKey: ["partner-agencies", "all"],
     queryFn: async () => {
@@ -91,24 +205,29 @@ export function PartnerAgenciesPage() {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Agency</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Contact</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Phone Number</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Universities</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>Commission</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700 }}>Best grade</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
+  Actions
+</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {agencies.map((agency) => (
                 <TableRow key={agency.id}>
                   <TableCell sx={{ fontWeight: 600 }}>{agency.name}</TableCell>
-                  <TableCell sx={{ color: "text.secondary", fontSize: 13 }}>
-                    {agency.contactName || agency.contactEmail || "—"}
-                  </TableCell>
+
+<TableCell sx={{ color: "text.secondary", fontSize: 13 }}>
+  {agency.contactEmail || "—"}
+</TableCell>
+
+<TableCell sx={{ color: "text.secondary", fontSize: 13 }}>
+  {agency.contactPhone || "—"}
+</TableCell>
                   <TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
                     {agency.universityCount}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-                    {commissionRange(agency)}
                   </TableCell>
                   <TableCell align="center">
                     {agency.bestGrade ? (
@@ -126,12 +245,103 @@ export function PartnerAgenciesPage() {
                       "—"
                     )}
                   </TableCell>
+                  <TableCell align="center">
+  <Tooltip title="Edit contact details">
+    <IconButton
+      size="small"
+      onClick={() => startEdit(agency)}
+    >
+      <EditOutlined fontSize="small" />
+    </IconButton>
+  </Tooltip>
+
+  <Tooltip title="Delete agency">
+    <IconButton
+      size="small"
+      onClick={() => {
+        if (
+          window.confirm(
+            `Delete ${agency.name} from all universities?`,
+          )
+        ) {
+          deleteAgency.mutate(agency.id);
+        }
+      }}
+    >
+      <DeleteOutlineRounded fontSize="small" />
+    </IconButton>
+  </Tooltip>
+</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </Box>
       )}
-    </Box>
-  );
+
+      
+<Dialog
+  open={Boolean(editingAgency)}
+  onClose={() => setEditingAgency(null)}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>Edit Contact Details</DialogTitle>
+
+  <DialogContent>
+    <Stack spacing={2} sx={{ pt: 1 }}>
+      <TextField
+        fullWidth
+        label="Agency Name"
+        value={editingAgency?.name ?? ""}
+        disabled
+      />
+
+      <TextField
+        fullWidth
+        label="Contact Email"
+        type="email"
+        value={contactEmail}
+        error={Boolean(emailError)}
+        helperText={emailError}
+        onChange={(event) => {
+          setContactEmail(event.target.value);
+          setEmailError("");
+        }}
+      />
+
+      <TextField
+        fullWidth
+        label="Contact Phone"
+        value={contactPhone}
+        error={Boolean(phoneError)}
+        helperText={phoneError}
+        onChange={(event) => {
+          setContactPhone(event.target.value);
+          setPhoneError("");
+        }}
+      />
+    </Stack>
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setEditingAgency(null)}>
+      Cancel
+    </Button>
+
+    <Button
+      variant="contained"
+      disabled={updateContact.isPending}
+      onClick={() => {
+        if (validateContactForm()) {
+          updateContact.mutate();
+        }
+      }}
+    >
+      {updateContact.isPending ? "Saving..." : "Save"}
+    </Button>
+  </DialogActions>
+</Dialog>
+</Box>
+);
 }
