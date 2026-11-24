@@ -226,6 +226,21 @@ export function CourseImportDialog({ open, onClose }: CourseImportDialogProps) {
                 row. The university must already exist in your catalogue. Nothing is written
                 until you review the preview and confirm.
               </Alert>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+  {COURSE_IMPORT_FIELDS.map((field) => (
+    <Chip
+      key={field}
+      label={`${IMPORT_FIELD_LABELS[field]}${
+        (COURSE_IMPORT_REQUIRED as readonly string[]).includes(field)
+          ? " *"
+          : ""
+      }`}
+      size="small"
+      variant="outlined"
+      sx={{ fontSize: 11 }}
+    />
+  ))}
+</Box>
               <Stack
                 alignItems={{ xs: "stretch", sm: "center" }}
                 direction={{ xs: "column", sm: "row" }}
