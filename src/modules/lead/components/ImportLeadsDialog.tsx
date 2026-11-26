@@ -285,6 +285,8 @@ export function ImportLeadsDialog({ open, onClose, onImported }: ImportLeadsDial
               <Alert severity="info">
                 Upload a <b>.csv</b> or <b>.xlsx</b> file. If its columns don&apos;t already match
                 ours, you&apos;ll get a chance to map them next:
+                 <br />
+  <b>First Name is mandatory.</b>
               </Alert>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
                 {EXPECTED_HEADERS.map((h) => (

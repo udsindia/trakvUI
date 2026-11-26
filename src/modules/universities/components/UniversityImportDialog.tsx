@@ -246,6 +246,22 @@ export function UniversityImportDialog({ open, onClose }: UniversityImportDialog
                 Import courses to add courses to these universities afterwards. Nothing is written
                 until you review the preview and confirm.
               </Alert>
+<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+  {UNIVERSITY_IMPORT_FIELDS.map((field) => (
+    <Chip
+      key={field}
+      label={`${IMPORT_FIELD_LABELS[field]}${
+  (UNIVERSITY_IMPORT_REQUIRED as readonly string[]).includes(field)
+    ? " *"
+    : ""
+}`}
+      size="small"
+      variant="outlined"
+      sx={{ fontSize: 11 }}
+    />
+  ))}
+</Box>
+
               <Stack
                 alignItems={{ xs: "stretch", sm: "center" }}
                 direction={{ xs: "column", sm: "row" }}
